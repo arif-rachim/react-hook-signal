@@ -1,14 +1,30 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+/// https://vitejs.dev/config/
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [dts({rollupTypes:true,outDir:'./dist'})],
   build: {
     lib: {
-      entry: './lib/react-hook-signal.tsx',
+      entry: './src/main.ts',
       name: 'ReactHookSignal',
-      fileName: 'react-hook-signal'
-    }
-  }
+      fileName: 'react-hook-signal',
+    },
+    minify:false,
+    rollupOptions: {
+      // Optional: Configure Rollup for library building
+      external: ['react', 'react-dom','signal-polyfill'], // Externalize React dependencies
+      output: {
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+        },
+      },
+    },
+  },
+  test : {
+    globals:true,
+    environment: 'jsdom',
+  },
 })
