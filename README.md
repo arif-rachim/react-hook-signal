@@ -1,4 +1,5 @@
 # React Hook Signal
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 This guide explores how to integrate Signals, a proposed standard for JavaScript communication, into React components using the react-hook-signal library.
 
