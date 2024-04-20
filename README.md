@@ -1,10 +1,14 @@
-<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-hero.png" width="600" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
+<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-830-300.png" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
+
+<div style="display: flex;flex-direction: row;justify-content: center;gap:1rem">
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
 [![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
+
 [![Node.js CI](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml/badge.svg)](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml)
 
-This guide explores how to integrate Signals, a proposed standard for JavaScript communication, into React components using the react-hook-signal library.
+</div>
 
 ### Installation
 ```bash
@@ -19,16 +23,16 @@ The TC39 Proposal for Signals in JavaScript aims to establish a mechanism for co
 - Refer to https://eisenbergeffect.medium.com/a-tc39-proposal-for-signals-f0bedd37a335 for detailed explanation.
 - Explore the proposal repository: https://github.com/proposal-signals/proposal-signals
 
-Once adopted, JavaScript will have a native signaling system, referred to as Native Signal throughout this guide.
+Once adopted, JavaScript will have a native signaling system, referred to as `Signal` throughout this guide.
 
 ## Steps to Integrate Signals with React
-### STEP 1: Rendering Native Signal Values:
+### STEP 1: Rendering Signal Values:
 
 - Utilize `notify` components provided by react-hook-signal.
 - `notify` components accept standard HTML attributes, Signal, and Lambda for detecting dependency changes.
 
 Example:
-Let say we have Global.tsx, holding global signals
+Say we have Global.tsx, holding global signals
 ```tsx
 // Global.tsx
 import {Signal} from "signal-polyfill";
@@ -40,7 +44,7 @@ export const renderCount = new Signal.Computed(() => {
 })
 
 ```
-Next, you want to integrate the signal in your React component, so the fastest way to integrate it is to use the `notifiable` elements.
+The fastest way to integrate `Signal` is to use the `notifiable` components.
 
 ```tsx
 import {count,renderCount} from "./GlobalSignals.tsx";
@@ -60,7 +64,7 @@ export function App() {
 }
 ```
 
-`notifiable` element attributes is not only capable of accepting the `Signal` type but also can receive `Lambda`,Lambda is a callback that's able to listen for changes in the signals it depends on. Below is an example demonstrating how the code above can be modified using a `Lambda`.
+`notifiable` component attributes is not only capable of accepting the `Signal` type but also can receive `Lambda`,Lambda is a callback that's able to listen for changes in the signals it depends on. Below is an example demonstrating how the code above can be modified using a `Lambda`.
 
 ```tsx
 import {count} from "./GlobalSignals.tsx";
@@ -83,12 +87,12 @@ export function App() {
 
 ### STEP 2: Observing Signal Changes
 
-- Use the useSignalEffect hook to listen for changes in Native Signal.
+- Use the `useSignalEffect` hook to listen for changes in Signal.
 - This hook accepts a callback that reads the final signal value and can optionally return a cleanup function.
 
 #### Important Note:
 
-- useSignalEffect doesn't automatically re-render the component. Use React.useState:setState to trigger a re-render.
+- `useSignalEffect` doesn't automatically re-render the component. Use React.useState to trigger a re-render.
 
 Example: 
 
@@ -117,12 +121,12 @@ export function App() {
 
 ### STEP 3: Creating Signals in React Components:
 
-`useSignal` is a hook used to generate `Native Signals` that are tied to the lifespan of a component. It returns two types of `Signals` : `Signal.State` and `Signal.Computed`. `Signal.State` is a native signal whose value can be modified after it is initially created. On the other hand, `Signal.Computed` represents a computed signal whose value cannot be modified directly, as it is the result of a computation.
+`useSignal` is a hook used to generate `Signal` that are tied to the lifespan of a component. It returns two types of `Signals` : `Signal.State` and `Signal.Computed`. `Signal.State` is a signal whose value can be MODIFIED after it is initially created. On the other hand, `Signal.Computed` represents a computed signal whose value cannot be modified directly, as it is the result of a computation.
 
 - To create a `Signal.State`, simply provide a constant value as a parameter when calling `useSignal`. 
 - To create a `Signal.Computed`,simply provide  a `Lambda` that returns the result of a dynamic computation.
 
-Let's look at the following example.
+Example :
 ```tsx
 import {notifiable, useSignal} from "react-hook-signal";
 
@@ -165,16 +169,13 @@ export function App() {
 }
 
 ```
-The `react-hook-signal` library manages state in this React component. It defines signals (count, style, etc.) for dynamic updates. Clicking the button increments the count, and signal components automatically update content based on signal changes.
 
 ### STEP 4: Encapsulate any Component with a Notifiable :
 
-- Wrap component with `Notifiable`
-- Component properties & children now capable to receive `Signal` or `Lambda`
+- Use `Notifiable` component to wrap any React Functional or Class Component 
+- A React component encapsulated within the `Notifiable` component will inherently enable its properties and children to utilize `Lambda` expressions or `Signals` seamlessly
 
-We can wrap any component, enabling it to receive signals or lambdas within its properties, by utilizing the Notifiable component from the React hook. 
-Refer to the following example :
-
+Example :
 ```tsx
 import {Notifiable} from "react-hook-signal";
 
@@ -199,6 +200,6 @@ function MyComponent(props:{title:string}){
 ```
 
 ### Summary
-The integration of `Native Signal` into the React application can be done in various ways tailored to the needs and complexity of the app.
+The integration of `Signal` into the React application can be done in various ways tailored to the needs and complexity of the app.
 
 
