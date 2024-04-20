@@ -1,5 +1,7 @@
 # React Hook Signal
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
+[![Node.js CI](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml/badge.svg)](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml)
 
 This guide explores how to integrate Signals, a proposed standard for JavaScript communication, into React components using the react-hook-signal library.
 
