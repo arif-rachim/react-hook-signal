@@ -206,10 +206,8 @@ function isOfType<T extends SignalLambdaNormal>(attributeName: string, value: un
             return value !== undefined && value !== null && typeof value === 'object' && 'get' in value
         case "lambda":
             return !attributeName.startsWith('on') && value !== undefined && value !== null && typeof value === 'function'
-        case "normal":
-            return true
         default :
-            return false
+            return true
     }
 }
 
