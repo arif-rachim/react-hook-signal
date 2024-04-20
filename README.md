@@ -1,14 +1,8 @@
-<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-830-300.png" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
-
-<div style="display: flex;flex-direction: row;justify-content: center;gap:1rem">
+<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-hero.png" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-
 [![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
-
 [![Node.js CI](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml/badge.svg)](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml)
-
-</div>
 
 ### Installation
 ```bash
