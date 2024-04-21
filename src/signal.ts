@@ -3,7 +3,6 @@ import { Signal } from "signal-polyfill";
 import { isNil, isFunction, type Universal } from "./utils";
 
 type AnyFunction<T = Universal> = (...args: Universal[]) => T;
-type BaseTypes = string | number | boolean | bigint;
 
 export type INTERNAL_SignalState<T = Universal> = Signal.State<T>;
 
