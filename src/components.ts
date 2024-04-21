@@ -15,6 +15,16 @@ export type HtmlNotifiableComponents = {
     [K in keyof JSX.IntrinsicElements]: ComponentType<ComputableProps<InferPropsParameter<K>>>;
 };
 
+// this is for Notifiable
+type PropsToComputable<T> = {
+    [K in keyof T as T[K] extends (...args:unknown[]) => unknown ? never : K extends 'key' ? never : K]: Computable<T[K]>;
+}
+
+type HandlerPropsToAppend<T> = {
+    [K in keyof T as T[K] extends (...args:unknown[]) => unknown ? K extends string ? `${K}Handler` : never : never]: T[K];
+}
+type NotifiableProps<T extends object> = PropsToComputable<T> & HandlerPropsToAppend<T>
+
 export type AnySignal<T> = { get(): T }
 
 type SignalLambdaNormal = 'signal' | 'lambda' | 'normal'
@@ -24,7 +34,7 @@ function isOfType<T extends SignalLambdaNormal>(attributeName: string, value: un
         case "signal":
             return value !== undefined && value !== null && typeof value === 'object' && 'get' in value
         case "lambda":
-            return !attributeName.startsWith('on') && value !== undefined && value !== null && typeof value === 'function'
+            return !attributeName.endsWith('Handler') && value !== undefined && value !== null && typeof value === 'function'
         default :
             return true
     }
@@ -32,7 +42,7 @@ function isOfType<T extends SignalLambdaNormal>(attributeName: string, value: un
 
 type InferIsOfType<T extends SignalLambdaNormal> = T extends 'signal' ? AnySignal<unknown> : T extends 'lambda' ? Lambda<unknown> : unknown
 
-type InferSignalLambdaValue<T, Key> = Key extends `on${string}` ? T : T extends Lambda<infer A> ? A : T extends AnySignal<infer B> ? B : T;
+type InferSignalLambdaValue<T, Key> = Key extends `${string}Handler` ? T : T extends Lambda<infer A> ? A : T extends AnySignal<infer B> ? B : T;
 
 function filterPropsByType<P>(props: P, type: SignalLambdaNormal) {
     return Object.entries(props!).reduce(function mapPropsByType(acc, [key, value]) {
@@ -43,7 +53,7 @@ function filterPropsByType<P>(props: P, type: SignalLambdaNormal) {
             return {...acc, [key]: value.get()}
         }
         if (type === 'normal' && isOfType(key, value, 'normal')) {
-            return {...acc, [key]: value}
+            return {...acc, [key.endsWith('Handler') ? key.slice(0,-'Handler'.length) : key]: value}
         }
         return acc;
     }, {} as Partial<{ [Key in keyof P]: InferSignalLambdaValue<P[Key], Key> }>)
@@ -67,14 +77,18 @@ function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key:
     }
 
     const NotifiableHtmlElement = React.memo(function NotifiableHtmlElement(props: ComputableProps<Parameters<typeof HtmlElement>[0]>) {
-        return Notifiable({component: HtmlElement,componentRenderStrategy:'functionCall', ...props})
+
+        const notifiableProps = Object.entries(props).reduce((result,[key,value]) => {
+            return {...result,[key.startsWith('on') ? `${key}Handler`:key] : value}
+        },{} ) as NotifiableProps<Parameters<typeof HtmlElement>[0]>;
+
+        return Notifiable({component: HtmlElement,componentRenderStrategy:'functionCall', ...notifiableProps})
     })
     NotifiableHtmlElement.displayName = `n.${key}`
     return NotifiableHtmlElement;
 }
 
-
-export function Notifiable<T extends object>(propsWithComponent: { component: ComponentType<T>,componentRenderStrategy?:'functionCall'|'createElement' } & ComputableProps<T>) {
+export function Notifiable<T extends object>(propsWithComponent: { component: ComponentType<T>,componentRenderStrategy?:'functionCall'|'createElement' } & NotifiableProps<T>) {
     const {component,componentRenderStrategy, ...props} = propsWithComponent;
 
     const normalProps = filterPropsByType<typeof props>(props, 'normal');
