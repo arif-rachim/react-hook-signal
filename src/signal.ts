@@ -29,11 +29,11 @@ export interface WithSignal<T> {
 
 export type ReadonlySignal<T> = Omit<WithSignal<T>, "value" | "set" | "clear">;
 
-export type UnwrapSignal<T> =
-  T extends WithSignal<infer V> ? V : T extends AnyFunction ? BaseTypes : T;
+export type UnwrapSignal<T, Fn = ReturnType<() => T>> =
+  T extends WithSignal<infer V> ? V : T extends AnyFunction ? Fn : T;
 
 export function signal<T>(
-  value: T,
+  value: T | (() => T),
   options?: Signal.Options<T>,
 ): WithSignal<UnwrapSignal<T>>;
 export function signal<T>(
