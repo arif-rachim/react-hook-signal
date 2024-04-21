@@ -6,6 +6,10 @@ import {Lambda} from "./components.ts";
 
 export type JSXAttribute<K extends keyof JSX.IntrinsicElements, A extends keyof JSX.IntrinsicElements[K]> = NonNullable<JSX.IntrinsicElements[K][A]>;
 
+/**
+ * Executes the provided effect callback whenever the dependencies change.
+ * @param {React.EffectCallback} callback The effect callback function to execute.
+ */
 export function useSignalEffect(callback: React.EffectCallback) {
 
     const propsRef = React.useRef(callback);
@@ -18,6 +22,13 @@ export function useSignalEffect(callback: React.EffectCallback) {
 
 type SignalType<T> = T extends Lambda<infer R> ? Signal.Computed<R> : Signal.State<T>
 type OptionType<T> = T extends Lambda<infer R> ? R : T
+
+/**
+ * Creates a signal with initial value and options.
+ * @param param The initial value or function to derive the value from.
+ * @param options Options for creating the signal.
+ * @returns The created signal.
+ */
 export function useSignal<T>(param:T, options: Signal.Options<OptionType<T>> = {}):SignalType<T>{
 
     function initialState(){

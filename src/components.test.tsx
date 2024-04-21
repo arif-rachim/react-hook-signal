@@ -140,6 +140,7 @@ function NotifyButtonClickEvent(){
     })
 
     return <>
+        <notifiable.button ></notifiable.button>
         <notifiable.button onClick={() => count.set(count.get() + 1)} data-testid={'increment'}> Increment</notifiable.button>
         <notifiable.div data-testid={'div'}>{() => {
             return `is match ${isMatch.get()} result : ${countDouble.get()}`

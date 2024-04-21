@@ -1,8 +1,14 @@
 import {Signal} from "signal-polyfill";
 import type {EffectCallback} from "react";
 
+/**
+ * Flag indicating if microtasks need to be enqueued.
+ */
 let needsEnqueue = true;
 
+/**
+ * Watcher for signals.
+ */
 const signalWatcher = new Signal.subtle.Watcher(function notify(){
     if (needsEnqueue) {
         needsEnqueue = false;
@@ -10,6 +16,9 @@ const signalWatcher = new Signal.subtle.Watcher(function notify(){
     }
 });
 
+/**
+ * Process pending signals.
+ */
 function processPending() {
     needsEnqueue = true;
     for (const s of signalWatcher.getPending()) {
@@ -18,6 +27,11 @@ function processPending() {
     signalWatcher.watch();
 }
 
+/**
+ * Executes the provided callback as an effect.
+ * @param {React.EffectCallback} callback The effect callback function to execute.
+ * @returns A cleanup function to remove the effect.
+ */
 export function effect(callback: EffectCallback) {
     let cleanup: ReturnType<EffectCallback>;
 
