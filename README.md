@@ -3,7 +3,7 @@
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
 [![Node.js CI](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml/badge.svg)](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml)
-![npm bundle size](https://img.shields.io/bundlephobia/minzip/react-hook-signal)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/react-hook-signal)](https://bundlephobia.com/package/react-hook-signal@latest)
 
 
 > React-Hook-Signal is a tiny library, less than 1kb. It helps you integrate Signal with your React components easily.
