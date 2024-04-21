@@ -1,4 +1,4 @@
-import React, {ComponentType, createElement, JSX, PropsWithChildren, useState} from "react"
+import React, {ComponentType, createElement, FC, JSX, PropsWithChildren, useState} from "react"
 import {useSignal, useSignalEffect} from "./hooks.ts";
 
 /**
@@ -73,14 +73,13 @@ type SignalLambdaNormal = 'signal' | 'lambda' | 'normal'
  * @returns {boolean} True if the value is of the specified type, otherwise false.
  */
 function isOfType<T extends SignalLambdaNormal>(attributeName: string, value: unknown, type: T): value is InferIsOfType<T> {
-    switch (type) {
-        case "signal":
-            return value !== undefined && value !== null && typeof value === 'object' && 'get' in value
-        case "lambda":
-            return !attributeName.endsWith('Handler') && value !== undefined && value !== null && typeof value === 'function'
-        default :
-            return true
+    if (type === "signal") {
+        return value !== void 0 && value !== null && typeof value === "object" && "get" in value;
     }
+    if (type === "lambda") {
+        return !attributeName.endsWith("Handler") && value !== void 0 && value !== null && typeof value === "function";
+    }
+    return true;
 }
 
 /**
@@ -153,6 +152,7 @@ function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key:
  * @template P The type of the props object.
  */
 function filterPropsByType<P>(props: P, type: SignalLambdaNormal): Partial<{ [Key in keyof P]: InferSignalLambdaValue<P[Key], Key>; }> {
+
     return Object.entries(props!).reduce(function mapPropsByType(acc, [key, value]) {
         if (type === 'lambda' && isOfType(key, value, 'lambda')) {
             return {...acc, [key]: value.call(undefined)}
@@ -179,46 +179,21 @@ export function Notifiable<T extends object>(propsWithComponent: {
     component: ComponentType<T>,
     componentRenderStrategy?: 'functionCall' | 'createElement'
 } & NotifiableProps<T>): React.ReactNode {
+
     const {component, componentRenderStrategy, ...props} = propsWithComponent;
+    const normalProps = filterPropsByType(props, "normal");
+    const [signalProps, setSignalProps] = useState(() => filterPropsByType(props, "signal"));
+    useSignalEffect(() => setSignalProps(filterPropsByType(props, "signal")));
+    const lambdaPropsSignal = useSignal(() => filterPropsByType(props, "lambda"));
+    const [lambdaProps, setLambdaProps] = useState(() => lambdaPropsSignal.get());
+    useSignalEffect(() => setLambdaProps(lambdaPropsSignal.get()));
 
-    const normalProps = filterPropsByType<typeof props>(props, 'normal');
+    const mergedProps = { ...normalProps, ...signalProps, ...lambdaProps } as PropsWithChildren<T>;
+    const children = mergedProps && "children" in mergedProps ? mergedProps.children : void 0;
 
-    const [signalProps, setSignalProps] = useState(function initialSignalProps() {
-        return filterPropsByType(props, 'signal')
-    });
-
-    useSignalEffect(function updateSignalProps() {
-        return setSignalProps(filterPropsByType(props, 'signal'))
-    })
-
-    const lambdaPropsSignal = useSignal(function updateLambdaProps() {
-        return filterPropsByType(props, 'lambda');
-    })
-
-    const [lambdaProps, setLambdaProps] = useState(function initialLambdaProps() {
-        return lambdaPropsSignal.get()
-    });
-
-    useSignalEffect(function whenLambdaPropsChanged() {
-        return setLambdaProps(lambdaPropsSignal.get())
-    })
-
-    const mergedProps = ({...normalProps, ...signalProps, ...lambdaProps}) as PropsWithChildren<T>
-
-    const children = (mergedProps && 'children' in mergedProps ? mergedProps.children : undefined);
-
-    if (isFunctionalComponent(component) && componentRenderStrategy === 'functionCall') {
-        return component(mergedProps)
+    if (typeof component === "function" && componentRenderStrategy === "functionCall") {
+        return (component as FC)(mergedProps);
     } else {
-        return createElement(component as ComponentType, mergedProps, children);
+        return createElement(component, mergedProps, children);
     }
-}
-
-/**
- * Checks if a value is a functional component.
- * @param {unknown} value The value to check.
- * @returns {value is React.FC} True if the value is a functional component, otherwise false.
- */
-function isFunctionalComponent(value: unknown): value is React.FC {
-    return value !== undefined && value !== null && typeof value === 'function'
 }
