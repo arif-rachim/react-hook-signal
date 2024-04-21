@@ -4,6 +4,8 @@
 [![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
 [![Node.js CI](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml/badge.svg)](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml)
 
+> React-Hook-Signal is a tiny library, less than 1kb. It helps you integrate Signal with your React components easily.
+
 ### Installation
 ```bash
 npm install react-hook-signal signal-polyfill
@@ -25,14 +27,19 @@ Once adopted, JavaScript will have a native signaling system, referred to as `Si
 
 In React components, re-rendering starts at the component's beginning and extends to the end of the JSX element. Signal usage allows precise re-rendering, boosting performance and simplifying development without the need for memoization or useCallback functions.
 
+## Why choose React-Hook-Signal?
+- It's straightforward: Just React and Native Signal, no extra babel plugin needed.
+- Enjoy full TypeScript support for an improved Developer Experience.
+- Flexibility is key: Opt-in for integration in your React project, seamlessly blending state and signal.
+- It's incredibly lightweight, clocking in at less than 1kb
+
 ## Steps to Integrate Signals with React
 ### STEP 1: Rendering Signal Values:
 
-- Utilize `notify` components provided by react-hook-signal.
-- `notify` components accept standard HTML attributes, Signal, and Lambda for detecting dependency changes.
+- Utilize `notifiable` components provided by react-hook-signal.
+- `notifiable` components accept standard HTML attributes, `Signal`, and `Lambda` for detecting dependency changes.
 
 Example:
-Say we have Global.tsx, holding global signals
 ```tsx
 // Global.tsx
 import {Signal} from "signal-polyfill";
@@ -44,7 +51,7 @@ export const renderCount = new Signal.Computed(() => {
 })
 
 ```
-The fastest way to integrate `Signal` is to use the `notifiable` components.
+The fastest way to integrate these `Signals` is to use the `notifiable` components.
 
 ```tsx
 import {count,renderCount} from "./GlobalSignals.tsx";
@@ -64,7 +71,9 @@ export function App() {
 }
 ```
 
-`notifiable` component attributes is not only capable of accepting the `Signal` type but also can receive `Lambda`,Lambda is a callback that's able to listen for changes in the signals it depends on. Below is an example demonstrating how the code above can be modified using a `Lambda`.
+`notifiable` component attributes is not only capable of accepting the `Signal` type but also can receive `Lambda`
+
+> Lambda is a callback that's able to listen for changes in the signals it depends on. 
 
 ```tsx
 import {count} from "./GlobalSignals.tsx";
@@ -201,5 +210,3 @@ function MyComponent(props:{title:string}){
 
 ### Summary
 The integration of `Signal` into the React application can be done in various ways tailored to the needs and complexity of the app.
-
-

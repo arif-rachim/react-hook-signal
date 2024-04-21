@@ -11,7 +11,7 @@ export default defineConfig({
       name: 'ReactHookSignal',
       fileName: 'react-hook-signal',
     },
-    minify:false,
+    //minify:false,
     rollupOptions: {
       // Optional: Configure Rollup for library building
       external: ['react', 'react-dom','signal-polyfill'], // Externalize React dependencies
