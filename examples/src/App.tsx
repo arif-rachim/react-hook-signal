@@ -1,7 +1,5 @@
 import "./App.css";
-import { signal } from "../../src/signal";
-import { useSignal } from "../../src/react";
-import { computed } from "../../src/computed";
+import { signal, useSignal, computed } from "../../src";
 
 const count = signal(0);
 const plusOne = computed(() => count.value + 1);
