@@ -32,7 +32,7 @@ export function useSignal<T>(target: WithSignal<T>): T {
 
   const getSnapshot = React.useCallback(
     function getSnapshot() {
-      const nextSnapshot = snapshot(target.$$signal);
+      const nextSnapshot = snapshot(target.__INTERNAL_SIGNAL);
 
       return nextSnapshot;
     },
