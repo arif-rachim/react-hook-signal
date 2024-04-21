@@ -3,21 +3,21 @@ import { signal } from "../../src/signal";
 import { useSignal } from "../../src/react";
 import { computed } from "../../src/computed";
 
-const counter = signal(0);
-const plusOne = computed(() => counter.value + 1);
+const count = signal(0);
+const plusOne = computed(() => count.value + 1);
 const plusOneWritable = computed({
-  get: () => counter.value + 1,
+  get: () => count.value + 1,
   set: (val) => {
-    counter.value = val - 1;
+    count.value = val - 1;
   },
 });
 
 function App() {
-  const snapshot = useSignal(counter);
+  const snapshot = useSignal(count);
 
   const renderSignalWithComputed = () => {
     const handleClick = () => {
-      counter.value++;
+      count.value++;
     };
 
     return (
@@ -32,7 +32,7 @@ function App() {
 
   const renderSignalWithWritableComputed = () => {
     const increase = () => {
-      counter.value++;
+      count.value++;
     };
 
     const decrease = () => {
@@ -42,7 +42,7 @@ function App() {
     return (
       <div style={{ margin: "20px 0" }}>
         <h2>Signal With Writable Computed</h2>
-        <p>Signal: {counter.value} </p>
+        <p>Signal: {count.value} </p>
         <p>Computed: {plusOneWritable.value} </p>
         <p>(The computed value will descreased)</p>
 
