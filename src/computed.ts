@@ -48,7 +48,7 @@ export interface WritableComputedOptions<T> {
  * console.log(plusOne.value) // 2
  *
  * plusOne.value = 0;
- * console.log(counter.value) // -1
+ * console.log(count.value) // -1
  * ```
  *
  */
