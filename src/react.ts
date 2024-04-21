@@ -11,14 +11,14 @@ import { type WithSignal, snapshot } from "./signal.ts";
  *
  * @example
  * ```js
- * const counter = signal(0);
+ * const count = signal(0);
 
  * function Counter() {
- *    const snap = useSignal(counter);
+ *    const snap = useSignal(count);
  *    return (
  *      <div>
  *          {snap}
- *          <button onClick={() => ++counter.value}>+1</button>
+ *          <button onClick={() => count.value++}>+1</button>
  *      </div>
  *    )
  * }

@@ -30,7 +30,7 @@ export interface WritableComputedOptions<T> {
  * const count = signal(0);
  * const plusOne = computed(() => count.value + 1);
  *
- * ++counter.value
+ * ++count.value
  * console.log(plusOne.value) // 2
  * ```
  *
@@ -44,7 +44,7 @@ export interface WritableComputedOptions<T> {
  *   },
  * });
  *
- * ++counter.value
+ * ++count.value
  * console.log(plusOne.value) // 2
  *
  * plusOne.value = 0;
