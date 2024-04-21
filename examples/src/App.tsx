@@ -1,5 +1,6 @@
 import "./App.css";
 import { signal, useSignal, computed } from "../../src";
+import Container from "./components/Container";
 
 const count = signal(0);
 const plusOne = computed(() => count.value + 1);
@@ -14,6 +15,8 @@ function App() {
   const snapshot = useSignal(count);
 
   const renderSignalWithComputed = () => {
+    console.log("renderSignalWithComputed rendered!");
+
     const handleClick = () => {
       count.value++;
     };
@@ -29,6 +32,7 @@ function App() {
   };
 
   const renderSignalWithWritableComputed = () => {
+    console.log("renderSignalWithWritableComputed rendered!");
     const increase = () => {
       count.value++;
     };
@@ -56,6 +60,7 @@ function App() {
     <>
       {renderSignalWithComputed()}
       {renderSignalWithWritableComputed()}
+      <Container />
     </>
   );
 }
