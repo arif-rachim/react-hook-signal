@@ -3,6 +3,7 @@ import {notifiable} from "./main.ts";
 import {expect, test} from "vitest";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {useRef, useState} from "react";
+import {useComputed} from "./hooks.ts";
 
 function SimpleSignal(){
     const count = useSignal(0);
@@ -32,8 +33,8 @@ test('items should perform update count correctly',async () => {
 
 function ComputedStyleSignal(){
     const count = useSignal(0);
-    const backgroundColor = useSignal(() => (count.get() % 2 === 0)?'white':'red');
-    const style = useSignal(() => ({background:backgroundColor.get()}))
+    const backgroundColor = useComputed(() => (count.get() % 2 === 0)?'white':'red');
+    const style = useComputed(() => ({background:backgroundColor.get()}))
     return <>
         <button data-testid={'increment'} onClick={() => count.set(count.get() + 1)}>Increment</button>
         <notifiable.div style={style} data-testid={'renderDiv'}/>
@@ -66,7 +67,7 @@ test('items should perform computed on style correctly',async () => {
 
 function ComputedStyleEffect(){
     const count = useSignal(0);
-    const backgroundColor = useSignal(() => (count.get() % 2 === 0)?'white':'red');
+    const backgroundColor = useComputed(() => (count.get() % 2 === 0)?'white':'red');
     return <>
         <button data-testid={'increment'} onClick={() => count.set(count.get() + 1)}>Increment</button>
         <notifiable.div style={() => {

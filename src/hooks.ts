@@ -20,23 +20,33 @@ export function useSignalEffect(callback: React.EffectCallback) {
     }, [])
 }
 
-type SignalType<T> = T extends Lambda<infer R> ? Signal.Computed<R> : Signal.State<T>
 type OptionType<T> = T extends Lambda<infer R> ? R : T
 
 /**
  * Creates a signal with initial value and options.
- * @param param The initial value or function to derive the value from.
+ * @param param The initial value.
  * @param options Options for creating the signal.
  * @returns The created signal.
  */
-export function useSignal<T>(param:T, options: Signal.Options<OptionType<T>> = {}):SignalType<T>{
+export function useSignal<T>(param:T, options: Signal.Options<OptionType<T>> = {}):Signal.State<T>{
 
     function initialState(){
-        if(param !== null && param !== undefined && typeof param === 'function'){
-            return new Signal.Computed(param as Lambda<unknown>,options as Signal.Options<unknown>);
-        }
         return new Signal.State(param,options as Signal.Options<T>);
     }
     const [state] = useState<ReturnType<typeof initialState>>(initialState);
-    return state as SignalType<T>
+    return state
+}
+
+/**
+ * Creates a signal with initial value and options.
+ * @param param The lambda function to derive the value from.
+ * @param options Options for creating the signal.
+ * @returns The created signal.
+ */
+export function useComputed<T>(param:Lambda<T>, options: Signal.Options<OptionType<T>> = {}):Signal.Computed<T>{
+    function initialState(){
+        return new Signal.Computed(param as Lambda<T>,options as Signal.Options<T>);
+    }
+    const [state] = useState<Signal.Computed<T>>(initialState);
+    return state
 }

@@ -132,14 +132,15 @@ export function App() {
 
 ### STEP 3: Creating Signals in React Components:
 
-`useSignal` is a hook used to generate `Signal` that are tied to the lifespan of a component. It returns two types of `Signals` : `Signal.State` and `Signal.Computed`. `Signal.State` is a signal whose value can be MODIFIED after it is initially created. On the other hand, `Signal.Computed` represents a computed signal whose value cannot be modified directly, as it is the result of a computation.
+- `useSignal` is a hook that creates `Signal.State`, and `useComputed` is a hook that creates `Signal.Computed`.
+- These hooks generate signals that are linked to the component's lifecycle.
 
 - To create a `Signal.State`, simply provide a constant value as a parameter when calling `useSignal`. 
 - To create a `Signal.Computed`,simply provide  a `Lambda` that returns the result of a dynamic computation.
 
 Example :
 ```tsx
-import {notifiable, useSignal} from "react-hook-signal";
+import {notifiable, useSignal, useComputed} from "react-hook-signal";
 
 export function App() {
     
@@ -147,10 +148,10 @@ export function App() {
     const count = useSignal(0);
     
     // creating Signal.Computed countString
-    const countString = useSignal(() => (count.get() * 2).toString());
+    const countString = useComputed(() => (count.get() * 2).toString());
     
     // creating Signal.Computed style
-    const style = useSignal(() => {
+    const style = useComputed(() => {
         const isEven = count.get() % 2 === 0;
         return {
             background: isEven ? 'white' : 'black',
@@ -159,7 +160,7 @@ export function App() {
     })
 
     // creating Signal.Computed text
-    const text = useSignal(() => {
+    const text = useComputed(() => {
         const isWhite = style.get().background === 'white'
         return <div>{isWhite ? 'Background is White' : 'Background is Black'}</div>
     })

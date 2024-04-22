@@ -2,7 +2,7 @@ import {Notifiable, notifiable} from "./components.ts";
 import {expect, test} from "vitest";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {Signal} from "signal-polyfill";
-import {useSignal} from "./hooks.ts";
+import {useComputed, useSignal} from "./hooks.ts";
 
 function SimpleNotifiable(){
     return <>
@@ -134,8 +134,8 @@ test('It should test Notifiable component properly',async () => {
 
 function NotifyButtonClickEvent(){
     const count = useSignal(0);
-    const countDouble = useSignal(() => count.get() * 2);
-    const isMatch = useSignal(() => {
+    const countDouble = useComputed(() => count.get() * 2);
+    const isMatch = useComputed(() => {
         return countDouble.get() === count.get() * 2
     })
 

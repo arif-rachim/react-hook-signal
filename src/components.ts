@@ -1,5 +1,5 @@
 import React, {ComponentType, createElement, FC, JSX, PropsWithChildren, useState} from "react"
-import {useSignal, useSignalEffect} from "./hooks.ts";
+import {useComputed, useSignalEffect} from "./hooks.ts";
 
 /**
  * Type representing a function returning a value.
@@ -178,7 +178,7 @@ export function Notifiable<T extends object>(propsWithComponent: {
     const normalProps = filterPropsByType(props, "normal");
     const [signalProps, setSignalProps] = useState(() => filterPropsByType(props, "signal"));
     useSignalEffect(() => setSignalProps(filterPropsByType(props, "signal")));
-    const lambdaPropsSignal = useSignal(() => filterPropsByType(props, "lambda"));
+    const lambdaPropsSignal = useComputed(() => filterPropsByType(props, "lambda"));
     const [lambdaProps, setLambdaProps] = useState(() => lambdaPropsSignal.get());
     useSignalEffect(() => setLambdaProps(lambdaPropsSignal.get()));
 
