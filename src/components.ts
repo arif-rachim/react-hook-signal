@@ -8,12 +8,6 @@ import {useSignal, useSignalEffect} from "./hooks.ts";
 export type Lambda<T> = () => T;
 
 /**
- * Type ensuring that the value is not undefined.
- * @template T The type to ensure is not undefined.
- */
-export type Definite<T> = T extends undefined ? never : T;
-
-/**
  * Type representing a value that can be a lambda, a signal, or a normal value.
  * @template T The type of the value.
  */
@@ -24,7 +18,7 @@ export type Computable<T> = Lambda<T> | AnySignal<T> | T;
  * @template T The type of the props object.
  */
 export type ComputableProps<T> = {
-    [K in keyof T]: K extends `on${string}` ? T[K] : K extends 'key' ? T[K] : Computable<Definite<T[K]>>;
+    [K in keyof T]: K extends `on${string}` ? T[K] : K extends 'key' ? T[K] : Computable<T[K]>;
 };
 
 /**

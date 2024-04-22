@@ -6,6 +6,9 @@
   "files": [
     "dist"
   ],
+  "workspaces": [
+    "examples/*"
+  ],
   "main": "./dist/react-hook-signal.umd.cjs",
   "module": "./dist/react-hook-signal.js",
   "types": "./dist/index.d.ts",
