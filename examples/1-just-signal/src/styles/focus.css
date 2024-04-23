@@ -1,0 +1,5 @@
+*:focus {
+    border: 1px solid rgba(148, 216, 246, 1);
+    background-color: rgba(148, 216, 246, 0.1);
+    outline: none;
+}

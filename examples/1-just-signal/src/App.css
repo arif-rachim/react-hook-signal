@@ -1,6 +1,25 @@
+@import "styles/background.css";
+@import "styles/border.css";
+@import "styles/flex.css";
+@import "styles/height.css";
+@import "styles/overflow.css";
+@import "styles/padding.css";
+@import "styles/round.css";
+@import "styles/table.css";
+@import "styles/text.css";
+@import "styles/width.css";
+@import "styles/focus.css";
+@import "styles/buttons.css";
+@import "styles/margin.css";
+@import "styles/position.css";
+@import "styles/shadows.css";
+
 #root {
-  width: 100%;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #F6F6F6;
 }
+
+

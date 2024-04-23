@@ -1,0 +1,22 @@
+.text-red {
+    color: red;
+}
+
+.font-medium {
+    font-weight: 600;
+}
+
+.text-xl {
+    font-size: 18px;
+    line-height: 20px;
+}
+
+.text-2xl {
+    font-size: 23px;
+    line-height: 25px;
+}
+
+.text-3xl {
+    font-size: 28px;
+    line-height: 30px;
+}

@@ -1,4 +1,4 @@
-export function formatDateForInputDate(date?:Date) {
+export function formatDateForInputDate(date?: Date) {
     // Check if the input is a valid Date object
     if (!(date instanceof Date) || isNaN(date.getTime())) {
         return ''
