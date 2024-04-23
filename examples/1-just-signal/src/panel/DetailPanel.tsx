@@ -3,17 +3,20 @@ import {notifiable, useSignal} from "../../../../src/main.ts";
 import {formatDateForInputDate} from "../utils/formatDateForInputData.ts";
 import {useComputed} from "../../../../src/hooks.ts";
 import {Signal} from "signal-polyfill";
+import {ReactNode, useRef} from "react";
 
-export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
+export function DetailPanel(props: { todo: Signal.State<Todo | undefined>,disabled:Signal.State<boolean>,onChange:(todo:Todo) => void }) {
 
     const todo = props.todo;
+    const isDisabled = props.disabled;
+    const propsRef = useRef(props);
+
     const dueDate = useComputed(() => formatDateForInputDate(todo.get()?.dueDate))
     const priority = useComputed(() => todo.get()?.priority ?? '');
     const title = useComputed(() => todo.get()?.title ?? '');
     const description = useComputed(() => todo.get()?.description ?? '');
 
     const userHasTriedToSubmit = useSignal(false);
-    //const isEditMode = useSignal(false);
 
     const dueDateError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.dueDate) ? 'Due Date required' : '' : '');
     const priorityError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.priority) ? 'Priority required' : '' : '');
@@ -25,6 +28,26 @@ export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
     const titleClassName = useComputed(() => `rounded-5 p-5 border${isEmpty(titleError.get()) ? '' : '-red'}`);
     const descriptionClassName = useComputed(() => `rounded-5 p-5 border${isEmpty(descriptionError.get()) ? '' : '-red'} h-80`);
 
+    const buttons = useComputed(() => {
+        const isDisabledValue = isDisabled.get();
+        const result:ReactNode[] = [];
+        if(isDisabledValue){
+            result.push(<button type={'button'} className={'flex p-5 bg-darken-1 border rounded-5 w-100 justify-center font-medium'} onClick={() =>{
+                isDisabled.set(false);
+            }}>Edit</button>)
+        }
+        if(!isDisabledValue){
+            result.push(<button type={'button'} className={'flex p-5 bg-darken-1 border rounded-5 w-100 justify-center font-medium'} onClick={() =>{
+                propsRef.current.onChange(todo.get()!);
+                isDisabled.set(true);
+            }}>Save</button>)
+            result.push(<button type={'button'} className={'flex p-5 bg-darken-1 border rounded-5 w-100 justify-center font-medium'} onClick={() =>{
+                isDisabled.set(true);
+            }}>Cancel</button>)
+
+        }
+        return result;
+    })
     return (
         <>
             <form className={"flex col gap-10"} onSubmit={(event) => {
@@ -38,6 +61,7 @@ export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
                         Due Date :
                         <notifiable.input className={dueDateClassName} type={'date'}
                                           value={dueDate}
+                                          disabled={isDisabled}
                                           onChange={(e) => {
                                               todo.set({...todo.get()!, dueDate: new Date(e.target.value)})
                                           }}
@@ -50,6 +74,7 @@ export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
                         Priority :
                         <notifiable.select className={priorityClassName}
                                            value={priority}
+                                           disabled={isDisabled}
                                            onChange={(e) => todo.set({
                                                ...todo.get()!,
                                                priority: e.target.value as Todo["priority"]
@@ -69,6 +94,7 @@ export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
                     Title :
                     <notifiable.input className={titleClassName} type={'text'}
                                       value={title}
+                                      disabled={isDisabled}
                                       onChange={(e) => todo.set({...todo.get()!, title: e.target.value})}
                     />
                     <notifiable.div className={'flex col align-end text-red'}>
@@ -79,6 +105,7 @@ export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
                     Description :
                     <notifiable.textarea className={descriptionClassName}
                                          value={description}
+                                         disabled={isDisabled}
                                          onChange={e => todo.set({...todo.get()!, description: e.target.value})}
                     />
 
@@ -86,12 +113,9 @@ export function DetailPanel(props: { todo: Signal.State<Todo | undefined> }) {
                         {descriptionError}
                     </notifiable.div>
                 </label>
-                <div className={'flex row justify-end gap-10'}>
-                    <button className={'flex p-5 bg-darken-1 border rounded-5 w-100 justify-center font-medium'}>Edit
-                    </button>
-                    <button className={'flex p-5 bg-darken-1 border rounded-5 w-100 justify-center font-medium'}>Save
-                    </button>
-                </div>
+                <notifiable.div className={'flex row justify-end gap-10'}>
+                    {buttons}
+                </notifiable.div>
             </form>
         </>
     )

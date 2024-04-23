@@ -10,7 +10,7 @@ import {useShowModal} from "./useShowModal.ts";
 export default function ListPanel(props: {
     todos: Signal.State<Todo[]>,
     selectedTodo: Signal.State<Todo | undefined>,
-    disabled: Signal.State<boolean>
+    disabled: AnySignal<boolean>
 }) {
     const {todos, disabled} = props;
 

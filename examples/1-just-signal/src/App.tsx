@@ -3,18 +3,24 @@ import {DetailPanel} from "./panel/DetailPanel.tsx";
 import ListPanel from "./panel/ListPanel.tsx";
 import {Signal} from "signal-polyfill";
 import {Todo} from "./model/Todo.ts";
-import {useSignal} from "../../../src/hooks.ts";
+import {useComputed, useSignal} from "../../../src/hooks.ts";
 import {ModalProvider} from "./panel/ModalProvider.tsx";
 
 function App() {
     const todos = useSignal<Todo[]>([]);
     const selectedTodo = useSignal<Todo | undefined>(undefined)
-    const disableListPanel = useSignal<boolean>(false);
+    const disableDetailPanel = useSignal<boolean>(true);
+    const disableListPanel = useComputed(() => !disableDetailPanel.get())
     populateTodosMockData(todos);
     return (
         <div className={'flex col gap-30 p-20 overflow-auto grow'}>
             <ModalProvider>
-                <DetailPanel todo={selectedTodo}/>
+                <DetailPanel todo={selectedTodo} disabled={disableDetailPanel} onChange={(todo:Todo) => {
+                    const todosValue = todos.get()
+                    const index = todosValue.findIndex(i => i.id === todo.id);
+                    todosValue.splice(index, 1,todo);
+                    todos.set([...todosValue])
+                }}/>
                 <ListPanel todos={todos} disabled={disableListPanel} selectedTodo={selectedTodo}/>
             </ModalProvider>
         </div>
