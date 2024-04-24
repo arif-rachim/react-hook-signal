@@ -15,3 +15,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
 }
+
+.bg-gradient{
+    background: linear-gradient(180deg,#FEFEFE,#F3F2F1);
+}

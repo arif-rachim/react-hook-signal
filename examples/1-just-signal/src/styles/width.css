@@ -27,6 +27,18 @@
     width: 100%
 }
 
+.w-50 {
+    width: 50px;
+}
+
+.w-60 {
+    width: 60px;
+}
+
+.w-70 {
+    width: 70px;
+}
+
 .w-80 {
     width: 80px;
 }

@@ -3,10 +3,18 @@
     border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+.border-none {
+    border: 1px solid rgba(255, 255, 255, 0);
+}
+
 .border-red {
     border: 1px solid red;
 }
 
 .border-b {
     border-bottom: 1px solid rgba(0, 0, 0, 0.1)
+}
+
+.border-r {
+    border-right: 1px solid rgba(0, 0, 0, 0.1)
 }

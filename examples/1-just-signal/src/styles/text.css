@@ -20,3 +20,16 @@
     font-size: 28px;
     line-height: 30px;
 }
+
+
+.text-4xl {
+    font-size: 33px;
+    line-height: 35px;
+}
+.text-5xl {
+    font-size: 38px;
+    line-height: 40px;
+}
+.text-nowrap {
+    white-space: nowrap;
+}

@@ -1,11 +1,11 @@
 import {useComputed, useSignal} from "../../../../src/hooks.ts";
-import {createContext, CSSProperties, PropsWithChildren, useEffect, useRef} from "react";
+import {createContext, CSSProperties, PropsWithChildren, useEffect, useRef,type ReactNode} from "react";
 import {delay} from "../utils/delay.ts";
 import {notifiable} from "../../../../src/components.ts";
 import {guid} from "../utils/guid.ts";
 
 function ModalPanel(props: {
-    panel: React.ReactNode,
+    panel: ReactNode,
     beforeHide: (callback: () => Promise<void>) => () => void
 }) {
     const style = useSignal<CSSProperties>({top: '-100%', transition: 'all 300ms ease-in-out'})
@@ -29,13 +29,13 @@ function ModalPanel(props: {
     </notifiable.div>
 }
 
-export type ShowDialogType = <T>(factory: (closePanel: (value: T) => void) => React.ReactNode) => Promise<T>
+export type ShowDialogType = <T>(factory: (closePanel: (value: T) => void) => ReactNode) => Promise<T>
 export const ModalContext = createContext<ShowDialogType | null>(null)
 
 export function ModalProvider(props: PropsWithChildren) {
 
     const panels = useSignal<{
-        node: React.ReactNode,
+        node: ReactNode,
         id: string,
         hideCallback?: () => Promise<void>,
     }[]>([]);
@@ -55,11 +55,11 @@ export function ModalProvider(props: PropsWithChildren) {
         return `${isEmpty ? 'none' : 'flex'} w-full h-full overflow-auto absolute top-0 left-0`
     })
 
-    function showDialog<T>(panelBuilder: (resolver: (value: T) => void) => React.ReactNode) {
+    function showDialog<T>(panelBuilder: (resolver: (value: T) => void) => ReactNode) {
         return new Promise<T>((resolve) => {
             const id = guid();
 
-            const node: React.ReactNode = panelBuilder((value: T) => {
+            const node: ReactNode = panelBuilder((value: T) => {
                 const indexToRemove = panels.get().findIndex(i => i.id === id);
                 const p = panels.get()[indexToRemove];
                 if (p.hideCallback) {
