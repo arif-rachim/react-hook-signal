@@ -1,5 +1,5 @@
 import {useComputed, useSignal} from "../../../../src/hooks.ts";
-import {createContext, CSSProperties, PropsWithChildren, useEffect, useRef,type ReactNode} from "react";
+import {createContext, CSSProperties, PropsWithChildren, type ReactNode, useEffect, useRef} from "react";
 import {delay} from "../utils/delay.ts";
 import {notifiable} from "../../../../src/components.ts";
 import {guid} from "../utils/guid.ts";
@@ -8,7 +8,7 @@ function ModalPanel(props: {
     panel: ReactNode,
     beforeHide: (callback: () => Promise<void>) => () => void
 }) {
-    const style = useSignal<CSSProperties>({top: '-100%', transition: 'all 300ms ease-in-out'})
+    const style = useSignal<CSSProperties>({transform:'scale(0.5)',opacity:0, transition: 'all 300ms ease-in-out'})
     const {panel} = props;
     const propsRef = useRef({...props, style});
     propsRef.current = {...props, style};
@@ -16,14 +16,14 @@ function ModalPanel(props: {
         const {style, beforeHide} = propsRef.current;
         (async () => {
             await delay(10);
-            style.set({...style.get(), top: 0})
+            style.set({...style.get(), transform:'scale(1)',opacity:1})
         })();
         return beforeHide(async () => {
-            style.set({...style.get(), top: '-100%'});
+            style.set({...style.get(), transform:'scale(0.5)',opacity:0});
             await delay(300);
         })
     }, [])
-    return <notifiable.div className={'flex col overflow-auto w-full h-full align-center absolute top-0 left-0'}
+    return <notifiable.div className={'flex col overflow-auto w-full h-full  align-center justify-center absolute top-0 left-0'}
                            style={style}>
         {panel}
     </notifiable.div>
@@ -84,7 +84,7 @@ export function ModalProvider(props: PropsWithChildren) {
     return (
         <ModalContext.Provider value={showDialog}>
             {props.children}
-            <notifiable.div className={modalContainerClassName}>
+            <notifiable.div className={modalContainerClassName} >
                 {panelsElement}
             </notifiable.div>
         </ModalContext.Provider>

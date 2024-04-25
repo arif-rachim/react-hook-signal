@@ -1,24 +1,20 @@
 import {Todo} from "../../../model/Todo.ts";
-import {MdQuestionMark} from "react-icons/md";
 
 export const deleteCancellationConfirmation = (todo: Todo) => (closePanel: (params: 'yes' | 'no') => void) => {
-    return <div className={'bg-gray w-1-3 p-10 shadow rounded-bl-10 rounded-br-10 flex col gap-20'}>
+    return <div className={'bg-gray w-350 p-20 shadow-xl border rounded-10 rounded-br-10 flex col gap-10'}>
         <div className={'flex col gap-10 bg-gradient p-20 rounded-10'}>
-            <div className={'flex col text-xl'}>
+            <div className={'flex col font-medium'}>
                 Are you sure you would like to delete :
             </div>
             <div className={'flex row gap-20'}>
-                <div className={'mt-10'}>
-                    <MdQuestionMark className={"text-5xl"}/>
-                </div>
-                <div className={'flex col grow'}>
+                <div className={'flex col grow gap-10'}>
                     <label className={'flex col'}>
-                        Title :
+                        <div className={'font-medium'}>Title :</div>
                         <input className={'flex col border p-5 rounded-5'} value={todo.title} disabled={true}/>
                     </label>
                     <label className={'flex col'}>
-                        Description :
-                        <textarea className={'flex col border p-5 rounded-5 h-60'} value={todo.description}
+                        <div className={'font-medium'}>Description :</div>
+                        <textarea className={'flex col border p-5 rounded-5 h-80'} value={todo.description}
                                   disabled={true}/>
                     </label>
                 </div>

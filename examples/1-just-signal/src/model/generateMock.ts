@@ -1,6 +1,8 @@
 import {Signal} from "signal-polyfill";
 import {Todo} from "./Todo.ts";
 import {guid} from "../utils/guid.ts";
+import {ddMMMyyyy} from "../utils/dateFormat.ts";
+import {dateAdd} from "../utils/dateAdd.ts";
 
 const mockTitle:string[] = [
     "Complete report for Q1 sales analysis",
@@ -820,21 +822,29 @@ export function populateTodosMockData(todos: Signal.State<Todo[]>) {
     const now = new Date();
     const mockTodos = mockTitle.map((title: string) => {
 
-        const createdDate = new Date(now.getFullYear(), now.getMonth(), (now.getDate() - Math.round(Math.random() * 1000)) );
-        const calculationDueDate = new Date(createdDate.getFullYear(), createdDate.getMonth(), createdDate.getDate() + (Math.round(Math.random() * 1000)));
+        const createdDate = dateAdd(now,-Math.round(Math.random() * 1000));
+        const calculationDueDate = dateAdd(createdDate,Math.round(Math.random() * 1000));
         const completionDate = calculationDueDate < now ? calculationDueDate : undefined;
-        const dueDate = completionDate ? new Date(completionDate.getFullYear(),completionDate.getMonth(),completionDate.getDate() - Math.round(Math.random() * 10) ) : undefined;
-        return ({
+        const dueDate = dateAdd(calculationDueDate,-Math.round(Math.random() * 10))
+        const pendingOrOnGoing = ['Pending','On Going'][Math.round(Math.random())];
+        const status = (completionDate !== undefined ? 'Completed' : pendingOrOnGoing) as Todo['status'];
+        const priority = ['High','Medium','Low'][Math.round(Math.random() * 2)] as Todo['priority'];
+        const progress = status === 'Completed' ? 100 : status === 'Pending' ? 0 : Math.round(Math.random() * 100);
+
+
+        const todo:Todo = {
             completionDate: completionDate,
             createdTime: createdDate,
-            description: Math.round(Math.random() * 10000000).toString(),
+            description: `To complete ${title.toLowerCase()} by ${ddMMMyyyy(dueDate)}`,
             dueDate: dueDate,
             id: guid(),
-            lastUpdate: new Date(),
-            priority: 'High',
-            status: 'Pending',
-            title: title
-        }) as Todo
+            lastUpdate: now,
+            priority: priority,
+            status: status,
+            title: title,
+            progress : progress
+        };
+        return todo;
     })
 
     todos.set(mockTodos);

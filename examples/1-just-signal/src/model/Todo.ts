@@ -6,6 +6,7 @@ export interface Todo {
     dueDate: Date,
     lastUpdate: Date,
     priority: 'High' | 'Medium' | 'Low',
-    completionDate: Date,
+    progress : number,
+    completionDate: Date | undefined,
     createdTime: Date,
 }

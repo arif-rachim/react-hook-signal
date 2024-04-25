@@ -1,6 +1,11 @@
 .text-red {
-    color: red;
+    color: crimson;
 }
+
+.text-yellow {
+    color: orange;
+}
+
 
 .font-medium {
     font-weight: 600;
@@ -30,6 +35,25 @@
     font-size: 38px;
     line-height: 40px;
 }
+.text-6xl {
+    font-size: 43px;
+    line-height: 45px;
+}
+
+.text-7xl {
+    font-size: 48px;
+    line-height: 50px;
+}
+
 .text-nowrap {
     white-space: nowrap;
+}
+
+.text-ellipsis{
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-uppercase{
+    text-transform: uppercase;
 }

@@ -1,19 +1,17 @@
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable} from "../../../../../src/components.ts";
 import {Todo} from "../../model/Todo.ts";
-import {useShowModal} from "../useShowModal.ts";
 import {useComputed} from "../../../../../src/hooks.ts";
-import {disableNotification} from "./notification/disableNotification.tsx";
 
 export function Paging(props: {
-    currentPage: Signal.State<number>,
+    currentPage: AnySignal<number>,
     totalRowPerPage: Signal.State<number>,
     data: AnySignal<Todo[]>
-    disabled: AnySignal<boolean>
+    disabled: AnySignal<boolean>,
+    onPageChange: (page: number) => void
 }) {
 
-    const {currentPage, totalRowPerPage, data, disabled} = props;
-    const showModal = useShowModal();
+    const {currentPage, totalRowPerPage, data, onPageChange} = props;
     const buttons = useComputed(() => {
         const currentPageValue = currentPage.get();
         const totalRowPerPageValue = totalRowPerPage.get();
@@ -23,16 +21,9 @@ export function Paging(props: {
         return generatePaginationArray(currentPageValue, totalPages).map((page, index) => {
             const isCurrentPage = page === currentPageValue;
             return <div key={index} className={`button-circle ${isCurrentPage ? 'bg-selected' : 'bg-darken-1'}`}
-                        onClick={async () => {
-                            if (disabled.get()) {
-                                await showModal<void>(disableNotification)
-                                return;
-                            }
-                            currentPage.set(page);
-                        }}>{page}</div>
+                        onClick={async () => onPageChange(page)}>{page}</div>
         })
     })
-
 
     return <div className={'flex justify-center'}>
         <notifiable.div className={'flex row gap-5'}>{buttons}</notifiable.div>
