@@ -8,11 +8,14 @@ type VisibleProps = {
 }
 
 export function Visible(props: PropsWithChildren<VisibleProps>) {
-    const [visible, setVisible] = useState(props[`on${capUp(screenSize.get())}`] === true);
+    const screenSizeValue = screenSize.get();
+    const key = `on${capUp(screenSizeValue)}` as keyof typeof props;
+    const [visible, setVisible] = useState(props[key] === true);
 
     useSignalEffect(() => {
         const screenSizeValue = screenSize.get();
-        setVisible(props[`on${capUp(screenSizeValue)}`] === true)
+        const key = `on${capUp(screenSizeValue)}` as keyof typeof props;
+        setVisible(props[key] === true)
     })
     if (visible) {
         return props.children;

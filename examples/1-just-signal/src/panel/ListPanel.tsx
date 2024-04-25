@@ -31,7 +31,8 @@ export default function ListPanel(props: {
             for (const key_ of Object.keys(filter)) {
                 const key = key_ as keyof Todo;
                 if (!isEmpty(filter[key])) {
-                    const isMatch = todo?.[key]?.toString()?.toUpperCase()?.indexOf(filter?.[key]?.toUpperCase() ?? '') >= 0;
+                    const stringValue = todo?.[key]?.toString()?.toUpperCase() ?? '';
+                    const isMatch = stringValue.indexOf(filter?.[key]?.toUpperCase() ?? '') >= 0
                     if (!isMatch) {
                         return false;
                     }

@@ -1,7 +1,7 @@
 import {Signal} from "signal-polyfill";
 import {Todo} from "./Todo.ts";
 import {guid} from "../utils/guid.ts";
-import {ddMMMyyyy} from "../utils/dateFormat.ts";
+import {format_ddMMMyyyy} from "../utils/dateFormat.ts";
 import {dateAdd} from "../utils/dateAdd.ts";
 
 const mockTitle:string[] = [
@@ -835,7 +835,7 @@ export function populateTodosMockData(todos: Signal.State<Todo[]>) {
         const todo:Todo = {
             completionDate: completionDate,
             createdTime: createdDate,
-            description: `To complete ${title.toLowerCase()} by ${ddMMMyyyy(dueDate)}`,
+            description: `To complete ${title.toLowerCase()} by ${format_ddMMMyyyy(dueDate)}`,
             dueDate: dueDate,
             id: guid(),
             lastUpdate: now,

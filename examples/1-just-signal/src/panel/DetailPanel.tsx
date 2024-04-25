@@ -7,7 +7,7 @@ import {ReactNode} from "react";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {MdAdd, MdCancel, MdDelete, MdDirectionsRun, MdEdit, MdSave} from "react-icons/md";
 import {SortFilter} from "../App.tsx";
-import {yyyyMMdd} from "../utils/dateFormat.ts";
+import {format_yyyyMMdd} from "../utils/dateFormat.ts";
 import {useShowModal} from "./useShowModal.ts";
 
 export function DetailPanel(props: {
@@ -20,7 +20,7 @@ export function DetailPanel(props: {
 }) {
 
     const {todo, disabled, onChange} = props;
-    const dueDate = useComputed(() => yyyyMMdd(todo.get()?.dueDate));
+    const dueDate = useComputed(() => format_yyyyMMdd(todo.get()?.dueDate));
     const priority = useComputed(() => todo.get()?.priority ?? '');
     const title = useComputed(() => todo.get()?.title ?? '');
     const status = useComputed(() => todo.get()?.status ?? '');

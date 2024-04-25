@@ -3,7 +3,7 @@ import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable} from "../../../../../src/components.ts";
 import {useShowModal} from "../useShowModal.ts";
 import {useComputed, useSignal} from "../../../../../src/hooks.ts";
-import {ddMMMyyyy} from "../../utils/dateFormat.ts";
+import {format_yyyyMMdd} from "../../utils/dateFormat.ts";
 import {MdDelete, MdEdit} from "react-icons/md";
 import {ResizeableListener} from "./ResizeableListener.tsx";
 import {disableNotification} from "./notification/disableNotification.tsx";
@@ -95,7 +95,7 @@ export function RowRenderer(props: {
         <Visible onDesktop={true} onTablet={true}>
             <ResizeableListener className={'flex col p-5 border-r overflow-hidden text-nowrap align-center'}
                                 cellsWidth={cellsWidth}
-                                colId={'dueDate'}>{ddMMMyyyy(todo.dueDate)}</ResizeableListener>
+                                colId={'dueDate'}>{format_yyyyMMdd(todo.dueDate)}</ResizeableListener>
         </Visible>
         <ResizeableListener className={'flex col p-5 border-r'} cellsWidth={cellsWidth}
                             colId={'priority'}>{todo.priority}</ResizeableListener>
