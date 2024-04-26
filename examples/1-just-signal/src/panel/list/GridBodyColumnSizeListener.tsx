@@ -4,7 +4,7 @@ import {Todo} from "../../model/Todo.ts";
 import {useComputed} from "../../../../../src/hooks.ts";
 import {notifiable} from "../../../../../src/components.ts";
 
-export function ResizeableListener(props: PropsWithChildren<{
+export function GridBodyColumnSizeListener(props: PropsWithChildren<{
     className: string,
     cellsWidth: Signal.State<Partial<{ [K in keyof Todo]: number }>>,
     colId: keyof Todo | string,

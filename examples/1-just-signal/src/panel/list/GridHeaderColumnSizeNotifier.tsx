@@ -2,7 +2,7 @@ import {CSSProperties, PropsWithChildren, useEffect, useRef} from "react";
 import {Signal} from "signal-polyfill";
 import {Todo} from "../../model/Todo.ts";
 
-export function ResizeableProvider(props: PropsWithChildren<{
+export function GridHeaderColumnSizeNotifier(props: PropsWithChildren<{
     className: string,
     cellsWidth: Signal.State<Partial<{ [K in keyof Todo]: number }>>,
     colId: keyof Todo | string,

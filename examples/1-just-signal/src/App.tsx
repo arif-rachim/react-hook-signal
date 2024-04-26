@@ -1,6 +1,6 @@
 import './App.css'
-import {DetailPanel} from "./panel/DetailPanel.tsx";
-import ListPanel from "./panel/ListPanel.tsx";
+import {TaskDetailsPanel} from "./panel/TaskDetailsPanel.tsx";
+import TaskListPanel from "./panel/TaskListPanel.tsx";
 import {Todo} from "./model/Todo.ts";
 import {useComputed, useSignal} from "../../../src/hooks.ts";
 import {guid} from "./utils/guid.ts";
@@ -51,14 +51,14 @@ function App() {
     }
     return (
         <div className={'flex col gap-10 p-10 overflow-auto grow'}>
-                <DetailPanel todo={selectedTodo} disabled={disableDetailPanel} onChange={onTodoChanged} sortFilter={sortFilter}
-                             onEdit={() => onEditTodo(selectedTodo.get()!)}
-                             onDelete={() => onDeleteTodo(selectedTodo.get()!)}
+                <TaskDetailsPanel todo={selectedTodo} disabled={disableDetailPanel} onChange={onTodoChanged} sortFilter={sortFilter}
+                                  onEdit={() => onEditTodo(selectedTodo.get()!)}
+                                  onDelete={() => onDeleteTodo(selectedTodo.get()!)}
                 />
-                <ListPanel todos={todos} disabled={disableListPanel} selectedTodo={selectedTodo}
-                           onEdit={onEditTodo}
-                           onDelete={onDeleteTodo}
-                           sortFilter={sortFilter}/>
+                <TaskListPanel todos={todos} disabled={disableListPanel} selectedTodo={selectedTodo}
+                               onEdit={onEditTodo}
+                               onDelete={onDeleteTodo}
+                               sortFilter={sortFilter}/>
         </div>
     )
 }

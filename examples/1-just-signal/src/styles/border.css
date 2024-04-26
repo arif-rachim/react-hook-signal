@@ -12,9 +12,17 @@
 }
 
 .border-b {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1)
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .border-r {
-    border-right: 1px solid rgba(0, 0, 0, 0.1)
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.border-t{
+    border-top : 1px solid rgba(0,0,0,0.1);
+}
+
+.border-l{
+    border-left: 1px solid rgba(0,0,0,0.1);
 }

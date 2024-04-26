@@ -9,8 +9,21 @@ import {MdAdd, MdCancel, MdDelete, MdDirectionsRun, MdEdit, MdSave} from "react-
 import {SortFilter} from "../App.tsx";
 import {format_yyyyMMdd} from "../utils/dateFormat.ts";
 import {useShowModal} from "./useShowModal.ts";
+import {ProgressUpdateModal} from "./detail/ProgressUpdateModal.tsx";
 
-export function DetailPanel(props: {
+/**
+ * Renders a task details panel component for a Todo item.
+ *
+ * @param {Object} props - The component props.
+ * @param {Signal.State<Todo | undefined>} props.todo - The current Todo item.
+ * @param {Signal.State<boolean>} props.disabled - Indicates whether the form is disabled.
+ * @param {(todo: Todo) => void} props.onChange - Callback function to update the Todo item.
+ * @param {Signal.State<SortFilter>} props.sortFilter - The current sort filter.
+ * @param {() => void} props.onEdit - Callback function to edit the Todo item.
+ * @param {() => void} props.onDelete - Callback function to delete the Todo item.
+ * @returns {JSX.Element} - The rendered task details panel.
+ */
+export function TaskDetailsPanel(props: {
     todo: Signal.State<Todo | undefined>,
     disabled: Signal.State<boolean>,
     onChange: (todo: Todo) => void,
@@ -54,7 +67,7 @@ export function DetailPanel(props: {
     const onUpdateProgress = async () => {
         const todoValue = todo.get()!;
         const progress = await showModal<number>(closePanel => {
-            return <UpdateProgressPanel closePanel={closePanel} todo={todoValue}/>
+            return <ProgressUpdateModal closePanel={closePanel} todo={todoValue}/>
         })
         onChange({...todoValue,progress,status:progress === 100 ? 'Completed' : progress === 0 ? 'Pending' : 'On Going'})
     }
@@ -197,22 +210,4 @@ export function DetailPanel(props: {
             </form>
         </>
 )
-}
-
-
-function UpdateProgressPanel(props: { closePanel: (param: number) => void, todo: Todo }) {
-    const progress = useSignal(props.todo.progress);
-    const progressText = useComputed(() => progress.get() + '%')
-    return <div className={'bg-gray w-350 p-20 shrink-0 shadow-xl border rounded-10 rounded-br-10 flex col gap-10'}>
-        <div className={'flex col gap-10 bg-gradient p-20 rounded-10'}>
-            <div className={'font-medium'}>Update : <i>{props.todo.title}</i></div>
-
-            <div className={'font-medium'}>Current Progress :</div>
-            <notifiable.div className={'text-7xl flex col align-center'}>{progressText}</notifiable.div>
-            <notifiable.input type={'range'} min={0} max={100} value={progress} onChange={e => progress.set(parseInt(e.target.value))}/>
-        </div>
-        <div className={'flex justify-end'}>
-            <button className={'p-5 w-100 rounded-5 border bg-darken-1'} onClick={() => props.closePanel(progress.get())}>OK</button>
-        </div>
-    </div>
 }

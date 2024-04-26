@@ -3,7 +3,7 @@ import {AnySignal, notifiable} from "../../../../../src/components.ts";
 import {Todo} from "../../model/Todo.ts";
 import {useComputed} from "../../../../../src/hooks.ts";
 
-export function Paging(props: {
+export function GridPagination(props: {
     currentPage: AnySignal<number>,
     totalRowPerPage: Signal.State<number>,
     data: AnySignal<Todo[]>

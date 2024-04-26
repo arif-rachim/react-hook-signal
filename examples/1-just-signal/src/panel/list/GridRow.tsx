@@ -5,12 +5,12 @@ import {useShowModal} from "../useShowModal.ts";
 import {useComputed, useSignal} from "../../../../../src/hooks.ts";
 import {format_yyyyMMdd} from "../../utils/dateFormat.ts";
 import {MdDelete, MdEdit} from "react-icons/md";
-import {ResizeableListener} from "./ResizeableListener.tsx";
+import {GridBodyColumnSizeListener} from "./GridBodyColumnSizeListener.tsx";
 import {disableNotification} from "./notification/disableNotification.tsx";
 import {Visible} from "../Visible.tsx";
 import {CSSProperties, useEffect, useRef} from "react";
 
-export function RowRenderer(props: {
+export function GridRow(props: {
     todo: Todo,
     currentSelectedRow: Signal.State<Todo | undefined>,
     cellsWidth: Signal.State<Partial<{ [K in keyof Todo]: number }>>,
@@ -73,35 +73,35 @@ export function RowRenderer(props: {
         }
         currentSelectedRow.set(todo);
     }} style={style}>
-        <ResizeableListener className={'flex col p-5 border-r text-ellipsis'} cellsWidth={cellsWidth}
-                            colId={'no'}>
+        <GridBodyColumnSizeListener className={'flex col p-5 border-r text-ellipsis'} cellsWidth={cellsWidth}
+                                    colId={'no'}>
             <div className={'text-ellipsis overflow-hidden'}>{index + 1}</div>
-        </ResizeableListener>
-        <ResizeableListener className={'flex col  border-r text-ellipsis'} cellsWidth={cellsWidth}
-                            colId={'title'}>
+        </GridBodyColumnSizeListener>
+        <GridBodyColumnSizeListener className={'flex col  border-r text-ellipsis'} cellsWidth={cellsWidth}
+                                    colId={'title'}>
             <div className={'flex col relative'}>
                 <notifiable.div style={styleRowBackground}></notifiable.div>
                 <notifiable.div className={'text-ellipsis p-5 overflow-hidden'} style={styleColor}>
                     {todo.title}
                 </notifiable.div>
             </div>
-        </ResizeableListener>
+        </GridBodyColumnSizeListener>
         <Visible onDesktop={true}>
-            <ResizeableListener className={'flex col p-5 border-r text-ellipsis'} cellsWidth={cellsWidth}
-                                colId={'description'}>
+            <GridBodyColumnSizeListener className={'flex col p-5 border-r text-ellipsis'} cellsWidth={cellsWidth}
+                                        colId={'description'}>
                 <div className={'text-ellipsis overflow-hidden'}>{todo.description}</div>
-            </ResizeableListener>
+            </GridBodyColumnSizeListener>
         </Visible>
         <Visible onDesktop={true} onTablet={true}>
-            <ResizeableListener className={'flex col p-5 border-r overflow-hidden text-nowrap align-center'}
-                                cellsWidth={cellsWidth}
-                                colId={'dueDate'}>{format_yyyyMMdd(todo.dueDate)}</ResizeableListener>
+            <GridBodyColumnSizeListener className={'flex col p-5 border-r overflow-hidden text-nowrap align-center'}
+                                        cellsWidth={cellsWidth}
+                                        colId={'dueDate'}>{format_yyyyMMdd(todo.dueDate)}</GridBodyColumnSizeListener>
         </Visible>
-        <ResizeableListener className={'flex col p-5 border-r'} cellsWidth={cellsWidth}
-                            colId={'priority'}>{todo.priority}</ResizeableListener>
+        <GridBodyColumnSizeListener className={'flex col p-5 border-r'} cellsWidth={cellsWidth}
+                                    colId={'priority'}>{todo.priority}</GridBodyColumnSizeListener>
         <Visible onDesktop={true}>
-            <ResizeableListener className={'flex col align-center justify-center border-r'} cellsWidth={cellsWidth}
-                                colId={'edit'}>
+            <GridBodyColumnSizeListener className={'flex col align-center justify-center border-r'} cellsWidth={cellsWidth}
+                                        colId={'edit'}>
                 <button className={'flex col align-center border rounded-5'} onClick={async (event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -111,11 +111,11 @@ export function RowRenderer(props: {
                     }
                     onEdit(todo);
                 }}><MdEdit className={'text-2xl'}/></button>
-            </ResizeableListener>
+            </GridBodyColumnSizeListener>
         </Visible>
         <Visible onDesktop={true}>
-            <ResizeableListener className={'flex col align-center justify-center'} cellsWidth={cellsWidth}
-                                colId={'delete'}>
+            <GridBodyColumnSizeListener className={'flex col align-center justify-center'} cellsWidth={cellsWidth}
+                                        colId={'delete'}>
                 <button className={'flex col align-center border rounded-5'} onClick={async (event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -125,7 +125,7 @@ export function RowRenderer(props: {
                     }
                     onDelete(todo);
                 }}><MdDelete className={'text-2xl'}/></button>
-            </ResizeableListener>
+            </GridBodyColumnSizeListener>
         </Visible>
     </notifiable.div>
 }
