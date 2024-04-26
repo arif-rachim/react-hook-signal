@@ -2,7 +2,6 @@ import {Todo} from "../../model/Todo.ts";
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable} from "../../../../../src/components.ts";
 import {useShowModal} from "../useShowModal.ts";
-import {useComputed, useSignal} from "../../../../../src/hooks.ts";
 import {format_yyyyMMdd} from "../../utils/dateFormat.ts";
 import {MdDelete, MdEdit} from "react-icons/md";
 import {GridBodyColumnSizeListener} from "./GridBodyColumnSizeListener.tsx";
@@ -29,14 +28,14 @@ export function GridRow(props: {
     /**
      * A signal to determine if the row is selected.
      */
-    const isSelected = useComputed(() => {
+    const isSelected = new Signal.Computed(() => {
         return currentSelectedRow.get()?.id === todo.id
     })
 
     /**
      * The class name for the row based on selection and index.
      */
-    const className = useComputed(() => {
+    const className = new Signal.Computed(() => {
         const isSelectedValue = isSelected.get();
         const classNames = ['flex', 'row', 'h-30']
         if (isSelectedValue) {
@@ -50,7 +49,7 @@ export function GridRow(props: {
     /**
      * A signal for the Todo item.
      */
-    const todoSignal = useSignal(todo);
+    const todoSignal = new Signal.State(todo);
 
     /**
      * A reference to the Todo item and signal.
@@ -74,7 +73,7 @@ export function GridRow(props: {
     /**
      * The background style of the row based on progress and selection.
      */
-    const styleRowBackground = useComputed<CSSProperties>(() => {
+    const styleRowBackground = new Signal.Computed<CSSProperties>(() => {
         const isSelectedValue = isSelected.get();
         return {
             position: 'absolute',
@@ -91,7 +90,7 @@ export function GridRow(props: {
     /**
      * The text color and style based on selection.
      */
-    const styleColor = useComputed(() => {
+    const styleColor = new Signal.Computed(() => {
         const isSelectedValue = isSelected.get();
         const result:CSSProperties = {
             position: 'relative',

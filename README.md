@@ -25,7 +25,7 @@ Once adopted, JavaScript will have a native signaling system, referred to as `Si
 
 ### How signal can efficiently re-render react component
 
-![Solving rerendering problem in react using signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/re-render.gif)
+![Solving rerendering problem in react using signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/1-just-signal-sample-code-hd.gif)
 
 In React components, re-rendering starts at the component's beginning and extends to the end of the JSX element. Signal usage allows precise re-rendering, boosting performance and simplifying development without the need for memoization or useCallback functions.
 

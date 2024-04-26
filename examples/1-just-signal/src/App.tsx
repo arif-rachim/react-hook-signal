@@ -2,12 +2,12 @@ import './App.css'
 import {TaskDetailsPanel} from "./panel/TaskDetailsPanel.tsx";
 import TaskListPanel from "./panel/TaskListPanel.tsx";
 import {Todo} from "./model/Todo.ts";
-import {useComputed, useSignal} from "../../../src/hooks.ts";
 import {guid} from "./utils/guid.ts";
 import {isEmpty} from "./utils/isEmpty.ts";
 import {populateTodosMockData} from "./model/generateMock.ts";
 import {deleteCancellationConfirmation} from "./panel/list/notification/deleteCancellationConfirmation.tsx";
 import {useShowModal} from "./panel/useShowModal.ts";
+import {Signal} from "signal-polyfill";
 
 
 export type SortFilter = Partial<{
@@ -24,27 +24,27 @@ function App() {
     /**
      * Represents a variable for managing TODO items using a signal.
      */
-    const todos = useSignal<Todo[]>([]);
+    const todos = new Signal.State<Todo[]>([]);
 
     /**
      * The currently selected Todo item.
      */
-    const selectedTodo = useSignal<Todo | undefined>(undefined);
+    const selectedTodo = new Signal.State<Todo | undefined>(undefined);
 
     /**
      * A flag indicating whether the Task Details Panel is disabled.
      */
-    const disableDetailPanel = useSignal<boolean>(true);
+    const disableDetailPanel = new Signal.State<boolean>(true);
 
     /**
      * A computed value indicating whether the Task List Panel is disabled.
      */
-    const disableListPanel = useComputed(() => !disableDetailPanel.get())
+    const disableListPanel = new Signal.Computed(() => !disableDetailPanel.get())
 
     /**
      * The current sort and filter configuration.
      */
-    const sortFilter = useSignal<SortFilter>({});
+    const sortFilter = new Signal.State<SortFilter>({});
 
     /**
      * Populates the Todo items with mock data.

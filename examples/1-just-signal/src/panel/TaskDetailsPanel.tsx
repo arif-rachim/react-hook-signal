@@ -1,7 +1,5 @@
 import {Todo} from "../model/Todo.ts";
-import {notifiable, useSignal} from "../../../../src/main.ts";
-
-import {useComputed} from "../../../../src/hooks.ts";
+import {notifiable} from "../../../../src/main.ts";
 import {Signal} from "signal-polyfill";
 import {ReactNode} from "react";
 import {isEmpty} from "../utils/isEmpty.ts";
@@ -28,84 +26,84 @@ export function TaskDetailsPanel(props: {
     /**
      * The formatted due date of the current Todo item.
      */
-    const dueDate = useComputed(() => format_yyyyMMdd(todo.get()?.dueDate));
+    const dueDate = new Signal.Computed(() => format_yyyyMMdd(todo.get()?.dueDate));
 
     /**
      * The priority of the current Todo item.
      */
-    const priority = useComputed(() => todo.get()?.priority ?? '');
+    const priority = new Signal.Computed(() => todo.get()?.priority ?? '');
 
     /**
      * The title of the current Todo item.
      */
-    const title = useComputed(() => todo.get()?.title ?? '');
+    const title = new Signal.Computed(() => todo.get()?.title ?? '');
 
     /**
      * The status of the current Todo item.
      */
-    const status = useComputed(() => todo.get()?.status ?? '');
+    const status = new Signal.Computed(() => todo.get()?.status ?? '');
 
     /**
      * The progress of the current Todo item.
      */
-    const progress = useComputed(() => todo.get()?.progress ?? '');
+    const progress = new Signal.Computed(() => todo.get()?.progress ?? '');
 
     /**
      * The description of the current Todo item.
      */
-    const description = useComputed(() => todo.get()?.description ?? '');
+    const description = new Signal.Computed(() => todo.get()?.description ?? '');
 
     /**
      * A flag indicating whether the user has tried to submit the form.
      */
-    const userHasTriedToSubmit = useSignal(false);
+    const userHasTriedToSubmit = new Signal.State(false);
 
     /**
      * The error message for the due date field.
      */
-    const dueDateError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.dueDate) ? 'Due Date required' : '' : '');
+    const dueDateError = new Signal.Computed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.dueDate) ? 'Due Date required' : '' : '');
 
     /**
      * The error message for the priority field.
      */
-    const priorityError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.priority) ? 'Priority required' : '' : '');
+    const priorityError = new Signal.Computed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.priority) ? 'Priority required' : '' : '');
 
     /**
      * The error message for the title field.
      */
-    const titleError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.title) ? 'Title required' : '' : '');
+    const titleError = new Signal.Computed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.title) ? 'Title required' : '' : '');
 
     /**
      * The error message for the description field.
      */
-    const descriptionError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.description) ? 'Description required' : '' : '');
+    const descriptionError = new Signal.Computed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.description) ? 'Description required' : '' : '');
 
     /**
      * A flag indicating whether there are any errors in the form.
      */
-    const hasError = useComputed(() => {
+    const hasError = new Signal.Computed(() => {
         return !(isEmpty(dueDateError.get()) && isEmpty(priorityError.get()) && isEmpty(titleError.get()) && isEmpty(descriptionError.get()))
     })
 
     /**
      * The computed class name for the due date input.
      */
-    const dueDateClassName = useComputed(() => `rounded-5 p-5 pl-10 border${isEmpty(dueDateError.get()) ? '' : '-red'} h-30 w-full w-min-0`);
+    const dueDateClassName = new Signal.Computed(() => `rounded-5 p-5 pl-10 border${isEmpty(dueDateError.get()) ? '' : '-red'} h-30 w-full w-min-0`);
 
     /**
      * The computed class name for the priority input.
      */
-    const priorityClassName = useComputed(() => `rounded-5  border${isEmpty(priorityError.get()) ? '' : '-red'} h-30`);
+    const priorityClassName = new Signal.Computed(() => `rounded-5  border${isEmpty(priorityError.get()) ? '' : '-red'} h-30`);
 
     /**
      * The computed class name for the title input.
      */
-    const titleClassName = useComputed(() => `rounded-5 p-5 border${isEmpty(titleError.get()) ? '' : '-red'}`);
+    const titleClassName = new Signal.Computed(() => `rounded-5 p-5 border${isEmpty(titleError.get()) ? '' : '-red'}`);
 
     /**
      * The computed class name for the description input.
      */
-    const descriptionClassName = useComputed(() => `rounded-5 p-5 border${isEmpty(descriptionError.get()) ? '' : '-red'} h-80`);
+    const descriptionClassName = new Signal.Computed(() => `rounded-5 p-5 border${isEmpty(descriptionError.get()) ? '' : '-red'} h-80`);
 
     /**
      * A function to show a modal.
@@ -166,7 +164,7 @@ export function TaskDetailsPanel(props: {
     /**
      * The computed header buttons for the component.
      */
-    const headerButtons = useComputed(() => {
+    const headerButtons = new Signal.Computed(() => {
         const result: ReactNode[] = [];
         const isDisabledValue = disabled.get()
         if (isDisabledValue) {
@@ -180,12 +178,12 @@ export function TaskDetailsPanel(props: {
     /**
      * Determines if a todo is selected.
      */
-    const aTodoIsSelected = useComputed(() => !isEmpty(todo.get()?.id))
+    const aTodoIsSelected = new Signal.Computed(() => !isEmpty(todo.get()?.id))
 
     /**
      * The computed buttons for the component.
      */
-    const buttons = useComputed(() => {
+    const buttons = new Signal.Computed(() => {
         const isDisabledValue = disabled.get();
         const aTodoIsSelectedValue = aTodoIsSelected.get();
         const result: ReactNode[] = [];

@@ -1,7 +1,6 @@
 import {Signal} from "signal-polyfill";
 import {Todo} from "../../model/Todo.ts";
 import {SortFilter} from "../../App.tsx";
-import {useComputed} from "../../../../../src/hooks.ts";
 import {GridHeaderColumnSizeNotifier} from "./GridHeaderColumnSizeNotifier.tsx";
 import {notifiable} from "../../../../../src/components.ts";
 import {Visible} from "../Visible.tsx";
@@ -28,7 +27,7 @@ export function GridHeader(props: {
      *
      * @returns {string} The computed title value.
      */
-    const title = useComputed(() => sortFilter.get().filter?.title ?? '')
+    const title = new Signal.Computed(() => sortFilter.get().filter?.title ?? '')
 
     /**
      * Returns the description value from the filtered result of the sort filter,
@@ -36,14 +35,14 @@ export function GridHeader(props: {
      *
      * @returns {string} The description value from the filtered result.
      */
-    const description = useComputed(() => sortFilter.get().filter?.description ?? '')
+    const description = new Signal.Computed(() => sortFilter.get().filter?.description ?? '')
 
     /**
      * Represents the due date of a task or an item.
      *
      * @typedef {string} DueDate
      */
-    const dueDate = useComputed(() => sortFilter.get().filter?.dueDate ?? '')
+    const dueDate = new Signal.Computed(() => sortFilter.get().filter?.dueDate ?? '')
 
     /**
      * Calculates the priority value based on the sort filter.
@@ -52,7 +51,7 @@ export function GridHeader(props: {
      * @param {Function} callback - A callback function to calculate the priority value.
      * @returns {string} - The calculated priority value.
      */
-    const priority = useComputed(() => sortFilter.get().filter?.priority ?? '')
+    const priority = new Signal.Computed(() => sortFilter.get().filter?.priority ?? '')
 
     /**
      * Updates the filter value for a specific column ID based on an input change event.

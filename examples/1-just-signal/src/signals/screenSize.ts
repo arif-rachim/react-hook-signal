@@ -1,4 +1,4 @@
-import { Signal } from "signal-polyfill";
+import {Signal} from "signal-polyfill";
 
 /**
  * Represents the possible screen sizes.

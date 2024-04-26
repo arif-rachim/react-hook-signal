@@ -1,6 +1,6 @@
-import { PropsWithChildren, useState,type ReactNode } from "react";
-import { useSignalEffect } from "../../../../src/hooks.ts";
-import { screenSize, ScreenSize } from "../signals/screenSize.ts";
+import {PropsWithChildren, type ReactNode, useState} from "react";
+import {useSignalEffect} from "../../../../src/hooks.ts";
+import {screenSize, ScreenSize} from "../signals/screenSize.ts";
 
 /**
  * Props for the Visible component based on different screen sizes.

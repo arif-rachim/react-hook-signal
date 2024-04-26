@@ -1,8 +1,8 @@
-import {useComputed, useSignal} from "../../../../src/hooks.ts";
 import {createContext, CSSProperties, PropsWithChildren, type ReactNode, useEffect, useRef} from "react";
 import {delay} from "../utils/delay.ts";
 import {notifiable} from "../../../../src/components.ts";
 import {guid} from "../utils/guid.ts";
+import {Signal} from "signal-polyfill";
 
 /**
  * The ModalPanel component.
@@ -15,7 +15,7 @@ function ModalPanel(props: {
     /**
      * The current style of the modal panel.
      */
-    const style = useSignal<CSSProperties>({transform:'scale(0.5)',opacity:0, transition: 'all 300ms ease-in-out'})
+    const style = new Signal.State<CSSProperties>({transform:'scale(0.5)',opacity:0, transition: 'all 300ms ease-in-out'})
 
     const {panel} = props;
 
@@ -60,7 +60,7 @@ export function ModalProvider(props: PropsWithChildren) {
     /**
      * The list of currently displayed modal panels.
      */
-    const panels = useSignal<{
+    const panels = new Signal.State<{
         node: ReactNode,
         id: string,
         hideCallback?: () => Promise<void>,
@@ -69,7 +69,7 @@ export function ModalProvider(props: PropsWithChildren) {
     /**
      * The computed elements for the modal panels.
      */
-    const panelsElement = useComputed(() => {
+    const panelsElement = new Signal.Computed(() => {
         return panels.get().map(p => {
             return <ModalPanel panel={p.node} key={p.id} beforeHide={(hideCallback: () => Promise<void>) => {
                 p.hideCallback = hideCallback
@@ -83,7 +83,7 @@ export function ModalProvider(props: PropsWithChildren) {
     /**
      * The computed class name for the modal container.
      */
-    const modalContainerClassName = useComputed(() => {
+    const modalContainerClassName = new Signal.Computed(() => {
         const isEmpty = panels.get().length === 0;
         return `${isEmpty ? 'none' : 'flex'} w-full h-full overflow-auto absolute top-0 left-0`
     })

@@ -1,7 +1,7 @@
 import {Todo} from "../../model/Todo.ts";
-import {useComputed, useSignal} from "../../../../../src/hooks.ts";
 import {notifiable} from "../../../../../src/components.ts";
 import {type ReactElement} from "react";
+import {Signal} from "signal-polyfill";
 
 /**
  * Renders a progress update modal.
@@ -12,8 +12,8 @@ import {type ReactElement} from "react";
  * @returns {ReactElement} The progress update modal component.
  */
 export function ProgressUpdateModal(props: { closePanel: (param: number) => void, todo: Todo }): ReactElement {
-    const progress = useSignal(props.todo.progress);
-    const progressText = useComputed(() => progress.get() + '%')
+    const progress = new Signal.State(props.todo.progress);
+    const progressText = new Signal.Computed(() => progress.get() + '%')
     return <div className={'bg-gray w-350 p-20 shrink-0 shadow-xl border rounded-10 rounded-br-10 flex col gap-10'}>
         <div className={'flex col gap-10 bg-gradient p-20 rounded-10'}>
             <div className={'font-medium'}>Update : <i>{props.todo.title}</i></div>

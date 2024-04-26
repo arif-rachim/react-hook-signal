@@ -1,7 +1,6 @@
 import {CSSProperties, PropsWithChildren, useRef} from "react";
 import {Signal} from "signal-polyfill";
 import {Todo} from "../../model/Todo.ts";
-import {useComputed} from "../../../../../src/hooks.ts";
 import {notifiable} from "../../../../../src/components.ts";
 
 /**
@@ -38,7 +37,7 @@ export function GridBodyColumnSizeListener(props: PropsWithChildren<{
     /**
      * Returns a computed style object based on the provided conditions.
      */
-    const style = useComputed<CSSProperties>(() => {
+    const style = new Signal.Computed<CSSProperties>(() => {
         const cw = props.cellsWidth.get();
         if (cw && colId in cw && cw[colId]) {
             return {

@@ -1,7 +1,6 @@
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable} from "../../../../../src/components.ts";
 import {Todo} from "../../model/Todo.ts";
-import {useComputed} from "../../../../../src/hooks.ts";
 
 /**
  * Represents a pagination component for a grid view.
@@ -30,7 +29,7 @@ export function GridPagination(props: {
      *
      * @returns {Array} Array of JSX elements representing pagination buttons
      */
-    const buttons = useComputed(() => {
+    const buttons = new Signal.Computed(() => {
         const currentPageValue = currentPage.get();
         const totalRowPerPageValue = totalRowPerPage.get();
         const dataValue = data.get();

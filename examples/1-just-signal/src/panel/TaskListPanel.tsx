@@ -1,4 +1,4 @@
-import {useComputed, useSignal, useSignalEffect} from "../../../../src/hooks.ts";
+import {useSignalEffect} from "../../../../src/hooks.ts";
 import {type AnySignal, notifiable} from "../../../../src/components.ts";
 import {Todo} from "../model/Todo.ts";
 import {Signal} from "signal-polyfill";
@@ -26,27 +26,27 @@ export default function TaskListPanel(props: {
     /**
      * The maximum number of rows to display per page.
      */
-    const maxRowPerPage = useSignal(20);
+    const maxRowPerPage = new Signal.State(20);
 
     /**
      * The current width of each column in the grid.
      */
-    const cellsWidth = useSignal<Partial<{ [K in keyof Todo]: number }>>({});
+    const cellsWidth = new Signal.State<Partial<{ [K in keyof Todo]: number }>>({});
 
     /**
      * The current scroll position of the grid.
      */
-    const scrollPosition = useSignal(0);
+    const scrollPosition = new Signal.State(0);
 
     /**
      * The current filter status.
      */
-    const status = useComputed(() => sortFilter.get().filter?.status);
+    const status = new Signal.Computed(() => sortFilter.get().filter?.status);
 
     /**
      * The filtered list of Todo items.
      */
-    const filteredTodo = useComputed(() => {
+    const filteredTodo = new Signal.Computed(() => {
         const filter = sortFilter.get().filter ?? {}
         return todos.get().filter((todo) => {
             for (const key_ of Object.keys(filter)) {
@@ -75,7 +75,7 @@ export default function TaskListPanel(props: {
     /**
      * The rendered rows of the grid.
      */
-    const todoRenderer = useComputed(() => {
+    const todoRenderer = new Signal.Computed(() => {
 
         const maxRowPerPageValue = maxRowPerPage.get();
         const currentPageNumberValue = currentPageNumber.get();
@@ -101,17 +101,17 @@ export default function TaskListPanel(props: {
     /**
      * The computed class name for the header of the grid.
      */
-    const headerClassName = useComputed(() => `flex row h-60 border-b ${scrollPosition.get() > 1 ? 'shadow' : ''}`)
+    const headerClassName = new Signal.Computed(() => `flex row h-60 border-b ${scrollPosition.get() > 1 ? 'shadow' : ''}`)
 
     /**
      * The computed height of the container for the grid.
      */
-    const containerHeight = useComputed(() => filteredTodo.get().length * 30);
+    const containerHeight = new Signal.Computed(() => filteredTodo.get().length * 30);
 
     /**
      * The current page number of the grid.
      */
-    const currentPageNumber = useComputed(() => {
+    const currentPageNumber = new Signal.Computed(() => {
         const position = scrollPosition.get();
         const rowPerPageValue = maxRowPerPage.get();
         return Math.floor(Math.floor(position / 30) / rowPerPageValue) + 1;
@@ -120,7 +120,7 @@ export default function TaskListPanel(props: {
     /**
      * The computed style for the container of the grid.
      */
-    const containerStyle = useComputed<CSSProperties>(() => {
+    const containerStyle = new Signal.Computed<CSSProperties>(() => {
         return {
             position:'relative',
             height : containerHeight.get(),
@@ -141,7 +141,7 @@ export default function TaskListPanel(props: {
     /**
      * The computed class name for the "All" filter button.
      */
-    const classNameAll = useComputed(() => {
+    const classNameAll = new Signal.Computed(() => {
         const isSelected = isEmpty(status.get())
         return `flex col p-5 border-none border-l border-r border-b border-t rounded-tl-5 rounded-bl-5 ${isSelected ? 'bg-selected':''}`
     });
@@ -149,7 +149,7 @@ export default function TaskListPanel(props: {
     /**
      * The computed class name for the "Pending" filter button.
      */
-    const classNamePending = useComputed(() => {
+    const classNamePending = new Signal.Computed(() => {
         const isSelected = status.get() === 'Pending'
         return `flex col p-5 border-none border-r border-b border-t ${isSelected ? 'bg-selected':''}`
     });
@@ -157,12 +157,12 @@ export default function TaskListPanel(props: {
     /**
      * The computed class name for the "Completed" filter button.
      */
-    const classNameCompleted = useComputed(() => {
+    const classNameCompleted = new Signal.Computed(() => {
         const isSelected = status.get() === 'Completed'
         return `flex col p-5 border-none border-r border-b border-t rounded-tr-5 rounded-br-5 ${isSelected ? 'bg-selected':''}`
     });
 
-    const classNameOnGoing = useComputed(() => {
+    const classNameOnGoing = new Signal.Computed(() => {
         const isSelected = status.get() === 'On Going'
         return `flex col p-5 border-none border-r border-b border-t ${isSelected ? 'bg-selected':''}`
     });
