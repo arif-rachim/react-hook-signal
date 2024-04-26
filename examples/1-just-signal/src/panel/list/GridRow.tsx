@@ -10,6 +10,9 @@ import {disableNotification} from "./notification/disableNotification.tsx";
 import {Visible} from "../Visible.tsx";
 import {CSSProperties, useEffect, useRef} from "react";
 
+/**
+ * The GridRow component.
+ */
 export function GridRow(props: {
     todo: Todo,
     currentSelectedRow: Signal.State<Todo | undefined>,
@@ -22,9 +25,17 @@ export function GridRow(props: {
 }) {
     const {todo, cellsWidth, index, currentSelectedRow, disabled, onDelete, onEdit, style} = props;
     const showModal = useShowModal();
+
+    /**
+     * A signal to determine if the row is selected.
+     */
     const isSelected = useComputed(() => {
         return currentSelectedRow.get()?.id === todo.id
     })
+
+    /**
+     * The class name for the row based on selection and index.
+     */
     const className = useComputed(() => {
         const isSelectedValue = isSelected.get();
         const classNames = ['flex', 'row', 'h-30']
@@ -35,14 +46,34 @@ export function GridRow(props: {
         }
         return classNames.join(' ')
     })
+
+    /**
+     * A signal for the Todo item.
+     */
     const todoSignal = useSignal(todo);
+
+    /**
+     * A reference to the Todo item and signal.
+     */
     const propsRef = useRef({todoSignal,todo});
     propsRef.current = {todoSignal,todo};
+
+    /**
+     * The progress of the Todo item.
+     */
     const todoProgress = todo.progress;
+
+    /**
+     * An effect to update the Todo signal based on progress changes.
+     */
     useEffect(() => {
         const {todoSignal,todo} = propsRef.current;
         todoSignal.set(todo);
     },[todoProgress])
+
+    /**
+     * The background style of the row based on progress and selection.
+     */
     const styleRowBackground = useComputed<CSSProperties>(() => {
         const isSelectedValue = isSelected.get();
         return {
@@ -56,6 +87,10 @@ export function GridRow(props: {
             transition : 'all 300ms ease-in-out'
         }
     })
+
+    /**
+     * The text color and style based on selection.
+     */
     const styleColor = useComputed(() => {
         const isSelectedValue = isSelected.get();
         const result:CSSProperties = {

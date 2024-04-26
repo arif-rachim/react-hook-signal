@@ -1,5 +1,8 @@
 import {Todo} from "../../../model/Todo.ts";
 
+/**
+ * Function to render a confirmation panel for deleting a Todo.
+ */
 export const deleteCancellationConfirmation = (todo: Todo) => (closePanel: (params: 'yes' | 'no') => void) => {
     return <div className={'bg-gray w-350 p-20 shadow-xl border rounded-10 rounded-br-10 flex col gap-10'}>
         <div className={'flex col gap-10 bg-gradient p-20 rounded-10'}>

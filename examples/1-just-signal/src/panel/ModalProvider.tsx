@@ -4,14 +4,30 @@ import {delay} from "../utils/delay.ts";
 import {notifiable} from "../../../../src/components.ts";
 import {guid} from "../utils/guid.ts";
 
+/**
+ * The ModalPanel component.
+ */
 function ModalPanel(props: {
     panel: ReactNode,
     beforeHide: (callback: () => Promise<void>) => () => void
 }) {
+
+    /**
+     * The current style of the modal panel.
+     */
     const style = useSignal<CSSProperties>({transform:'scale(0.5)',opacity:0, transition: 'all 300ms ease-in-out'})
+
     const {panel} = props;
+
+    /**
+     * A reference to the props and style.
+     */
     const propsRef = useRef({...props, style});
     propsRef.current = {...props, style};
+
+    /**
+     * An effect that animates the modal panel when it is shown and hides it when it is closed.
+     */
     useEffect(() => {
         const {style, beforeHide} = propsRef.current;
         (async () => {
@@ -30,15 +46,29 @@ function ModalPanel(props: {
 }
 
 export type ShowDialogType = <T>(factory: (closePanel: (value: T) => void) => ReactNode) => Promise<T>
+
+/**
+ * The context for the modal dialog.
+ */
 export const ModalContext = createContext<ShowDialogType | null>(null)
 
+/**
+ * The ModalProvider component.
+ */
 export function ModalProvider(props: PropsWithChildren) {
 
+    /**
+     * The list of currently displayed modal panels.
+     */
     const panels = useSignal<{
         node: ReactNode,
         id: string,
         hideCallback?: () => Promise<void>,
     }[]>([]);
+
+    /**
+     * The computed elements for the modal panels.
+     */
     const panelsElement = useComputed(() => {
         return panels.get().map(p => {
             return <ModalPanel panel={p.node} key={p.id} beforeHide={(hideCallback: () => Promise<void>) => {
@@ -50,11 +80,17 @@ export function ModalProvider(props: PropsWithChildren) {
         })
     })
 
+    /**
+     * The computed class name for the modal container.
+     */
     const modalContainerClassName = useComputed(() => {
         const isEmpty = panels.get().length === 0;
         return `${isEmpty ? 'none' : 'flex'} w-full h-full overflow-auto absolute top-0 left-0`
     })
 
+    /**
+     * A function to show a modal dialog.
+     */
     function showDialog<T>(panelBuilder: (resolver: (value: T) => void) => ReactNode) {
         return new Promise<T>((resolve) => {
             const id = guid();

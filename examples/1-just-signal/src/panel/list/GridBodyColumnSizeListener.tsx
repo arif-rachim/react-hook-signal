@@ -4,14 +4,40 @@ import {Todo} from "../../model/Todo.ts";
 import {useComputed} from "../../../../../src/hooks.ts";
 import {notifiable} from "../../../../../src/components.ts";
 
+/**
+ * Listens for changes in the size of a grid body column and updates the column's width accordingly.
+ *
+ * @param {PropsWithChildren} props - The properties for the GridBodyColumnSizeListener component.
+ * @param {string} props.className - The CSS class name for the container element.
+ * @param {Signal.State<Partial<{ [K in keyof Todo]: number }>>} props.cellsWidth - The signal state that contains the width information for the cells.
+ * @param {keyof Todo | string} props.colId - The key of the column or string identifier.
+ *
+ * @returns {JSX.Element} - The GridBodyColumnSizeListener component.
+ */
 export function GridBodyColumnSizeListener(props: PropsWithChildren<{
     className: string,
     cellsWidth: Signal.State<Partial<{ [K in keyof Todo]: number }>>,
     colId: keyof Todo | string,
 }>) {
+
+    /**
+     * A reference to hold the value of props.
+     */
     const propsRef = useRef(props);
     propsRef.current = props;
+
+    /**
+     * Represents the column ID of a Todo item.
+     *
+     *
+     * @param {object} props - The props object containing the column ID.
+     * @property {string} colId - The column ID.
+     */
     const colId = props.colId as keyof Todo;
+
+    /**
+     * Returns a computed style object based on the provided conditions.
+     */
     const style = useComputed<CSSProperties>(() => {
         const cw = props.cellsWidth.get();
         if (cw && colId in cw && cw[colId]) {

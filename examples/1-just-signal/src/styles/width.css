@@ -102,3 +102,7 @@
 .w-350 {
     width: 350px;
 }
+
+.w-min-0{
+    min-width: 0;
+}

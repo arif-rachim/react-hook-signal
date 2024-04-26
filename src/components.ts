@@ -134,7 +134,7 @@ function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key:
         }
         return Notifiable({component: HtmlElement, componentRenderStrategy: 'functionCall', ...notifiableProps})
     })
-    NotifiableHtmlElement.displayName = `n.${key}`
+    NotifiableHtmlElement.displayName = key;
     return NotifiableHtmlElement;
 }
 

@@ -1,9 +1,17 @@
 import {Todo} from "../../model/Todo.ts";
 import {useComputed, useSignal} from "../../../../../src/hooks.ts";
 import {notifiable} from "../../../../../src/components.ts";
+import {type ReactElement} from "react";
 
-
-export function ProgressUpdateModal(props: { closePanel: (param: number) => void, todo: Todo }) {
+/**
+ * Renders a progress update modal.
+ *
+ * @param {Object} props - The properties for the progress update modal.
+ * @param {Function} props.closePanel - The function to close the progress update modal and pass the progress value.
+ * @param {Object} props.todo - The todo object containing the progress value.
+ * @returns {ReactElement} The progress update modal component.
+ */
+export function ProgressUpdateModal(props: { closePanel: (param: number) => void, todo: Todo }): ReactElement {
     const progress = useSignal(props.todo.progress);
     const progressText = useComputed(() => progress.get() + '%')
     return <div className={'bg-gray w-350 p-20 shrink-0 shadow-xl border rounded-10 rounded-br-10 flex col gap-10'}>

@@ -9,17 +9,8 @@ import {GridPagination} from "./list/GridPagination.tsx";
 import {GridHeader} from "./list/GridHeader.tsx";
 import {CSSProperties, useRef} from "react";
 
-
 /**
- * Functional component for rendering a task list panel.
- * @param {Object} props - Props for the TaskListPanel component.
- * @param {Signal.State<Todo[]>} props.todos - Signal for todos.
- * @param {Signal.State<Todo | undefined>} props.selectedTodo - Signal for selected todo.
- * @param {AnySignal<boolean>} props.disabled - Signal for disabled state.
- * @param {(todo: Todo) => void} props.onEdit - Function to handle editing a todo.
- * @param {(todo: Todo) => void} props.onDelete - Function to handle deleting a todo.
- * @param {Signal.State<SortFilter>} props.sortFilter - Signal for sorting and filtering.
- * @returns {JSX.Element} - Rendered component.
+ * The TaskListPanel component.
  */
 export default function TaskListPanel(props: {
     todos: Signal.State<Todo[]>,
@@ -32,10 +23,29 @@ export default function TaskListPanel(props: {
 
     const {todos, disabled, selectedTodo: currentSelectedRow, sortFilter} = props;
 
+    /**
+     * The maximum number of rows to display per page.
+     */
     const maxRowPerPage = useSignal(20);
+
+    /**
+     * The current width of each column in the grid.
+     */
     const cellsWidth = useSignal<Partial<{ [K in keyof Todo]: number }>>({});
+
+    /**
+     * The current scroll position of the grid.
+     */
     const scrollPosition = useSignal(0);
+
+    /**
+     * The current filter status.
+     */
     const status = useComputed(() => sortFilter.get().filter?.status);
+
+    /**
+     * The filtered list of Todo items.
+     */
     const filteredTodo = useComputed(() => {
         const filter = sortFilter.get().filter ?? {}
         return todos.get().filter((todo) => {
@@ -62,7 +72,9 @@ export default function TaskListPanel(props: {
         }
     })
 
-
+    /**
+     * The rendered rows of the grid.
+     */
     const todoRenderer = useComputed(() => {
 
         const maxRowPerPageValue = maxRowPerPage.get();
@@ -80,16 +92,34 @@ export default function TaskListPanel(props: {
                             cellsWidth={cellsWidth} index={recordPosition} disabled={disabled} onDelete={props.onDelete} onEdit={props.onEdit} style={style}/>
         })
     });
+
+    /**
+     * A function to handle the scroll event of the grid.
+     */
     const onScroll = (e:{target:unknown}) => scrollPosition.set((e.target as HTMLDivElement).scrollTop);
+
+    /**
+     * The computed class name for the header of the grid.
+     */
     const headerClassName = useComputed(() => `flex row h-60 border-b ${scrollPosition.get() > 1 ? 'shadow' : ''}`)
+
+    /**
+     * The computed height of the container for the grid.
+     */
     const containerHeight = useComputed(() => filteredTodo.get().length * 30);
 
+    /**
+     * The current page number of the grid.
+     */
     const currentPageNumber = useComputed(() => {
         const position = scrollPosition.get();
         const rowPerPageValue = maxRowPerPage.get();
         return Math.floor(Math.floor(position / 30) / rowPerPageValue) + 1;
     })
 
+    /**
+     * The computed style for the container of the grid.
+     */
     const containerStyle = useComputed<CSSProperties>(() => {
         return {
             position:'relative',
@@ -98,21 +128,35 @@ export default function TaskListPanel(props: {
         }
     })
     const scrollerContainerRef = useRef<HTMLDivElement|null>(null);
+
+    /**
+     * A function to handle page changes in the grid.
+     */
     function onPageChange(page:number){
         if(scrollerContainerRef.current){
             scrollerContainerRef.current!.scrollTop = ((page - 1) * 30 * maxRowPerPage.get())
         }
     }
+
+    /**
+     * The computed class name for the "All" filter button.
+     */
     const classNameAll = useComputed(() => {
         const isSelected = isEmpty(status.get())
         return `flex col p-5 border-none border-l border-r border-b border-t rounded-tl-5 rounded-bl-5 ${isSelected ? 'bg-selected':''}`
     });
 
+    /**
+     * The computed class name for the "Pending" filter button.
+     */
     const classNamePending = useComputed(() => {
         const isSelected = status.get() === 'Pending'
         return `flex col p-5 border-none border-r border-b border-t ${isSelected ? 'bg-selected':''}`
     });
 
+    /**
+     * The computed class name for the "Completed" filter button.
+     */
     const classNameCompleted = useComputed(() => {
         const isSelected = status.get() === 'Completed'
         return `flex col p-5 border-none border-r border-b border-t rounded-tr-5 rounded-br-5 ${isSelected ? 'bg-selected':''}`
@@ -122,6 +166,10 @@ export default function TaskListPanel(props: {
         const isSelected = status.get() === 'On Going'
         return `flex col p-5 border-none border-r border-b border-t ${isSelected ? 'bg-selected':''}`
     });
+
+    /**
+     * A function to update the filter status.
+     */
     function updateFilterStatus(value?:Todo['status']){
         return () => {
             sortFilter.set({...sortFilter.get(),filter:{...sortFilter.get().filter,status:value} })

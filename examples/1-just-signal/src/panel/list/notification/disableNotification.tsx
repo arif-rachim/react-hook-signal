@@ -1,5 +1,8 @@
 import {MdWarning} from "react-icons/md";
 
+/**
+ * Disables the notification panel.
+ */
 export function disableNotification(closePanel: () => void) {
 
     return <div className={'bg-gray w-350 p-20 shadow-xl border rounded-10 rounded-br-10 flex col gap-20'}>

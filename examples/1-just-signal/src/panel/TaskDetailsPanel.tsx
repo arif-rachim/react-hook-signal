@@ -12,16 +12,7 @@ import {useShowModal} from "./useShowModal.ts";
 import {ProgressUpdateModal} from "./detail/ProgressUpdateModal.tsx";
 
 /**
- * Renders a task details panel component for a Todo item.
- *
- * @param {Object} props - The component props.
- * @param {Signal.State<Todo | undefined>} props.todo - The current Todo item.
- * @param {Signal.State<boolean>} props.disabled - Indicates whether the form is disabled.
- * @param {(todo: Todo) => void} props.onChange - Callback function to update the Todo item.
- * @param {Signal.State<SortFilter>} props.sortFilter - The current sort filter.
- * @param {() => void} props.onEdit - Callback function to edit the Todo item.
- * @param {() => void} props.onDelete - Callback function to delete the Todo item.
- * @returns {JSX.Element} - The rendered task details panel.
+ * The TaskDetailsPanel component.
  */
 export function TaskDetailsPanel(props: {
     todo: Signal.State<Todo | undefined>,
@@ -33,30 +24,97 @@ export function TaskDetailsPanel(props: {
 }) {
 
     const {todo, disabled, onChange} = props;
+
+    /**
+     * The formatted due date of the current Todo item.
+     */
     const dueDate = useComputed(() => format_yyyyMMdd(todo.get()?.dueDate));
+
+    /**
+     * The priority of the current Todo item.
+     */
     const priority = useComputed(() => todo.get()?.priority ?? '');
+
+    /**
+     * The title of the current Todo item.
+     */
     const title = useComputed(() => todo.get()?.title ?? '');
+
+    /**
+     * The status of the current Todo item.
+     */
     const status = useComputed(() => todo.get()?.status ?? '');
+
+    /**
+     * The progress of the current Todo item.
+     */
     const progress = useComputed(() => todo.get()?.progress ?? '');
+
+    /**
+     * The description of the current Todo item.
+     */
     const description = useComputed(() => todo.get()?.description ?? '');
 
+    /**
+     * A flag indicating whether the user has tried to submit the form.
+     */
     const userHasTriedToSubmit = useSignal(false);
 
+    /**
+     * The error message for the due date field.
+     */
     const dueDateError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.dueDate) ? 'Due Date required' : '' : '');
+
+    /**
+     * The error message for the priority field.
+     */
     const priorityError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.priority) ? 'Priority required' : '' : '');
+
+    /**
+     * The error message for the title field.
+     */
     const titleError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.title) ? 'Title required' : '' : '');
+
+    /**
+     * The error message for the description field.
+     */
     const descriptionError = useComputed(() => userHasTriedToSubmit.get() ? isEmpty(todo.get()?.description) ? 'Description required' : '' : '');
 
+    /**
+     * A flag indicating whether there are any errors in the form.
+     */
     const hasError = useComputed(() => {
         return !(isEmpty(dueDateError.get()) && isEmpty(priorityError.get()) && isEmpty(titleError.get()) && isEmpty(descriptionError.get()))
     })
 
-    const dueDateClassName = useComputed(() => `rounded-5 p-5 pl-10 border${isEmpty(dueDateError.get()) ? '' : '-red'} h-30`);
+    /**
+     * The computed class name for the due date input.
+     */
+    const dueDateClassName = useComputed(() => `rounded-5 p-5 pl-10 border${isEmpty(dueDateError.get()) ? '' : '-red'} h-30 w-full w-min-0`);
+
+    /**
+     * The computed class name for the priority input.
+     */
     const priorityClassName = useComputed(() => `rounded-5  border${isEmpty(priorityError.get()) ? '' : '-red'} h-30`);
+
+    /**
+     * The computed class name for the title input.
+     */
     const titleClassName = useComputed(() => `rounded-5 p-5 border${isEmpty(titleError.get()) ? '' : '-red'}`);
+
+    /**
+     * The computed class name for the description input.
+     */
     const descriptionClassName = useComputed(() => `rounded-5 p-5 border${isEmpty(descriptionError.get()) ? '' : '-red'} h-80`);
 
+    /**
+     * A function to show a modal.
+     */
     const showModal = useShowModal();
+
+    /**
+     * A function to create a new Todo task.
+     */
     const onCreateNewTAsk = () => {
         todo.set({
             status : 'Pending',
@@ -64,6 +122,10 @@ export function TaskDetailsPanel(props: {
         } as Todo);
         disabled.set(false);
     }
+
+    /**
+     * A function to update the progress of the current Todo item.
+     */
     const onUpdateProgress = async () => {
         const todoValue = todo.get()!;
         const progress = await showModal<number>(closePanel => {
@@ -71,6 +133,10 @@ export function TaskDetailsPanel(props: {
         })
         onChange({...todoValue,progress,status:progress === 100 ? 'Completed' : progress === 0 ? 'Pending' : 'On Going'})
     }
+
+    /**
+     * A function to handle the saving of the Todo item.
+     */
     const onSave = (event:{preventDefault:() => void,stopPropagation:() => void}) => {
         event.preventDefault();
         event.stopPropagation();
@@ -82,14 +148,24 @@ export function TaskDetailsPanel(props: {
         disabled.set(true);
     }
 
+    /**
+     * A function to handle the cancellation of the Todo item.
+     */
     const onCancel = () => {
         disabled.set(true);
         userHasTriedToSubmit.set(false);
     };
 
+    /**
+     * A function to handle changes to the input fields.
+     */
     const onInputChange = (colId:keyof Todo,formatter?:(value:unknown) => unknown) => (e:{target:{value:string}}) => {
         todo.set({...todo.get()!, [colId]: formatter? formatter(e.target.value) : e.target.value})
     }
+
+    /**
+     * The computed header buttons for the component.
+     */
     const headerButtons = useComputed(() => {
         const result: ReactNode[] = [];
         const isDisabledValue = disabled.get()
@@ -101,15 +177,22 @@ export function TaskDetailsPanel(props: {
         return result;
     });
 
+    /**
+     * Determines if a todo is selected.
+     */
+    const aTodoIsSelected = useComputed(() => !isEmpty(todo.get()?.id))
 
+    /**
+     * The computed buttons for the component.
+     */
     const buttons = useComputed(() => {
         const isDisabledValue = disabled.get();
-        const selectedTodo = todo.get()?.id;
+        const aTodoIsSelectedValue = aTodoIsSelected.get();
         const result: ReactNode[] = [];
 
-        if(isDisabledValue && selectedTodo !== undefined){
+        if(isDisabledValue && aTodoIsSelectedValue){
             result.push(<button key={'edit'} type={'button'}
-                                className={'flex p-5 gap-10 bg-darken-1 border rounded-5 w-50 justify-center font-medium'}
+                                className={' flex p-5 gap-10 bg-darken-1 border rounded-5 w-50 justify-center font-medium'}
                                 onClick={props.onEdit}><MdEdit className={'text-xl'}/></button>)
             result.push(<button key={'delete'} type={'button'}
                                 className={'flex p-5 gap-10 bg-darken-1 border rounded-5 w-50 justify-center font-medium bg-red'}
@@ -138,8 +221,8 @@ export function TaskDetailsPanel(props: {
                     <notifiable.div>{headerButtons}</notifiable.div>
                 </div>
                 <div className={'flex flex-row gap-5'}>
-                    <label className={'flex col w-1-3'}>
-                        <div className={'font-medium'}>Due Date :</div>
+                    <label className={'flex col w-1-3 '}>
+                        <div className={'font-medium'}>Due Date:</div>
                         <notifiable.input className={dueDateClassName} type={'date'}
                                           value={dueDate}
                                           disabled={disabled}
