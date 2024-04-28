@@ -1,0 +1,6 @@
+.shadow {
+    box-shadow: 0 25px 15px -12px rgba(0, 0, 0, 0.2);
+}
+.shadow-xl{
+    box-shadow: 0 30px 100px 0 rgba(0, 0, 0, 0.3);
+}

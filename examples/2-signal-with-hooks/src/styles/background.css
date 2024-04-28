@@ -1,0 +1,40 @@
+
+.bg-gray {
+    background-color: #EFEFEF;
+}
+
+.bg-darken-1 {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.bg-darken-2 {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.bg-selected {
+    background-color: rgba(0, 0, 0, 0.5);
+    color : white;
+}
+
+.bg-gradient{
+    background: linear-gradient(180deg,#FEFEFE,#F3F2F1);
+}
+
+.bg-lighten-1{
+    background-color: rgba(255,255,255,0.5);
+}
+
+.bg-red{
+    background-color : crimson;
+    color : white;
+}
+
+.bg-blue{
+    background-color : #1469DC;
+    color : white;
+}
+
+.bg-green{
+    background-color: #0E9A31;
+    color : white;
+}

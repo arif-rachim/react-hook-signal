@@ -1,0 +1,42 @@
+
+.rounded-5 {
+    border-radius: 5px;
+}
+
+.rounded-10 {
+    border-radius: 10px;
+}
+
+.rounded-bl-5 {
+    border-bottom-left-radius: 5px;
+}
+
+.rounded-bl-10 {
+    border-bottom-left-radius: 10px;
+}
+
+.rounded-br-5 {
+    border-bottom-right-radius: 5px;
+}
+
+.rounded-br-10 {
+    border-bottom-right-radius: 10px;
+}
+
+
+.rounded-tl-5 {
+    border-top-left-radius: 5px;
+}
+
+.rounded-tl-10 {
+    border-top-left-radius: 10px;
+}
+
+
+.rounded-tr-5 {
+    border-top-right-radius: 5px;
+}
+
+.rounded-tr-10 {
+    border-top-right-radius: 10px;
+}
