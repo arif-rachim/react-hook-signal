@@ -1,7 +1,7 @@
 import {Signal} from "signal-polyfill";
-import {AnySignal, notifiable} from "../../../../../src/components.ts";
+import {AnySignal, notifiable} from "react-hook-signal"
 import {Todo} from "../../model/Todo.ts";
-import {useComputed} from "../../../../../src/hooks.ts";
+import {useComputed} from "react-hook-signal"
 
 /**
  * Represents a pagination component for a grid view.

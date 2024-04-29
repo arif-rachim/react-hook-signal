@@ -1,5 +1,5 @@
 import {Todo} from "../model/Todo.ts";
-import {notifiable} from "../../../../src/main.ts";
+import {notifiable} from "react-hook-signal"
 import {Signal} from "signal-polyfill";
 import {ReactNode} from "react";
 import {isEmpty} from "../utils/isEmpty.ts";

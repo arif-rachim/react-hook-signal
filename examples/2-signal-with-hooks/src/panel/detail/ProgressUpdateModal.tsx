@@ -1,7 +1,7 @@
 import {Todo} from "../../model/Todo.ts";
-import {notifiable} from "../../../../../src/components.ts";
+import {notifiable} from "react-hook-signal"
 import {type ReactElement} from "react";
-import {useComputed,useSignal} from "../../../../../src/hooks.ts";
+import {useComputed,useSignal} from "react-hook-signal"
 
 /**
  * Renders a progress update modal.

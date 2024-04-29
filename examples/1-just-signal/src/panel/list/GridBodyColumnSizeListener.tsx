@@ -1,7 +1,7 @@
 import {CSSProperties, PropsWithChildren, useRef} from "react";
 import {Signal} from "signal-polyfill";
 import {Todo} from "../../model/Todo.ts";
-import {notifiable} from "../../../../../src/components.ts";
+import {notifiable} from "react-hook-signal"
 
 /**
  * Listens for changes in the size of a grid body column and updates the column's width accordingly.

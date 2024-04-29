@@ -2,9 +2,9 @@ import {Signal} from "signal-polyfill";
 import {Todo} from "../../model/Todo.ts";
 import {SortFilter} from "../../App.tsx";
 import {GridHeaderColumnSizeNotifier} from "./GridHeaderColumnSizeNotifier.tsx";
-import {notifiable} from "../../../../../src/components.ts";
+import {notifiable} from "react-hook-signal"
 import {Visible} from "../Visible.tsx";
-import {useComputed} from "../../../../../src/hooks.ts";
+import {useComputed} from "react-hook-signal"
 
 /**
  * Represents the header component of a grid.

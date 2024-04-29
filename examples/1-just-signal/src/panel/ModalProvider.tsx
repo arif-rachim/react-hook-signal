@@ -1,6 +1,6 @@
 import {createContext, CSSProperties, PropsWithChildren, type ReactNode, useEffect, useRef} from "react";
 import {delay} from "../utils/delay.ts";
-import {notifiable} from "../../../../src/components.ts";
+import {notifiable} from "react-hook-signal"
 import {guid} from "../utils/guid.ts";
 import {Signal} from "signal-polyfill";
 

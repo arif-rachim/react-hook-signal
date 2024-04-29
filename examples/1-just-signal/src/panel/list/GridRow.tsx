@@ -1,6 +1,6 @@
 import {Todo} from "../../model/Todo.ts";
 import {Signal} from "signal-polyfill";
-import {AnySignal, notifiable} from "../../../../../src/components.ts";
+import {AnySignal, notifiable} from "react-hook-signal"
 import {useShowModal} from "../useShowModal.ts";
 import {format_yyyyMMdd} from "../../utils/dateFormat.ts";
 import {MdDelete, MdEdit} from "react-icons/md";

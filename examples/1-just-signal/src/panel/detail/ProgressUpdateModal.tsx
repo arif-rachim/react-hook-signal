@@ -1,5 +1,5 @@
 import {Todo} from "../../model/Todo.ts";
-import {notifiable} from "../../../../../src/components.ts";
+import {notifiable} from "react-hook-signal"
 import {type ReactElement} from "react";
 import {Signal} from "signal-polyfill";
 

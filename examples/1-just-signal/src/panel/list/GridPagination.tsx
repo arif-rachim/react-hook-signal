@@ -1,5 +1,5 @@
 import {Signal} from "signal-polyfill";
-import {AnySignal, notifiable} from "../../../../../src/components.ts";
+import {AnySignal, notifiable} from "react-hook-signal"
 import {Todo} from "../../model/Todo.ts";
 
 /**

@@ -1,5 +1,5 @@
-import {useComputed, useSignalEffect,useSignal} from "../../../../src/hooks.ts";
-import {type AnySignal, notifiable} from "../../../../src/components.ts";
+import {useComputed, useSignalEffect,useSignal} from "react-hook-signal"
+import {type AnySignal, notifiable} from "react-hook-signal"
 import {Todo} from "../model/Todo.ts";
 import {Signal} from "signal-polyfill";
 import {SortFilter} from "../App.tsx";

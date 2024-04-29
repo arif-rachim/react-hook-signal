@@ -7,7 +7,7 @@ import {isEmpty} from "./utils/isEmpty.ts";
 import {populateTodosMockData} from "./model/generateMock.ts";
 import {deleteCancellationConfirmation} from "./panel/list/notification/deleteCancellationConfirmation.tsx";
 import {useShowModal} from "./panel/useShowModal.ts";
-import {useComputed,useSignal} from "../../../src/hooks.ts";
+import {useComputed,useSignal} from "react-hook-signal"
 
 
 export type SortFilter = Partial<{

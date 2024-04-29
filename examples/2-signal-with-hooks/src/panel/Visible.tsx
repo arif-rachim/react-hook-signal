@@ -1,5 +1,5 @@
 import {PropsWithChildren, type ReactNode, useState} from "react";
-import {useSignalEffect} from "../../../../src/hooks.ts";
+import {useSignalEffect} from "react-hook-signal"
 import {screenSize, ScreenSize} from "../signals/screenSize.ts";
 
 /**
