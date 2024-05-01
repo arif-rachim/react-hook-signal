@@ -2,6 +2,19 @@ import {createContext, CSSProperties, type FunctionComponent, useContext, useEff
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 
+type SlotComponent<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
+type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: SlotComponent<CellRenderer> }> }
+type CellRendererProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K],style:CSSProperties};
+type CellRendererType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellRendererProps<DataItem, K>> }
+
+interface ListContextProps<BreakPoint, CellRenderer, Template> {
+    breakPoint: Signal.State<BreakPoint>,
+    cellRenderer: Signal.State<CellRenderer>,
+    template: Signal.State<Template>,
+    containerSize?: AnySignal<{ width: number, height: number }>,
+    activeBreakPoint?: AnySignal<keyof BreakPoint>
+}
+
 export function createAdaptiveList<DataItem extends object>() {
     return {
         breakPoint: createBreakPoint<DataItem>()
@@ -17,9 +30,6 @@ const createBreakPoint = <DataItem extends object>() => <BreakPoint extends Reco
 }
 
 
-type CellRendererProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K],style:CSSProperties};
-type CellRendererType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellRendererProps<DataItem, K>> }
-
 const createRenderer = <DataItem extends object, BreakPoint extends Record<string, number>>(props: {
     breakPoint: Signal.State<BreakPoint>
 }) => <CellRenderer extends CellRendererType<DataItem>>(cellRenderer: CellRenderer) => {
@@ -27,8 +37,7 @@ const createRenderer = <DataItem extends object, BreakPoint extends Record<strin
         template: createTemplate<DataItem, BreakPoint, CellRenderer>({...props, cellRenderer: new Signal.State(cellRenderer)})
     }
 }
-type SlotComponent<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
-type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: SlotComponent<CellRenderer> }> }
+
 const createTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>>(props: {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
@@ -36,14 +45,6 @@ const createTemplate = <DataItem extends object, BreakPoint extends Record<strin
     return {
         list: createList<DataItem, BreakPoint, CellRenderer, Template>({...props, template: new Signal.State(template)})
     }
-}
-
-interface ListContextProps<BreakPoint, CellRenderer, Template> {
-    breakPoint: Signal.State<BreakPoint>,
-    cellRenderer: Signal.State<CellRenderer>,
-    template: Signal.State<Template>,
-    containerSize?: AnySignal<{ width: number, height: number }>,
-    activeBreakPoint?: AnySignal<keyof BreakPoint>
 }
 
 const createList = <DataItem extends object,
