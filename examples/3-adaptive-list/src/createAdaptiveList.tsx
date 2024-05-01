@@ -1,4 +1,4 @@
-import {createContext, type FunctionComponent, useContext, useEffect, useId} from "react";
+import {createContext, CSSProperties, type FunctionComponent, useContext, useEffect, useId} from "react";
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 
@@ -16,7 +16,8 @@ const createBreakPoint = <DataItem extends object>() => <BreakPoint extends Reco
     }
 }
 
-type CellRendererProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K] };
+
+type CellRendererProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K],style:CSSProperties};
 type CellRendererType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellRendererProps<DataItem, K>> }
 
 const createRenderer = <DataItem extends object, BreakPoint extends Record<string, number>>(props: {
@@ -26,8 +27,8 @@ const createRenderer = <DataItem extends object, BreakPoint extends Record<strin
         template: createTemplate<DataItem, BreakPoint, CellRenderer>({...props, cellRenderer: new Signal.State(cellRenderer)})
     }
 }
-
-type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: FunctionComponent<{ for: keyof CellRenderer }> }> }
+type SlotComponent<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
+type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: SlotComponent<CellRenderer> }> }
 const createTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>>(props: {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
@@ -75,16 +76,18 @@ const createList = <DataItem extends object,
             return entries[entries.length - 1][0]
         });
 
-        function TemplateSlot(props: {
-            for: keyof CellRenderer
-        }) {
+        const TemplateSlot:SlotComponent<CellRenderer> = (props: {
+            for: keyof CellRenderer,
+            style : CSSProperties
+        }) => {
             const rowContext = useContext(RowContext);
-            const {for: name} = props;
+            const {for: name,style} = props;
             const nameKey = name as keyof DataItem;
             const componentProps = {
                 item: rowContext?.item,
                 name: name,
-                value: rowContext?.item?.[nameKey]
+                value: rowContext?.item?.[nameKey],
+                style
             } as CellRendererProps<DataItem, typeof nameKey>;
             const ItemRenderer = cellRenderer.get()[name] as FunctionComponent<CellRendererProps<DataItem, typeof nameKey>>;
             if (ItemRenderer === null || ItemRenderer === undefined) {
@@ -128,7 +131,7 @@ const createList = <DataItem extends object,
             if (findMatchingTemplateKey === undefined) {
                 findMatchingTemplateKey = entries[0][0];
             }
-            const TemplateRenderer = templateValue[findMatchingTemplateKey] as FunctionComponent<{ Slot: FunctionComponent<{ for: keyof CellRenderer }> }>;
+            const TemplateRenderer = templateValue[findMatchingTemplateKey]!;
             return data.get().map((item,index) => {
                 return <RowContext.Provider value={{item, index}} key={index}>
                     <TemplateRenderer Slot={TemplateSlot}/>
