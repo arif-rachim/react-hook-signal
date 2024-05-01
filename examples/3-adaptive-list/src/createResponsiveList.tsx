@@ -1,13 +1,13 @@
-import {createContext, CSSProperties, type FunctionComponent, useContext, useEffect, useId} from "react";
+import {createContext, CSSProperties, type FunctionComponent, useContext, useEffect, useId, useRef} from "react";
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 
-type SlotComponent<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
-type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: SlotComponent<CellRenderer> }> }
-type CellRendererProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K],style:CSSProperties};
-type CellRendererType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellRendererProps<DataItem, K>> }
+type CellCompProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K],index:number};
+type CellCompType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellCompProps<DataItem, K>> }
+type SlotComp<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
+type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: SlotComp<CellRenderer> }> }
 
-interface ListContextProps<BreakPoint, CellRenderer, Template> {
+interface ContextData<BreakPoint, CellRenderer, Template> {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>,
     template: Signal.State<Template>,
@@ -15,41 +15,41 @@ interface ListContextProps<BreakPoint, CellRenderer, Template> {
     activeBreakPoint?: AnySignal<keyof BreakPoint>
 }
 
-export function createAdaptiveList<DataItem extends object>() {
+export function createResponsiveList<DataItem extends object>() {
     return {
-        breakPoint: createBreakPoint<DataItem>()
+        breakPoint: defineBreakPoint<DataItem>()
     }
 }
 
-const createBreakPoint = <DataItem extends object>() => <BreakPoint extends Record<string, number>>(breakPoint: BreakPoint) => {
+const defineBreakPoint = <DataItem extends object>() => <BreakPoint extends Record<string, number>>(breakPoint: BreakPoint) => {
     return {
-        renderer: createRenderer<DataItem, BreakPoint>({
+        renderer: defineRenderer<DataItem, BreakPoint>({
             breakPoint: new Signal.State(breakPoint)
         })
     }
 }
 
 
-const createRenderer = <DataItem extends object, BreakPoint extends Record<string, number>>(props: {
+const defineRenderer = <DataItem extends object, BreakPoint extends Record<string, number>>(props: {
     breakPoint: Signal.State<BreakPoint>
-}) => <CellRenderer extends CellRendererType<DataItem>>(cellRenderer: CellRenderer) => {
+}) => <CellRenderer extends CellCompType<DataItem>>(cellRenderer: CellRenderer) => {
     return {
-        template: createTemplate<DataItem, BreakPoint, CellRenderer>({...props, cellRenderer: new Signal.State(cellRenderer)})
+        template: defineTemplate<DataItem, BreakPoint, CellRenderer>({...props, cellRenderer: new Signal.State(cellRenderer)})
     }
 }
 
-const createTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellRendererType<DataItem>>(props: {
+const defineTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem>>(props: {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
 }) => <Template extends TemplateType<DataItem, BreakPoint, CellRenderer>>(template: Template) => {
     return {
-        list: createList<DataItem, BreakPoint, CellRenderer, Template>({...props, template: new Signal.State(template)})
+        list: defineList<DataItem, BreakPoint, CellRenderer, Template>({...props, template: new Signal.State(template)})
     }
 }
 
-const createList = <DataItem extends object,
+const defineList = <DataItem extends object,
     BreakPoint extends Record<string, number>,
-    CellRenderer extends CellRendererType<DataItem>,
+    CellRenderer extends CellCompType<DataItem>,
     Template extends TemplateType<DataItem, BreakPoint, CellRenderer>,
 >(props: {
     breakPoint: Signal.State<BreakPoint>,
@@ -57,12 +57,14 @@ const createList = <DataItem extends object,
     template: Signal.State<Template>,
 }) => () => {
     const {breakPoint, cellRenderer, template} = props;
-    const ListContext = createContext<ListContextProps<BreakPoint, CellRenderer, Template>>({...props})
+    const ListContext = createContext<ContextData<BreakPoint, CellRenderer, Template>>({...props})
     const RowContext = createContext<{ item: DataItem, index: number } | undefined>(undefined);
 
     function List(properties: { data: Signal.State<Array<DataItem>> }) {
         const componentId = useId();
-        const containerSize = useSignal({width: 0, height: 0});
+        const containerSize = useSignal({width: window.innerWidth, height: window.innerHeight});
+        const scrollPosition = useSignal(0);
+        const rowHeight = useSignal(0);
         const {data} = properties;
         const activeBreakPoint = useComputed<keyof BreakPoint>(() => {
             const containerSizeValue: { width: number; height: number } = containerSize.get();
@@ -77,25 +79,43 @@ const createList = <DataItem extends object,
             return entries[entries.length - 1][0]
         });
 
-        const TemplateSlot:SlotComponent<CellRenderer> = (props: {
+        const TemplateSlot:SlotComp<CellRenderer> = (props: {
             for: keyof CellRenderer,
             style : CSSProperties
         }) => {
-            const rowContext = useContext(RowContext);
+            const {item,index} = useContext(RowContext)!;
             const {for: name,style} = props;
             const nameKey = name as keyof DataItem;
             const componentProps = {
-                item: rowContext?.item,
+                item: item,
                 name: name,
-                value: rowContext?.item?.[nameKey],
-                style
-            } as CellRendererProps<DataItem, typeof nameKey>;
-            const ItemRenderer = cellRenderer.get()[name] as FunctionComponent<CellRendererProps<DataItem, typeof nameKey>>;
-            if (ItemRenderer === null || ItemRenderer === undefined) {
-                return <div
-                    style={{color: 'red', fontWeight: 'bold', fontStyle: 'italic', fontSize: 'small'}}>{name.toString()}!</div>
-            }
-            return <ItemRenderer {...componentProps}/>
+                value: item?.[nameKey],
+                index
+            } as CellCompProps<DataItem, typeof nameKey>;
+            const ref = useRef<HTMLDivElement>(null);
+            useEffect(() => {
+                if(ref.current !== null){
+                    if(rowHeight.get() === 0 ){
+                        rowHeight.set(ref.current.getBoundingClientRect().height);
+                    }else{
+                        ref.current.style.height = `${rowHeight.get()}px`;
+                    }
+                }
+
+            }, []);
+            const ItemRenderer = cellRenderer.get()[name] as FunctionComponent<CellCompProps<DataItem, typeof nameKey>>;
+            const styleComputed = useComputed<CSSProperties>(() => {
+                const rowHeightValue = rowHeight.get();
+                return {
+                    overflow:'hidden',
+                    position:'absolute',
+                    top:index * rowHeightValue,
+                    ...style
+                }
+            })
+            return <notifiable.div ref={ref} style={styleComputed}>
+                <ItemRenderer {...componentProps}/>
+            </notifiable.div>
         }
 
         useEffect(() => {
@@ -139,13 +159,25 @@ const createList = <DataItem extends object,
                 </RowContext.Provider>
             })
         })
+        const containerStyle = useComputed<CSSProperties>(() => {
+            const rowHeightValue = rowHeight.get();
+            const totalData = data.get().length;
+            return {
+                height : rowHeightValue * totalData,
+                position:'relative'
+            }
+        })
         return <ListContext.Provider
             value={{breakPoint, cellRenderer, template, containerSize, activeBreakPoint}}>
-            <notifiable.div id={componentId} style={{display: 'flex', flexDirection: 'column'}}>
+            <notifiable.div id={componentId} style={{display:"flex",flexDirection:'column',height:'100%',overflow:'auto'}} onScroll={(e) => {
+                scrollPosition.set((e.target as HTMLDivElement).scrollTop);
+            }}>
+                <notifiable.div style={containerStyle}>
                 {elements}
+                </notifiable.div>
             </notifiable.div>
         </ListContext.Provider>
     }
 
-    return {List,Context:ListContext}
+    return {List,ListContext,RowContext}
 }

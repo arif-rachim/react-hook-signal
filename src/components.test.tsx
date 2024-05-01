@@ -3,6 +3,7 @@ import {expect, test} from "vitest";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {Signal} from "signal-polyfill";
 import {useComputed, useSignal} from "./hooks.ts";
+import {useEffect, useRef} from "react";
 
 function SimpleNotifiable(){
     return <>
@@ -160,5 +161,21 @@ test('It should Accurately test onclick button',async () => {
     fireEvent.click(increment);
     await waitFor(() => {
         expect(div.innerHTML).to.equal('is match true result : 4');
+    })
+})
+
+function TextRef(){
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        ref.current!.innerHTML = 'Hello';
+    }, []);
+    return <notifiable.div data-testid={'div'} ref={ref}></notifiable.div>
+}
+
+test('It should Accurately populate ref',async () => {
+    render(<TextRef />);
+    const div = screen.getByTestId('div');
+    await waitFor(() => {
+        expect(div.innerHTML).to.equal('Hello');
     })
 })

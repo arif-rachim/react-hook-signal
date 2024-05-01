@@ -121,19 +121,19 @@ export const notifiable: HtmlNotifiableComponents = new Proxy<Partial<HtmlNotifi
  * @returns {React.FC<ComputableProps<JSX.IntrinsicElements[K]>>} The notifiable HTML element component.
  * @template K The type of the HTML element.
  */
-function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key: K): React.FC<ComputableProps<JSX.IntrinsicElements[K]>> {
+function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key: K) {
 
     function HtmlElement(props: JSX.IntrinsicElements[K]) {
         return createElement(key, props)
     }
 
-    const NotifiableHtmlElement = React.memo(function NotifiableHtmlElement(props: ComputableProps<Parameters<typeof HtmlElement>[0]>) {
+    const NotifiableHtmlElement = React.memo(React.forwardRef(function NotifiableHtmlElement(props: ComputableProps<Parameters<typeof HtmlElement>[0]>,ref) {
         let notifiableProps = {} as NotifiableProps<Parameters<typeof HtmlElement>[0]>;
         for (const [key, value] of Object.entries(props)) {
             notifiableProps = {...notifiableProps, [key.startsWith("on") ? `${key}Handler` : key]: value}
         }
-        return Notifiable({component: HtmlElement, componentRenderStrategy: 'functionCall', ...notifiableProps})
-    })
+        return Notifiable({component: HtmlElement, componentRenderStrategy: 'functionCall',ref, ...notifiableProps})
+    }))
     NotifiableHtmlElement.displayName = key;
     return NotifiableHtmlElement;
 }
