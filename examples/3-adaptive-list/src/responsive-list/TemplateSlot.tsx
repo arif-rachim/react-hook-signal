@@ -1,7 +1,7 @@
 import {CSSProperties, type FunctionComponent, useContext, useEffect, useRef} from "react";
-import {RowContext} from "./RowContext.ts";
+import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
-import {CellCompProps, ListContextData, RowContextData} from "./types.ts";
+import {CellCompProps, ListContextData, TemplateContextData} from "./types.ts";
 
 /**
  * Renders a template slot for a cell in a list or grid.
@@ -15,21 +15,21 @@ export function TemplateSlot<BreakPoint,CellRenderer,Template,DataItem>(props: {
     for: keyof CellRenderer,
     style : CSSProperties
 }): JSX.Element{
-    const {item,index} = useContext(RowContext) as RowContextData<DataItem>;
-    const {rowHeight,cellRenderer} = useContext(ListContext)  as ListContextData<BreakPoint, CellRenderer, Template>;
+    const {item,index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
+    const {templateHeight,cellRenderer} = useContext(ListContext)  as ListContextData<BreakPoint, CellRenderer, Template>;
     const {for: name,style} = props;
 
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if(ref.current !== null){
-            if(rowHeight.get() === 0 ){
-                rowHeight.set(ref.current.getBoundingClientRect().height);
+            if(templateHeight.get() === 0 ){
+                templateHeight.set(ref.current.getBoundingClientRect().height);
             }else{
-                ref.current.style.height = `${rowHeight.get()}px`;
+                ref.current.style.height = `${templateHeight.get()}px`;
             }
         }
-    }, [rowHeight]);
+    }, [templateHeight]);
 
     /**
      * Represents an item renderer function component used to render a cell in a table.

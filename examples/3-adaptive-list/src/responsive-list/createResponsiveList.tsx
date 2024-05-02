@@ -1,9 +1,9 @@
 import React, {CSSProperties, useEffect, useId} from "react";
 import {Signal} from "signal-polyfill";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
-import {RowContext} from "./RowContext.ts";
+import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
-import {CellCompType, ListContextData, RowContextData, TemplateType} from "./types.ts";
+import {CellCompType, ListContextData, TemplateContextData, TemplateType} from "./types.ts";
 import {TemplateComp} from "./TemplateComp.tsx";
 
 /**
@@ -63,13 +63,13 @@ const defineList = <DataItem extends object,
 }) => () => {
     const {breakPoint, cellRenderer, template} = props;
     const ResponsiveListContext = ListContext as React.Context<ListContextData<BreakPoint, CellRenderer, Template>>;
-    const ResponsiveRowContext = RowContext as React.Context<RowContextData<DataItem>>;
+    const ResponsiveTemplateContext = TemplateContext as React.Context<TemplateContextData<DataItem>>;
 
     function List(properties: { data: Signal.State<Array<DataItem>> }) {
         const componentId = useId();
         const containerSize = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollPosition = useSignal(0);
-        const rowHeight = useSignal(0);
+        const templateHeight = useSignal(0);
         const {data} = properties;
 
         const activeBreakPoint = useComputed<keyof BreakPoint>(() => {
@@ -124,34 +124,34 @@ const defineList = <DataItem extends object,
 
         const elements = useComputed(() => {
             return data.get().map((item,index) => {
-                return <ResponsiveRowContext.Provider value={{item, index}} key={index}>
+                return <ResponsiveTemplateContext.Provider value={{item, index}} key={index}>
                     <TemplateComp/>
-                </ResponsiveRowContext.Provider>
+                </ResponsiveTemplateContext.Provider>
             })
         })
 
 
 
         const containerStyle = useComputed<CSSProperties>(() => {
-            const rowHeightValue = rowHeight.get();
+            const templateHeightValue = templateHeight.get();
             const totalData = data.get().length;
             return {
-                height : rowHeightValue * totalData,
+                height : templateHeightValue * totalData,
                 position:'relative'
             }
         })
         return <ResponsiveListContext.Provider
-            value={{breakPoint, cellRenderer, template, containerSize, activeBreakPoint,rowHeight,scrollPosition,activeTemplateKey}}>
-            <notifiable.div id={componentId} style={{display:"flex",flexDirection:'column',height:'100%',overflow:'auto'}} onScroll={(e) => {
+            value={{breakPoint, cellRenderer, template, containerSize, activeBreakPoint,templateHeight,scrollPosition,activeTemplateKey}}>
+            <div id={componentId} style={{display:"flex",flexDirection:'column',height:'100%',overflow:'auto'}} onScroll={(e) => {
                 scrollPosition.set((e.target as HTMLDivElement).scrollTop);
             }}>
                 <notifiable.div style={containerStyle}>
                 {elements}
                 </notifiable.div>
-            </notifiable.div>
+            </div>
         </ResponsiveListContext.Provider>
     }
 
-    return {List,ListContext:ResponsiveListContext,RowContext:ResponsiveRowContext}
+    return {List,ListContext:ResponsiveListContext,TemplateContext:ResponsiveTemplateContext}
 }
 

@@ -1,6 +1,6 @@
 import {CSSProperties, FunctionComponent, useContext} from "react";
-import {RowContext} from "./RowContext.ts";
-import {ListContextData, RowContextData, SlotComp} from "./types.ts";
+import {TemplateContext} from "./TemplateContext.ts";
+import {ListContextData, TemplateContextData, SlotComp} from "./types.ts";
 import {ListContext} from "./ListContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import {TemplateSlot} from "./TemplateSlot.tsx";
@@ -11,16 +11,16 @@ import {TemplateSlot} from "./TemplateSlot.tsx";
  * @returns {JSX.Element} - The generated template component.
  */
 export function TemplateComp<DataItem,BreakPoint, CellRenderer, Template>(): JSX.Element{
-    const {index} = useContext(RowContext) as RowContextData<DataItem>;
-    const {rowHeight,template,activeTemplateKey} = useContext(ListContext) as ListContextData<BreakPoint, CellRenderer, Template>;
+    const {index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
+    const {templateHeight,template,activeTemplateKey} = useContext(ListContext) as ListContextData<BreakPoint, CellRenderer, Template>;
     const style = useComputed<CSSProperties>(() => {
-        const rowHeightValue = rowHeight.get();
+        const templateHeightValue = templateHeight.get();
         return {
             position:'absolute',
-            top : index * rowHeightValue,
+            top : index * templateHeightValue,
             display:"flex",
             flexDirection:'column',
-            height : rowHeightValue,
+            height : templateHeightValue,
             overflow:"hidden",
             width:'100%'
         }

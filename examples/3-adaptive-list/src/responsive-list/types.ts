@@ -43,7 +43,7 @@ export interface ListContextData<BreakPoint, CellRenderer, Template> {
     template: Signal.State<Template>,
     containerSize: AnySignal<{ width: number, height: number }>,
     activeBreakPoint: AnySignal<keyof BreakPoint>,
-    rowHeight: Signal.State<number>,
+    templateHeight: Signal.State<number>,
     scrollPosition:AnySignal<number>,
     activeTemplateKey:AnySignal<keyof Template>
 }
@@ -53,7 +53,7 @@ export interface ListContextData<BreakPoint, CellRenderer, Template> {
  *
  * @template DataItem The type of the data item in the row.
  */
-export interface RowContextData<DataItem>{
+export interface TemplateContextData<DataItem>{
     item: DataItem,
     index: number
 }
