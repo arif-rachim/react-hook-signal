@@ -1,29 +1,23 @@
-import React, {createContext, CSSProperties, type FunctionComponent, useContext, useEffect, useId, useRef} from "react";
+import React, {CSSProperties, useEffect, useId} from "react";
 import {Signal} from "signal-polyfill";
-import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
+import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import {RowContext} from "./RowContext.ts";
+import {ListContext} from "./ListContext.ts";
+import {CellCompType, ListContextData, RowContextData, TemplateType} from "./types.ts";
+import {TemplateComp} from "./TemplateComp.tsx";
 
-type CellCompProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K],index:number};
-type CellCompType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellCompProps<DataItem, K>> }
-type SlotComp<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
-type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem>> = { [K in keyof BreakPoint]?: FunctionComponent<{ Slot: SlotComp<CellRenderer> }> }
-
-interface ContextData<BreakPoint, CellRenderer, Template> {
-    breakPoint: Signal.State<BreakPoint>,
-    cellRenderer: Signal.State<CellRenderer>,
-    template: Signal.State<Template>,
-    containerSize?: AnySignal<{ width: number, height: number }>,
-    activeBreakPoint?: AnySignal<keyof BreakPoint>
-}
-interface RowContextData<DataItem>{
-    item: DataItem,
-    index: number
-}
+/**
+ * Create a responsive list.
+ */
 export function createResponsiveList<DataItem extends object>() {
     return {
         breakPoint: defineBreakPoint<DataItem>()
     }
 }
 
+/**
+ * Defines a breakpoint for rendering based on the provided `breakPoint` object.
+ */
 const defineBreakPoint = <DataItem extends object>() => <BreakPoint extends Record<string, number>>(breakPoint: BreakPoint) => {
     return {
         renderer: defineRenderer<DataItem, BreakPoint>({
@@ -32,7 +26,9 @@ const defineBreakPoint = <DataItem extends object>() => <BreakPoint extends Reco
     }
 }
 
-
+/**
+ * Define a renderer for a data item and break point.
+ */
 const defineRenderer = <DataItem extends object, BreakPoint extends Record<string, number>>(props: {
     breakPoint: Signal.State<BreakPoint>
 }) => <CellRenderer extends CellCompType<DataItem>>(cellRenderer: CellRenderer) => {
@@ -41,6 +37,9 @@ const defineRenderer = <DataItem extends object, BreakPoint extends Record<strin
     }
 }
 
+/**
+ * Define a template for rendering a list of items with custom breakpoints and cell renderers.
+ */
 const defineTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem>>(props: {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
@@ -50,10 +49,9 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
     }
 }
 
-const InternalListContext = createContext(undefined)
-const InternalRowContext = createContext(undefined);
-
-
+/**
+ * A function that returns a list component and related context providers.
+ */
 const defineList = <DataItem extends object,
     BreakPoint extends Record<string, number>,
     CellRenderer extends CellCompType<DataItem>,
@@ -64,8 +62,8 @@ const defineList = <DataItem extends object,
     template: Signal.State<Template>,
 }) => () => {
     const {breakPoint, cellRenderer, template} = props;
-    const ListContext = InternalListContext as unknown as React.Context<ContextData<BreakPoint, CellRenderer, Template>>;
-    const RowContext = InternalRowContext as unknown as React.Context<RowContextData<DataItem>>;
+    const ResponsiveListContext = ListContext as React.Context<ListContextData<BreakPoint, CellRenderer, Template>>;
+    const ResponsiveRowContext = RowContext as React.Context<RowContextData<DataItem>>;
 
     function List(properties: { data: Signal.State<Array<DataItem>> }) {
         const componentId = useId();
@@ -110,39 +108,8 @@ const defineList = <DataItem extends object,
             if (findMatchingTemplateKey === undefined) {
                 findMatchingTemplateKey = entries[0][0];
             }
-            return findMatchingTemplateKey;
+            return findMatchingTemplateKey as keyof Template;
         })
-
-        const TemplateSlot:SlotComp<CellRenderer> = (props: {
-            for: keyof CellRenderer,
-            style : CSSProperties
-        }) => {
-            const {item,index} = useContext(RowContext)!;
-            const {for: name,style} = props;
-            const nameKey = name as keyof DataItem;
-            const componentProps = {
-                item: item,
-                name: name,
-                value: item?.[nameKey],
-                index
-            } as CellCompProps<DataItem, typeof nameKey>;
-            const ref = useRef<HTMLDivElement>(null);
-            useEffect(() => {
-                if(ref.current !== null){
-                    if(rowHeight.get() === 0 ){
-                        rowHeight.set(ref.current.getBoundingClientRect().height);
-                    }else{
-                        ref.current.style.height = `${rowHeight.get()}px`;
-                    }
-                }
-
-            }, []);
-            const ItemRenderer = cellRenderer.get()[name] as FunctionComponent<CellCompProps<DataItem, typeof nameKey>>;
-
-            return <div ref={ref} style={style}>
-                <ItemRenderer {...componentProps}/>
-            </div>
-        }
 
         useEffect(() => {
             const element: HTMLElement = document.getElementById(componentId)!;
@@ -156,18 +123,13 @@ const defineList = <DataItem extends object,
         }, [componentId, containerSize]);
 
         const elements = useComputed(() => {
-            const templateValue = template.get();
-            const activeTemplateKeyValue = activeTemplateKey.get();
-
-            const TemplateRenderer = templateValue[activeTemplateKeyValue]!;
-
-            const Context = RowContext as unknown as React.Context<RowContextData<DataItem>>
             return data.get().map((item,index) => {
-                return <Context.Provider value={{item, index}} key={index}>
-                    <TemplateRenderer Slot={TemplateSlot} />
-                </Context.Provider>
+                return <ResponsiveRowContext.Provider value={{item, index}} key={index}>
+                    <TemplateComp/>
+                </ResponsiveRowContext.Provider>
             })
         })
+
 
 
         const containerStyle = useComputed<CSSProperties>(() => {
@@ -178,9 +140,8 @@ const defineList = <DataItem extends object,
                 position:'relative'
             }
         })
-        const Context = ListContext as unknown as React.Context<ContextData<BreakPoint, CellRenderer, Template>>
-        return <Context.Provider
-            value={{breakPoint, cellRenderer, template, containerSize, activeBreakPoint}}>
+        return <ResponsiveListContext.Provider
+            value={{breakPoint, cellRenderer, template, containerSize, activeBreakPoint,rowHeight,scrollPosition,activeTemplateKey}}>
             <notifiable.div id={componentId} style={{display:"flex",flexDirection:'column',height:'100%',overflow:'auto'}} onScroll={(e) => {
                 scrollPosition.set((e.target as HTMLDivElement).scrollTop);
             }}>
@@ -188,8 +149,9 @@ const defineList = <DataItem extends object,
                 {elements}
                 </notifiable.div>
             </notifiable.div>
-        </Context.Provider>
+        </ResponsiveListContext.Provider>
     }
 
-    return {List,ListContext,RowContext}
+    return {List,ListContext:ResponsiveListContext,RowContext:ResponsiveRowContext}
 }
+

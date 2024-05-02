@@ -2,7 +2,7 @@ import './App.css'
 import {Todo} from "./model/Todo.ts";
 import {populateTodosMockData} from "./model/generateMock.ts";
 import {useSignal} from "react-hook-signal"
-import {createResponsiveList} from "./createResponsiveList.tsx";
+import {createResponsiveList} from "./responsive-list/createResponsiveList.tsx";
 import {CSSProperties} from "react";
 import {format_ddMMMyyyy} from "./utils/dateFormat.ts";
 
