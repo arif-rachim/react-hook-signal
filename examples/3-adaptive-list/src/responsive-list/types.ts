@@ -48,8 +48,11 @@ export interface ListContextData<DataItem,BreakPoint, CellRenderer, Template> {
     scrollOffset:AnySignal<number>,
     currentTemplateKey:AnySignal<keyof Template>,
     data:AnySignal<Array<DataItem>>,
-    maxRenderedData: AnySignal<number>,
-    visibleDataIndices:AnySignal<{start:number,end:number}>,
+    totalTemplatePerSegment: AnySignal<number>,
+    totalSegment:Signal.State<number>,
+    totalOffsetSegment:Signal.State<number>,
+    currentScrollSegment:AnySignal<number>,
+    segmentCurrentlyBeingRendered:Signal.State<Array<number>>
 }
 
 /**

@@ -4,7 +4,7 @@ import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
 import {CellCompType, ListContextData, TemplateContextData, TemplateType} from "./types.ts";
-import {TemplateComp} from "./TemplateComp.tsx";
+import {Segment} from "./Segment.tsx";
 
 /**
  * Create a responsive list.
@@ -70,7 +70,9 @@ const defineList = <DataItem extends object,
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
-        const maxRenderedData = useSignal(50);
+        const totalTemplatePerSegment = useSignal(5);
+        const totalSegment = useSignal(7);
+        const totalOffsetSegment = useSignal(2);
         const {data} = properties;
 
         const currentBreakPoint = useComputed<keyof BreakPoint>(() => {
@@ -123,48 +125,18 @@ const defineList = <DataItem extends object,
             return () => resizeObserver.disconnect();
         }, [componentId, viewportDimensions]);
 
-        const currentScrollPage = useComputed(() => {
+        const currentScrollSegment = useComputed(() => {
             const scrollPositionValue = scrollOffset.get();
             const templateHeightValue = templateHeight.get();
             if(templateHeightValue === 0){
                 return 0
             }
             const currentScrollIndex = Math.floor(scrollPositionValue / templateHeightValue);
-            const templateToBeDisplayed = maxRenderedData.get();
+            const templateToBeDisplayed = totalTemplatePerSegment.get();
             return Math.floor(currentScrollIndex / templateToBeDisplayed);
         })
 
-
-        const visibleDataIndices = useComputed(() => {
-
-            const templateHeightValue = templateHeight.get();
-            const currentPageValue = currentScrollPage.get();
-            const templateToBeDisplayed = maxRenderedData.get();
-            const dataValue = data.get();
-            if(templateHeightValue === 0){
-                return {start:0,end:1}
-            }
-            const currentScrollIndex = currentPageValue * templateToBeDisplayed;
-            const totalRecord = dataValue.length;
-            const start = Math.max(currentScrollIndex -  templateToBeDisplayed,0);
-            const end = Math.min((currentScrollIndex + (templateToBeDisplayed * 2) ),totalRecord - 1);
-            return {start,end}
-        })
-
-
-        const elementsToRender = useComputed(() => {
-            const {start,end} = visibleDataIndices.get();
-            const renderedDataValue = data.get().slice(start,end);
-            return renderedDataValue.map((item,idx) => {
-                const index = start + idx;
-                return <ResponsiveTemplateContext.Provider value={{item, index}} key={index}>
-                    <TemplateComp/>
-                </ResponsiveTemplateContext.Provider>
-            })
-        })
-
-
-
+        const segmentCurrentlyBeingRendered = useSignal<Array<number>>(Array.from({length:totalSegment.get()}).map((_,i) => i));
         const containerStyle = useComputed<CSSProperties>(() => {
             const templateHeightValue = templateHeight.get();
             const totalData = data.get().length;
@@ -173,13 +145,20 @@ const defineList = <DataItem extends object,
                 position:'relative'
             }
         })
+        const segments = useComputed(() => {
+            const totalSegmentValue = totalSegment.get();
+            return Array.from({length:totalSegmentValue}).map((_,index) => {
+                return <Segment startingPage={index} key={index}/>
+            })
+
+        })
         return <ResponsiveListContext.Provider
-            value={{breakPoint, cellRenderer, template, viewportDimensions, currentBreakPoint,templateHeight,scrollOffset, currentTemplateKey,data,maxRenderedData,visibleDataIndices}}>
+            value={{breakPoint, cellRenderer, template, viewportDimensions, currentBreakPoint,templateHeight,scrollOffset, currentTemplateKey,data,totalTemplatePerSegment, currentScrollSegment,segmentCurrentlyBeingRendered,totalOffsetSegment,totalSegment}}>
             <div id={componentId} style={{height:'100%',overflow:'auto'}} onScroll={(e) => {
                 scrollOffset.set((e.target as HTMLDivElement).scrollTop);
             }}>
                 <notifiable.div style={containerStyle}>
-                {elementsToRender}
+                    {segments}
                 </notifiable.div>
             </div>
         </ResponsiveListContext.Provider>
@@ -187,4 +166,3 @@ const defineList = <DataItem extends object,
 
     return {List,ListContext:ResponsiveListContext,TemplateContext:ResponsiveTemplateContext}
 }
-
