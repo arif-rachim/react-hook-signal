@@ -33,19 +33,23 @@ export type TemplateType<DataItem extends object, BreakPoint extends Record<stri
 
 /**
  * Represents the context data for a list component.
+ * @template DataItem - The type of data
  * @template BreakPoint - The type of breakpoint.
  * @template CellRenderer - The type of cell renderer.
  * @template Template - The type of template.
  */
-export interface ListContextData<BreakPoint, CellRenderer, Template> {
+export interface ListContextData<DataItem,BreakPoint, CellRenderer, Template> {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>,
     template: Signal.State<Template>,
-    containerSize: AnySignal<{ width: number, height: number }>,
-    activeBreakPoint: AnySignal<keyof BreakPoint>,
+    viewportDimensions: AnySignal<{ width: number, height: number }>,
+    currentBreakPoint: AnySignal<keyof BreakPoint>,
     templateHeight: Signal.State<number>,
-    scrollPosition:AnySignal<number>,
-    activeTemplateKey:AnySignal<keyof Template>
+    scrollOffset:AnySignal<number>,
+    currentTemplateKey:AnySignal<keyof Template>,
+    data:AnySignal<Array<DataItem>>,
+    maxRenderedData: AnySignal<number>,
+    visibleDataIndices:AnySignal<{start:number,end:number}>,
 }
 
 /**

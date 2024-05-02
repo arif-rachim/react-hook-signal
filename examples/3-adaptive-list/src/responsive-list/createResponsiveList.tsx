@@ -62,18 +62,19 @@ const defineList = <DataItem extends object,
     template: Signal.State<Template>,
 }) => () => {
     const {breakPoint, cellRenderer, template} = props;
-    const ResponsiveListContext = ListContext as React.Context<ListContextData<BreakPoint, CellRenderer, Template>>;
+    const ResponsiveListContext = ListContext as React.Context<ListContextData<DataItem,BreakPoint, CellRenderer, Template>>;
     const ResponsiveTemplateContext = TemplateContext as React.Context<TemplateContextData<DataItem>>;
 
     function List(properties: { data: Signal.State<Array<DataItem>> }) {
         const componentId = useId();
-        const containerSize = useSignal({width: window.innerWidth, height: window.innerHeight});
-        const scrollPosition = useSignal(0);
+        const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
+        const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
+        const maxRenderedData = useSignal(50);
         const {data} = properties;
 
-        const activeBreakPoint = useComputed<keyof BreakPoint>(() => {
-            const containerSizeValue: { width: number; height: number } = containerSize.get();
+        const currentBreakPoint = useComputed<keyof BreakPoint>(() => {
+            const containerSizeValue: { width: number; height: number } = viewportDimensions.get();
             const responsiveBreakPointValue: Record<string, number> = breakPoint.get();
             const entries = Object.entries(responsiveBreakPointValue);
             entries.sort((a, b) => a[1] - b[1]);
@@ -85,8 +86,8 @@ const defineList = <DataItem extends object,
             return entries[entries.length - 1][0]
         });
 
-        const activeTemplateKey = useComputed(() => {
-            const activeBreakPointValue = activeBreakPoint.get();
+        const currentTemplateKey = useComputed(() => {
+            const activeBreakPointValue = currentBreakPoint.get();
             const templateValue = template.get();
             const breakPointValue = breakPoint.get();
             const templateValueEntries = Object.keys(templateValue).reduce((result, key: keyof Template) => {
@@ -115,15 +116,47 @@ const defineList = <DataItem extends object,
             const element: HTMLElement = document.getElementById(componentId)!;
             const resizeObserver: ResizeObserver = new ResizeObserver(entries => {
                 const size = entries.pop()!.target.getBoundingClientRect();
-                containerSize.set({width: size.width, height: size.height});
+                viewportDimensions.set({width: size.width, height: size.height});
             })
-            containerSize.set(element.getBoundingClientRect());
+            viewportDimensions.set(element.getBoundingClientRect());
             resizeObserver.observe(element);
             return () => resizeObserver.disconnect();
-        }, [componentId, containerSize]);
+        }, [componentId, viewportDimensions]);
 
-        const elements = useComputed(() => {
-            return data.get().map((item,index) => {
+        const currentScrollPage = useComputed(() => {
+            const scrollPositionValue = scrollOffset.get();
+            const templateHeightValue = templateHeight.get();
+            if(templateHeightValue === 0){
+                return 0
+            }
+            const currentScrollIndex = Math.floor(scrollPositionValue / templateHeightValue);
+            const templateToBeDisplayed = maxRenderedData.get();
+            return Math.floor(currentScrollIndex / templateToBeDisplayed);
+        })
+
+
+        const visibleDataIndices = useComputed(() => {
+
+            const templateHeightValue = templateHeight.get();
+            const currentPageValue = currentScrollPage.get();
+            const templateToBeDisplayed = maxRenderedData.get();
+            const dataValue = data.get();
+            if(templateHeightValue === 0){
+                return {start:0,end:1}
+            }
+            const currentScrollIndex = currentPageValue * templateToBeDisplayed;
+            const totalRecord = dataValue.length;
+            const start = Math.max(currentScrollIndex -  templateToBeDisplayed,0);
+            const end = Math.min((currentScrollIndex + (templateToBeDisplayed * 2) ),totalRecord - 1);
+            return {start,end}
+        })
+
+
+        const elementsToRender = useComputed(() => {
+            const {start,end} = visibleDataIndices.get();
+            const renderedDataValue = data.get().slice(start,end);
+            return renderedDataValue.map((item,idx) => {
+                const index = start + idx;
                 return <ResponsiveTemplateContext.Provider value={{item, index}} key={index}>
                     <TemplateComp/>
                 </ResponsiveTemplateContext.Provider>
@@ -141,12 +174,12 @@ const defineList = <DataItem extends object,
             }
         })
         return <ResponsiveListContext.Provider
-            value={{breakPoint, cellRenderer, template, containerSize, activeBreakPoint,templateHeight,scrollPosition,activeTemplateKey}}>
-            <div id={componentId} style={{display:"flex",flexDirection:'column',height:'100%',overflow:'auto'}} onScroll={(e) => {
-                scrollPosition.set((e.target as HTMLDivElement).scrollTop);
+            value={{breakPoint, cellRenderer, template, viewportDimensions, currentBreakPoint,templateHeight,scrollOffset, currentTemplateKey,data,maxRenderedData,visibleDataIndices}}>
+            <div id={componentId} style={{height:'100%',overflow:'auto'}} onScroll={(e) => {
+                scrollOffset.set((e.target as HTMLDivElement).scrollTop);
             }}>
                 <notifiable.div style={containerStyle}>
-                {elements}
+                {elementsToRender}
                 </notifiable.div>
             </div>
         </ResponsiveListContext.Provider>

@@ -11,12 +11,12 @@ import {CellCompProps, ListContextData, TemplateContextData} from "./types.ts";
  * @param {CSSProperties} props.style - The custom style for the template slot.
  * @returns {JSX.Element} - The rendered template slot.
  */
-export function TemplateSlot<BreakPoint,CellRenderer,Template,DataItem>(props: {
+export function TemplateSlot<DataItem,BreakPoint,CellRenderer,Template>(props: {
     for: keyof CellRenderer,
     style : CSSProperties
 }): JSX.Element{
     const {item,index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
-    const {templateHeight,cellRenderer} = useContext(ListContext)  as ListContextData<BreakPoint, CellRenderer, Template>;
+    const {templateHeight,cellRenderer} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
     const {for: name,style} = props;
 
     const ref = useRef<HTMLDivElement>(null);

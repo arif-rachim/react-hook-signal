@@ -12,7 +12,7 @@ import {TemplateSlot} from "./TemplateSlot.tsx";
  */
 export function TemplateComp<DataItem,BreakPoint, CellRenderer, Template>(): JSX.Element{
     const {index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
-    const {templateHeight,template,activeTemplateKey} = useContext(ListContext) as ListContextData<BreakPoint, CellRenderer, Template>;
+    const {templateHeight,template,currentTemplateKey} = useContext(ListContext) as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
     const style = useComputed<CSSProperties>(() => {
         const templateHeightValue = templateHeight.get();
         return {
@@ -27,7 +27,7 @@ export function TemplateComp<DataItem,BreakPoint, CellRenderer, Template>(): JSX
     })
     const element = useComputed(() => {
         const templateValue = template.get();
-        const activeTemplateKeyValue = activeTemplateKey.get();
+        const activeTemplateKeyValue = currentTemplateKey.get();
         const TemplateRenderer = templateValue[activeTemplateKeyValue] as unknown as FunctionComponent<{Slot:SlotComp<unknown>}>;
         return <TemplateRenderer Slot={TemplateSlot<BreakPoint,CellRenderer,Template,DataItem>} />
     })
