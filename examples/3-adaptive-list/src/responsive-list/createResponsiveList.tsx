@@ -1,6 +1,6 @@
 import React, {CSSProperties, useEffect, useId} from "react";
 import {Signal} from "signal-polyfill";
-import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
 import {CellCompType, ListContextData, TemplateContextData, TemplateType} from "./types.ts";
@@ -33,7 +33,10 @@ const defineRenderer = <DataItem extends object, BreakPoint extends Record<strin
     breakPoint: Signal.State<BreakPoint>
 }) => <CellRenderer extends CellCompType<DataItem>>(cellRenderer: CellRenderer) => {
     return {
-        template: defineTemplate<DataItem, BreakPoint, CellRenderer>({...props, cellRenderer: new Signal.State(cellRenderer)})
+        template: defineTemplate<DataItem, BreakPoint, CellRenderer>({
+            ...props,
+            cellRenderer: new Signal.State(cellRenderer)
+        })
     }
 }
 
@@ -62,7 +65,7 @@ const defineList = <DataItem extends object,
     template: Signal.State<Template>,
 }) => () => {
     const {breakPoint, cellRenderer, template} = props;
-    const ResponsiveListContext = ListContext as React.Context<ListContextData<DataItem,BreakPoint, CellRenderer, Template>>;
+    const ResponsiveListContext = ListContext as React.Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template>>;
     const ResponsiveTemplateContext = TemplateContext as React.Context<TemplateContextData<DataItem>>;
 
     function List(properties: { data: Signal.State<Array<DataItem>> }) {
@@ -70,11 +73,20 @@ const defineList = <DataItem extends object,
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
-        const totalTemplatePerSegment = useSignal(1);
-        const totalSegment = useSignal(3);
-        const totalOffsetSegment = useSignal(-2);
+        const totalSegment = useSignal(4);
+        const totalOffsetSegment = useSignal(1);
         const {data} = properties;
-
+        const totalTemplatePerSegment = useComputed(() => {
+            const {height} = viewportDimensions.get();
+            const templateHeightValue = templateHeight.get();
+            if (height > 0 && templateHeightValue > 0) {
+                return Math.ceil(height / templateHeightValue);
+            }
+            return 1
+        });
+        useSignalEffect(() => {
+            console.log('templatePerSegment',totalTemplatePerSegment.get());
+        })
         const currentBreakPoint = useComputed<keyof BreakPoint>(() => {
             const containerSizeValue: { width: number; height: number } = viewportDimensions.get();
             const responsiveBreakPointValue: Record<string, number> = breakPoint.get();
@@ -128,7 +140,7 @@ const defineList = <DataItem extends object,
         const currentScrollSegment = useComputed(() => {
             const scrollPositionValue = scrollOffset.get();
             const templateHeightValue = templateHeight.get();
-            if(templateHeightValue === 0){
+            if (templateHeightValue === 0) {
                 return 0
             }
             const currentScrollIndex = Math.floor(scrollPositionValue / templateHeightValue);
@@ -136,25 +148,40 @@ const defineList = <DataItem extends object,
             return Math.floor(currentScrollIndex / templateToBeDisplayed);
         })
 
-        const segmentCurrentlyBeingRendered = useSignal<Array<number>>(Array.from({length:totalSegment.get()}).map((_,i) => i));
+        const segmentCurrentlyBeingRendered = useSignal<Array<number>>(Array.from({length: totalSegment.get()}).map((_, i) => i));
         const containerStyle = useComputed<CSSProperties>(() => {
             const templateHeightValue = templateHeight.get();
             const totalData = data.get().length;
             return {
-                height : templateHeightValue * totalData,
-                position:'relative'
+                height: templateHeightValue * totalData,
+                position: 'relative'
             }
         })
         const segments = useComputed(() => {
             const totalSegmentValue = totalSegment.get();
-            return Array.from({length:totalSegmentValue}).map((_,index) => {
+            return Array.from({length: totalSegmentValue}).map((_, index) => {
                 return <Segment startingPage={index} key={index}/>
             })
 
         })
         return <ResponsiveListContext.Provider
-            value={{breakPoint, cellRenderer, template, viewportDimensions, currentBreakPoint,templateHeight,scrollOffset, currentTemplateKey,data,totalTemplatePerSegment, currentScrollSegment,segmentCurrentlyBeingRendered,totalOffsetSegment,totalSegment}}>
-            <div id={componentId} style={{height:'100%',overflow:'auto'}} onScroll={(e) => {
+            value={{
+                breakPoint,
+                cellRenderer,
+                template,
+                viewportDimensions,
+                currentBreakPoint,
+                templateHeight,
+                scrollOffset,
+                currentTemplateKey,
+                data,
+                totalTemplatePerSegment,
+                currentScrollSegment,
+                segmentCurrentlyBeingRendered,
+                totalOffsetSegment,
+                totalSegment
+            }}>
+            <div id={componentId} style={{height: '100%', overflow: 'auto'}} onScroll={(e) => {
                 scrollOffset.set((e.target as HTMLDivElement).scrollTop);
             }}>
                 <notifiable.div style={containerStyle}>
@@ -164,5 +191,5 @@ const defineList = <DataItem extends object,
         </ResponsiveListContext.Provider>
     }
 
-    return {List,ListContext:ResponsiveListContext,TemplateContext:ResponsiveTemplateContext}
+    return {List, ListContext: ResponsiveListContext, TemplateContext: ResponsiveTemplateContext}
 }
