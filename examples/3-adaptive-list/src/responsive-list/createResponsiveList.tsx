@@ -70,9 +70,9 @@ const defineList = <DataItem extends object,
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
-        const totalTemplatePerSegment = useSignal(5);
-        const totalSegment = useSignal(7);
-        const totalOffsetSegment = useSignal(2);
+        const totalTemplatePerSegment = useSignal(1);
+        const totalSegment = useSignal(3);
+        const totalOffsetSegment = useSignal(-2);
         const {data} = properties;
 
         const currentBreakPoint = useComputed<keyof BreakPoint>(() => {

@@ -6,7 +6,6 @@ import {createResponsiveList} from "./responsive-list/createResponsiveList.tsx";
 import {CSSProperties} from "react";
 import {format_ddMMMyyyy} from "./utils/dateFormat.ts";
 
-
 /**
  * App class representing an application with todo functionality.
  * @constructor
@@ -22,7 +21,6 @@ function App() {
         <AdaptiveList.List data={todos} />
     </div>
 }
-
 
 export default App
 

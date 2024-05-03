@@ -1,42 +1,39 @@
-import React, {ComponentType, createElement, FC, JSX, PropsWithChildren, useState} from "react"
+import React, {ComponentType, createElement, FC, FunctionComponent, JSX, PropsWithChildren, useState} from "react"
 import {useComputed, useSignalEffect} from "./hooks.ts";
 
 /**
  * Type representing a function returning a value.
- * @template T The type of value returned by the function.
  */
 export type Lambda<T> = () => T;
 
 /**
  * Type representing a value that can be a lambda, a signal, or a normal value.
- * @template T The type of the value.
  */
 export type Computable<T> = Lambda<T> | AnySignal<T> | T;
 
 /**
  * Props where the value of each property can be a lambda, a signal, or a normal value.
- * @template T The type of the props object.
  */
 export type ComputableProps<T> = {
-    [K in keyof T]: K extends `on${string}` ? T[K] : K extends 'key' ? T[K] : Computable<T[K]>;
+    [K in keyof T]: K extends `on${string}` ? T[K] : Computable<T[K]>;
 };
 
 /**
  * Type representing HTML notifiable components.
  */
 export type HtmlNotifiableComponents = {
-    [K in keyof JSX.IntrinsicElements]: ComponentType<ComputableProps<JSX.IntrinsicElements[K]>>;
+    [K in keyof JSX.IntrinsicElements]: FunctionComponent<ComputableProps<InferAttribute<JSX.IntrinsicElements[K]>>>;
 };
+
+type InferAttribute<T> = T extends React.DetailedHTMLProps<infer V,unknown> ? (V & {ref?:unknown}): never;
 
 /**
  * Props for notifiable components.
- * @template T The type of the component props.
  */
 type NotifiableProps<T extends object> = PropsToComputable<T> & HandlerPropsToAppend<T>;
 
 /**
  * Type representing any signal.
- * @template T The type of value returned by the signal.
  */
 export type AnySignal<T> = { get(): T };
 
@@ -61,10 +58,6 @@ type SignalLambdaNormal = 'signal' | 'lambda' | 'normal'
 
 /**
  * Checks if a value is of a specific type.
- * @param {string} attributeName The name of the attribute.
- * @param {unknown} value The value to check.
- * @param {SignalLambdaNormal} type The type to check against.
- * @returns {boolean} True if the value is of the specified type, otherwise false.
  */
 function isOfType<T extends SignalLambdaNormal>(attributeName: string, value: unknown, type: T): value is InferIsOfType<T> {
     if (type === "signal") {
@@ -78,22 +71,16 @@ function isOfType<T extends SignalLambdaNormal>(attributeName: string, value: un
 
 /**
  * Infer the type of value based on SignalLambdaNormal type.
- * @template T The type of the value.
- * @template Key The type of the key.
  */
 type InferIsOfType<T extends SignalLambdaNormal> = T extends 'signal' ? AnySignal<unknown> : T extends 'lambda' ? Lambda<unknown> : unknown
 
 /**
  * Infer the value type based on the key.
- * @template T The type of the value.
- * @template Key The type of the key.
  */
 type InferSignalLambdaValue<T, Key> = Key extends `${string}Handler` ? T : T extends Lambda<infer A> ? A : T extends AnySignal<infer B> ? B : T;
 
 /**
  * Removes the 'Handler' suffix from a string.
- * @param {string} val The string to remove the suffix from.
- * @returns {string} The string without the 'Handler' suffix.
  */
 function removeHandler(val: string): string {
     return val.endsWith('Handler') ? val.slice(0, -'Handler'.length) : val;
@@ -101,7 +88,6 @@ function removeHandler(val: string): string {
 
 /**
  * Proxy object for generating notifiable HTML elements.
- * @type {HtmlNotifiableComponents}
  */
 export const notifiable: HtmlNotifiableComponents = new Proxy<Partial<HtmlNotifiableComponents>>({}, {
 
@@ -117,9 +103,6 @@ export const notifiable: HtmlNotifiableComponents = new Proxy<Partial<HtmlNotifi
 
 /**
  * Creates a notifiable HTML element component.
- * @param {keyof JSX.IntrinsicElements} key The key representing the HTML element type.
- * @returns {React.FC<ComputableProps<JSX.IntrinsicElements[K]>>} The notifiable HTML element component.
- * @template K The type of the HTML element.
  */
 function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key: K) {
 
@@ -132,7 +115,7 @@ function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key:
         for (const [key, value] of Object.entries(props)) {
             notifiableProps = {...notifiableProps, [key.startsWith("on") ? `${key}Handler` : key]: value}
         }
-        return Notifiable({component: HtmlElement, componentRenderStrategy: 'functionCall',ref, ...notifiableProps})
+        return Notifiable({component: HtmlElement, _element: true,ref, ...notifiableProps})
     }))
     NotifiableHtmlElement.displayName = key;
     return NotifiableHtmlElement;
@@ -140,10 +123,6 @@ function createNotifiableHtmlElement<K extends keyof JSX.IntrinsicElements>(key:
 
 /**
  * Filters props based on the specified type.
- * @param {P} props The props object to filter.
- * @param {SignalLambdaNormal} type The type to filter by.
- * @returns {Partial<{[Key in keyof P]: InferSignalLambdaValue<P[Key], Key>}>} The filtered props object.
- * @template P The type of the props object.
  */
 function filterPropsByType<P>(props: P, type: SignalLambdaNormal): Partial<{ [Key in keyof P]: InferSignalLambdaValue<P[Key], Key>; }> {
 
@@ -163,18 +142,11 @@ function filterPropsByType<P>(props: P, type: SignalLambdaNormal): Partial<{ [Ke
 
 /**
  * Creates a notifiable React component.
- * @param {object} propsWithComponent The props object containing the component and its props.
- * @param {ComponentType<T>} propsWithComponent.component The component type.
- * @param {'functionCall' | 'createElement'} [propsWithComponent.componentRenderStrategy] The rendering strategy.
- * @returns {React.ReactNode} The rendered notifiable component.
- * @template T The type of the component props.
  */
 export function Notifiable<T extends object>(propsWithComponent: {
-    component: ComponentType<T>,
-    componentRenderStrategy?: 'functionCall' | 'createElement'
-} & NotifiableProps<T>): React.ReactNode {
-
-    const {component, componentRenderStrategy, ...props} = propsWithComponent;
+    component: ComponentType<T>} & NotifiableProps<T>): React.ReactNode {
+    type PropsWithComponentType = typeof propsWithComponent & {_element?:boolean}
+    const {component,_element, ...props} = propsWithComponent as PropsWithComponentType;
     const normalProps = filterPropsByType(props, "normal");
     const [signalProps, setSignalProps] = useState(() => filterPropsByType(props, "signal"));
     useSignalEffect(() => setSignalProps(filterPropsByType(props, "signal")));
@@ -182,10 +154,11 @@ export function Notifiable<T extends object>(propsWithComponent: {
     const [lambdaProps, setLambdaProps] = useState(() => lambdaPropsSignal.get());
     useSignalEffect(() => setLambdaProps(lambdaPropsSignal.get()));
 
-    const mergedProps = { ...normalProps, ...signalProps, ...lambdaProps } as PropsWithChildren<T>;
+    const mergedProps = { ...normalProps, ...signalProps, ...lambdaProps } as PropsWithChildren<T> & {_element?:boolean};
     const children = mergedProps && "children" in mergedProps ? mergedProps.children : void 0;
 
-    if (typeof component === "function" && componentRenderStrategy === "functionCall") {
+    if (_element) {
+        delete mergedProps._element;
         return (component as FC)(mergedProps);
     } else {
         return createElement(component, mergedProps, children);

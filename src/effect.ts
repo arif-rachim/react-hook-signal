@@ -29,8 +29,6 @@ function processPending() {
 
 /**
  * Executes the provided callback as an effect.
- * @param {React.EffectCallback} callback The effect callback function to execute.
- * @returns A cleanup function to remove the effect.
  */
 export function effect(callback: EffectCallback) {
     let cleanup: ReturnType<EffectCallback>;

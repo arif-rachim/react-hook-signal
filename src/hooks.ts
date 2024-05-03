@@ -8,7 +8,6 @@ export type JSXAttribute<K extends keyof JSX.IntrinsicElements, A extends keyof 
 
 /**
  * Executes the provided effect callback whenever the dependencies change.
- * @param {React.EffectCallback} callback The effect callback function to execute.
  */
 export function useSignalEffect(callback: React.EffectCallback) {
 
@@ -24,9 +23,6 @@ type OptionType<T> = T extends Lambda<infer R> ? R : T
 
 /**
  * Creates a signal with initial value and options.
- * @param param The initial value.
- * @param options Options for creating the signal.
- * @returns The created signal.
  */
 export function useSignal<T>(param:T, options: Signal.Options<OptionType<T>> = {}):Signal.State<T>{
 
@@ -39,9 +35,6 @@ export function useSignal<T>(param:T, options: Signal.Options<OptionType<T>> = {
 
 /**
  * Creates a signal with initial value and options.
- * @param param The lambda function to derive the value from.
- * @param options Options for creating the signal.
- * @returns The created signal.
  */
 export function useComputed<T>(param:Lambda<T>, options: Signal.Options<OptionType<T>> = {}):Signal.Computed<T>{
     function initialState(){

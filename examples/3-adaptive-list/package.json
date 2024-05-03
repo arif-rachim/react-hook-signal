@@ -23,8 +23,11 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
-    "react-hook-signal": "^0.0.1-rc.15",
+    "framer-motion": "^11.1.7",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
+  },
+  "dependencies": {
+    "react-hook-signal": "file:../.."
   }
 }
