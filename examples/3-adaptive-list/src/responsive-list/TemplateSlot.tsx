@@ -1,4 +1,4 @@
-import {CSSProperties, type FunctionComponent, useContext, useEffect, useRef} from "react";
+import {CSSProperties, type FunctionComponent, useContext} from "react";
 import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
 import {CellCompProps, ListContextData, TemplateContextData} from "./types.ts";
@@ -16,20 +16,8 @@ export function TemplateSlot<DataItem,BreakPoint,CellRenderer,Template>(props: {
     style : CSSProperties
 }): JSX.Element{
     const {item,index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
-    const {templateHeight,cellRenderer} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
+    const {cellRenderer} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
     const {for: name,style} = props;
-
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if(ref.current !== null){
-            if(templateHeight.get() === 0 ){
-                templateHeight.set(ref.current.getBoundingClientRect().height);
-            }else{
-                ref.current.style.height = `${templateHeight.get()}px`;
-            }
-        }
-    }, [templateHeight]);
 
     /**
      * Represents an item renderer function component used to render a cell in a table.
@@ -49,7 +37,7 @@ export function TemplateSlot<DataItem,BreakPoint,CellRenderer,Template>(props: {
             value: item[nameKey],
             index
         } as CellCompProps<DataItem, typeof nameKey>;
-        return <div ref={ref} style={style}>
+        return <div style={style}>
             <ItemRenderer {...componentProps}/>
         </div>
     }

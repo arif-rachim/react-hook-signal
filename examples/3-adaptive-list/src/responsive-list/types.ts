@@ -20,7 +20,7 @@ export type CellCompType<DataItem> = { [K in keyof DataItem]?: FunctionComponent
  *
  * @template CellRenderer - The type of the cell renderer to be used.
  */
-export type SlotComp<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style:CSSProperties }>
+export type SlotComp<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer,style?:CSSProperties }>
 
 /**
  * Represents a template type for rendering data items with breakpoints and cell renderers.

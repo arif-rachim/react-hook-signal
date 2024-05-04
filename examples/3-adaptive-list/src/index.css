@@ -1,5 +1,6 @@
+@import "../assets/fonts/stylesheet.css";
 * {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: "SF Pro Display",Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 18px;
     font-weight: 400;
     font-size: 14px;

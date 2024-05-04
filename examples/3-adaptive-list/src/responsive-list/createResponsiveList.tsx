@@ -73,6 +73,9 @@ const defineList = <DataItem extends object,
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
+        useSignalEffect(() => {
+            console.log('[TemplateHeight]',templateHeight.get());
+        })
         const totalSegment = useSignal(4);
         const totalOffsetSegment = useSignal(1);
         const {data} = properties;
@@ -84,9 +87,6 @@ const defineList = <DataItem extends object,
             }
             return 1
         });
-        useSignalEffect(() => {
-            console.log('templatePerSegment',totalTemplatePerSegment.get());
-        })
         const currentBreakPoint = useComputed<keyof BreakPoint>(() => {
             const containerSizeValue: { width: number; height: number } = viewportDimensions.get();
             const responsiveBreakPointValue: Record<string, number> = breakPoint.get();
