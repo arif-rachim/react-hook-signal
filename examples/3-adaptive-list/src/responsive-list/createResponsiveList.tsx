@@ -1,6 +1,6 @@
 import React, {CSSProperties, useEffect, useId} from "react";
 import {Signal} from "signal-polyfill";
-import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
 import {CellCompType, ListContextData, TemplateContextData, TemplateType} from "./types.ts";
@@ -73,9 +73,6 @@ const defineList = <DataItem extends object,
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
-        useSignalEffect(() => {
-            console.log('[TemplateHeight]',templateHeight.get());
-        })
         const totalSegment = useSignal(4);
         const totalOffsetSegment = useSignal(1);
         const {data} = properties;

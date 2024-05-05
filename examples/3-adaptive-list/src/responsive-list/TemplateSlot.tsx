@@ -5,15 +5,10 @@ import {CellCompProps, ListContextData, TemplateContextData} from "./types.ts";
 
 /**
  * Renders a template slot for a cell in a list or grid.
- *
- * @param {object} props - The properties for the template slot.
- * @param {keyof CellRenderer} props.for - The name of the cell renderer to use.
- * @param {CSSProperties} props.style - The custom style for the template slot.
- * @returns {JSX.Element} - The rendered template slot.
  */
 export function TemplateSlot<DataItem,BreakPoint,CellRenderer,Template>(props: {
     for: keyof CellRenderer,
-    style : CSSProperties
+    style ?: CSSProperties
 }): JSX.Element{
     const {item,index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
     const {cellRenderer} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;

@@ -43,7 +43,6 @@ export function TemplateComp<DataItem,BreakPoint, CellRenderer, Template>(): JSX
         (async () => {
             if(templateHeight.get() === 0){
                 const height = await getHeight();
-                console.log('[WeHaveHeight]',height);
                 templateHeight.set(height);
             }else if(ref.current){
                 ref.current.style.height = `${templateHeight.get()}px`;
