@@ -67,7 +67,7 @@ const downloadSymbol = async (symbol, index, browser) => {
         profile.Exchange,
         profile['Reporting Currency'],
         profile['CIK Code'],
-        profile['CUSIP Numner'],
+        profile['CUSIP Number'],
         profile['ISIN Number'],
         profile['Employer ID'],
         profile['SIC Code'],
