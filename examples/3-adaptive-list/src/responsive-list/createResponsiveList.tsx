@@ -1,4 +1,4 @@
-import {Context, CSSProperties, useEffect, useId} from "react";
+import {Context, CSSProperties, forwardRef, useEffect, useId, useImperativeHandle} from "react";
 import {Signal} from "signal-polyfill";
 import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 import {TemplateContext} from "./TemplateContext.ts";
@@ -68,7 +68,7 @@ const defineList = <DataItem extends object,
     const ResponsiveListContext = ListContext as Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template>>;
     const ResponsiveTemplateContext = TemplateContext as Context<TemplateContextData<DataItem>>;
 
-    function List(properties: { data: AnySignal<Array<DataItem>>,onScroll?:(e:{target:{scrollTop:number}}) => void } & Record<string,unknown>) {
+    const List = forwardRef<{viewPort:() => HTMLDivElement,container:() => HTMLDivElement},{ data: AnySignal<Array<DataItem>>,onScroll?:(e:{target:{scrollTop:number}}) => void } & Record<string,unknown>>(function List(properties,ref) {
         const componentId = useId();
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
@@ -159,7 +159,12 @@ const defineList = <DataItem extends object,
             return Array.from({length: totalSegmentValue}).map((_, index) => {
                 return <Segment startingPage={index} key={index}/>
             })
-
+        })
+        useImperativeHandle(ref,() => {
+            return {
+                viewPort : () => document.getElementById(componentId)! as HTMLDivElement,
+                container : () => document.getElementById(`${componentId}Container`)! as HTMLDivElement
+            }
         })
         return <ResponsiveListContext.Provider
             value={{
@@ -185,12 +190,12 @@ const defineList = <DataItem extends object,
                     onScroll(e as unknown as {target:{scrollTop:number}});
                 }
             }}>
-                <notifiable.div style={containerStyle}>
+                <notifiable.div id={`${componentId}Container`} style={containerStyle}>
                     {segments}
                 </notifiable.div>
             </div>
         </ResponsiveListContext.Provider>
-    }
+    });
 
     return {List, ListContext: ResponsiveListContext, TemplateContext: ResponsiveTemplateContext}
 }

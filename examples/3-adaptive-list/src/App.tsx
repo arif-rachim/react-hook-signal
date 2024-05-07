@@ -41,6 +41,8 @@ function App() {
     });
     const prevScrollPos = useRef(0);
     const detailPanelRef = useRef<Attributes<typeof DetailPanel> | null>(null);
+    const adaptiveListRef = useRef(undefined as unknown as {viewPort:() => HTMLDivElement,container:() => HTMLDivElement});
+
     return <div style={{
         height: '100%',
         overflow: 'hidden',
@@ -97,23 +99,22 @@ function App() {
             }
         }}>
             <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, position: 'relative'}}>
-                <notifiable.input style={{
+                <notifiable.input placeholder={'Search'} style={{
                     backgroundColor: 'rgba(255,255,255,0.12)',
                     color: 'white',
-                    border: 'none',
-                    padding: '5px 10px 5px 30px',
+                    border: '1px solid rgba(0,0,0,1)',
+                    padding: '10px 10px 12px 35px',
                     fontSize: 18,
-                    height: 36,
-                    borderRadius: 20
+                    borderRadius: 14
                 }}
                                   onFocus={() => isSearchFocused.set(true)} onBlur={() => isSearchFocused.set(false)}
                                   value={search}
                                   onChange={(e) => setSearch(e.target.value)}
                 />
                 <IoSearch
-                    style={{position: 'absolute', top: 7, left: 5, fontSize: 22, color: 'rgba(255,255,255,0.5)'}}/>
+                    style={{position: 'absolute', top: 10, left: 5, fontSize: 22, color: 'rgba(255,255,255,0.5)'}}/>
                 {search &&
-                    <IoIosCloseCircle style={{position: 'absolute', top: 7, right: 5, fontSize: 20}} onClick={() => {
+                    <IoIosCloseCircle style={{position: 'absolute', top: 12, right: 7, fontSize: 20}} onClick={() => {
                         setSearch('');
                     }}/>
                 }
@@ -129,7 +130,7 @@ function App() {
                 {doneElement}
             </notifiable.div>
         </notifiable.div>
-        <AdaptiveList.List data={filteredData} onScroll={(e) => {
+        <AdaptiveList.List data={filteredData} onScroll={(e:{target:{scrollTop:number}}) => {
             const prevPos = prevScrollPos.current;
             const current = e.target.scrollTop;
             const scrollDown = prevPos < current;
@@ -137,7 +138,7 @@ function App() {
             hideSearch.set(scrollDown);
         }} onClick={({item}: { item: Stock }) => {
             detailPanelRef.current!.showSelectedStock(item);
-        }}></AdaptiveList.List>
+        }} ref={adaptiveListRef}></AdaptiveList.List>
         <DetailPanel ref={detailPanelRef} />
     </div>
 }
@@ -300,6 +301,7 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
             }
         }
     })
+
     const startDragging = useCallback((e:({clientY:number} | {targetTouches:React.TouchList})) => {
         let clientY:number = 0
         if(isTouch(e)){
@@ -311,8 +313,8 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
         divRef.current!.style.transition = '';
         dragRef.current.startY = clientY;
         dragRef.current.startTop = divRef.current?.offsetTop ?? 0;
-
         function drag(e:({clientY:number} | {targetTouches:TouchList})) {
+
             let clientY:number = 0
             if(isTouch(e)){
                 clientY = e.targetTouches[0].clientY;
@@ -339,7 +341,6 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
                 divRef.current!.style.transition = 'top 200ms linear';
                 topOffset.set(window.innerHeight);
             }
-
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', stopDragging);
             document.removeEventListener('touchmove', drag);
@@ -364,8 +365,7 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
         overflow: 'auto',
         userSelect: 'none'
     }} onMouseDown={startDragging} onTouchStart={startDragging}>
-        <button style={{position: 'absolute', top: 0}}></button>
-        <notifiable.h1>{clientY}</notifiable.h1>
+
         <notifiable.div>{() => selectedStock.get()?.tickerSymbol}</notifiable.div>
         <notifiable.div>{() => selectedStock.get()?.name}</notifiable.div>
         <notifiable.div>{() => selectedStock.get()?.description}</notifiable.div>
@@ -379,27 +379,3 @@ function isTouch(e:unknown):e is {targetTouches:TouchList}{
 function isMouseDrag(e:unknown):e is {clientY:number}{
     return e !== null && e !== undefined && typeof e === 'object' && 'clientY' in e;
 }
-
-const startScrolling = new Signal.State<boolean>(false);
-const clientY = new Signal.State(0);
-const clientYInitial = new Signal.State(0);
-const delta = new Signal.Computed(() => {
-    return clientY.get() - clientYInitial.get();
-});
-document.body.addEventListener('touchstart', function(event) {
-    // Prevent pull-to-refresh behavior
-    const initialValue = event.targetTouches[0].clientY
-    clientYInitial.set(initialValue);
-    clientY.set(initialValue);
-    startScrolling.set(true);
-}, { passive: false });
-document.body.addEventListener('touchmove', function(event) {
-    // Prevent pull-to-refresh behavior
-    clientY.set(event.targetTouches[0].clientY);
-    event.preventDefault();
-}, { passive: false });
-
-document.body.addEventListener('touchend', function() {
-    // Prevent pull-to-refresh behavior
-    startScrolling.set(false);
-}, { passive: false });
