@@ -26,10 +26,9 @@ function App() {
     const [search, setSearch] = useState('');
     const searchSignal = useSignal(search);
     const hideSearch = useSignal(false);
-    // const selectedStock = useSignal<Stock | undefined>(undefined)
     useEffect(() => {
         searchSignal.set(search);
-    }, [search]);
+    }, [search, searchSignal]);
     const doneElement = useComputed(() => {
         const isSearchFocusedValue = isSearchFocused.get();
         return isSearchFocusedValue ? <div style={{color: 'deepskyblue', fontSize: 18}}>Done</div> : <></>
@@ -48,7 +47,7 @@ function App() {
         display: 'flex',
         position: 'relative',
         flexDirection: 'column',
-        backgroundColor: '#222',
+        backgroundColor: '#000',
         color: 'rgba(255,255,255,0.9)',
         userSelect: 'none'
     }}>
@@ -66,7 +65,7 @@ function App() {
             }
         }}>
             <div style={{display: 'flex', flexDirection: 'column', gap: 15}}>
-                <div style={{fontSize: 32, fontWeight: 'bold'}}>Fault Management</div>
+                <div style={{fontSize: 32, fontWeight: 'bold'}}>Stocks</div>
                 <div style={{fontSize: 28, fontWeight: 'bold', color: 'rgba(255,255,255,0.5)'}}>6 May</div>
             </div>
             <div style={{flexGrow: 1}}></div>
@@ -301,17 +300,27 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
             }
         }
     })
-    useSignalEffect(() => {
-        const dragDirectionValue = dragDirection.get();
-        console.log('dragDirection', dragDirectionValue);
-    })
-    const startDragging = useCallback((e:{clientY:number}) => {
+    const startDragging = useCallback((e:({clientY:number} | {targetTouches:React.TouchList})) => {
+        let clientY:number = 0
+        if(isTouch(e)){
+            clientY = e.targetTouches[0].clientY;
+        }
+        if(isMouseDrag(e)){
+            clientY = e.clientY;
+        }
         divRef.current!.style.transition = '';
-        dragRef.current.startY = e.clientY;
+        dragRef.current.startY = clientY;
         dragRef.current.startTop = divRef.current?.offsetTop ?? 0;
 
-        function drag(e:{clientY:number}) {
-            const deltaY = e.clientY - dragRef.current.startY;
+        function drag(e:({clientY:number} | {targetTouches:TouchList})) {
+            let clientY:number = 0
+            if(isTouch(e)){
+                clientY = e.targetTouches[0].clientY;
+            }
+            if(isMouseDrag(e)){
+                clientY = e.clientY;
+            }
+            const deltaY = clientY - dragRef.current.startY;
             if (deltaY > 0) {
                 dragDirection.set('down');
             } else {
@@ -333,11 +342,15 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
 
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', stopDragging);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', stopDragging);
         }
 
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', stopDragging);
-    }, []);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', stopDragging);
+    }, [dragDirection, topOffset]);
 
     return <div ref={divRef} style={{
         position: 'absolute',
@@ -350,10 +363,43 @@ const DetailPanel = forwardRef<{ showSelectedStock: (stock: Stock) => void }>(fu
         borderTop: '1px solid rgba(255,255,255,0.2)',
         overflow: 'auto',
         userSelect: 'none'
-    }} onMouseDown={startDragging}>
+    }} onMouseDown={startDragging} onTouchStart={startDragging}>
         <button style={{position: 'absolute', top: 0}}></button>
+        <notifiable.h1>{clientY}</notifiable.h1>
         <notifiable.div>{() => selectedStock.get()?.tickerSymbol}</notifiable.div>
         <notifiable.div>{() => selectedStock.get()?.name}</notifiable.div>
         <notifiable.div>{() => selectedStock.get()?.description}</notifiable.div>
     </div>
 })
+
+function isTouch(e:unknown):e is {targetTouches:TouchList}{
+    return e !== null && e !== undefined && typeof e === 'object' && 'targetTouches' in e && (e.targetTouches as TouchList).length > 0
+}
+
+function isMouseDrag(e:unknown):e is {clientY:number}{
+    return e !== null && e !== undefined && typeof e === 'object' && 'clientY' in e;
+}
+
+const startScrolling = new Signal.State<boolean>(false);
+const clientY = new Signal.State(0);
+const clientYInitial = new Signal.State(0);
+const delta = new Signal.Computed(() => {
+    return clientY.get() - clientYInitial.get();
+});
+document.body.addEventListener('touchstart', function(event) {
+    // Prevent pull-to-refresh behavior
+    const initialValue = event.targetTouches[0].clientY
+    clientYInitial.set(initialValue);
+    clientY.set(initialValue);
+    startScrolling.set(true);
+}, { passive: false });
+document.body.addEventListener('touchmove', function(event) {
+    // Prevent pull-to-refresh behavior
+    clientY.set(event.targetTouches[0].clientY);
+    event.preventDefault();
+}, { passive: false });
+
+document.body.addEventListener('touchend', function() {
+    // Prevent pull-to-refresh behavior
+    startScrolling.set(false);
+}, { passive: false });

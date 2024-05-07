@@ -21,6 +21,7 @@ html, body {
     min-width: 320px;
     height: 100%;
     overflow: auto;
+    background: #000000;
 }
 
 input:focus{
