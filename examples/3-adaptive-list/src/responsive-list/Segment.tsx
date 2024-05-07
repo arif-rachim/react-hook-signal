@@ -1,12 +1,12 @@
 import {TemplateContext} from "./TemplateContext.ts";
-import React, {useContext, useState} from "react";
+import {useContext, useState,Context} from "react";
 import {ListContextData, TemplateContextData} from "./types.ts";
 import {ListContext} from "./ListContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {TemplateComp} from "./TemplateComp.tsx";
 
 export function Segment<DataItem,BreakPoint,CellRenderer,Template>(props:{startingPage:number}){
-    const ResponsiveTemplateContext = TemplateContext as React.Context<TemplateContextData<DataItem>>;
+    const ResponsiveTemplateContext = TemplateContext as Context<TemplateContextData<DataItem>>;
 
     const {currentScrollSegment,segmentCurrentlyBeingRendered,data,totalTemplatePerSegment,totalOffsetSegment,totalSegment} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
     const currentPage = useSignal(props.startingPage);

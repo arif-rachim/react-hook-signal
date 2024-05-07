@@ -9,10 +9,10 @@ import {CellCompProps, ListContextData, TemplateContextData} from "./types.ts";
 export function TemplateSlot<DataItem,BreakPoint,CellRenderer,Template>(props: {
     for: keyof CellRenderer,
     style ?: CSSProperties
-}): JSX.Element{
+} & Record<string, unknown>): JSX.Element{
     const {item,index} = useContext(TemplateContext) as TemplateContextData<DataItem>;
     const {cellRenderer} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
-    const {for: name,style} = props;
+    const {for: name,style,...propsForRenderer} = props;
 
     /**
      * Represents an item renderer function component used to render a cell in a table.
@@ -30,7 +30,8 @@ export function TemplateSlot<DataItem,BreakPoint,CellRenderer,Template>(props: {
             item: item,
             name: name,
             value: item[nameKey],
-            index
+            index,
+            ...propsForRenderer
         } as CellCompProps<DataItem, typeof nameKey>;
         return <div style={style}>
             <ItemRenderer {...componentProps}/>

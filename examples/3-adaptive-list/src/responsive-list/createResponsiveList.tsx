@@ -1,6 +1,6 @@
-import React, {CSSProperties, useEffect, useId} from "react";
+import {Context, CSSProperties, useEffect, useId} from "react";
 import {Signal} from "signal-polyfill";
-import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
 import {CellCompType, ListContextData, TemplateContextData, TemplateType} from "./types.ts";
@@ -65,17 +65,17 @@ const defineList = <DataItem extends object,
     template: Signal.State<Template>,
 }) => () => {
     const {breakPoint, cellRenderer, template} = props;
-    const ResponsiveListContext = ListContext as React.Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template>>;
-    const ResponsiveTemplateContext = TemplateContext as React.Context<TemplateContextData<DataItem>>;
+    const ResponsiveListContext = ListContext as Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template>>;
+    const ResponsiveTemplateContext = TemplateContext as Context<TemplateContextData<DataItem>>;
 
-    function List(properties: { data: Signal.State<Array<DataItem>> }) {
+    function List(properties: { data: AnySignal<Array<DataItem>>,onScroll?:(e:{target:{scrollTop:number}}) => void } & Record<string,unknown>) {
         const componentId = useId();
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
         const totalSegment = useSignal(4);
         const totalOffsetSegment = useSignal(1);
-        const {data} = properties;
+        const {data,onScroll,...props} = properties;
         const totalTemplatePerSegment = useComputed(() => {
             const {height} = viewportDimensions.get();
             const templateHeightValue = templateHeight.get();
@@ -176,10 +176,14 @@ const defineList = <DataItem extends object,
                 currentScrollSegment,
                 segmentCurrentlyBeingRendered,
                 totalOffsetSegment,
-                totalSegment
+                totalSegment,
+                properties:props
             }}>
             <div id={componentId} style={{height: '100%', overflow: 'auto'}} onScroll={(e) => {
                 scrollOffset.set((e.target as HTMLDivElement).scrollTop);
+                if(onScroll) {
+                    onScroll(e as unknown as {target:{scrollTop:number}});
+                }
             }}>
                 <notifiable.div style={containerStyle}>
                     {segments}
