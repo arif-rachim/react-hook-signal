@@ -200,7 +200,7 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
                 containerLevelOne : () => document.getElementById(levelOneId)! as HTMLDivElement,
                 containerLevelTwo : () => document.getElementById(levelTwoId)! as HTMLDivElement
             }}>
-            <div id={levelOneId} style={{height: '100%', overflow: 'auto',...style}} onScroll={(e) => {
+            <div id={levelOneId} style={{height: '100%', overflow: 'auto',scrollBehavior:'smooth',...style}} onScroll={(e) => {
                 scrollOffset.set((e.target as HTMLDivElement).scrollTop);
                 if (onScroll) {
                     onScroll(e as unknown as {
