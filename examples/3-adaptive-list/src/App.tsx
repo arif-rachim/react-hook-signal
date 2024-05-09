@@ -41,7 +41,6 @@ function App() {
     });
     const prevScrollPos = useRef(0);
     const detailPanelRef = useRef<Attributes<typeof DetailPanel> | null>(null);
-    const adaptiveListRef = useRef(undefined as unknown as {viewPort:() => HTMLDivElement,container:() => HTMLDivElement});
 
     return <div style={{
         height: '100%',
@@ -138,7 +137,7 @@ function App() {
             hideSearch.set(scrollDown);
         }} onClick={({item}: { item: Stock }) => {
             detailPanelRef.current!.showSelectedStock(item);
-        }} ref={adaptiveListRef}></AdaptiveList.List>
+        }} ></AdaptiveList.List>
         <DetailPanel ref={detailPanelRef} />
     </div>
 }
@@ -147,6 +146,7 @@ type Attributes<T> = T extends ForwardRefExoticComponent<infer V> ? V extends Re
 export default App
 
 const AdaptiveList = createResponsiveList<Stock>().breakPoint({s: 400, m: 600, l: 900, xl: 1200}).renderer({
+    icon : ({value}) => <div className={'svg-container'} style={{width:50,height:50,display:'flex',backgroundColor:'#FFF'}} dangerouslySetInnerHTML={{__html:value}}></div>,
     tickerSymbol: ({value}) => value,
     earningsDate: ({value}) => value,
     name: ({value}) => value,
@@ -190,6 +190,7 @@ const AdaptiveList = createResponsiveList<Stock>().breakPoint({s: 400, m: 600, l
     }
 }).template({
     s: function SmallTemplate({Slot, item, index}) {
+
         const {properties} = useContext(AdaptiveList.ListContext)
         const openPrice = parseFloat(item.open);
         const currentPrice = useSignal(openPrice);
@@ -214,7 +215,7 @@ const AdaptiveList = createResponsiveList<Stock>().breakPoint({s: 400, m: 600, l
             return () => {
                 stop = true;
             }
-        }, []);
+        }, [currentPrice, isBullish, openPrice]);
 
         return <div style={{
             gap: 10,
@@ -228,6 +229,7 @@ const AdaptiveList = createResponsiveList<Stock>().breakPoint({s: 400, m: 600, l
                 onClick({item, index});
             }
         }}>
+            <Slot for={"icon"} />
             <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1,}}>
                 <Slot for={'tickerSymbol'} style={{flexGrow: 1, fontSize: 22, fontWeight: 700}}/>
                 <Slot for={'name'} style={{color: 'rgba(255,255,255,0.5)'}}/>
@@ -243,7 +245,7 @@ const AdaptiveList = createResponsiveList<Stock>().breakPoint({s: 400, m: 600, l
             </div>
         </div>
     }
-}).list();
+});
 
 function isChartProps(value: unknown): value is { currentPrice: AnySignal<number>, item: Stock } {
     return value !== null && value !== undefined && typeof value === 'object' && 'currentPrice' in value && 'item' in value;

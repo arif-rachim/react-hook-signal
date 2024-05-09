@@ -1,26 +1,35 @@
-import {Context, CSSProperties, forwardRef, useEffect, useId, useImperativeHandle} from "react";
+import {
+    Context,
+    CSSProperties,
+    forwardRef,
+    ForwardRefExoticComponent,
+    RefAttributes,
+    useEffect,
+    useId,
+    useImperativeHandle
+} from "react";
 import {Signal} from "signal-polyfill";
-import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
+import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {TemplateContext} from "./TemplateContext.ts";
 import {ListContext} from "./ListContext.ts";
-import {CellCompType, ListContextData, TemplateContextData, TemplateType} from "./types.ts";
+import {CellCompType, ListContextData, ListProps, TemplateContextData, TemplateType} from "./types.ts";
 import {Segment} from "./Segment.tsx";
 
 /**
  * Create a responsive list.
  */
-export function createResponsiveList<DataItem extends object>() {
+export function createResponsiveList<DataItem extends object, Properties extends object = Record<string, unknown>>() {
     return {
-        breakPoint: defineBreakPoint<DataItem>()
+        breakPoint: defineBreakPoint<DataItem, Properties>()
     }
 }
 
 /**
  * Defines a breakpoint for rendering based on the provided `breakPoint` object.
  */
-const defineBreakPoint = <DataItem extends object>() => <BreakPoint extends Record<string, number>>(breakPoint: BreakPoint) => {
+const defineBreakPoint = <DataItem extends object, Properties>() => <BreakPoint extends Record<string, number>>(breakPoint: BreakPoint) => {
     return {
-        renderer: defineRenderer<DataItem, BreakPoint>({
+        renderer: defineRenderer<DataItem, BreakPoint, Properties>({
             breakPoint: new Signal.State(breakPoint)
         })
     }
@@ -29,11 +38,11 @@ const defineBreakPoint = <DataItem extends object>() => <BreakPoint extends Reco
 /**
  * Define a renderer for a data item and break point.
  */
-const defineRenderer = <DataItem extends object, BreakPoint extends Record<string, number>>(props: {
+const defineRenderer = <DataItem extends object, BreakPoint extends Record<string, number>, Properties>(props: {
     breakPoint: Signal.State<BreakPoint>
-}) => <CellRenderer extends CellCompType<DataItem>>(cellRenderer: CellRenderer) => {
+}) => <CellRenderer extends CellCompType<DataItem, Properties>>(cellRenderer: CellRenderer) => {
     return {
-        template: defineTemplate<DataItem, BreakPoint, CellRenderer>({
+        template: defineTemplate<DataItem, BreakPoint, CellRenderer, Properties>({
             ...props,
             cellRenderer: new Signal.State(cellRenderer)
         })
@@ -43,39 +52,25 @@ const defineRenderer = <DataItem extends object, BreakPoint extends Record<strin
 /**
  * Define a template for rendering a list of items with custom breakpoints and cell renderers.
  */
-const defineTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem>>(props: {
+const defineTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem, Properties>, Properties>(props: {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
-}) => <Template extends TemplateType<DataItem, BreakPoint, CellRenderer>>(template: Template) => {
-    return {
-        list: defineList<DataItem, BreakPoint, CellRenderer, Template>({...props, template: new Signal.State(template)})
-    }
-}
-
-/**
- * A function that returns a list component and related context providers.
- */
-const defineList = <DataItem extends object,
-    BreakPoint extends Record<string, number>,
-    CellRenderer extends CellCompType<DataItem>,
-    Template extends TemplateType<DataItem, BreakPoint, CellRenderer>,
->(props: {
-    breakPoint: Signal.State<BreakPoint>,
-    cellRenderer: Signal.State<CellRenderer>,
-    template: Signal.State<Template>,
-}) => () => {
-    const {breakPoint, cellRenderer, template} = props;
-    const ResponsiveListContext = ListContext as Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template>>;
+}) => <Template extends TemplateType<DataItem, BreakPoint, CellRenderer, Properties>>(_template: Template) => {
+    const {breakPoint,cellRenderer} = props;
+    const template = new Signal.State(_template);
+    const ResponsiveListContext = ListContext as Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>>;
     const ResponsiveTemplateContext = TemplateContext as Context<TemplateContextData<DataItem>>;
 
-    const List = forwardRef<{viewPort:() => HTMLDivElement,container:() => HTMLDivElement},{ data: AnySignal<Array<DataItem>>,onScroll?:(e:{target:{scrollTop:number}}) => void } & Record<string,unknown>>(function List(properties,ref) {
+    const List = forwardRef<ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>,(ListProps<DataItem> & Properties)>(function List(props,ref) {
         const componentId = useId();
+        const levelOneId = `${componentId}-lvl1`;
+        const levelTwoId = `${componentId}-lvl2`;
         const viewportDimensions = useSignal({width: window.innerWidth, height: window.innerHeight});
         const scrollOffset = useSignal(0);
         const templateHeight = useSignal(0);
         const totalSegment = useSignal(4);
         const totalOffsetSegment = useSignal(1);
-        const {data,onScroll,...props} = properties;
+        const {data, onScroll, ...properties} = props;
         const totalTemplatePerSegment = useComputed(() => {
             const {height} = viewportDimensions.get();
             const templateHeightValue = templateHeight.get();
@@ -85,7 +80,10 @@ const defineList = <DataItem extends object,
             return 1
         });
         const currentBreakPoint = useComputed<keyof BreakPoint>(() => {
-            const containerSizeValue: { width: number; height: number } = viewportDimensions.get();
+            const containerSizeValue: {
+                width: number;
+                height: number
+            } = viewportDimensions.get();
             const responsiveBreakPointValue: Record<string, number> = breakPoint.get();
             const entries = Object.entries(responsiveBreakPointValue);
             entries.sort((a, b) => a[1] - b[1]);
@@ -124,7 +122,7 @@ const defineList = <DataItem extends object,
         })
 
         useEffect(() => {
-            const element: HTMLElement = document.getElementById(componentId)!;
+            const element: HTMLElement = document.getElementById(levelOneId)!;
             const resizeObserver: ResizeObserver = new ResizeObserver(entries => {
                 const size = entries.pop()!.target.getBoundingClientRect();
                 viewportDimensions.set({width: size.width, height: size.height});
@@ -132,7 +130,7 @@ const defineList = <DataItem extends object,
             viewportDimensions.set(element.getBoundingClientRect());
             resizeObserver.observe(element);
             return () => resizeObserver.disconnect();
-        }, [componentId, viewportDimensions]);
+        }, [levelOneId, viewportDimensions]);
 
         const currentScrollSegment = useComputed(() => {
             const scrollPositionValue = scrollOffset.get();
@@ -143,9 +141,10 @@ const defineList = <DataItem extends object,
             const currentScrollIndex = Math.floor(scrollPositionValue / templateHeightValue);
             const templateToBeDisplayed = totalTemplatePerSegment.get();
             return Math.floor(currentScrollIndex / templateToBeDisplayed);
-        })
+        });
 
         const segmentCurrentlyBeingRendered = useSignal<Array<number>>(Array.from({length: totalSegment.get()}).map((_, i) => i));
+
         const containerStyle = useComputed<CSSProperties>(() => {
             const templateHeightValue = templateHeight.get();
             const totalData = data.get().length;
@@ -157,13 +156,28 @@ const defineList = <DataItem extends object,
         const segments = useComputed(() => {
             const totalSegmentValue = totalSegment.get();
             return Array.from({length: totalSegmentValue}).map((_, index) => {
-                return <Segment startingPage={index} key={index}/>
+                return <Segment startingPage={index} key={index} />
             })
         })
         useImperativeHandle(ref,() => {
             return {
-                viewPort : () => document.getElementById(componentId)! as HTMLDivElement,
-                container : () => document.getElementById(`${componentId}Container`)! as HTMLDivElement
+                breakPoint,
+                cellRenderer,
+                template,
+                viewportDimensions,
+                currentBreakPoint,
+                templateHeight,
+                scrollOffset,
+                currentTemplateKey,
+                data,
+                totalTemplatePerSegment,
+                currentScrollSegment,
+                segmentCurrentlyBeingRendered,
+                totalOffsetSegment,
+                totalSegment,
+                properties : properties as Properties,
+                containerLevelOne : () => document.getElementById(levelOneId)! as HTMLDivElement,
+                containerLevelTwo : () => document.getElementById(levelTwoId)! as HTMLDivElement
             }
         })
         return <ResponsiveListContext.Provider
@@ -182,20 +196,35 @@ const defineList = <DataItem extends object,
                 segmentCurrentlyBeingRendered,
                 totalOffsetSegment,
                 totalSegment,
-                properties:props
+                properties : properties as Properties,
+                containerLevelOne : () => document.getElementById(levelOneId)! as HTMLDivElement,
+                containerLevelTwo : () => document.getElementById(levelTwoId)! as HTMLDivElement
             }}>
-            <div id={componentId} style={{height: '100%', overflow: 'auto'}} onScroll={(e) => {
+            <div id={levelOneId} style={{height: '100%', overflow: 'auto'}} onScroll={(e) => {
                 scrollOffset.set((e.target as HTMLDivElement).scrollTop);
-                if(onScroll) {
-                    onScroll(e as unknown as {target:{scrollTop:number}});
+                if (onScroll) {
+                    onScroll(e as unknown as {
+                        target: {
+                            scrollTop: number
+                        }
+                    });
                 }
             }}>
-                <notifiable.div id={`${componentId}Container`} style={containerStyle}>
+                <notifiable.div id={levelTwoId} style={containerStyle}>
                     {segments}
                 </notifiable.div>
             </div>
         </ResponsiveListContext.Provider>
-    });
-
+    })
     return {List, ListContext: ResponsiveListContext, TemplateContext: ResponsiveTemplateContext}
 }
+
+
+export type InferContextRef<T> = T extends ForwardRefExoticComponent<infer A> ? A extends RefAttributes<infer B> ? B : never : never;
+export type InferListGenerics<T> = InferContextRef<T> extends ListContextData<infer DataItem,infer BreakPoint,infer CellRenderer,infer Template,infer Properties> ? {
+    dataItem : DataItem,
+    breakPoint : BreakPoint,
+    cellRenderer : CellRenderer,
+    template : Template,
+    properties : Properties
+} : never

@@ -1,16 +1,26 @@
 import {TemplateContext} from "./TemplateContext.ts";
-import {useContext, useState,Context} from "react";
+import {Context, useContext, useState} from "react";
 import {ListContextData, TemplateContextData} from "./types.ts";
 import {ListContext} from "./ListContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {TemplateComp} from "./TemplateComp.tsx";
 
-export function Segment<DataItem,BreakPoint,CellRenderer,Template>(props:{startingPage:number}){
+export function Segment<DataItem, BreakPoint, CellRenderer, Template, Properties>(props: { startingPage: number }) {
     const ResponsiveTemplateContext = TemplateContext as Context<TemplateContextData<DataItem>>;
 
-    const {currentScrollSegment,segmentCurrentlyBeingRendered,data,totalTemplatePerSegment,totalOffsetSegment,totalSegment} = useContext(ListContext)  as ListContextData<DataItem,BreakPoint, CellRenderer, Template>;
+    const {currentScrollSegment, segmentCurrentlyBeingRendered, data, totalTemplatePerSegment, totalOffsetSegment, totalSegment} = useContext(ListContext) as ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>;
     const currentPage = useSignal(props.startingPage);
-    const [dataItems,setDataItems] = useState<Array<DataItem>>([]);
+    const [dataItems, setDataItems] = useState<Array<DataItem>>([]);
+
+    function updateDataItems() {
+        const currentPageValue = currentPage.get();
+        const renderedDataPerPage = totalTemplatePerSegment.get();
+        const dataValue = data.get() ?? [];
+        const start = currentPageValue * renderedDataPerPage;
+        const end = (currentPageValue + 1) * renderedDataPerPage;
+        setDataItems(dataValue.slice(start, end))
+    }
+
     useSignalEffect(() => {
         // here we remove one page before to improve rendering !
         const totalSegmentValue = totalSegment.get();
@@ -18,30 +28,25 @@ export function Segment<DataItem,BreakPoint,CellRenderer,Template>(props:{starti
         const currentScrollSegmentValue = currentScrollSegment.get() - totalOffsetSegmentValue;
         const segmentCurrentlyBeingRenderedValue = segmentCurrentlyBeingRendered.get();
         const currentPageValue = currentPage.get();
-        const pagesToRender = Array.from({length:totalSegmentValue}).map((_,index) => currentScrollSegmentValue + index);
+        const pagesToRender = Array.from({length: totalSegmentValue}).map((_, index) => currentScrollSegmentValue + index);
 
-        const pagesThatRequiredToBeRendered = pagesToRender.filter(page => segmentCurrentlyBeingRenderedValue.indexOf(page)<0);
-        const pagesThatExpiredFromRendering = segmentCurrentlyBeingRenderedValue.filter(page => pagesToRender.indexOf(page)<0);
+        const pagesThatRequiredToBeRendered = pagesToRender.filter(page => segmentCurrentlyBeingRenderedValue.indexOf(page) < 0);
+        const pagesThatExpiredFromRendering = segmentCurrentlyBeingRenderedValue.filter((page: number) => pagesToRender.indexOf(page) < 0);
         const engineNeedsToPickupANewData = pagesThatExpiredFromRendering.indexOf(currentPageValue) >= 0 && pagesThatRequiredToBeRendered.length > 0;
 
-        if(engineNeedsToPickupANewData){
+        if (engineNeedsToPickupANewData) {
             const pageToRender = pagesThatRequiredToBeRendered[0];
             currentPage.set(pageToRender);
-            segmentCurrentlyBeingRendered.set([...segmentCurrentlyBeingRenderedValue.filter(i => i !== currentPageValue),pageToRender]);
+            segmentCurrentlyBeingRendered.set([...segmentCurrentlyBeingRenderedValue.filter((i: number) => i !== currentPageValue), pageToRender]);
+            // we need to updateDataItems here, for some reason the signal does not updating the child
+            updateDataItems();
         }
     });
 
-    useSignalEffect(() => {
-        const currentPageValue = currentPage.get();
-        const renderedDataPerPage= totalTemplatePerSegment.get();
-        const dataValue = data.get();
-        const start = currentPageValue * renderedDataPerPage;
-        const end = (currentPageValue + 1) * renderedDataPerPage;
-        setDataItems(dataValue.slice(start,end))
-    })
+    useSignalEffect(updateDataItems)
 
     const start = currentPage.get() * totalTemplatePerSegment.get();
-    return dataItems.map((item,idx) => {
+    return dataItems.map((item, idx) => {
         const index = start + idx;
         return <ResponsiveTemplateContext.Provider value={{item, index}} key={index}>
             <TemplateComp/>

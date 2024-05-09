@@ -7,20 +7,34 @@ import {AnySignal} from "react-hook-signal";
  * @template DataItem The type of the data item.
  * @template K The key of the item property.
  */
-export type CellCompProps<DataItem, K extends keyof DataItem> = { item: DataItem, value: DataItem[K], index: number };
+export type CellCompProps<DataItem, K extends keyof DataItem> = {
+    item: DataItem,
+    value: DataItem[K],
+    index: number,
+    name: K
+};
 
 /**
  * Represents the type definition for a Cell Component.
  * @template DataItem The type of the data item being used.
  */
-export type CellCompType<DataItem> = { [K in keyof DataItem]?: FunctionComponent<CellCompProps<DataItem, K> & Record<string, unknown> > }
+export type CellCompType<DataItem, Properties> = { [K in keyof DataItem]?: FunctionComponent<CellCompProps<DataItem, K> & Properties> }
+
+/**
+ * Properties for slot component
+ */
+export type SlotCompProps<CellRenderer> = {
+    for: keyof CellRenderer,
+    style?: CSSProperties,
+    onSizeChange?: (rect: DOMRect) => void
+};
 
 /**
  * Slot component to render a specific cell in a grid or table component.
  *
  * @template CellRenderer - The type of the cell renderer to be used.
  */
-export type SlotComp<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer, style?: CSSProperties } & Record<string,unknown>>
+export type SlotComp<CellRenderer, TemplateProps extends Record<string, unknown>> = FunctionComponent<SlotCompProps<CellRenderer> & TemplateProps>
 
 /**
  * Represents a template type for rendering data items with breakpoints and cell renderers.
@@ -29,12 +43,12 @@ export type SlotComp<CellRenderer> = FunctionComponent<{ for: keyof CellRenderer
  * @template BreakPoint - The type of the breakpoints.
  * @template CellRenderer - The type of the cell renderer component.
  */
-export type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem>> = {
+export type TemplateType<DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem, Properties>, Properties> = {
     [K in keyof BreakPoint]?: FunctionComponent<{
-        Slot: SlotComp<CellRenderer>,
+        Slot: SlotComp<CellRenderer,Record<string,unknown>>,
         item: DataItem,
         index: number
-    }>
+    } & Properties>
 }
 
 /**
@@ -44,7 +58,7 @@ export type TemplateType<DataItem extends object, BreakPoint extends Record<stri
  * @template CellRenderer - The type of cell renderer.
  * @template Template - The type of template.
  */
-export interface ListContextData<DataItem, BreakPoint, CellRenderer, Template> {
+export interface ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties> {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>,
     template: Signal.State<Template>,
@@ -59,7 +73,9 @@ export interface ListContextData<DataItem, BreakPoint, CellRenderer, Template> {
     totalOffsetSegment: Signal.State<number>,
     currentScrollSegment: AnySignal<number>,
     segmentCurrentlyBeingRendered: Signal.State<Array<number>>,
-    properties:Record<string,unknown>
+    properties: Properties,
+    containerLevelOne: () => HTMLDivElement,
+    containerLevelTwo: () => HTMLDivElement
 }
 
 /**
@@ -70,4 +86,13 @@ export interface ListContextData<DataItem, BreakPoint, CellRenderer, Template> {
 export interface TemplateContextData<DataItem> {
     item: DataItem,
     index: number
+}
+
+export type ListProps<DataItem> = {
+    data: AnySignal<Array<DataItem>>,
+    onScroll?: (e: {
+        target: {
+            scrollTop: number
+        }
+    }) => void
 }
