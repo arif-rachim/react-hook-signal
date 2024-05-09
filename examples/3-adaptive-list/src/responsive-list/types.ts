@@ -94,5 +94,7 @@ export type ListProps<DataItem> = {
         target: {
             scrollTop: number
         }
-    }) => void
+    }) => void,
+    style?:Pick<CSSProperties,'padding'|'paddingBottom'|'paddingTop'|'paddingLeft'|'paddingRight'>
+
 }

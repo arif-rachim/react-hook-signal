@@ -70,7 +70,7 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
         const templateHeight = useSignal(0);
         const totalSegment = useSignal(4);
         const totalOffsetSegment = useSignal(1);
-        const {data, onScroll, ...properties} = props;
+        const {data, onScroll,style, ...properties} = props;
         const totalTemplatePerSegment = useComputed(() => {
             const {height} = viewportDimensions.get();
             const templateHeightValue = templateHeight.get();
@@ -200,7 +200,7 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
                 containerLevelOne : () => document.getElementById(levelOneId)! as HTMLDivElement,
                 containerLevelTwo : () => document.getElementById(levelTwoId)! as HTMLDivElement
             }}>
-            <div id={levelOneId} style={{height: '100%', overflow: 'auto'}} onScroll={(e) => {
+            <div id={levelOneId} style={{height: '100%', overflow: 'auto',...style}} onScroll={(e) => {
                 scrollOffset.set((e.target as HTMLDivElement).scrollTop);
                 if (onScroll) {
                     onScroll(e as unknown as {
