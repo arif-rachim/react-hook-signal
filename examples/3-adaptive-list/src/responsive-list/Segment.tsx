@@ -18,7 +18,18 @@ export function Segment<DataItem, BreakPoint, CellRenderer, Template, Properties
         const dataValue = data.get() ?? [];
         const start = currentPageValue * renderedDataPerPage;
         const end = (currentPageValue + 1) * renderedDataPerPage;
-        setDataItems(dataValue.slice(start, end))
+        setDataItems(current => {
+            const newValue = dataValue.slice(start, end)
+            if(current.length > 0 && current.length === newValue.length){
+                for (let i = 0; i < current.length; i++) {
+                    if(current[i] !== newValue[i]){
+                        return newValue;
+                    }
+                }
+                return current;
+            }
+            return newValue
+        })
     }
 
     useSignalEffect(() => {
@@ -38,7 +49,6 @@ export function Segment<DataItem, BreakPoint, CellRenderer, Template, Properties
             const pageToRender = pagesThatRequiredToBeRendered[0];
             currentPage.set(pageToRender);
             segmentCurrentlyBeingRendered.set([...segmentCurrentlyBeingRenderedValue.filter((i: number) => i !== currentPageValue), pageToRender]);
-            // we need to updateDataItems here, for some reason the signal does not updating the child
             updateDataItems();
         }
     });

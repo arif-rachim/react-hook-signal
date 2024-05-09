@@ -10,7 +10,7 @@ export function Paging() {
         const context = contextSignal.get();
         const dataLength = context?.data.get().length ?? 0;
         const templatePerSegmentValue = context?.totalTemplatePerSegment.get() ?? 1;
-        return Math.ceil(dataLength / templatePerSegmentValue);
+        return Math.floor(dataLength / templatePerSegmentValue);
     })
 
     const paginationArray = useComputed(() => {

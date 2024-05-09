@@ -16,12 +16,11 @@ export function ListContextProvider<V extends RefAttributes<ListContextData<unkn
 }>) {
     const listRef = props.listRef;
     const [context, setContext] = useState(listRef.current);
-    const currentRef = listRef.current;
     useEffect(() => {
         let exit = false;
-
+        
         async function waitForListToBeMounted() {
-            if (currentRef === null && !exit) {
+            if (listRef.current === null && !exit) {
                 await delay(100);
                 return waitForListToBeMounted()
             }
@@ -32,12 +31,12 @@ export function ListContextProvider<V extends RefAttributes<ListContextData<unkn
             if (exit) {
                 return;
             }
-            setContext(currentRef);
+            setContext(listRef.current);
         })();
         return () => {
             exit = true
         }
-    }, [currentRef]);
+    }, [listRef]);
     const contextValue = context as ListContextData<unknown, unknown, unknown, unknown, unknown> | undefined;
     return <ListContext.Provider value={contextValue}>
         {props.children}
