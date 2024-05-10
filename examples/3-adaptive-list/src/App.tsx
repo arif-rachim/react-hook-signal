@@ -1,6 +1,6 @@
 import './App.css'
 import {Stock} from "./model/Stock.ts";
-import {useComputed, useSignal, notifiable, useSignalEffect} from "react-hook-signal";
+import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {useRef} from "react";
 import {StockList} from "./comp/StockList.tsx";
 import {StockListHeader} from "./comp/StockListHeader.tsx";
@@ -8,7 +8,7 @@ import {dataSource} from "./model/dataSource.ts";
 import {exchange} from "./model/exchange.ts";
 import {StockListFooter} from "./comp/StockListFooter.tsx";
 import {jokes} from "./comp/jokes.ts";
-import {StockDetail} from "./comp/StockDetail.tsx";
+import {StockDetail, StockDetailConfig} from "./comp/StockDetail.tsx";
 
 function App() {
 
@@ -20,7 +20,7 @@ function App() {
     const isSearchFocused = useSignal(false);
     const timeoutId = useRef<number>(0);
     const showBusyMessage = useSignal(false);
-    const detailProps = useSignal<{item?:Stock,showDetail?:boolean,itemRect?:DOMRect}>({item:undefined,showDetail:undefined,itemRect:undefined});
+    const detailProps = useSignal<(StockDetailConfig & {showDetail:boolean})|undefined>(undefined);
     useSignalEffect(() => {
         const isFast = scrollSpeed.get() > 30;
         if(isFast){
@@ -80,8 +80,8 @@ function App() {
             scrollSpeed.set(distance / timeElapsed);
             hideSearch.set(clientY < currentClientY);
             scrollInfoRef.current = {clientY: currentClientY, timeStamp: currentTimestamp};
-        }} style={{paddingTop: 170}} onClick={({item,itemRect}) => {
-            detailProps.set({item,showDetail:true,itemRect});
+        }} style={{paddingTop: 170}} onClick={(props) => {
+            detailProps.set({...props,showDetail:true});
         }}/>
         <StockListFooter selectedExchange={selectedExchange} />
         <StockDetail config={detailProps} />
