@@ -1,0 +1,22 @@
+export const jokes = [
+"You're scrolling so fast, I'm worried your finger might catch fire from friction!",
+"Are you using a mouse or a rocket booster? Because your scrolling speed is out of this world!",
+"If scrolling were an Olympic sport, you'd be a gold medalist by now!",
+"Are you scrolling or teleporting? I can't keep up with your lightning-fast fingers!",
+"I've heard of speed reading, but you're on a whole other level with your speed scrolling!",
+"Slow down there, Speedy McScrollerson! You're making the internet dizzy!",
+"If scrolling were a superpower, you'd be the Flash of the digital world!",
+"You're scrolling so fast, I'm starting to wonder if you have a turbocharged mouse!",
+"Is your mouse made of lightning? Because it seems to be moving at warp speed!",
+"You're scrolling through content like a tornado in a library - watch out for flying words!",
+"Are you on a mission to break the world record for fastest scroll? Because you're certainly giving Usain Bolt a run for his money!",
+"Someone call the Guinness World Records! We've got a new champion in the \"Scrolling at Ludicrous Speed\" category!",
+"Your scrolling speed is so impressive, I'm starting to suspect you have a secret jetpack attached to your mouse!",
+"Is your mouse secretly a Formula 1 car in disguise? Because your scrolling speed suggests you're racing on a digital track!",
+"Your scrolling is like a high-speed train - no stops, no delays, just full steam ahead!",
+"I heard NASA wants to study your scrolling technique to help them improve rocket propulsion technology!",
+"Your scrolling is so fast, I'm surprised you haven't scrolled into the future yet!",
+"If scrolling were a dance, you'd be doing the \"Speedy Shuffle\" with moves faster than the eye can see!",
+"Your scrolling speed could power a small village - who needs electricity when you have hyper-scrolling energy?",
+"They say time flies when you're having fun, but for you, time flies when you're scrolling at warp speed!"
+] as const;

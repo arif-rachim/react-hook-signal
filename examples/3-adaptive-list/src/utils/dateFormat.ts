@@ -50,6 +50,22 @@ export function format_ddMMMyyyy(date?: Date | string): string {
     return formattedDate ? formatDate(formattedDate) : '';
 }
 
+
+/**
+ * Formats a Date object as "DD-MMM-YYYY".
+ * @param {Date | string} date - The Date object or date string.
+ * @returns {string} The formatted date string.
+ */
+export function format_ddMMM(param?: Date | string): string {
+    const date = toDate(param);
+    if(date === undefined){
+        return '';
+    }
+    const day = pad(date.getDate());
+    const monthAbbrev = monthsAbbreviated[date.getMonth()];
+    return `${day} ${monthAbbrev}`;
+}
+
 /**
  * Formats the time part of a Date object as "HH:mm".
  * @param {Date | string} date - The Date object or date string.

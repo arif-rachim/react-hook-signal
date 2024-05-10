@@ -3,6 +3,7 @@ import {notifiable} from "react-hook-signal";
 import {colors} from "../utils/colors.ts";
 import {IoEllipsisHorizontal, IoSearch} from "react-icons/io5";
 import {IoIosCloseCircle} from "react-icons/io";
+import {format_ddMMM} from "../utils/dateFormat.ts";
 
 export function StockListHeader(props: {
     isSearchFocused: Signal.State<boolean>,
@@ -26,7 +27,7 @@ export function StockListHeader(props: {
                 padding: searchFocused ? 0 : 20,
                 display: 'flex',
                 flexDirection: 'row',
-                height: searchFocused ? 0 : 90,
+                height: searchFocused ? 0 : 120,
                 opacity: searchFocused ? 0 : 1,
                 transition: 'all 300ms linear',
                 overflow: 'hidden',
@@ -34,9 +35,10 @@ export function StockListHeader(props: {
                 zIndex: 1,
             }
         }}>
-            <div style={{display: 'flex', flexDirection: 'column', gap: 15}}>
+            <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{fontSize: 32, fontWeight: 'bold'}}>Stocks</div>
-                <div style={{fontSize: 28, fontWeight: 'bold', color: colors.grey}}>6 May</div>
+                <div style={{fontSize: 28, fontWeight: 'bold', color: colors.grey,marginTop:15}}>{format_ddMMM(new Date())}</div>
+                <div style={{color: colors.grey,fontSize:12,marginTop:10,fontStyle:'italic'}}>The data is not real. This app showcases how TC39 Signal Proposal and React can deliver high performance.</div>
             </div>
             <div style={{flexGrow: 1}}></div>
             <div style={{
