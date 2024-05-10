@@ -8,6 +8,7 @@ import {dataSource} from "./model/dataSource.ts";
 import {exchange} from "./model/exchange.ts";
 import {StockListFooter} from "./comp/StockListFooter.tsx";
 import {jokes} from "./comp/jokes.ts";
+import {StockDetail} from "./comp/StockDetail.tsx";
 
 function App() {
 
@@ -19,9 +20,9 @@ function App() {
     const isSearchFocused = useSignal(false);
     const timeoutId = useRef<number>(0);
     const showBusyMessage = useSignal(false);
+    const detailProps = useSignal<{item?:Stock,showDetail?:boolean,itemRect?:DOMRect}>({item:undefined,showDetail:undefined,itemRect:undefined});
     useSignalEffect(() => {
         const isFast = scrollSpeed.get() > 30;
-        console.log('isFast',isFast,scrollSpeed.get());
         if(isFast){
             clearTimeout(timeoutId.current);
             showBusyMessage.set(true);
@@ -79,8 +80,11 @@ function App() {
             scrollSpeed.set(distance / timeElapsed);
             hideSearch.set(clientY < currentClientY);
             scrollInfoRef.current = {clientY: currentClientY, timeStamp: currentTimestamp};
-        }} style={{paddingTop: 150}}/>
+        }} style={{paddingTop: 170}} onClick={({item,itemRect}) => {
+            detailProps.set({item,showDetail:true,itemRect});
+        }}/>
         <StockListFooter selectedExchange={selectedExchange} />
+        <StockDetail config={detailProps} />
     </div>
 }
 

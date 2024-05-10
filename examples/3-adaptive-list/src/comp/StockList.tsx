@@ -2,18 +2,19 @@ import {createResponsiveList} from "../responsive-list/createResponsiveList.tsx"
 import {Stock} from "../model/Stock.ts";
 import {AnySignal, Notifiable, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
-import {useContext, useEffect} from "react";
+import {useContext, useEffect, useId} from "react";
 import {delay} from "../utils/delay.ts";
 import {LineChart} from "./LineChart.tsx";
 import {colors} from "../utils/colors.ts";
 
-export const StockList = createResponsiveList<Stock>().breakPoint({s: 400, m: 600, l: 900, xl: 1200}).renderer({
+export const StockList = createResponsiveList<Stock,{onClick:(props:{item:Stock,index:number,itemRect:DOMRect}) => void}>().breakPoint({s: 400, m: 600, l: 900, xl: 1200}).renderer({
     tickerSymbol: ({value}) => value,
     earningsDate: ({value}) => value,
     name: ({value}) => value,
     priceTarget: ({value}) => value,
-    marketCap: ({value, isBullish}) => {
-        const isBullishSignal = isBullish as AnySignal<boolean>;
+    marketCap: (props) => {
+        const isBullishSignal = (props as unknown as {isBullish:AnySignal<boolean>}).isBullish;
+        const value = props.value;
         return <div style={{
             backgroundColor: isBullishSignal.get() ? '#00B050' : '#B21016',
             padding: '2px 5px',
@@ -63,7 +64,9 @@ export const StockList = createResponsiveList<Stock>().breakPoint({s: 400, m: 60
         const currentPrice = useSignal(openPrice);
         const isBullish = useSignal(Math.random() < 0.7);
         const onClick = properties.onClick;
+        
         const dataSource = useSignal<Array<{ value: number }>>([]);
+        const id = useId();
         useEffect(() => {
             const data = [];
             let nextPrice = openPrice;
@@ -99,7 +102,7 @@ export const StockList = createResponsiveList<Stock>().breakPoint({s: 400, m: 60
             }
         }, [currentPrice, isBullish, openPrice]);
 
-        return <div style={{
+        return <div id={id} style={{
             gap: 10,
             display: 'flex',
             flexDirection: 'row',
@@ -108,8 +111,10 @@ export const StockList = createResponsiveList<Stock>().breakPoint({s: 400, m: 60
             borderBottom:'1px solid rgba(255,255,255,0.1)'
         }} onClick={() => {
             if (onClick && typeof onClick === 'function') {
-                onClick({item, index});
+                const itemRect = document.getElementById(id)!.getBoundingClientRect();
+                onClick({item,index,itemRect});
             }
+            
         }}>
             <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1,zIndex:1}}>
                 <Slot for={'tickerSymbol'} style={{flexGrow: 1, fontSize: 22, fontWeight: 700}}/>
