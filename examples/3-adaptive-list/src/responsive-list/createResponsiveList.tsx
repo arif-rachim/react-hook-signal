@@ -56,12 +56,12 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
 }) => <Template extends TemplateType<DataItem, BreakPoint, CellRenderer, Properties>>(_template: Template) => {
-    const {breakPoint,cellRenderer} = props;
+    const {breakPoint, cellRenderer} = props;
     const template = new Signal.State(_template);
     const ResponsiveListContext = ListContext as Context<ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>>;
     const ResponsiveTemplateContext = TemplateContext as Context<TemplateContextData<DataItem>>;
 
-    const List = forwardRef<ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>,(ListProps<DataItem> & Properties)>(function List(props,ref) {
+    const List = forwardRef<ListContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>, (ListProps<DataItem> & Properties)>(function List(props, ref) {
         const componentId = useId();
         const levelOneId = `${componentId}-lvl1`;
         const levelTwoId = `${componentId}-lvl2`;
@@ -70,7 +70,7 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
         const templateHeight = useSignal(0);
         const totalSegment = useSignal(4);
         const totalOffsetSegment = useSignal(1);
-        const {data, onScroll,style, ...properties} = props;
+        const {data, onScroll, style, ...properties} = props;
         const totalTemplatePerSegment = useComputed(() => {
             const {height} = viewportDimensions.get();
             const templateHeightValue = templateHeight.get();
@@ -156,10 +156,10 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
         const segments = useComputed(() => {
             const totalSegmentValue = totalSegment.get();
             return Array.from({length: totalSegmentValue}).map((_, index) => {
-                return <Segment startingPage={index} key={index} />
+                return <Segment startingPage={index} key={index}/>
             })
         })
-        useImperativeHandle(ref,() => {
+        useImperativeHandle(ref, () => {
             return {
                 breakPoint,
                 cellRenderer,
@@ -175,9 +175,9 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
                 segmentCurrentlyBeingRendered,
                 totalOffsetSegment,
                 totalSegment,
-                properties : properties as Properties,
-                containerLevelOne : () => document.getElementById(levelOneId)! as HTMLDivElement,
-                containerLevelTwo : () => document.getElementById(levelTwoId)! as HTMLDivElement
+                properties: properties as Properties,
+                containerLevelOne: () => document.getElementById(levelOneId)! as HTMLDivElement,
+                containerLevelTwo: () => document.getElementById(levelTwoId)! as HTMLDivElement
             }
         })
         return <ResponsiveListContext.Provider
@@ -196,20 +196,21 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
                 segmentCurrentlyBeingRendered,
                 totalOffsetSegment,
                 totalSegment,
-                properties : properties as Properties,
-                containerLevelOne : () => document.getElementById(levelOneId)! as HTMLDivElement,
-                containerLevelTwo : () => document.getElementById(levelTwoId)! as HTMLDivElement
+                properties: properties as Properties,
+                containerLevelOne: () => document.getElementById(levelOneId)! as HTMLDivElement,
+                containerLevelTwo: () => document.getElementById(levelTwoId)! as HTMLDivElement
             }}>
-            <div id={levelOneId} style={{height: '100%', overflow: 'auto',scrollBehavior:'smooth',...style}} onScroll={(e) => {
-                scrollOffset.set((e.target as HTMLDivElement).scrollTop);
-                if (onScroll) {
-                    onScroll(e as unknown as {
-                        target: {
-                            scrollTop: number
-                        }
-                    });
-                }
-            }}>
+            <div id={levelOneId} style={{height: '100%', overflow: 'auto', scrollBehavior: 'smooth', ...style}}
+                 onScroll={(e) => {
+                     scrollOffset.set((e.target as HTMLDivElement).scrollTop);
+                     if (onScroll) {
+                         onScroll(e as unknown as {
+                             target: {
+                                 scrollTop: number
+                             }
+                         });
+                     }
+                 }} >
                 <notifiable.div id={levelTwoId} style={containerStyle}>
                     {segments}
                 </notifiable.div>
@@ -221,10 +222,10 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
 
 
 export type InferContextRef<T> = T extends ForwardRefExoticComponent<infer A> ? A extends RefAttributes<infer B> ? B : never : never;
-export type InferListGenerics<T> = InferContextRef<T> extends ListContextData<infer DataItem,infer BreakPoint,infer CellRenderer,infer Template,infer Properties> ? {
-    dataItem : DataItem,
-    breakPoint : BreakPoint,
-    cellRenderer : CellRenderer,
-    template : Template,
-    properties : Properties
+export type InferListGenerics<T> = InferContextRef<T> extends ListContextData<infer DataItem, infer BreakPoint, infer CellRenderer, infer Template, infer Properties> ? {
+    dataItem: DataItem,
+    breakPoint: BreakPoint,
+    cellRenderer: CellRenderer,
+    template: Template,
+    properties: Properties
 } : never
