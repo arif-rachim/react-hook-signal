@@ -114,7 +114,7 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
         const element = useComputed(() => {
             const activeTemplateKeyValue = currentTemplateKey.get();
             const templateValue = template.get();
-            const TemplateRenderer = templateValue[activeTemplateKeyValue] as unknown as FunctionComponent<{ Slot: SlotComp<unknown>, item: DataItem } & Properties>;
+            const TemplateRenderer = templateValue[activeTemplateKeyValue] as unknown as FunctionComponent<{ Slot: SlotComp<unknown,Record<string,unknown>>, item: DataItem } & Properties>;
 
             return <TemplateRenderer Slot={TemplateSlot<BreakPoint, CellRenderer, Template, DataItem, Properties, Record<string,unknown>>}
                                      {...properties}/>

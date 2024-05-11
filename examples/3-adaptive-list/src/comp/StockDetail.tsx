@@ -4,6 +4,8 @@ import {Signal} from "signal-polyfill";
 import {useId} from "react";
 import {IoArrowBack} from "react-icons/io5";
 import {LineChart} from "./LineChart.tsx";
+import {useAnimatedStyle} from "../utils/useAnimatedStyle.ts";
+
 
 const transitionDuration = 300;
 export type StockDetailConfig = {
@@ -21,11 +23,13 @@ export function StockDetail(props: {
 }) {
     const elementId = useId();
     const config = props.config;
-    const showDetail = useComputed(() => props.config?.get()?.showDetail ?? false);
+    const showDetail = useComputed(() => props.config?.get()?.showDetail);
     const isBullish = useSignal(false);
     const data = useSignal<Array<number>>([]);
     const color = useSignal<string>('');
     const currentPrice = useSignal<number>(0);
+
+
     useSignalEffect(() => {
         if (props.config === undefined || props.config.get() === undefined) {
             return;
@@ -41,82 +45,73 @@ export function StockDetail(props: {
         currentPrice.set(propsCurrentPrice?.get() ?? 0);
         isBullish.set(propsIsBullish?.get() ?? false);
     })
-    const animationStyle = useComputed(() => {
-        if (props.config === undefined || props.config.get() === undefined) {
-            return;
-        }
-        const itemRect = props.config.get()!.itemRect;
-        if (itemRect === undefined) {
-            return {__html: ''}
-        }
-        return {
-            __html: `
-@keyframes list-to-detail {
-    from {
-        top: ${itemRect?.top}px;
-        left: ${itemRect?.left}px;
-        height : ${itemRect?.height}px;
-        width : ${itemRect?.width}px;
-    }
-    to {
-        top: 0px;
-        left: 0px;
-        height : 100%;
-        width : 100%;
-    }
-}
-.animate-in {
-    animation-name: list-to-detail;
-    animation-duration:${transitionDuration}ms;
-    animation-timing-function: linear;
-    animation-direction:normal;
-    animation-iteration-count:1;
-    animation-fill-mode:forwards;
-}
-.animate-out {
-    animation-name: list-to-detail;
-    animation-duration:${transitionDuration}ms;
-    animation-timing-function: linear;
-    animation-direction:reverse;
-    animation-iteration-count:1;
-    animation-fill-mode:forwards;
-}`
-        }
-    })
-    useSignalEffect(() => {
-        if (props.config === undefined || props.config.get() === undefined) {
-            return;
-        }
-        const showDetailValue = config.get()!.showDetail;
-        const hasStyle = animationStyle.get()!.__html !== '';
-        if (!hasStyle) {
-            return;
-        }
-        const element = document.getElementById(elementId)!;
-        if (showDetailValue === undefined) {
+
+    const [style, setStyle] = useAnimatedStyle({
+        position: 'absolute',
+        padding: '20px 20px',
+        gap: 10,
+        display: 'flex',
+        background: 'black',
+        top: -100,
+        left: 0,
+        width: '100%',
+        height: 0,
+        zIndex: 20
+    });
+    useSignalEffect((): void => {
+        const showDetailValue = showDetail.get();
+        const domRect = config.get()?.itemRect
+        if (domRect === undefined) {
             return;
         }
         if (showDetailValue) {
-            element.classList.remove('animate-out');
-            void element.offsetWidth;
-            element.classList.add('animate-in');
-            element.style.zIndex = '20';
+
+            setStyle({
+                from: {
+                    top: domRect.top,
+                    left: domRect.left,
+                    width: domRect.width,
+                    height: domRect.height,
+                }, to: {
+                    top: 0,
+                    left: 0,
+                    width: domRect.width,
+                    height: document.body.getBoundingClientRect().height,
+                },
+                duration: transitionDuration,
+                onBeforeStarted : () => {
+                    return {
+                        zIndex:20
+                    }
+                }
+            })
         }
         if (!showDetailValue) {
-            element.classList.remove('animate-in');
-            void element.offsetWidth;
-            element.addEventListener('animationend', (props) => {
-                if (props.animationName === 'list-to-detail') {
-                    element.style.zIndex = '-1';
+            setStyle({
+                to: {
+                    top: domRect.top,
+                    left: domRect.left,
+                    width: domRect.width,
+                    height: domRect.height,
+                }, from: {
+                    top: 0,
+                    left: 0,
+                    width: domRect.width,
+                    height: document.body.getBoundingClientRect().height,
+                },
+                duration: transitionDuration,
+                onAfter: () => {
+                    return {
+                        zIndex: -1
+                    }
                 }
-            }, {once: true})
-            element.classList.add('animate-out');
+            })
         }
-    })
+    });
+
     const item = useComputed(() => props.config?.get()?.item)
-    return <div id={elementId}
-                style={{position: 'absolute', padding: '20px 20px', gap: 10, display: 'flex', background: 'black'}}>
-        <notifiable.style dangerouslySetInnerHTML={animationStyle}/>
+    return <notifiable.div id={elementId}
+                           style={style}>
         <notifiable.div style={() => {
             const showDetailValue = showDetail.get();
             return {
@@ -151,7 +146,7 @@ export function StockDetail(props: {
                 position: 'absolute',
                 right: showDetailValue ? 20 : 100,
                 top: showDetailValue ? 100 : 20,
-                transition:`all ${transitionDuration}ms linear`,
+                transition: `all ${transitionDuration}ms linear`,
             }
         }}>
             <Notifiable component={LineChart} data={data} height={() => showDetail.get() ? 300 : 42}
@@ -171,5 +166,5 @@ export function StockDetail(props: {
             })}>{() => item.get()?.marketCap}</notifiable.div>
         </div>
 
-    </div>
+    </notifiable.div>
 }

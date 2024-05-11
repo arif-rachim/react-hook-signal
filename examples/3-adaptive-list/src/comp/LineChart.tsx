@@ -1,5 +1,6 @@
 import {useEffect, useRef} from "react";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
+import {transformValue} from "../utils/transformValue.ts";
 
 export function LineChart(props: {
     data: Array<number>,
@@ -34,15 +35,11 @@ export function LineChart(props: {
 
     useEffect(() => {
         const oldWidth = widthSignal.get();
-        transformValue({start: oldWidth, end: propsWidth, duration: 300}, (value) => {
-            widthSignal.set(Math.round(value));
-        })
+        transformValue({start: oldWidth, end: propsWidth, duration: 300}, (value) => widthSignal.set(Math.round(value)))
     }, [propsWidth, widthSignal]);
     useEffect(() => {
         const oldHeight = heightSignal.get();
-        transformValue({start: oldHeight, end: propsHeight, duration: 300}, (value) => {
-            heightSignal.set(Math.round(value));
-        })
+        transformValue({start: oldHeight, end: propsHeight, duration: 300}, (value) => heightSignal.set(Math.round(value)))
     }, [heightSignal, propsHeight]);
 
     useSignalEffect(() => {
@@ -52,7 +49,6 @@ export function LineChart(props: {
         const backgroundColor = backgroundColorSignal.get();
         const lineColor = lineColorSignal.get();
         const gradientColor = gradientColorSignal.get();
-        console.log('width', width, 'height', height);
         const canvas = canvasRef.current;
         if (canvas === null) {
             return;
@@ -94,47 +90,4 @@ export function LineChart(props: {
     });
 
     return <notifiable.canvas ref={canvasRef} width={widthSignal} height={heightSignal}/>;
-}
-
-// function easeInOut(t: number) {
-//     return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-// }
-
-function linear(t: number): number {
-    return t;
-}
-
-function transformValue(config: {
-    start: number,
-    end: number,
-    duration: number,
-    easing?: (t: number) => number
-}, callback: (value: number) => void) {
-    const {end, start, duration} = config;
-    let {easing} = config;
-    // default easing easeInOut
-    easing = easing ?? linear;
-    let startTime: DOMHighResTimeStamp | null = null;
-
-    // Define the animation function
-    function animate(timestamp: DOMHighResTimeStamp) {
-        if (!startTime) startTime = timestamp;
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / duration, 1); // Ensure progress is between 0 and 1
-
-        // Apply linear interpolation
-        const easedProgress = easing!(progress)
-        const interpolatedValue = start + (end - start) * easedProgress;
-
-        // Do something with the interpolated value (e.g., update UI)
-        callback(interpolatedValue);
-
-        // Continue the animation until duration is reached
-        if (elapsed < duration) {
-            requestAnimationFrame(animate);
-        }
-    }
-
-    // Start the animation
-    requestAnimationFrame(animate);
 }
