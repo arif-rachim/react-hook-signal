@@ -74,7 +74,6 @@ export function LineChart(props: {
                 const x = index * xIncrement;
                 const y = height - (value - Math.min(...data)) * yIncrement;
                 ctx.lineTo(x, y);
-                //ctx.arc(x, y, 2, 0, Math.PI * 2);
             });
             ctx.stroke();
 

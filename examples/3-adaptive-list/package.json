@@ -29,10 +29,8 @@
     "puppeteer": "^22.7.1",
     "react-hook-signal": "file:../..",
     "react-icons": "^5.2.1",
+    "recharts": "^2.12.7",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
-  },
-  "dependencies": {
-    "recharts": "^2.12.7"
   }
 }
