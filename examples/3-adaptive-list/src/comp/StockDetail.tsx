@@ -5,7 +5,7 @@ import {useId} from "react";
 import {IoArrowBack} from "react-icons/io5";
 import {LineChart} from "./LineChart.tsx";
 
-const animationDuration = 300;
+const transitionDuration = 300;
 export type StockDetailConfig = {
     item: Stock,
     index: number,
@@ -13,11 +13,11 @@ export type StockDetailConfig = {
     color: AnySignal<string>,
     data: AnySignal<Array<number>>,
     isBullish: AnySignal<boolean>,
-    currentPrice:AnySignal<number>
+    currentPrice: AnySignal<number>
 }
 
 export function StockDetail(props: {
-    config: Signal.State<(StockDetailConfig & {showDetail:boolean}) | undefined>
+    config: Signal.State<(StockDetailConfig & { showDetail: boolean }) | undefined>
 }) {
     const elementId = useId();
     const config = props.config;
@@ -27,17 +27,22 @@ export function StockDetail(props: {
     const color = useSignal<string>('');
     const currentPrice = useSignal<number>(0);
     useSignalEffect(() => {
-        if(props.config === undefined || props.config.get() === undefined) {
+        if (props.config === undefined || props.config.get() === undefined) {
             return;
         }
-        const {data: propsData, color: propsColor, isBullish: propsIsBullish,currentPrice:propsCurrentPrice} = props.config!.get()!;
+        const {
+            data: propsData,
+            color: propsColor,
+            isBullish: propsIsBullish,
+            currentPrice: propsCurrentPrice
+        } = props.config!.get()!;
         data.set(propsData?.get() ?? []);
         color.set(propsColor?.get() ?? '');
         currentPrice.set(propsCurrentPrice?.get() ?? 0);
         isBullish.set(propsIsBullish?.get() ?? false);
     })
     const animationStyle = useComputed(() => {
-        if(props.config === undefined || props.config.get() === undefined) {
+        if (props.config === undefined || props.config.get() === undefined) {
             return;
         }
         const itemRect = props.config.get()!.itemRect;
@@ -62,7 +67,7 @@ export function StockDetail(props: {
 }
 .animate-in {
     animation-name: list-to-detail;
-    animation-duration:${animationDuration}ms;
+    animation-duration:${transitionDuration}ms;
     animation-timing-function: linear;
     animation-direction:normal;
     animation-iteration-count:1;
@@ -70,7 +75,7 @@ export function StockDetail(props: {
 }
 .animate-out {
     animation-name: list-to-detail;
-    animation-duration:${animationDuration}ms;
+    animation-duration:${transitionDuration}ms;
     animation-timing-function: linear;
     animation-direction:reverse;
     animation-iteration-count:1;
@@ -79,7 +84,7 @@ export function StockDetail(props: {
         }
     })
     useSignalEffect(() => {
-        if(props.config === undefined || props.config.get() === undefined) {
+        if (props.config === undefined || props.config.get() === undefined) {
             return;
         }
         const showDetailValue = config.get()!.showDetail;
@@ -110,13 +115,13 @@ export function StockDetail(props: {
     })
     const item = useComputed(() => props.config?.get()?.item)
     return <div id={elementId}
-                style={{position: 'absolute', padding: '20px 20px',gap: 10, display: 'flex', background: 'black'}}>
+                style={{position: 'absolute', padding: '20px 20px', gap: 10, display: 'flex', background: 'black'}}>
         <notifiable.style dangerouslySetInnerHTML={animationStyle}/>
         <notifiable.div style={() => {
             const showDetailValue = showDetail.get();
             return {
                 width: showDetailValue ? 40 : 0,
-                transition: `all ${animationDuration}ms linear`,
+                transition: `all ${transitionDuration}ms linear`,
                 textAlign: 'right',
                 overflow: 'hidden'
             }
@@ -129,20 +134,30 @@ export function StockDetail(props: {
                     fontSize: showDetailValue ? 44 : 22,
                     lineHeight: showDetailValue ? 1 : 1,
                     fontWeight: 700,
-                    transition: `all ${animationDuration}ms ease-in-out`,
-                    zIndex:1
+                    transition: `all ${transitionDuration}ms ease-in-out`,
+                    zIndex: 1
                 }
             }}>{() => item.get()?.tickerSymbol}</notifiable.div>
             <notifiable.div
-                style={{color: 'rgba(255,255,255,0.5)', marginTop: 10,zIndex:1}}>{() => item.get()?.name}</notifiable.div>
+                style={{
+                    color: 'rgba(255,255,255,0.5)',
+                    marginTop: 10,
+                    zIndex: 1
+                }}>{() => item.get()?.name}</notifiable.div>
         </div>
-        <div style={{flexGrow: 1, display: 'flex', position: 'relative'}}>
-            <div style={{position: 'absolute', right: 0, top: 0}}>
-                <Notifiable component={LineChart} data={data} height={42} width={200}
-                            backgroundColor={'black'} lineColor={color} gradientColors={() => [color.get(), 'black']}/>
-                {/*<Slot for={'chart'} currentPrice={currentPrice} dataSource={dataSource} isBullish={isBullish}/>*/}
-            </div>
-        </div>
+        <notifiable.div style={() => {
+            const showDetailValue = showDetail.get();
+            return {
+                position: 'absolute',
+                right: showDetailValue ? 20 : 100,
+                top: showDetailValue ? 100 : 20,
+                transition:`all ${transitionDuration}ms linear`,
+            }
+        }}>
+            <Notifiable component={LineChart} data={data} height={() => showDetail.get() ? 300 : 42}
+                        width={() => showDetail.get() ? (document.body.getBoundingClientRect().width - 40) : 200}
+                        backgroundColor={'black'} lineColor={color} gradientColors={() => [color.get(), 'black']}/>
+        </notifiable.div>
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5}}>
             <notifiable.div style={{fontSize: 18, fontWeight: 500}}>{currentPrice}</notifiable.div>
             <notifiable.div style={() => ({
