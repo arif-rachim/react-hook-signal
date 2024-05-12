@@ -50,6 +50,7 @@ export function StockDetail(props: {
         display: 'flex',
         flexDirection: 'column',
         background: 'black',
+        overflow:'hidden',
         top: -100,
         left: 0,
         width: '100%',
@@ -110,7 +111,7 @@ export function StockDetail(props: {
                     opacity : 1
                 },
                 to : {
-                    height : 300,
+                    height : 100,
                     width : domRect.width - 40,
                     paddingRight:0,
                     marginTop : 10,
@@ -154,34 +155,7 @@ export function StockDetail(props: {
                         zIndex: 1
                     }}>{() => item.get()?.name}</notifiable.div>
             </div>
-            {/*<notifiable.div style={() => {*/}
-            {/*    const showDetailValue = showDetail.get();*/}
-            {/*    return {*/}
-            {/*        position: 'absolute',*/}
-            {/*        right: showDetailValue ? 20 : 100,*/}
-            {/*        top: showDetailValue ? 100 : 20,*/}
-            {/*        transition: `all ${transitionDuration}ms linear`,*/}
-            {/*    }*/}
-            {/*}}>*/}
-            {/*    <Notifiable component={LineChart}*/}
-            {/*                data={data}*/}
-            {/*                height={() => showDetail.get() ? 300 : 42}*/}
-            {/*                width={() => {*/}
-            {/*                    const itemRect = config.get()?.itemRect;*/}
-            {/*                    const showDetailValue = showDetail.get();*/}
-            {/*                    if(itemRect === undefined) {*/}
-            {/*                        return 0;*/}
-            {/*                    }*/}
-            {/*                    if(showDetailValue) {*/}
-            {/*                        //return itemRect.width - 100*/}
-            {/*                        return itemRect.width - 100*/}
-            {/*                    }*/}
-            {/*                    return 100;*/}
-            {/*                }}*/}
-            {/*                backgroundColor={'black'}*/}
-            {/*                lineColor={color}*/}
-            {/*                gradientColors={() => [color.get(), 'black']}/>*/}
-            {/*</notifiable.div>*/}
+
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5}}>
                 <notifiable.div style={{fontSize: 18, fontWeight: 500}}>{currentPrice}</notifiable.div>
                 <notifiable.div style={() => ({
@@ -220,5 +194,29 @@ export function StockDetail(props: {
                 <Area type="monotone" dataKey={'value'} stroke="url(#fillGradient)" fill="url(#fillGradient)" isAnimationActive={false}/>
             </Notifiable>
         </notifiable.div>
+        <div style={{display: 'flex',marginTop: 20, flexDirection: 'column', overflow: 'auto'}}>
+            <notifiable.div style={{ fontSize: 14, gap: 10, display: 'flex', flexDirection: 'column'}}>
+                {() => item.get()?.description.split('.').reduce<{
+                    words: string[],
+                    skipIndex: number,
+                    textToMerge: string
+                }>((result, word, index) => {
+                    if (word.length < 100) {
+                        result.textToMerge += word;
+                        result.skipIndex = index + 1;
+                    } else {
+                        if (result.skipIndex === index) {
+                            result.words.push(result.textToMerge + word);
+                            result.textToMerge = ''
+                        } else {
+                            result.words.push(word)
+                        }
+                    }
+                    return result;
+                }, {words: [], skipIndex: 0, textToMerge: ''}).words.map((sentence, index) => (
+                    <p key={index}>{sentence}</p>))}
+            </notifiable.div>
+        </div>
+
     </notifiable.div>
 }

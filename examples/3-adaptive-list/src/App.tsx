@@ -35,8 +35,6 @@ function App() {
         const selectedExchangeIndex = selectedExchange.get();
         const selectedExchangeValue = exchangeValue[selectedExchangeIndex];
         const searchValue = search.get().toUpperCase();
-        console.log("WE GOT DATA MAN ",data.get(),'selectedExchangeValue',selectedExchangeValue);
-
         return (dataValue[selectedExchangeValue]??[]).filter(data => {
             if (selectedExchangeValue && data.exchange !== selectedExchangeValue) {
                 return false;
