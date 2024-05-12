@@ -1,10 +1,9 @@
 import './App.css'
-import {Stock} from "./model/Stock.ts";
+import {dataSource as data} from "./model/Stock.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {useRef} from "react";
 import {StockList} from "./comp/StockList.tsx";
 import {StockListHeader} from "./comp/StockListHeader.tsx";
-import {dataSource} from "./model/dataSource.ts";
 import {exchange} from "./model/exchange.ts";
 import {StockListFooter} from "./comp/StockListFooter.tsx";
 import {jokes} from "./comp/jokes.ts";
@@ -12,7 +11,6 @@ import {StockDetail, StockDetailConfig} from "./comp/StockDetail.tsx";
 
 function App() {
 
-    const data = useSignal<Array<Stock>>(dataSource);
     const hideSearch = useSignal(false);
     const scrollSpeed = useSignal(0);
     const search = useSignal('');
@@ -31,13 +29,15 @@ function App() {
             },1000) as unknown as number;
         }
     });
-
     const filteredData = useComputed(() => {
         const dataValue = data.get();
+        const exchangeValue = exchange.get()??[];
         const selectedExchangeIndex = selectedExchange.get();
-        const selectedExchangeValue = exchange[selectedExchangeIndex];
+        const selectedExchangeValue = exchangeValue[selectedExchangeIndex];
         const searchValue = search.get().toUpperCase();
-        return dataValue.filter(data => {
+        console.log("WE GOT DATA MAN ",data.get(),'selectedExchangeValue',selectedExchangeValue);
+
+        return (dataValue[selectedExchangeValue]??[]).filter(data => {
             if (selectedExchangeValue && data.exchange !== selectedExchangeValue) {
                 return false;
             }

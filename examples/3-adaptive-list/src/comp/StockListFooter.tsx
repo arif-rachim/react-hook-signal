@@ -7,8 +7,9 @@ export function StockListFooter(props: {
 }) {
     const {selectedExchange} = props;
     const exchangeElements = useComputed(() => {
+        const exchangeValue = exchange.get();
         const selectedExchangeValue = selectedExchange.get();
-        return exchange.map((item, index, source) => {
+        return exchangeValue.map((item, index, source) => {
             const isSelected = selectedExchangeValue === index;
             return <div style={{
                 padding: '20px 0px',
@@ -23,7 +24,7 @@ export function StockListFooter(props: {
     return <>
         <notifiable.div style={() => {
             const selectedExchangeValue = selectedExchange.get();
-            const width = (100 / exchange.length);
+            const width = (100 / exchange.get().length);
             return {
                 position: 'absolute',
                 bottom: 0,

@@ -1,7 +1,4 @@
-import {dataSource} from "./dataSource.ts";
+import {dataSource} from "./Stock.ts";
+import {Signal} from "signal-polyfill";
 
-const exchangeSet = new Set<string>();
-for (const data of dataSource) {
-    exchangeSet.add(data.exchange)
-}
-export const exchange = Array.from(exchangeSet);
+export const exchange = new Signal.Computed(() => Object.keys(dataSource.get()));

@@ -54,7 +54,7 @@ export function LineChart(props: {
             return;
         }
         const ctx = canvas.getContext('2d')!;
-
+        ctx.imageSmoothingEnabled = true;
         ctx.fillStyle = backgroundColor;
         ctx.fillRect(0, 0, width, height);
 

@@ -20,7 +20,7 @@ export const StockList = createResponsiveList<Stock,{onClick:(props:StockDetailC
     },
     chart: function Chart(props: unknown) {
         const {color,data} = props as unknown as {data:AnySignal<Array<number>>,color:AnySignal<string>};
-        return <Notifiable component={LineChart} data={data} height={42} width={200}
+        return <Notifiable component={LineChart} data={data} height={42} width={100}
                                 backgroundColor={'black'} lineColor={color} gradientColors={() => [color.get(),'black']}/>
     }
 }).template({

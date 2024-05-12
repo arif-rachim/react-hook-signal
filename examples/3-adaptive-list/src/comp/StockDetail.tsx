@@ -1,11 +1,10 @@
 import {AnySignal, Notifiable, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Stock} from "../model/Stock.ts";
 import {Signal} from "signal-polyfill";
-import {useId} from "react";
+import {useId, useRef} from "react";
 import {IoArrowBack} from "react-icons/io5";
-import {LineChart} from "./LineChart.tsx";
-import {useAnimatedStyle} from "../utils/useAnimatedStyle.ts";
-import {Area, AreaChart, CartesianGrid, Tooltip, YAxis} from "recharts";
+import {SetStyleProps, useAnimatedStyle} from "../utils/useAnimatedStyle.ts";
+import {Area, AreaChart, CartesianGrid, YAxis} from "recharts";
 
 const transitionDuration = 300;
 export type StockDetailConfig = {
@@ -57,6 +56,7 @@ export function StockDetail(props: {
         height: 0,
         zIndex: 20
     });
+    const reversePlayOriginalChart = useRef<((props:{onAfter:SetStyleProps<unknown>['onAfter']}) => void)|undefined>(undefined)
     useSignalEffect((): void => {
         const showDetailValue = showDetail.get();
         const domRect = config.get()?.itemRect
@@ -64,8 +64,7 @@ export function StockDetail(props: {
             return;
         }
         if (showDetailValue) {
-
-            setStyle({
+            reversePlayOriginalChart.current = setStyle({
                 from: {
                     top: domRect.top,
                     left: domRect.left,
@@ -78,7 +77,7 @@ export function StockDetail(props: {
                     height: document.body.getBoundingClientRect().height,
                 },
                 duration: transitionDuration,
-                onBeforeStarted: () => {
+                onBefore: () => {
                     return {
                         zIndex: 20
                     }
@@ -86,33 +85,47 @@ export function StockDetail(props: {
             })
         }
         if (!showDetailValue) {
-            setStyle({
-                to: {
-                    top: domRect.top,
-                    left: domRect.left,
-                    width: domRect.width,
-                    height: domRect.height,
-                }, from: {
-                    top: 0,
-                    left: 0,
-                    width: domRect.width,
-                    height: document.body.getBoundingClientRect().height,
-                },
-                duration: transitionDuration,
-                onAfter: () => {
-                    return {
-                        zIndex: -1
-                    }
-                }
-            })
+            if(reversePlayOriginalChart.current){
+                reversePlayOriginalChart.current({onAfter:() => ({zIndex:-1})});
+            }
         }
     });
 
     const item = useComputed(() => props.config?.get()?.item)
-
+    const [chartStyle,setChartStyle] = useAnimatedStyle({height:42});
+    const reversePlay = useRef<(() => void)|undefined>(undefined);
+    useSignalEffect((): void => {
+        const showDetailValue = showDetail.get();
+        const domRect = config.get()?.itemRect
+        if (domRect === undefined) {
+            return;
+        }
+        if(showDetailValue){
+            reversePlay.current = setChartStyle({
+                from : {
+                    height : 42,
+                    width : 160,
+                    paddingRight : 80,
+                    marginTop : -50,
+                    opacity : 1
+                },
+                to : {
+                    height : 300,
+                    width : domRect.width - 40,
+                    paddingRight:0,
+                    marginTop : 10,
+                    opacity:1
+                }
+            })
+        }else{
+            if(reversePlay.current){
+                reversePlay.current();
+            }
+        }
+    });
     return <notifiable.div id={elementId}
                            style={style}>
-        <div style={{display: 'flex', flexDirection: 'row', gap: 10}}>
+        <div style={{display: 'flex', flexDirection: 'row'}}>
             <notifiable.div style={() => {
                 const showDetailValue = showDetail.get();
                 return {
@@ -141,29 +154,34 @@ export function StockDetail(props: {
                         zIndex: 1
                     }}>{() => item.get()?.name}</notifiable.div>
             </div>
-            <notifiable.div style={() => {
-                const showDetailValue = showDetail.get();
-                return {
-                    position: 'absolute',
-                    right: showDetailValue ? 20 : 100,
-                    top: showDetailValue ? 100 : 20,
-                    transition: `all ${transitionDuration}ms linear`,
-                }
-            }}>
-                <Notifiable component={LineChart} data={data} height={() => showDetail.get() ? 300 : 42}
-                            width={() => {
-                                const itemRect = config.get()?.itemRect;
-                                const showDetailValue = showDetail.get();
-                                if(itemRect === undefined) {
-                                    return 0;
-                                }
-                                if(showDetailValue) {
-                                    return itemRect.width - 100
-                                }
-                                return 200;
-                            }}
-                            backgroundColor={'black'} lineColor={color} gradientColors={() => [color.get(), 'black']}/>
-            </notifiable.div>
+            {/*<notifiable.div style={() => {*/}
+            {/*    const showDetailValue = showDetail.get();*/}
+            {/*    return {*/}
+            {/*        position: 'absolute',*/}
+            {/*        right: showDetailValue ? 20 : 100,*/}
+            {/*        top: showDetailValue ? 100 : 20,*/}
+            {/*        transition: `all ${transitionDuration}ms linear`,*/}
+            {/*    }*/}
+            {/*}}>*/}
+            {/*    <Notifiable component={LineChart}*/}
+            {/*                data={data}*/}
+            {/*                height={() => showDetail.get() ? 300 : 42}*/}
+            {/*                width={() => {*/}
+            {/*                    const itemRect = config.get()?.itemRect;*/}
+            {/*                    const showDetailValue = showDetail.get();*/}
+            {/*                    if(itemRect === undefined) {*/}
+            {/*                        return 0;*/}
+            {/*                    }*/}
+            {/*                    if(showDetailValue) {*/}
+            {/*                        //return itemRect.width - 100*/}
+            {/*                        return itemRect.width - 100*/}
+            {/*                    }*/}
+            {/*                    return 100;*/}
+            {/*                }}*/}
+            {/*                backgroundColor={'black'}*/}
+            {/*                lineColor={color}*/}
+            {/*                gradientColors={() => [color.get(), 'black']}/>*/}
+            {/*</notifiable.div>*/}
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5}}>
                 <notifiable.div style={{fontSize: 18, fontWeight: 500}}>{currentPrice}</notifiable.div>
                 <notifiable.div style={() => ({
@@ -177,32 +195,30 @@ export function StockDetail(props: {
                 })}>{() => item.get()?.marketCap}</notifiable.div>
             </div>
         </div>
-        <svg>
-            <linearGradient id="fillGradient" x1="0" y1="0" x2="0" y2="1">
-                <notifiable.stop offset={0} stopColor={color} stopOpacity={0.9}/>
-                <notifiable.stop offset={1} stopColor={color} stopOpacity={0.2} />
-            </linearGradient>
-        </svg>
-        <div style={{display:'flex',flexDirection:'column',marginTop:-140}}>
+
+        <notifiable.div style={() => {
+            const {paddingRight,marginTop,opacity} = chartStyle.get();
+            return {display:'flex',flexDirection:'column',alignItems:'flex-end',paddingRight,marginTop,opacity}
+        }}>
             <Notifiable component={AreaChart}
-                        margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-                        width={() => {
-                            const domRect = config.get()?.itemRect;
-                            if(domRect === undefined) {
-                                return 0;
-                            }
-                            return domRect.width - 40
-                        }}
-                        height={300}
+                        margin={{top: 0, right: 0, left: 0, bottom: 0}}
+                        width={() => chartStyle.get().width as number}
+                        height={() => chartStyle.get().height as number}
                         data={() => {
                             return data.get().map(i => ({value: i}))
                         }}
             >
-                <CartesianGrid strokeDasharray="4 1" />
-                <Tooltip  />
-                <YAxis domain={['dataMin']} />
-                <Area type="monotone" dataKey={'value'} stroke="green"  fill="url(#fillGradient)" isAnimationActive={false}/>
+                <defs>
+                    <linearGradient id="fillGradient" x1="0" y1="0" x2="0" y2="1">
+                        <notifiable.stop offset={0} stopColor={color} stopOpacity={0.9}/>
+                        <notifiable.stop offset={1} stopColor={color} stopOpacity={0.2}/>
+                    </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="10 5" opacity={0.2}/>
+                {/*<Tooltip/>*/}
+                <YAxis domain={['dataMin']}/>
+                <Area type="monotone" dataKey={'value'} stroke="url(#fillGradient)" fill="url(#fillGradient)" isAnimationActive={false}/>
             </Notifiable>
-        </div>
+        </notifiable.div>
     </notifiable.div>
 }

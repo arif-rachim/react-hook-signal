@@ -60,24 +60,24 @@ export type AnimatedProperties = {
     [K in (typeof props)[number]]?: number
 }
 
-type SetStyleProps<AnimatedProperties> = {
+export type SetStyleProps<AnimatedProperties> = {
     to: AnimatedProperties,
     from: AnimatedProperties,
-    duration: number,
-    onBeforeStarted?: (current: CSSProperties) => CSSProperties,
+    duration?: number,
+    onBefore?: (current: CSSProperties) => CSSProperties,
     onAfter?: (current: CSSProperties) => CSSProperties
 }
-export function useAnimatedStyle(initial: CSSProperties): [Signal.State<CSSProperties>, (props: SetStyleProps<AnimatedProperties>) => void] {
+export function useAnimatedStyle(initial: CSSProperties): [Signal.State<CSSProperties>, (props: SetStyleProps<AnimatedProperties>) => (props?:Pick<SetStyleProps<AnimatedProperties>,'onBefore'|'onAfter'>) => void] {
     const style: Signal.State<CSSProperties> = useSignal<CSSProperties>(initial);
     useEffect(() => style.set(initial),[initial, style])
     const setStyle = <T extends AnimatedProperties>(value: SetStyleProps<T>) => {
-        const {from, to, duration, onAfter, onBeforeStarted} = value;
-        if (onBeforeStarted) {
+        const {from, to, duration, onAfter, onBefore} = value;
+        if (onBefore) {
             const currentStyle = Signal.subtle.untrack(() => style.get());
-            const newStyle = onBeforeStarted(currentStyle);
+            const newStyle = onBefore(currentStyle);
             style.set({...currentStyle,...newStyle})
         }
-        transformValue({start: from, end: to, duration}, (value) => {
+        transformValue({start: from, end: to, duration : duration ?? 300}, (value) => {
             style.set({...style.get(), ...value})
         },() => {
             if(onAfter){
@@ -86,7 +86,11 @@ export function useAnimatedStyle(initial: CSSProperties): [Signal.State<CSSPrope
                 style.set({...currentStyle,...newStyle})
             }
         })
-
+        return function reverse(props?:Pick<SetStyleProps<T>,'onBefore'|'onAfter'>){
+            const onBefore = props?.onBefore ?? (() => ({}));
+            const onAfter = props?.onAfter ?? (() => ({}));
+            setStyle({...value,from:value.to,to:value.from,onBefore,onAfter} )
+        }
     }
     return [style, setStyle]
 }
