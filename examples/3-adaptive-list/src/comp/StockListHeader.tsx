@@ -1,17 +1,31 @@
 import {Signal} from "signal-polyfill";
-import {notifiable} from "react-hook-signal";
+import {notifiable, useSignalEffect} from "react-hook-signal";
 import {colors} from "../utils/colors.ts";
 import {IoEllipsisHorizontal, IoSearch} from "react-icons/io5";
 import {IoIosCloseCircle} from "react-icons/io";
 import {format_ddMMM} from "../utils/dateFormat.ts";
+import {StockListFooter} from "./StockListFooter.tsx";
 
 export function StockListHeader(props: {
     isSearchFocused: Signal.State<boolean>,
     hideSearch: Signal.State<boolean>,
-    search: Signal.State<string>
+    search: Signal.State<string>,
+    selectedExchange: Signal.State<number>,
 }) {
 
-    const {isSearchFocused, search, hideSearch} = props;
+    const {isSearchFocused, search, hideSearch, selectedExchange} = props;
+    useSignalEffect(() => {
+        const isFocused = isSearchFocused.get();
+        function onClick(){
+            isSearchFocused.set(false)
+        }
+        if (isFocused) {
+            window.addEventListener('click',onClick)
+        }
+        return () => {
+            window.removeEventListener('click',onClick)
+        }
+    })
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -20,6 +34,9 @@ export function StockListHeader(props: {
         width: 'calc(100% - 15px)',
         backgroundColor: 'black',
         zIndex: 10,
+    }} onClick={e => {
+        e.preventDefault();
+        e.stopPropagation();
     }}>
         <notifiable.div style={() => {
             const searchFocused = isSearchFocused.get();
@@ -32,13 +49,20 @@ export function StockListHeader(props: {
                 transition: 'all 300ms linear',
                 overflow: 'hidden',
                 background: 'black',
-                zIndex: 1,
+                zIndex: 30,
             }
         }}>
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{fontSize: 32, fontWeight: 'bold'}}>Stocks</div>
-                <div style={{fontSize: 28, fontWeight: 'bold', color: colors.grey,marginTop:15}}>{format_ddMMM(new Date())}</div>
-                <div style={{color: colors.grey,fontSize:12,marginTop:10,fontStyle:'italic'}}>The data is not real. This app showcases how TC39 Signal Proposal and React can deliver high performance.</div>
+                <div style={{
+                    fontSize: 28,
+                    fontWeight: 'bold',
+                    color: colors.grey,
+                    marginTop: 15
+                }}>{format_ddMMM(new Date())}</div>
+                <div style={{color: colors.grey, fontSize: 12, marginTop: 10, fontStyle: 'italic'}}>The data is not
+                    real. This app showcases how TC39 Signal Proposal and React can deliver high performance.
+                </div>
             </div>
             <div style={{flexGrow: 1}}></div>
             <div style={{
@@ -64,7 +88,9 @@ export function StockListHeader(props: {
                 alignItems: 'center',
                 overflow: 'hidden',
                 opacity: hideSearchValue ? 1 : 1,
-                transition: 'all 300ms linear'
+                transition: 'all 300ms linear',
+                zIndex: 20,
+                backgroundColor: 'black'
             }
         }}>
             <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, position: 'relative'}}>
@@ -77,7 +103,7 @@ export function StockListHeader(props: {
                     borderRadius: 14
                 }}
                                   onFocus={() => isSearchFocused.set(true)}
-                                  onBlur={() => isSearchFocused.set(false)}
+
                                   defaultValue={search.get()}
                                   onChange={(e) => search.set(e.target.value)}
                 />
@@ -92,18 +118,32 @@ export function StockListHeader(props: {
             <notifiable.div style={() => {
                 const searchFocused = isSearchFocused.get();
                 return {
-                    paddingLeft:10,
-                    textAlign:'left',
+                    paddingLeft: 10,
+                    textAlign: 'left',
                     width: searchFocused ? 60 : 0,
                     opacity: searchFocused ? 1 : 0,
                     transition: 'all 300ms linear',
-                    color:colors.blue,
+                    color: colors.blue,
                     fontSize: 18,
-                    fontWeight:600
+                    fontWeight: 600
                 }
-            }}>
+            }} onClick={() => isSearchFocused.set(false)}>
                 Done
             </notifiable.div>
         </notifiable.div>
-    </div>;
+
+        <notifiable.div style={() => {
+            const searchFocused = isSearchFocused.get();
+            return {
+                position: 'absolute',
+                zIndex: 10,
+                bottom: searchFocused ? -50 : 0,
+                width: '100%',
+                backgroundColor: 'black',
+                transition : `all 300ms linear`
+            }
+        }}>
+            <StockListFooter selectedExchange={selectedExchange} highlightBottom={true}/>
+        </notifiable.div>
+    </div>
 }

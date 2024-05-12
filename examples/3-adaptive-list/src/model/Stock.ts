@@ -21,7 +21,7 @@ export interface Stock {
     iSINNumber: string,
     employerID: string,
     sICCode: string,
-    executives: string,
+    executives: Record<string,string>,
     marketCap: string,
     revenue: string,
     netIncome: string,
@@ -45,7 +45,7 @@ export interface Stock {
 export const dataSource = new Signal.State<Record<string, Array<Stock>>>({});
 
 (async function loadDataSource() {
-    const stocksData = await import('./stocks-data.json');
+    const stocksData = await import('./stocks-data-sort.json');
     const result = stocksData.default;
     dataSource.set(result as unknown as Record<string, Array<Stock>>)
 })();

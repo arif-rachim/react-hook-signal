@@ -3,9 +3,10 @@ import {notifiable, useComputed} from "react-hook-signal";
 import {exchange} from "../model/exchange.ts";
 
 export function StockListFooter(props: {
-    selectedExchange: Signal.State<number>
+    selectedExchange: Signal.State<number>,
+    highlightBottom: boolean
 }) {
-    const {selectedExchange} = props;
+    const {selectedExchange, highlightBottom} = props;
     const exchangeElements = useComputed(() => {
         const exchangeValue = exchange.get();
         const selectedExchangeValue = selectedExchange.get();
@@ -18,7 +19,9 @@ export function StockListFooter(props: {
                 width: `${(100 / source.length).toFixed(2)}%`,
                 textAlign: 'center',
                 transition: 'all 300ms linear'
-            }} key={item} onClick={() => selectedExchange.set(index)}>{item}</div>
+            }} key={item} onClick={() => {
+                selectedExchange.set(index)
+            }}>{item}</div>
         })
     })
     return <>
@@ -31,8 +34,9 @@ export function StockListFooter(props: {
                 left: `${(width * selectedExchangeValue).toFixed(2)}%`,
                 width: `${width.toFixed(2)}%`,
                 height: 60,
-                borderTop: '5px solid white',
-                zIndex: 10,
+                borderBottom: highlightBottom ? '5px solid white' : undefined,
+                borderTop: !highlightBottom ? '5px solid white' : undefined,
+                zIndex: 11,
                 transition: 'all 100ms linear'
             }
         }}></notifiable.div>
@@ -45,7 +49,8 @@ export function StockListFooter(props: {
             width: '100%',
             zIndex: 10,
             transition: 'all 300ms linear'
-        }}>{exchangeElements}
+        }}>
+            {exchangeElements}
         </notifiable.div>
     </>;
 }

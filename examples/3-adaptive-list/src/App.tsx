@@ -59,6 +59,7 @@ function App() {
             isSearchFocused={isSearchFocused}
             hideSearch={hideSearch}
             search={search}
+            selectedExchange={selectedExchange}
         />
         <notifiable.div style={{position:'absolute',top:300,width:'100%',textAlign:'center',backgroundColor:'black',zIndex:15}}>
             {() => {
@@ -81,7 +82,7 @@ function App() {
         }} style={{paddingTop: 170}} onClick={(props) => {
             detailProps.set({...props,showDetail:true});
         }}/>
-        <StockListFooter selectedExchange={selectedExchange} />
+        <StockListFooter selectedExchange={selectedExchange} highlightBottom={false} />
         <StockDetail config={detailProps} />
     </div>
 }
