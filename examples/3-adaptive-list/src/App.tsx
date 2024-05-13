@@ -1,13 +1,15 @@
 import './App.css';
-import { dataSource as stockData } from "./model/Stock.ts";
-import { notifiable, useComputed, useSignal, useSignalEffect } from "react-hook-signal";
-import { useRef } from "react";
-import { StockList } from "./comp/StockList.tsx";
-import { StockListHeader } from "./comp/StockListHeader.tsx";
-import { exchangeData } from "./model/exchange.ts";
-import { StockListFooter } from "./comp/StockListFooter.tsx";
-import { jokes } from "./comp/jokes.ts";
-import { StockDetailComponent, StockDetailConfig } from "./comp/StockDetail.tsx";
+import {dataSource as stockData} from "./model/Stock.ts";
+import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {useRef} from "react";
+import {StockList} from "./comp/StockList.tsx";
+import {StockListHeader} from "./comp/StockListHeader.tsx";
+import {exchangeData} from "./model/exchange.ts";
+import {StockListFooter} from "./comp/StockListFooter.tsx";
+import {jokes} from "./comp/jokes.ts";
+import {StockDetailComponent, StockDetailConfig} from "./comp/StockDetail.tsx";
+import {colors} from "./utils/colors.ts";
+import {WelcomePage} from "./comp/WelcomePage.tsx";
 
 /**
  * Represents the main application component.
@@ -54,9 +56,10 @@ function App() {
      */
     const stockDetailProps = useSignal<(StockDetailConfig & { showDetail: boolean }) | undefined>(undefined);
 
+    const showWelcomeMessage = useSignal(true);
     useSignalEffect(() => {
         const isFastScroll = scrollVelocity.get() > 30;
-        if(isFastScroll){
+        if (isFastScroll) {
             clearTimeout(timeoutId.current);
             isBusyMessageShown.set(true);
             timeoutId.current = setTimeout(() => {
@@ -84,7 +87,7 @@ function App() {
     /**
      * A reference object that contains scroll information.
      */
-    const scrollInfoRef = useRef({ timeStamp: performance.now(), clientY: 0 });
+    const scrollInfoRef = useRef({timeStamp: performance.now(), clientY: 0});
 
     return <div style={{
         height: '100%',
@@ -102,29 +105,53 @@ function App() {
             searchTerm={searchTerm}
             selectedExchangeIndex={selectedExchangeIndex}
         />
-        <notifiable.div style={{ position: 'absolute', top: 300, width: '100%', textAlign: 'center', backgroundColor: 'black', zIndex: 15 }}>
+        <notifiable.div style={{
+            position: 'absolute',
+            top: 300,
+            width: '100%',
+            textAlign: 'center',
+            backgroundColor: 'black',
+            zIndex: 15
+        }}>
             {() => {
                 if (isBusyMessageShown.get()) {
                     const randomJoke = jokes[Math.round(Math.random() * (jokes.length - 1))]
-                    return <div style={{ padding: 10 }}>{randomJoke}</div>
+                    return <div style={{padding: 10}}>{randomJoke}</div>
                 }
                 return <></>
             }}
         </notifiable.div>
         <StockList.List data={filteredStockData} onScroll={(e: { target: { scrollTop: number } }) => {
-            const { clientY, timeStamp } = scrollInfoRef.current;
+            const {clientY, timeStamp} = scrollInfoRef.current;
             const currentClientY = e.target.scrollTop;
             const currentTimestamp = performance.now();
             const distance = Math.abs(currentClientY - clientY);
             const timeElapsed = currentTimestamp - timeStamp;
             scrollVelocity.set(distance / timeElapsed);
             isSearchHidden.set(clientY < currentClientY);
-            scrollInfoRef.current = { clientY: currentClientY, timeStamp: currentTimestamp };
-        }} style={{ paddingTop: 170 }} onClick={(props) => {
-            stockDetailProps.set({ ...props, showDetail: true });
+            scrollInfoRef.current = {clientY: currentClientY, timeStamp: currentTimestamp};
+        }} style={{paddingTop: 170}} onClick={(props) => {
+            stockDetailProps.set({...props, showDetail: true});
         }}/>
-        <StockListFooter selectedExchangeIndex={selectedExchangeIndex} highlightBottom={false} />
-        <StockDetailComponent configuration={stockDetailProps} />
+        <notifiable.div style={() => {
+            const isEmpty = filteredStockData.get().length === 0;
+            return {
+                top: 300,
+                position: 'absolute',
+                width: '100%',
+                justifyContent: 'center',
+                color: colors.grey,
+                display: isEmpty ? 'flex' : 'none',
+                flexDirection: 'row',
+                flexWrap: 'nowrap'
+            }
+        }}>
+            <div style={{fontStyle: 'italic'}}>Thank you for your patience as we fetch the data...</div>
+            <div className={'rotate'} style={{width: 20, height: 20}}>⏳</div>
+        </notifiable.div>
+        <StockListFooter selectedExchangeIndex={selectedExchangeIndex} highlightBottom={false}/>
+        <StockDetailComponent configuration={stockDetailProps}/>
+        <WelcomePage visible={showWelcomeMessage}/>
     </div>
 }
 

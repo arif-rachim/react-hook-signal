@@ -33,6 +33,8 @@ export function StockListFooter(props: {
             const selectedExchangeValue = selectedExchangeIndex.get();
             const width = (100 / exchangeData.get().length);
             return {
+                display: exchangeData.get().length === 0 ? 'none' : 'block',
+                flexDirection: 'row',
                 position: 'absolute',
                 bottom: 0,
                 left: `${(width * selectedExchangeValue).toFixed(2)}%`,

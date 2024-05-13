@@ -51,8 +51,8 @@ export interface Stock {
 export const dataSource = new Signal.State<Record<string, Array<Stock>>>({});
 
 (async function loadDataSource() {
-    const stocksData = await import('./stocks-data-sort.json');
-    const result = stocksData.default;
-    dataSource.set(result as unknown as Record<string, Array<Stock>>)
+    const response = await fetch('https://raw.githubusercontent.com/arif-rachim/react-hook-signal/main/examples/3-adaptive-list/src/model/stocks-data-sort.json');
+    const text = await response.text()
+    dataSource.set(JSON.parse(text) as unknown as Record<string, Array<Stock>>)
 })();
 
