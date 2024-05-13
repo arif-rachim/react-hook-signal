@@ -9,15 +9,49 @@ import { StockListFooter } from "./comp/StockListFooter.tsx";
 import { jokes } from "./comp/jokes.ts";
 import { StockDetailComponent, StockDetailConfig } from "./comp/StockDetail.tsx";
 
+/**
+ * Represents the main application component.
+ */
 function App() {
 
+    /**
+     * Creates a signal to indicate whether the search is hidden or not.
+     */
     const isSearchHidden = useSignal(false);
+
+    /**
+     * A variable representing the scroll velocity.
+     */
     const scrollVelocity = useSignal(0);
+
+    /**
+     * Represents the search term used to perform a search using the Signal API.
+     */
     const searchTerm = useSignal('');
+
+    /**
+     * Represents the selected exchange index.
+     */
     const selectedExchangeIndex = useSignal<number>(0);
+
+    /**
+     * Represents the focus state of a search field.
+     */
     const isSearchFieldFocused = useSignal(false);
+
+    /**
+     * The reference to the timeout identifier.
+     */
     const timeoutId = useRef<number>(0);
+
+    /**
+     * Represents the state of whether the busy message is shown or not.
+     */
     const isBusyMessageShown = useSignal(false);
+
+    /**
+     * Represents the stock detail property.
+     */
     const stockDetailProps = useSignal<(StockDetailConfig & { showDetail: boolean }) | undefined>(undefined);
 
     useSignalEffect(() => {
@@ -31,6 +65,9 @@ function App() {
         }
     });
 
+    /**
+     * Returns filtered stock data based on selected exchange and search term.
+     */
     const filteredStockData = useComputed(() => {
         const stockDataValue = stockData.get();
         const exchangeDataValue = exchangeData.get() ?? [];
@@ -44,6 +81,9 @@ function App() {
         });
     });
 
+    /**
+     * A reference object that contains scroll information.
+     */
     const scrollInfoRef = useRef({ timeStamp: performance.now(), clientY: 0 });
 
     return <div style={{

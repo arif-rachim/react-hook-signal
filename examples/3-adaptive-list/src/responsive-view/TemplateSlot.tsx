@@ -4,6 +4,9 @@ import {ViewContextData} from "./types.ts";
 import {TemplateBody} from "../responsive-list/TemplateBody.tsx";
 import {SlotCompProps} from "../responsive-list/types.ts";
 
+/**
+ * A function that returns a JSX element representing a template slot.
+ */
 export function TemplateSlot<DataItem, BreakPoint, CellRenderer, Template, Properties, TemplateProps extends Record<string, unknown>>(props: SlotCompProps<CellRenderer> & TemplateProps): JSX.Element {
     const {cellRenderer, item, properties} = useContext(ViewContext) as ViewContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>;
     const {for: name, style,onSizeChange, ...propsForRenderer} = props;

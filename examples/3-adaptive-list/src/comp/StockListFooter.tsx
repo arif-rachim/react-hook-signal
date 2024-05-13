@@ -3,6 +3,9 @@ import {notifiable, useComputed} from "react-hook-signal";
 import {exchangeData} from "../model/exchange.ts";
 import {CSSProperties} from "react";
 
+/**
+ * Creates a footer component for the stock list.
+ */
 export function StockListFooter(props: {
     selectedExchangeIndex: Signal.State<number>,
     highlightBottom: boolean

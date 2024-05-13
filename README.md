@@ -1,36 +1,215 @@
-### Stock Monitoring Application with React and TC39 Signal Proposal
+<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-hero.png" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
 
-Hello!
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
+[![Node.js CI](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml/badge.svg)](https://github.com/arif-rachim/react-hook-signal/actions/workflows/node.js.yml)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/react-hook-signal)](https://bundlephobia.com/package/react-hook-signal@latest)
 
-Welcome to my latest project where I've explored the TC39 Signal Proposal in conjunction with React to build a sophisticated stock monitoring application. In this README, I'll provide insights into the project, its goals, and how Signal revolutionizes the development process.
 
-#### Overview:
+> React-Hook-Signal is a tiny library, less than 1kb. It helps you integrate Signal with your React components easily.
 
-In this project, I delved into the capabilities of the TC39 Signal Proposal, a powerful tool for reactive programming. Paired with React, Signal offers a streamlined approach to building responsive and efficient web applications.
+### Installation
+```bash
+npm install react-hook-signal signal-polyfill
+```
 
-#### Motivation:
+## What are Signals?
 
-The primary motivation behind this project was to showcase the potential of Signal, particularly when compared to conventional methods like useState and useEffect. Stocks were chosen as the focal point due to their complex nature, requiring real-time updates and handling vast amounts of data while maintaining a user-friendly interface.
+The TC39 Proposal for Signals in JavaScript aims to establish a mechanism for components to communicate effectively. This proposal includes a polyfill for prototyping purposes.
 
-#### Key Features:
+### Understanding Signals
+- Refer to https://eisenbergeffect.medium.com/a-tc39-proposal-for-signals-f0bedd37a335 for detailed explanation.
+- Explore the proposal repository: https://github.com/proposal-signals/proposal-signals
 
-- **Reactive Programming**: Signal simplifies complex application development by providing a reactive programming paradigm. This approach streamlines tasks such as implementing infinite scrolling and ensures optimal performance, even in dynamic environments like real-time data streaming.
+Once adopted, JavaScript will have a native signaling system, referred to as `Signal` throughout this guide.
 
-- **Efficiency**: By selectively updating components, Signal significantly enhances React's rendering efficiency. This results in a cleaner, more efficient codebase, approximately 40% fewer lines compared to traditional methods.
+### How signal can efficiently re-render react component
 
-#### Project Structure:
+![Solving rerendering problem in react using signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/1-just-signal-sample-code-lite.gif)
 
-The project consists of a stock monitoring application built using React and Signal. The codebase is organized into modular components, making it easy to understand and maintain.
+In React components, re-rendering starts at the component's beginning and extends to the end of the JSX element. Signal usage allows precise re-rendering, boosting performance and simplifying development without the need for memoization or useCallback functions.
 
-#### Benefits:
+## Why choose React-Hook-Signal?
+- It's straightforward: Just React and Native Signal, no extra babel plugin needed.
+- Enjoy full TypeScript support for an improved Developer Experience.
+- Flexibility is key: Opt-in for integration in your React project, seamlessly blending state and signal.
+- It's incredibly lightweight, clocking in at less than 1kb
 
-- **Streamlined Development**: Signal reduces reliance on additional libraries, leading to a more streamlined development process.
+## Steps to Integrate Signals with React
+### STEP 1: Rendering Signal Values:
 
-- **Optimal Performance**: By optimizing component updates, Signal ensures optimal performance, even in demanding scenarios like real-time data streaming.
+- Utilize `notifiable` components provided by react-hook-signal.
+- `notifiable` components accept standard HTML attributes, `Signal`, and `Lambda` for detecting dependency changes.
 
-#### Conclusion:
+Example:
+```tsx
+// Global.tsx
+import {Signal} from "signal-polyfill";
+import {JSXAttribute} from "react-hook-signal";
 
-Building this application was a testament to the power of Signal in simplifying complex challenges. I'm excited to share this journey with you all and invite you to explore the application and dive into the code. I hope it inspires you in your own projects!
+export const count = new Signal.State(0)
+export const renderCount = new Signal.Computed(() => {
+    return <div>Count {count.get()}</div>
+})
 
-Thank you for your support and engagement. Let's continue to learn together.
+```
+The fastest way to integrate these `Signals` is to use the `notifiable` components.
 
+```tsx
+import {count,renderCount} from "./GlobalSignals.tsx";
+// here we are importing react-hook-signal:notifiable
+import {notifiable} from "react-hook-signal";
+
+
+export function App() {
+    return <>
+    
+        {/* When user click button it will update the state */}
+        <button onClick={() => count.set(count.get() + 1)}>Click here</button>
+    
+        {/* Following line will get auto update when user click button*/}
+        <notifiable.div>{renderCount}</notifiable.div>
+    </>
+}
+```
+
+`notifiable` component attributes is not only capable of accepting the `Signal` type but also can receive `Lambda`
+
+> Lambda is a callback that's able to listen for changes in the signals it depends on.
+
+```tsx
+import {count} from "./GlobalSignals.tsx";
+import {notifiable} from "react-hook-signal";
+
+
+export function App() {
+    return <>
+    
+        {/* When user click button it will update the state */}
+        <button onClick={() => count.set(count.get() + 1)}>Click here</button>
+    
+        {/* Following line will get auto update when user click button*/}
+        <notifiable.div>{() => {
+            return <div>Count {count.get()}</div>
+        }}</notifiable.div>
+    </>
+}
+```
+
+### STEP 2: Observing Signal Changes
+
+- Use the `useSignalEffect` hook to listen for changes in Signal.
+- This hook accepts a callback that reads the final signal value and can optionally return a cleanup function.
+
+#### Important Note:
+
+- `useSignalEffect` doesn't automatically re-render the component. Use React.useState to trigger a re-render.
+
+Example:
+
+```tsx
+import {count} from "./GlobalSignals.tsx";
+import {useSignalEffect} from "react-hook-signal";
+import {useState} from "react";
+
+export function App() {
+    const [countState,setCountState] = useState(count.get())
+    
+    useSignalEffect(() => {
+        // Here, within the useSignalEffect hook, I can listen for updates on any Signal.State or Signal.Computed
+        setCountState(count.get())
+    })
+    return <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+        {/* When user click button it will update the state */}
+        <button onClick={() => count.set(count.get() + 1)}>Click here</button>
+
+        {/* Following line will be updated because of countState updated*/}
+        <div>{countState}</div>
+    </div>
+}
+
+```
+
+### STEP 3: Creating Signals in React Components:
+
+- `useSignal` is a hook that creates `Signal.State`, and `useComputed` is a hook that creates `Signal.Computed`.
+- These hooks generate signals that are linked to the component's lifecycle.
+
+- To create a `Signal.State`, simply provide a constant value as a parameter when calling `useSignal`.
+- To create a `Signal.Computed`,simply provide  a `Lambda` that returns the result of a dynamic computation.
+
+Example :
+```tsx
+import {notifiable, useSignal, useComputed} from "react-hook-signal";
+
+export function App() {
+    
+    // creating Signal.State count
+    const count = useSignal(0);
+    
+    // creating Signal.Computed countString
+    const countString = useComputed(() => (count.get() * 2).toString());
+    
+    // creating Signal.Computed style
+    const style = useComputed(() => {
+        const isEven = count.get() % 2 === 0;
+        return {
+            background: isEven ? 'white' : 'black',
+            color: isEven ? 'black' : 'white'
+        }
+    })
+
+    // creating Signal.Computed text
+    const text = useComputed(() => {
+        const isWhite = style.get().background === 'white'
+        return <div>{isWhite ? 'Background is White' : 'Background is Black'}</div>
+    })
+
+    return <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        {/* When user click button it will update the state */}
+        <button onClick={() => count.set(count.get() + 1)}>Click here</button>
+
+        {/* Following line will never get auto update*/}
+        <div>{countString.get()}</div>
+
+        {/* Following line will get auto update when user click button*/}
+        <notifiable.div>{countString}</notifiable.div>
+
+        {/* Following line will get auto update when user click button*/}
+        <notifiable.div style={style}>{text}</notifiable.div>
+    </div>
+}
+
+```
+
+### STEP 4: Encapsulate any Component with a Notifiable :
+
+- Use `Notifiable` component to wrap any React Functional or Class Component
+- A React component encapsulated within the `Notifiable` component will inherently enable its properties and children to utilize `Lambda` expressions or `Signals` seamlessly
+
+Example :
+```tsx
+import {Notifiable} from "react-hook-signal";
+
+export function App() {
+    const count = useSignal(0);
+    
+    return <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+        {/* When user click button it will update the state */}
+        <button onClick={() => count.set(count.get() + 1)}>Click here</button>
+
+        {/* Following line will be updated because of count updated*/}
+        <Notifiable component={MyComponent} title={() => {
+            return count.get() + ' Times'
+        }}></Notifiable>
+                    
+    </div>
+}
+
+function MyComponent(props:{title:string}){
+    return <div>Here is the title {props.title}</div>
+}
+```
+
+### Summary
+The integration of `Signal` into the React application can be done in various ways tailored to the needs and complexity of the app.

@@ -1,5 +1,8 @@
 import {Signal} from "signal-polyfill";
 
+/**
+ * Represents a stock information.
+ */
 export interface Stock {
     name: string,
     description: string,
@@ -42,6 +45,9 @@ export interface Stock {
     earningsDate: string,
 }
 
+/**
+ * Represents the data source for stocks.
+ */
 export const dataSource = new Signal.State<Record<string, Array<Stock>>>({});
 
 (async function loadDataSource() {

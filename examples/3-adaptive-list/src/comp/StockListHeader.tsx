@@ -6,6 +6,9 @@ import {IoIosCloseCircle} from "react-icons/io";
 import {format_ddMMM} from "../utils/dateFormat.ts";
 import {StockListFooter} from "./StockListFooter.tsx";
 
+/**
+ * Renders the header component for the stock list.
+ */
 export function StockListHeader(props: {
     isSearchFieldFocused: Signal.State<boolean>,
     isSearchHidden: Signal.State<boolean>,

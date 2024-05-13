@@ -6,12 +6,18 @@ import {ViewContextData} from "./types.ts";
 import {TemplateSlot} from "./TemplateSlot.tsx";
 import {CellCompType, SlotComp, TemplateType} from "../responsive-list/types.ts";
 
+/**
+ * Creates a responsive view.
+ */
 export function createResponsiveView<DataItem extends object, Properties extends object = Record<string,unknown>>() {
     return {
         breakPoint: defineBreakPoint<DataItem, Properties>()
     }
 }
 
+/**
+ * Defines a break point for rendering data.
+ */
 const defineBreakPoint = <DataItem extends object, Properties>() => <BreakPoint extends Record<string, number>>(breakPoint: BreakPoint) => {
     return {
         renderer: defineRenderer<DataItem, BreakPoint, Properties>({
@@ -20,6 +26,9 @@ const defineBreakPoint = <DataItem extends object, Properties>() => <BreakPoint 
     }
 }
 
+/**
+ * Defines a renderer for a cell in a grid.
+ */
 const defineRenderer = <DataItem extends object, BreakPoint extends Record<string, number>, Properties>(props: {
     breakPoint: Signal.State<BreakPoint>
 }) => <CellRenderer extends CellCompType<DataItem, Properties>>(cellRenderer: CellRenderer) => {
@@ -31,6 +40,9 @@ const defineRenderer = <DataItem extends object, BreakPoint extends Record<strin
     }
 }
 
+/**
+ * Creates a responsive template component.
+ * */
 const defineTemplate = <DataItem extends object, BreakPoint extends Record<string, number>, CellRenderer extends CellCompType<DataItem, Properties>, Properties>(props: {
     breakPoint: Signal.State<BreakPoint>,
     cellRenderer: Signal.State<CellRenderer>
@@ -40,6 +52,9 @@ const defineTemplate = <DataItem extends object, BreakPoint extends Record<strin
 
     const ResponsiveViewContext = ViewContext as Context<ViewContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>>;
 
+    /**
+     * React component that represents a View.
+     */
     const View = forwardRef<ViewContextData<DataItem, BreakPoint, CellRenderer, Template, Properties>, {item:DataItem} & Properties>(function View(properties, ref) {
         const componentId = useId();
 

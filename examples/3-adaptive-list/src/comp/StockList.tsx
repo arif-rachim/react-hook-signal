@@ -8,6 +8,9 @@ import {LineChart} from "./LineChart.tsx";
 import {colors} from "../utils/colors.ts";
 import {StockDetailConfig} from "./StockDetail.tsx";
 
+/**
+ * Variable to create a responsive list of stocks.
+ */
 export const StockList = createResponsiveList<Stock,{onClick:(props:StockDetailConfig) => void}>().breakPoint({s: 400, m: 600, l: 900, xl: 1200}).renderer({
     tickerSymbol: ({value}) => value,
     earningsDate: ({value}) => value,

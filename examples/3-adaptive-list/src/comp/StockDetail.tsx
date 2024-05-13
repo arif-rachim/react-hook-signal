@@ -7,8 +7,14 @@ import {SetStyleProps, useAnimatedStyle} from "../utils/useAnimatedStyle.ts";
 import {Area, AreaChart, CartesianGrid, YAxis} from "recharts";
 import {colors} from "../utils/colors.ts";
 
-const transitionDuration = 300;
+/**
+ * The duration in milliseconds for a transition animation.
+ */
+const TRANSITION_DURATION = 300;
 
+/**
+ * Represents the configuration details of a stock item.
+ */
 export type StockDetailConfig = {
     item: Stock,
     index: number,
@@ -19,17 +25,54 @@ export type StockDetailConfig = {
     currentPrice: AnySignal<number>
 }
 
+/**
+ * Renders a stock detail component.
+ */
 export function StockDetailComponent(props: {
     configuration: Signal.State<(StockDetailConfig & { showDetail: boolean }) | undefined>
 }) {
+    /**
+     * This variable represents the ID of an HTML element.
+     */
     const elementId = useId();
+
+    /**
+     * Represents a variable configuration object.
+     */
     const configuration = props.configuration;
+
+    /**
+     * Determines if a given indicator is bullish.
+     */
     const isBullish = useSignal(false);
+
+    /**
+     * Represents a variable named `data` of type `useSignal<Array<number>>`.
+     */
     const data = useSignal<Array<number>>([]);
+
+    /**
+     * Represents a color signal
+     */
     const color = useSignal<string>('');
+
+    /**
+     * Represents the current price.
+     */
     const currentPrice = useSignal<number>(0);
+
+    /**
+     * Represents the style options for a chart.
+     */
     const [chartStyle, setChartStyle] = useAnimatedStyle({height: 42});
 
+    /**
+     * Represents the computed value of the 'showDetail' property.
+     *
+     * showDetail is calculated by using a computed function that retrieves the 'showDetail'
+     * value from the 'configuration' object passed in 'props'. If the 'showDetail' property exists
+     * and has a value, it returns that value. Otherwise, it returns undefined.
+     */
     const showDetail = useComputed(() => props.configuration?.get()?.showDetail);
 
     useSignalEffect(() => {
@@ -48,6 +91,9 @@ export function StockDetailComponent(props: {
         isBullish.set(propsIsBullish?.get() ?? false);
     })
 
+    /**
+     * Represents the style of a variable.
+     */
     const [style, setStyle] = useAnimatedStyle({
         position: 'absolute',
         display: 'flex',
@@ -61,6 +107,10 @@ export function StockDetailComponent(props: {
         zIndex: 20,
         gap: 20
     });
+
+    /**
+     * Ref variable for a function that can be used to reverse play a chart.
+     */
     const reversePlayOriginalChart = useRef<((props: {
         onAfter: SetStyleProps<unknown>['onAfter']
     }) => void) | undefined>(undefined)
@@ -83,7 +133,7 @@ export function StockDetailComponent(props: {
                     width: domRect.width,
                     height: document.body.getBoundingClientRect().height,
                 },
-                duration: transitionDuration,
+                duration: TRANSITION_DURATION,
                 onBefore: () => {
                     return {
                         zIndex: 20
@@ -98,7 +148,12 @@ export function StockDetailComponent(props: {
         }
     });
 
+    /**
+     * A variable that is used to compute the value of `item`.
+     */
     const item = useComputed(() => props.configuration?.get()?.item)
+
+
     const reversePlay = useRef<((props: {
         onBefore: (props: CSSProperties) => CSSProperties
     }) => void) | undefined>(undefined);
@@ -147,7 +202,7 @@ export function StockDetailComponent(props: {
                     const showDetailValue = showDetail.get();
                     return {
                         width: showDetailValue ? 40 : 0,
-                        transition: `all ${transitionDuration}ms linear`,
+                        transition: `all ${TRANSITION_DURATION}ms linear`,
                         textAlign: 'right',
                         overflow: 'hidden'
                     }
@@ -161,7 +216,7 @@ export function StockDetailComponent(props: {
                             fontSize: showDetailValue ? 44 : 22,
                             lineHeight: showDetailValue ? 1 : 1,
                             fontWeight: 700,
-                            transition: `all ${transitionDuration}ms ease-in-out`,
+                            transition: `all ${TRANSITION_DURATION}ms ease-in-out`,
                             zIndex: 1
                         }
                     }}>{() => item.get()?.tickerSymbol}</notifiable.div>
@@ -298,6 +353,9 @@ export function StockDetailComponent(props: {
     </notifiable.div>
 }
 
+/**
+ * Renders a row component with two columns.
+ */
 function RowRenderComponent(props: { titleOne: string, valueOne?: string, titleTwo: string, valueTwo?: string }) {
     return <div style={{display: 'flex', flexDirection: 'row', gap: 20}}>
         <div style={{
