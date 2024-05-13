@@ -7,23 +7,25 @@ import {format_ddMMM} from "../utils/dateFormat.ts";
 import {StockListFooter} from "./StockListFooter.tsx";
 
 export function StockListHeader(props: {
-    isSearchFocused: Signal.State<boolean>,
-    hideSearch: Signal.State<boolean>,
-    search: Signal.State<string>,
-    selectedExchange: Signal.State<number>,
+    isSearchFieldFocused: Signal.State<boolean>,
+    isSearchHidden: Signal.State<boolean>,
+    searchTerm: Signal.State<string>,
+    selectedExchangeIndex: Signal.State<number>,
 }) {
 
-    const {isSearchFocused, search, hideSearch, selectedExchange} = props;
+    const {isSearchFieldFocused, searchTerm, isSearchHidden, selectedExchangeIndex} = props;
     useSignalEffect(() => {
-        const isFocused = isSearchFocused.get();
-        function onClick(){
-            isSearchFocused.set(false)
+        const isFocused = isSearchFieldFocused.get();
+
+        function onClick() {
+            isSearchFieldFocused.set(false)
         }
+
         if (isFocused) {
-            window.addEventListener('click',onClick)
+            window.addEventListener('click', onClick)
         }
         return () => {
-            window.removeEventListener('click',onClick)
+            window.removeEventListener('click', onClick)
         }
     })
     return <div style={{
@@ -39,7 +41,7 @@ export function StockListHeader(props: {
         e.stopPropagation();
     }}>
         <notifiable.div style={() => {
-            const searchFocused = isSearchFocused.get();
+            const searchFocused = isSearchFieldFocused.get();
             return {
                 padding: searchFocused ? 0 : 20,
                 display: 'flex',
@@ -78,7 +80,7 @@ export function StockListHeader(props: {
             {/*}}><IoEllipsisHorizontal style={{fontSize: 22, color: 'deepskyblue'}}/></div>*/}
         </notifiable.div>
         <notifiable.div style={() => {
-            const hideSearchValue = hideSearch.get();
+            const hideSearchValue = isSearchHidden.get();
             return {
                 display: 'flex',
                 flexDirection: 'row',
@@ -102,21 +104,20 @@ export function StockListHeader(props: {
                     fontSize: 18,
                     borderRadius: 14
                 }}
-                                  onFocus={() => isSearchFocused.set(true)}
-
-                                  defaultValue={search.get()}
-                                  onChange={(e) => search.set(e.target.value)}
+                                  onClick={() => isSearchFieldFocused.set(true)}
+                                  defaultValue={searchTerm.get()}
+                                  onChange={(e) => searchTerm.set(e.target.value)}
                 />
                 <IoSearch
                     style={{position: 'absolute', top: 12, left: 10, fontSize: 22, color: 'rgba(255,255,255,0.5)'}}/>
                 <IoIosCloseCircle style={{position: 'absolute', top: 12, right: 10, fontSize: 20}}
                                   onClick={() => {
                                       (document.getElementById('input')! as HTMLInputElement).value = '';
-                                      search.set('')
+                                      searchTerm.set('')
                                   }}/>
             </div>
             <notifiable.div style={() => {
-                const searchFocused = isSearchFocused.get();
+                const searchFocused = isSearchFieldFocused.get();
                 return {
                     paddingLeft: 10,
                     textAlign: 'left',
@@ -127,23 +128,23 @@ export function StockListHeader(props: {
                     fontSize: 18,
                     fontWeight: 600
                 }
-            }} onClick={() => isSearchFocused.set(false)}>
+            }} onClick={() => isSearchFieldFocused.set(false)}>
                 Done
             </notifiable.div>
         </notifiable.div>
 
         <notifiable.div style={() => {
-            const searchFocused = isSearchFocused.get();
+            const searchFocused = isSearchFieldFocused.get();
             return {
                 position: 'absolute',
                 zIndex: 10,
                 bottom: searchFocused ? -50 : 0,
                 width: '100%',
                 backgroundColor: 'black',
-                transition : `all 300ms linear`
+                transition: `all 300ms linear`
             }
         }}>
-            <StockListFooter selectedExchange={selectedExchange} highlightBottom={true}/>
+            <StockListFooter selectedExchangeIndex={selectedExchangeIndex} highlightBottom={true}/>
         </notifiable.div>
     </div>
 }

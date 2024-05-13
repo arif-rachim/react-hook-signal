@@ -18,19 +18,19 @@ export type StockDetailConfig = {
     currentPrice: AnySignal<number>
 }
 
-export function StockDetail(props: {
-    config: Signal.State<(StockDetailConfig & { showDetail: boolean }) | undefined>
+export function StockDetailComponent(props: {
+    configuration: Signal.State<(StockDetailConfig & { showDetail: boolean }) | undefined>
 }) {
     const elementId = useId();
-    const config = props.config;
-    const showDetail = useComputed(() => props.config?.get()?.showDetail);
+    const configuration = props.configuration;
+    const showDetail = useComputed(() => props.configuration?.get()?.showDetail);
     const isBullish = useSignal(false);
     const data = useSignal<Array<number>>([]);
     const color = useSignal<string>('');
     const currentPrice = useSignal<number>(0);
 
     useSignalEffect(() => {
-        if (props.config === undefined || props.config.get() === undefined) {
+        if (props.configuration === undefined || props.configuration.get() === undefined) {
             return;
         }
         const {
@@ -38,7 +38,7 @@ export function StockDetail(props: {
             color: propsColor,
             isBullish: propsIsBullish,
             currentPrice: propsCurrentPrice
-        } = props.config!.get()!;
+        } = props.configuration!.get()!;
         data.set(propsData?.get() ?? []);
         color.set(propsColor?.get() ?? '');
         currentPrice.set(propsCurrentPrice?.get() ?? 0);
@@ -63,7 +63,7 @@ export function StockDetail(props: {
     }) => void) | undefined>(undefined)
     useSignalEffect((): void => {
         const showDetailValue = showDetail.get();
-        const domRect = config.get()?.itemRect
+        const domRect = configuration.get()?.itemRect
         if (domRect === undefined) {
             return;
         }
@@ -95,14 +95,14 @@ export function StockDetail(props: {
         }
     });
 
-    const item = useComputed(() => props.config?.get()?.item)
+    const item = useComputed(() => props.configuration?.get()?.item)
     const [chartStyle, setChartStyle] = useAnimatedStyle({height: 42});
     const reversePlay = useRef<((props: {
         onBefore: (props: CSSProperties) => CSSProperties
     }) => void) | undefined>(undefined);
     useSignalEffect((): void => {
         const showDetailValue = showDetail.get();
-        const domRect = config.get()?.itemRect
+        const domRect = configuration.get()?.itemRect
         if (domRect === undefined) {
             return;
         }
@@ -149,7 +149,7 @@ export function StockDetail(props: {
                         textAlign: 'right',
                         overflow: 'hidden'
                     }
-                }} onClick={() => config.set({...config.get()!, showDetail: false})}><IoArrowBack
+                }} onClick={() => configuration.set({...configuration.get()!, showDetail: false})}><IoArrowBack
                     style={{fontSize: 40}}/>
                 </notifiable.div>
                 <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
@@ -223,19 +223,19 @@ export function StockDetail(props: {
              style={{display: 'flex', flexDirection: 'column', gap: 20, padding: '0 20px', overflow: 'auto'}}>
             <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
                 <h1 style={{fontSize: 22, borderBottom: `1px solid ${colors.grey}`, paddingBottom: 10}}>Profile</h1>
-                <Notifiable component={RowRender} titleOne={'Market Cap'} valueOne={() => item.get()?.marketCap}
+                <Notifiable component={RowRenderComponent} titleOne={'Market Cap'} valueOne={() => item.get()?.marketCap}
                             titleTwo={'Volume'} valueTwo={() => item.get()?.volume}/>
-                <Notifiable component={RowRender} titleOne={'Revenue (ttm)'} valueOne={() => item.get()?.revenue}
+                <Notifiable component={RowRenderComponent} titleOne={'Revenue (ttm)'} valueOne={() => item.get()?.revenue}
                             titleTwo={'Open'} valueTwo={() => item.get()?.open}/>
-                <Notifiable component={RowRender} titleOne={'Net Income (ttm)'} valueOne={() => item.get()?.netIncome}
+                <Notifiable component={RowRenderComponent} titleOne={'Net Income (ttm)'} valueOne={() => item.get()?.netIncome}
                             titleTwo={'Previous Close'} valueTwo={() => item.get()?.previousClose}/>
-                <Notifiable component={RowRender} titleOne={'Dividend'} valueOne={() => item.get()?.dividend}
+                <Notifiable component={RowRenderComponent} titleOne={'Dividend'} valueOne={() => item.get()?.dividend}
                             titleTwo={'Days Range'} valueTwo={() => item.get()?.daysRange}/>
-                <Notifiable component={RowRender} titleOne={'EPS (ttm)'} valueOne={() => item.get()?.ePS}
+                <Notifiable component={RowRenderComponent} titleOne={'EPS (ttm)'} valueOne={() => item.get()?.ePS}
                             titleTwo={'52-Week Range'} valueTwo={() => item.get()?.week52Range}/>
-                <Notifiable component={RowRender} titleOne={'PE Ratio'} valueOne={() => item.get()?.pERatio}
+                <Notifiable component={RowRenderComponent} titleOne={'PE Ratio'} valueOne={() => item.get()?.pERatio}
                             titleTwo={'Beta'} valueTwo={() => item.get()?.beta}/>
-                <Notifiable component={RowRender} titleOne={'Forward PE'} valueOne={() => item.get()?.forwardPE}
+                <Notifiable component={RowRenderComponent} titleOne={'Forward PE'} valueOne={() => item.get()?.forwardPE}
                             titleTwo={'Analysts'} valueTwo={() => item.get()?.analysts}/>
 
 
@@ -246,7 +246,7 @@ export function StockDetail(props: {
                     <span style={{marginRight: 5, fontSize: 22}}>About</span>
                     <notifiable.span style={{fontSize: 22}}>{() => item.get()?.tickerSymbol}</notifiable.span>
                 </h1>
-                <notifiable.div style={{fontSize: 14, gap: 10, display: 'flex', flexDirection: 'column'}}>
+                <notifiable.div style={{gap: 10, display: 'flex', flexDirection: 'column'}}>
                     {() => item.get()?.description.split('.').reduce<{
                         words: string[],
                         skipIndex: number,
@@ -265,7 +265,7 @@ export function StockDetail(props: {
                         }
                         return result;
                     }, {words: [], skipIndex: 0, textToMerge: ''}).words.map((sentence, index) => (
-                        <p key={index}>{sentence}</p>))}
+                        <p key={index} style={{fontSize:14}}>{sentence}</p>))}
                 </notifiable.div>
             </div>
             <div>
@@ -296,7 +296,7 @@ export function StockDetail(props: {
     </notifiable.div>
 }
 
-function RowRender(props: { titleOne: string, valueOne?: string, titleTwo: string, valueTwo?: string }) {
+function RowRenderComponent(props: { titleOne: string, valueOne?: string, titleTwo: string, valueTwo?: string }) {
     return <div style={{display: 'flex', flexDirection: 'row', gap: 20}}>
         <div style={{
             display: 'flex',
@@ -306,8 +306,8 @@ function RowRender(props: { titleOne: string, valueOne?: string, titleTwo: strin
             gap: 5,
             paddingBottom: 5
         }}>
-            <div style={{fontSize: 14}}>{props.titleOne}</div>
-            <div style={{fontSize: 18, fontWeight: 500}}>{props.valueOne}</div>
+            <div style={{fontSize: 12}}>{props.titleOne}</div>
+            <div style={{fontSize: 16, fontWeight: 500}}>{props.valueOne}</div>
         </div>
         <div style={{
             display: 'flex',
@@ -316,8 +316,8 @@ function RowRender(props: { titleOne: string, valueOne?: string, titleTwo: strin
             borderBottom: `1px solid rgba(255,255,255,0.2)`,
             gap: 5
         }}>
-            <div style={{fontSize: 14}}>{props.titleTwo}</div>
-            <notifiable.div style={{fontSize: 18, fontWeight: 500}}>{props.valueTwo}</notifiable.div>
+            <div style={{fontSize: 12}}>{props.titleTwo}</div>
+            <notifiable.div style={{fontSize: 16, fontWeight: 500}}>{props.valueTwo}</notifiable.div>
         </div>
     </div>
 }

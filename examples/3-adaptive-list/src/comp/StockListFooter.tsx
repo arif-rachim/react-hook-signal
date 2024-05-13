@@ -1,15 +1,16 @@
 import {Signal} from "signal-polyfill";
 import {notifiable, useComputed} from "react-hook-signal";
-import {exchange} from "../model/exchange.ts";
+import {exchangeData} from "../model/exchange.ts";
+import {CSSProperties} from "react";
 
 export function StockListFooter(props: {
-    selectedExchange: Signal.State<number>,
+    selectedExchangeIndex: Signal.State<number>,
     highlightBottom: boolean
 }) {
-    const {selectedExchange, highlightBottom} = props;
+    const {selectedExchangeIndex, highlightBottom} = props;
     const exchangeElements = useComputed(() => {
-        const exchangeValue = exchange.get();
-        const selectedExchangeValue = selectedExchange.get();
+        const exchangeValue = exchangeData.get();
+        const selectedExchangeValue = selectedExchangeIndex.get();
         return exchangeValue.map((item, index, source) => {
             const isSelected = selectedExchangeValue === index;
             return <div style={{
@@ -20,26 +21,29 @@ export function StockListFooter(props: {
                 textAlign: 'center',
                 transition: 'all 300ms linear'
             }} key={item} onClick={() => {
-                selectedExchange.set(index)
+                selectedExchangeIndex.set(index)
             }}>{item}</div>
         })
     })
     return <>
         <notifiable.div style={() => {
-            const selectedExchangeValue = selectedExchange.get();
-            const width = (100 / exchange.get().length);
+            const selectedExchangeValue = selectedExchangeIndex.get();
+            const width = (100 / exchangeData.get().length);
             return {
                 position: 'absolute',
                 bottom: 0,
                 left: `${(width * selectedExchangeValue).toFixed(2)}%`,
                 width: `${width.toFixed(2)}%`,
                 height: 60,
+                padding:10,
                 borderBottom: highlightBottom ? '5px solid white' : undefined,
                 borderTop: !highlightBottom ? '5px solid white' : undefined,
                 zIndex: 11,
                 transition: 'all 100ms linear'
-            }
-        }}></notifiable.div>
+            } as CSSProperties
+        }}>
+            <div style={{borderRadius:10, width:'100%',height:'100%',backgroundColor:'rgba(255,255,255,0.1)'}}></div>
+        </notifiable.div>
         <notifiable.div style={{
             display: 'flex',
             flexDirection: 'row',
@@ -48,7 +52,9 @@ export function StockListFooter(props: {
             backgroundColor: 'black',
             width: '100%',
             zIndex: 10,
-            transition: 'all 300ms linear'
+            transition: 'all 300ms linear',
+            borderBottom: highlightBottom ? '1px solid rgba(255,255,255,0.2)' : undefined,
+            borderTop: !highlightBottom ? '1px solid rgba(255,255,255,0.2)' : undefined,
         }}>
             {exchangeElements}
         </notifiable.div>
