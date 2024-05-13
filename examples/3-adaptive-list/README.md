@@ -1,5 +1,7 @@
 ### Stock Monitoring Application with React and TC39 Signal Proposal
 
+> Live demo https://www.rach.im/tc39-signal-proposal-react/index.html
+
 The TC39 Signal Proposal in conjunction with React to build a performant stock monitoring application. 
 
 #### Overview:
