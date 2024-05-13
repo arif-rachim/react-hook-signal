@@ -1,4 +1,4 @@
-import {useEffect, useRef} from "react";
+import {useEffect, useId} from "react";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {transformValue} from "../utils/transformValue.ts";
 
@@ -19,7 +19,7 @@ export function LineChart(props: {
         lineColor: propsLineColor,
         gradientColors: propsGradientColors,
     } = props;
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const id = useId();
 
     const dataSignal = useSignal(propsData);
     const widthSignal = useSignal(propsWidth);
@@ -49,7 +49,7 @@ export function LineChart(props: {
         const backgroundColor = backgroundColorSignal.get();
         const lineColor = lineColorSignal.get();
         const gradientColor = gradientColorSignal.get();
-        const canvas = canvasRef.current;
+        const canvas = document.getElementById(id)! as HTMLCanvasElement;
         if (canvas === null) {
             return;
         }
@@ -88,5 +88,5 @@ export function LineChart(props: {
         }
     });
 
-    return <notifiable.canvas ref={canvasRef} width={widthSignal} height={heightSignal}/>;
+    return <notifiable.canvas id={id} width={widthSignal} height={heightSignal}/>;
 }

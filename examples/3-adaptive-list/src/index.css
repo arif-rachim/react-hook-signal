@@ -27,3 +27,7 @@ html, body {
 input:focus{
     outline: none;
 }
+
+::-webkit-scrollbar{
+    width: 10px;
+}

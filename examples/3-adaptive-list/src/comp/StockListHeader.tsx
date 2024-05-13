@@ -1,7 +1,7 @@
 import {Signal} from "signal-polyfill";
 import {notifiable, useSignalEffect} from "react-hook-signal";
 import {colors} from "../utils/colors.ts";
-import {IoEllipsisHorizontal, IoSearch} from "react-icons/io5";
+import {IoSearch} from "react-icons/io5";
 import {IoIosCloseCircle} from "react-icons/io";
 import {format_ddMMM} from "../utils/dateFormat.ts";
 import {StockListFooter} from "./StockListFooter.tsx";
@@ -65,17 +65,17 @@ export function StockListHeader(props: {
                 </div>
             </div>
             <div style={{flexGrow: 1}}></div>
-            <div style={{
-                cursor: 'pointer',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                borderRadius: 20,
-                padding: 5,
-                width: 30,
-                height: 30,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}><IoEllipsisHorizontal style={{fontSize: 22, color: 'deepskyblue'}}/></div>
+            {/*<div style={{*/}
+            {/*    cursor: 'pointer',*/}
+            {/*    backgroundColor: 'rgba(255,255,255,0.1)',*/}
+            {/*    borderRadius: 20,*/}
+            {/*    padding: 5,*/}
+            {/*    width: 30,*/}
+            {/*    height: 30,*/}
+            {/*    display: 'flex',*/}
+            {/*    alignItems: 'center',*/}
+            {/*    justifyContent: 'center'*/}
+            {/*}}><IoEllipsisHorizontal style={{fontSize: 22, color: 'deepskyblue'}}/></div>*/}
         </notifiable.div>
         <notifiable.div style={() => {
             const hideSearchValue = hideSearch.get();
