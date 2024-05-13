@@ -8,6 +8,7 @@ import {Area, AreaChart, CartesianGrid, YAxis} from "recharts";
 import {colors} from "../utils/colors.ts";
 
 const transitionDuration = 300;
+
 export type StockDetailConfig = {
     item: Stock,
     index: number,
@@ -23,11 +24,13 @@ export function StockDetailComponent(props: {
 }) {
     const elementId = useId();
     const configuration = props.configuration;
-    const showDetail = useComputed(() => props.configuration?.get()?.showDetail);
     const isBullish = useSignal(false);
     const data = useSignal<Array<number>>([]);
     const color = useSignal<string>('');
     const currentPrice = useSignal<number>(0);
+    const [chartStyle, setChartStyle] = useAnimatedStyle({height: 42});
+
+    const showDetail = useComputed(() => props.configuration?.get()?.showDetail);
 
     useSignalEffect(() => {
         if (props.configuration === undefined || props.configuration.get() === undefined) {
@@ -96,7 +99,6 @@ export function StockDetailComponent(props: {
     });
 
     const item = useComputed(() => props.configuration?.get()?.item)
-    const [chartStyle, setChartStyle] = useAnimatedStyle({height: 42});
     const reversePlay = useRef<((props: {
         onBefore: (props: CSSProperties) => CSSProperties
     }) => void) | undefined>(undefined);
