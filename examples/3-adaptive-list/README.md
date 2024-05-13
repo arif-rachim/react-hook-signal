@@ -2,6 +2,10 @@
 
 > Live demo https://www.rach.im/tc39-signal-proposal-react/index.html
 
+
+![Stock application demo using react and tc39 signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/3-adaptive-list-stock-application.gif)
+
+
 The TC39 Signal Proposal in conjunction with React to build a performant stock monitoring application. 
 
 #### Overview:
