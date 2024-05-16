@@ -4,4 +4,4 @@ import {ViewContextData} from "./types.ts";
 /**
  * Context variable for a list component.
  */
-export const ViewContext = createContext<ViewContextData<unknown, unknown, unknown, unknown, unknown>|undefined>(undefined)
+export const ViewContext = createContext<ViewContextData|undefined>(undefined)
