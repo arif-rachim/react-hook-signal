@@ -10,7 +10,7 @@ import {colors} from "../utils/colors.ts";
 /**
  * The duration in milliseconds for a transition animation.
  */
-const TRANSITION_DURATION = 300;
+const TRANSITION_DURATION = 3000;
 
 /**
  * Represents the configuration details of a stock item.
@@ -112,7 +112,7 @@ export function StockDetailComponent(props: {
      * Ref variable for a function that can be used to reverse play a chart.
      */
     const reversePlayOriginalChart = useRef<((props: {
-        onAfter: SetStyleProps<unknown>['onAfter']
+        onAfter: SetStyleProps['onAfter']
     }) => void) | undefined>(undefined)
     useSignalEffect((): void => {
         const showDetailValue = showDetail.get();
