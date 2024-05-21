@@ -35,11 +35,11 @@ function App() {
     const rightPanelWidth = useSignal<number | undefined>(undefined);
     const leftPanelWidth = useSignal<number | undefined>(undefined);
 
-    function onMouseRightMove(e) {
+    function onMouseRightMove(e:MouseEvent) {
         rightPanelWidth.set(window.innerWidth - e.clientX - 5);
     }
 
-    function onMouseLeftMove(e) {
+    function onMouseLeftMove(e:MouseEvent) {
         leftPanelWidth.set(e.clientX)
     }
 
@@ -68,7 +68,7 @@ function App() {
                         padding: 5,
                         border: '1px solid #CCC',
                         borderRadius: 5,
-                        layout: 'row',
+                        flexDirection: 'row',
                         display: 'flex',
                         gap: 10,
                         alignItems: 'center'
@@ -86,7 +86,7 @@ function App() {
                         padding: 5,
                         border: '1px solid #CCC',
                         borderRadius: 5,
-                        layout: 'row',
+                        flexDirection: 'row',
                         display: 'flex',
                         gap: 10,
                         alignItems: 'center'
@@ -155,8 +155,8 @@ interface Component {
         minWidth?: number,
         minHeight?: number,
 
-        grow?: number,
-        shrink?: number,
+        grow?: CSSProperties['flexGrow'],
+        shrink?: CSSProperties['flexShrink'],
         overflow?: CSSProperties['overflow']
     },
     id: string,
@@ -170,13 +170,6 @@ const ComponentContext = createContext<{
     focusedComponent: Signal.State<Component | undefined>
 } | undefined>(undefined);
 
-function paddingIsEmpty(result: CSSProperties) {
-    let paddingEmpty = true;
-    for (const key of ['padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom']) {
-        paddingEmpty = paddingEmpty && result[key] === undefined;
-    }
-    return paddingEmpty;
-}
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -226,13 +219,13 @@ function ComponentRenderer(props: { comp: Component, renderAsTree?: boolean }) {
             currentParentComponent.children = currentParentComponent.children.filter(i => i !== elementTypeOrElementId);
             // ok now we have the element comp lets move this guy to new position inside this container
             currentComponent.parent = componentSignal.get().id;
-            const newParentComponent = components.find(layout => layout.id === currentComponent.parent);
+            const newParentComponent = components.find(layout => layout.id === currentComponent.parent) ?? {children:[]};
             newParentComponent.children = [...newParentComponent.children, elementTypeOrElementId];
             componentsSignal.set(components);
         }
     }
 
-    const divProps: ComputableProps<HTMLProps<HTMLDivElement>> = {
+    const divProps: ComputableProps<Omit<HTMLProps<HTMLDivElement>,'key'>> = {
         draggable: true,
         onMouseOver: (e) => {
             e.preventDefault();
@@ -290,7 +283,8 @@ function ComponentRenderer(props: { comp: Component, renderAsTree?: boolean }) {
                 border: isMouseOver ? `1px dashed ${isSelected ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)'}` : `1px dashed ${isSelected ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0)'}`
             };
             for (const key of Object.keys(style)) {
-                result[key] = style[key]
+                const keyType = key as keyof Omit<Component['style'],'grow'|'shrink'|'direction'|'width'|'height'>;
+                result[keyType] = style[keyType] as string;
             }
 
             return result;
@@ -346,7 +340,7 @@ function ComponentProperties() {
     function updateValue(callback: (thisComponent: Component) => void) {
         const componentId = focusedComponent.get()?.id;
         const comps = [...components.get()];
-        const newFocusedComponent = {...comps.find(i => i.id === componentId)};
+        const newFocusedComponent = {...comps.find(i => i.id === componentId)} as Component;
         callback(newFocusedComponent);
         focusedComponent.set(newFocusedComponent);
         components.set([...components.get().filter(i => i.id !== componentId), newFocusedComponent]);
@@ -360,9 +354,9 @@ function ComponentProperties() {
                                    return focusedComponent.get()?.style.direction ?? 'column'
                                }}
                                onChange={(e) => {
-                                   let newValue = e.target.value;
+                                   const newValue = e.target.value;
                                    updateValue((thisComponent) => {
-                                       thisComponent.style.direction = newValue;
+                                       thisComponent.style.direction = newValue as 'row'|'column';
                                    });
                                }}
             >
@@ -375,7 +369,7 @@ function ComponentProperties() {
                 <notifiable.input style={{width:'100%',padding: 5, borderRadius: 3, border: BORDER}} value={() => {
                     return focusedComponent.get()?.style.width ?? ''
                 }} onChange={(e) => {
-                    let newValue = e.target.value;
+                    let newValue:string|number = e.target.value;
                     if (!newValue.endsWith('%')) {
                         const number = parseInt(e.target.value);
                         if (!isNaN(number)) {
@@ -383,7 +377,7 @@ function ComponentProperties() {
                         }
                     }
                     updateValue((thisComponent) => {
-                        thisComponent.style.width = newValue;
+                        thisComponent.style.width = newValue as (number | `${number}%` | undefined);
                     });
                 }}/>
             </HorizontalLabel>
@@ -392,7 +386,7 @@ function ComponentProperties() {
                 <notifiable.input style={{width:'100%',padding: 5, borderRadius: 3, border: BORDER}} value={() => {
                     return focusedComponent.get()?.style.height ?? ''
                 }} onChange={(e) => {
-                    let newValue = e.target.value;
+                    let newValue:string|number = e.target.value;
                     if (!newValue.endsWith('%')) {
                         const number = parseInt(e.target.value);
                         if (!isNaN(number)) {
@@ -400,7 +394,7 @@ function ComponentProperties() {
                         }
                     }
                     updateValue((thisComponent) => {
-                        thisComponent.style.height = newValue;
+                        thisComponent.style.height = newValue as (number | `${number}%` | undefined);
                     });
                 }}/>
             </HorizontalLabel>
