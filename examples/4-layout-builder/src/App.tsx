@@ -180,8 +180,8 @@ function ComponentRenderer(props: { comp: Component, renderAsTree?: boolean }) {
     const renderAsTreeSignal = useSignal(props.renderAsTree);
     const displayChildrenSignal = useSignal(true);
 
-    useEffect(() => componentSignal.set(props.comp), [props.comp]);
-    useEffect(() => renderAsTreeSignal.set(props.renderAsTree), [props.renderAsTree]);
+    useEffect(() => componentSignal.set(props.comp), [componentSignal, props.comp]);
+    useEffect(() => renderAsTreeSignal.set(props.renderAsTree), [props.renderAsTree, renderAsTreeSignal]);
 
     const isDraggedOverSignal = useSignal(false);
     const elements = useComputed(() => {
