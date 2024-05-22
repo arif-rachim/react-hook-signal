@@ -1,0 +1,128 @@
+import {IconType} from "react-icons";
+import {RiCoinFill, RiInputField, RiLayoutHorizontalLine, RiLayoutVerticalLine} from "react-icons/ri";
+import {CSSProperties} from "react";
+import {Component, InputComponent, LabelComponent} from "./Component.ts";
+
+type ComponentConfigType = Record<string, {
+    icon: IconType,
+    label: string,
+    style: CSSProperties & {
+        borderWhenHovered: CSSProperties['border'],
+        borderWhenFocused: CSSProperties['border'],
+        backgroundWhenDragOver: CSSProperties['background'],
+    }
+}>
+export const ComponentConfig: ComponentConfigType = {
+    Vertical: {
+        label: 'Vertical',
+        icon: RiLayoutHorizontalLine,
+        style: {
+            display:'flex',
+            flexDirection:'column',
+            gap:10,
+            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            background: 'rgba(0,0,0,0.1)',
+            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
+            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`,
+            border: `1px solid rgba(0,0,0,0)`,
+            minWidth: 20,
+            minHeight: 20,
+            margin: 0,
+            padding: 10,
+            borderRadius: 0
+        },
+    },
+    Horizontal: {
+        label: 'Horizontal',
+        icon: RiLayoutVerticalLine,
+        style: {
+            display:'flex',
+            flexDirection:'row',
+            gap:10,
+            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            background: 'rgba(0,0,0,0.1)',
+            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
+            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`,
+            border: `1px solid rgba(0,0,0,0)`,
+            minWidth: 20,
+            minHeight: 20,
+            margin: 0,
+            padding: 10,
+            borderRadius: 0
+        },
+    },
+    Input: {
+        label: 'Input',
+        icon: RiInputField,
+        style: {
+            backgroundWhenDragOver: 'rgba(255,255,255,0.8)',
+            background: 'rgba(255,255,255,0.8)',
+            borderWhenHovered: `1px dashed #00B0F0`,
+            borderWhenFocused: `1px solid #0070C0`,
+            border: `1px solid rgba(0,0,0,0.2)`,
+            minWidth: 20,
+            minHeight: 20,
+            margin: 0,
+            padding: 5,
+            borderRadius: 10
+        },
+    },
+    Button: {
+        label: 'Button',
+        icon: RiCoinFill,
+        style: {
+            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            background: 'rgba(0,0,0,0.1)',
+            borderWhenHovered: `1px dashed #00B0F0`,
+            borderWhenFocused: `1px solid #0070C0`,
+            border: `1px solid rgba(0,0,0,0.1)`,
+            minWidth: 20,
+            minHeight: 20,
+            margin: 0,
+            padding: 5,
+            borderRadius: 10
+        },
+    }
+} as const;
+
+export function isContainer(type?: string): boolean {
+    return type === 'Vertical' || type === 'Horizontal';
+}
+
+export function isLabelComponent(comp?: Component): comp is LabelComponent {
+    return comp !== undefined && comp !== null && 'label' in comp && comp.label !== undefined
+}
+
+export function isInputComponent(comp?: Component): comp is InputComponent {
+    return comp !== undefined && comp !== null && 'value' in comp && comp.value !== undefined
+}
+
+export function ComponentLibrary() {
+    return <div style={{display: 'flex', flexDirection: 'column'}}>
+        {Object.keys(ComponentConfig).map(key => {
+            return <ComponentItem icon={ComponentConfig[key].icon} label={ComponentConfig[key].label} componentId={key}
+                                  key={key}/>
+        })}
+    </div>
+}
+
+function ComponentItem(props: { icon: IconType, label: string, componentId: string }) {
+    const {icon: Icon, componentId, label} = props;
+    return <div
+        style={{
+            padding: 5,
+            flexDirection: 'row',
+            display: 'flex',
+            cursor: 'pointer',
+            gap: 10,
+            alignItems: 'center'
+        }}
+        draggable={true}
+        onDragStart={(e) => {
+            e.dataTransfer.setData('text/plain', componentId);
+        }}
+    >
+        <Icon style={{fontSize: 22}}/>
+        <div>{label}</div>
+    </div>
+}

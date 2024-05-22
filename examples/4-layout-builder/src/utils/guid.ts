@@ -9,3 +9,10 @@ export function guid(): string {
         return v.toString(16);
     });
 }
+
+/**
+ * Determines whether a value is a valid GUID (Globally Unique Identifier).
+ */
+export function isGuid(value:unknown):boolean{
+    return value !== undefined && value !== null && typeof value === 'string' && value.length === 36;
+}
