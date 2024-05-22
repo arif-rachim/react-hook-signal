@@ -1,4 +1,4 @@
-import {ChangeEvent, CSSProperties, HTMLProps, useContext, useEffect} from "react";
+import {ChangeEvent, CSSProperties, DragEvent, MouseEvent, useContext, useEffect} from "react";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {guid, isGuid} from "../utils/guid.ts";
 import {ComputableProps} from "../../../../src/components.ts";
@@ -9,6 +9,22 @@ import {ComponentContext} from "./ComponentContext.ts";
 import {ComponentConfig, isContainer, isInputComponent, isLabelComponent} from "./ComponentLibrary.tsx";
 
 const mouseOverComponentId = new Signal.State('');
+
+function isComponentOneParentOfComponentTwo(props: {
+    componentOne: Component,
+    componentTwo: Component,
+    components: Component[]
+}) {
+    const {componentOne, componentTwo, components} = props;
+    if (componentTwo.parent) {
+        if (componentTwo.parent === componentOne.id) {
+            return true;
+        }
+        const componentTwoParent = components.find(i => i.id === componentTwo.parent)!;
+        return isComponentOneParentOfComponentTwo({componentOne, componentTwo: componentTwoParent, components});
+    }
+    return false
+}
 
 export function ComponentRenderer(props: { comp: Component, renderAsTree?: boolean }) {
 
@@ -45,14 +61,29 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
     function onDrop(componentTypeOrElementId: string) {
         if (isGuid(componentTypeOrElementId)) {
             const components = [...componentsSignal.get()];
-            const currentComponent = components.find(i => i.id === componentTypeOrElementId)!;
-            const currentParentComponent = components.find(i => i.id === currentComponent.parent)!;
-            // removing current comp from its current parent
-            currentParentComponent.children = currentParentComponent.children.filter(i => i !== componentTypeOrElementId);
-            // ok now we have the element comp lets move this guy to new position inside this container
-            currentComponent.parent = componentSignal.get().id;
-            const newParentComponent = components.find(layout => layout.id === currentComponent.parent) ?? {children: []};
-            newParentComponent.children = [...newParentComponent.children, componentTypeOrElementId];
+            const self = componentSignal.get();
+            // you cant drop to your children this will be madness you will loose the chain
+            // we need to check does current component is actually parent of this if yes then reject it
+
+            const droppedInComponent = components.find(i => i.id === componentTypeOrElementId)!;
+            const thisComponent = components.find(layout => layout.id === self.id) ?? {id: '', children: []};
+            if (isComponentOneParentOfComponentTwo({
+                componentOne: droppedInComponent,
+                componentTwo: thisComponent as Component,
+                components
+            })) {
+                return;
+            }
+
+            const originalDroppedInParentComponent = components.find(i => i.id === droppedInComponent.parent);
+            if (!originalDroppedInParentComponent) {
+                return;
+            }
+
+            originalDroppedInParentComponent.children = originalDroppedInParentComponent.children.filter(i => i !== componentTypeOrElementId);
+            droppedInComponent.parent = thisComponent.id;
+            thisComponent.children = [...thisComponent.children, componentTypeOrElementId];
+
             componentsSignal.set(components);
         } else {
             const containerId = props.comp.id;
@@ -90,22 +121,29 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         }
     }
 
-    const dragAndDropProps: ComputableProps<{draggable:boolean,
-        onMouseOver:(e:unknown) => void,
-        onDragOver:(e:unknown) => void,
-        onDragLeave:(e:unknown) => void,
-        onDrop:(e:unknown) => void,
-        onDragStart:(e:unknown) => void,
-        onClick:(e:unknown) => void,
+    const dragAndDropProps: ComputableProps<{
+        draggable: boolean,
+        onMouseOver: (e: unknown) => void,
+        onDragOver: (e: unknown) => void,
+        onDragLeave: (e: unknown) => void,
+        onDrop: (e: unknown) => void,
+        onDragStart: (e: unknown) => void,
+        onClick: (e: unknown) => void,
     }> = {
         draggable: true,
-        onMouseOver: () => {
+        onMouseOver: (e) => {
+            if (!isMouseEvent(e)) {
+                return;
+            }
             e.stopPropagation();
             e.preventDefault();
             const {id} = componentSignal.get();
             mouseOverComponentId.set(id);
         },
         onDragOver: (e) => {
+            if (!isMouseEvent(e)) {
+                return;
+            }
             e.stopPropagation();
             const {componentType} = componentSignal.get();
 
@@ -115,27 +153,39 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             isDraggedOverSignal.set(true);
         },
         onDragLeave: (e) => {
+            if (!isMouseEvent(e)) {
+                return;
+            }
             e.stopPropagation();
             e.preventDefault();
             isDraggedOverSignal.set(false);
         },
         onDrop: (e) => {
+            if (!isDragEvent(e)) {
+                return;
+            }
             e.stopPropagation();
             e.preventDefault();
             const {componentType} = componentSignal.get();
             if (componentType === 'Input') {
                 return;
             }
-
             const id = e.dataTransfer.getData('text/plain');
             onDrop(id);
             isDraggedOverSignal.set(false);
+
         },
         onDragStart: (e) => {
+            if (!isDragEvent(e)) {
+                return;
+            }
             e.stopPropagation();
             e.dataTransfer.setData('text/plain', componentSignal.get().id);
         },
         onClick: (e) => {
+            if (!isMouseEvent(e)) {
+                return;
+            }
             e.stopPropagation()
             focusedComponent.set(componentSignal.get());
         }
@@ -149,7 +199,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }
             return '';
         },
-        onChange: (e:ChangeEvent) => {
+        onChange: (e: ChangeEvent) => {
             updateValue((component) => {
                 component.value = (e.currentTarget as HTMLInputElement).value
             })
@@ -162,7 +212,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             return '';
         },
     }
-    const styleProps: ComputableProps<{style:CSSProperties}> = {
+    const styleProps: ComputableProps<{ style: CSSProperties }> = {
 
         style: () => {
             const renderAsTree = renderAsTreeSignal.get();
@@ -264,7 +314,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
     }
     if (componentType === 'Input' && isInputComponent(component)) {
 
-        return <notifiable.label style={():CSSProperties => {
+        return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             const result: CSSProperties = {
                 display: 'flex',
@@ -302,9 +352,13 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }}
         </notifiable.button>
     }
-    throw new Error('Unable to get element type')
+    //throw new Error('Unable to get element type')
 }
 
-function isMouseEvent(e:unknown): e is MouseEvent{
+function isMouseEvent(e: unknown): e is MouseEvent {
     return e !== undefined && e !== null && typeof e === 'object' && 'target' in e;
+}
+
+function isDragEvent(e: unknown): e is DragEvent {
+    return e !== undefined && e !== null && typeof e === 'object' && 'dataTransfer' in e;
 }

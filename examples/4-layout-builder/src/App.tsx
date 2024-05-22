@@ -5,20 +5,20 @@ import {ComponentProperties} from "./comp/ComponentProperties.tsx";
 import {ComponentContext} from "./comp/ComponentContext.ts";
 import {ComponentLibrary} from "./comp/ComponentLibrary.tsx";
 import {BORDER} from "./comp/Border.ts";
-
+import {guid} from "./utils/guid.ts";
 
 /**
  * Represents the main application comp.
  */
 function App() {
-
+    const ROOT_ID = guid();
     const components = useSignal<Component[]>([{
         style: {
             height: '100%',
             overflow: 'auto'
         },
         componentType: 'Vertical',
-        id: 'root',
+        id: ROOT_ID,
         parent: '',
         children: []
     }]);
@@ -58,7 +58,7 @@ function App() {
                 <div style={{borderBottom: BORDER}}></div>
                 <div style={{display: 'flex', flexDirection: 'column', marginRight: 5, marginTop: 5}}>
                     <Notifiable component={ComponentRenderer} comp={() => {
-                        return components.get().find(i => i.id === 'root')!
+                        return components.get().find(i => i.id === ROOT_ID)!
                     }} renderAsTree={true}/>
                 </div>
             </notifiable.div>
@@ -69,7 +69,7 @@ function App() {
                  }}></div>
             <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
                 <Notifiable component={ComponentRenderer} comp={() => {
-                    return components.get().find(i => i.id === 'root')!
+                    return components.get().find(i => i.id === ROOT_ID)!
                 }}/>
             </div>
             <div style={{height: '100%', backgroundColor: 'rgba(0,0,0,0.3)', width: 5, cursor: 'ew-resize'}}

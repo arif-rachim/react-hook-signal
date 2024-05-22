@@ -12,6 +12,8 @@ type ComponentConfigType = Record<string, {
         backgroundWhenDragOver: CSSProperties['background'],
     }
 }>
+
+
 export const ComponentConfig: ComponentConfigType = {
     Vertical: {
         label: 'Vertical',
