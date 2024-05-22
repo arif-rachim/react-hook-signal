@@ -13,6 +13,7 @@ import {ValueProperty} from "./properties/ValueProperty.tsx";
 import {HeightProperty} from "./properties/HeightProperty.tsx";
 import {MarginProperty} from "./properties/MarginProperty.tsx";
 import {PaddingProperty} from "./properties/PaddingProperty.tsx";
+import {ErrorMessageProperty} from "./properties/ErrorMessageProperty.tsx";
 
 
 export function ComponentProperties() {
@@ -51,6 +52,12 @@ export function ComponentProperties() {
         }}>
             <ValueProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
                            updateValue={updateValue  as unknown as (callback:(thisComponent:InputComponent) => void) => void}/>
+        </Visible>
+        <Visible when={() => {
+            return isInputComponent(focusedComponent.get())
+        }}>
+        <ErrorMessageProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
+                              updateValue={updateValue  as unknown as (callback:(thisComponent:InputComponent) => void) => void} />
         </Visible>
         <div style={{display: 'flex'}}>
             <WidthProperty focusedComponent={focusedComponent} updateValue={updateValue}/>

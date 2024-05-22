@@ -15,7 +15,6 @@ export interface LabelComponent extends Component{
 
 export interface InputComponent extends LabelComponent{
     value : unknown,
-    isRequired : boolean,
     errorMessage : string,
     name : string
 }

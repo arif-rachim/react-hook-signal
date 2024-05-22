@@ -194,10 +194,10 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
     const inputProps = {
         value: (): string => {
             const component = componentSignal.get();
-            if (isInputComponent(component)) {
-                return component.value ? component.value.toString() : '';
+            if (!isInputComponent(component)) {
+                return '';
             }
-            return '';
+            return component.value ? component.value.toString() : '';
         },
         onChange: (e: ChangeEvent) => {
             updateValue((component) => {
@@ -206,10 +206,10 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         },
         name: (): string => {
             const component = componentSignal.get();
-            if (isInputComponent(component)) {
-                return component.name;
+            if (!isInputComponent(component)) {
+                return '';
             }
-            return '';
+            return component.name;
         },
     }
     const styleProps: ComputableProps<{ style: CSSProperties }> = {
@@ -239,15 +239,16 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             result.border = isMouseOver ? initialStyle.borderWhenHovered : isSelected ? initialStyle.borderWhenFocused : initialStyle.border;
             result = {...result, ...style};
             // we alter this because width and height to be maintained by container
-            if (isInputComponent(component)) {
-                delete result.width;
-                delete result.height;
-                delete result.margin;
-                delete result.marginLeft;
-                delete result.marginTop;
-                delete result.marginRight;
-                delete result.marginBottom;
+            if (!isInputComponent(component)) {
+                return result;
             }
+            delete result.width;
+            delete result.height;
+            delete result.margin;
+            delete result.marginLeft;
+            delete result.marginTop;
+            delete result.marginRight;
+            delete result.marginBottom;
             return result;
         }
     } as const;
@@ -284,10 +285,10 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                     }}</notifiable.div>
                     <notifiable.div>{() => {
                         const component = componentSignal.get();
-                        if (isInputComponent(component)) {
-                            return component.name;
+                        if (!isInputComponent(component)) {
+                            return ''
                         }
-                        return ''
+                        return component.name;
                     }}</notifiable.div>
                 </notifiable.div>
             </div>
@@ -320,39 +321,47 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 display: 'flex',
                 flexDirection: 'column'
             };
-            if (isInputComponent(component)) {
-                result.width = component.style.width;
-                result.height = component.style.height;
-                result.margin = component.style.margin;
-                result.marginLeft = component.style.marginLeft;
-                result.marginTop = component.style.marginTop;
-                result.marginRight = component.style.marginRight;
-                result.marginBottom = component.style.marginBottom;
+            if (!isInputComponent(component)) {
+                return result;
             }
+            result.width = component.style.width;
+            result.height = component.style.height;
+            result.margin = component.style.margin;
+            result.marginLeft = component.style.marginLeft;
+            result.marginTop = component.style.marginTop;
+            result.marginRight = component.style.marginRight;
+            result.marginBottom = component.style.marginBottom;
             return result;
         }} {...dragAndDropProps}>
             <notifiable.div>{() => {
                 const component = componentSignal.get();
-                if (isLabelComponent(component)) {
-                    return component.label
+                if (!isLabelComponent(component)) {
+                    return '';
                 }
-                return ''
+                return component.label
             }}</notifiable.div>
             <notifiable.input {...inputProps} {...styleProps} autoComplete={'off'}/>
+            <notifiable.div>{() => {
+                const component = componentSignal.get();
+                if (!isInputComponent(component)) {
+                    return '';
+                }
+                return component.errorMessage
+            }}</notifiable.div>
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
         return <notifiable.button {...styleProps} {...dragAndDropProps}>
             {() => {
                 const component = componentSignal.get();
-                if (isLabelComponent(component)) {
-                    return component.label
+                if (!isLabelComponent(component)) {
+                    return ''
                 }
-                return ''
+                return component.label
             }}
         </notifiable.button>
     }
-    //throw new Error('Unable to get element type')
+    throw new Error('Unable to get element type')
 }
 
 function isMouseEvent(e: unknown): e is MouseEvent {
