@@ -49,7 +49,7 @@ export const StockList = createResponsiveList<Stock,{onClick:(props:StockDetailC
             }
             data.set(result);
             currentPrice.set(nextPrice);
-        }, [item.name]);
+        }, [currentPrice, data, isBullish, item.name, openPrice]);
 
         useEffect(() => {
             let stop = false;

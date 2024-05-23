@@ -10,7 +10,7 @@ import {colors} from "../utils/colors.ts";
 /**
  * The duration in milliseconds for a transition animation.
  */
-const TRANSITION_DURATION = 3000;
+const TRANSITION_DURATION = 300;
 
 /**
  * Represents the configuration details of a stock item.

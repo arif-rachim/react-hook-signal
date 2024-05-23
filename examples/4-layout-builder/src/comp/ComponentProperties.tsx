@@ -3,7 +3,6 @@ import {notifiable} from "react-hook-signal";
 import {ComponentContext} from "./ComponentContext.ts";
 import {Component, InputComponent, LabelComponent} from "./Component.ts";
 import {Signal} from "signal-polyfill";
-import {isContainer, isInputComponent, isLabelComponent} from "./ComponentLibrary.tsx";
 import Visible from "./Visible.tsx";
 import {WidthProperty} from "./properties/WidthProperty.tsx";
 import {DirectionProperty} from "./properties/DirectionProperty.tsx";
@@ -14,6 +13,9 @@ import {HeightProperty} from "./properties/HeightProperty.tsx";
 import {MarginProperty} from "./properties/MarginProperty.tsx";
 import {PaddingProperty} from "./properties/PaddingProperty.tsx";
 import {ErrorMessageProperty} from "./properties/ErrorMessageProperty.tsx";
+import {isContainer} from "../utils/isContainer.ts";
+import {isLabelComponent} from "../utils/isLabelComponent.ts";
+import {isInputComponent} from "../utils/isInputComponent.ts";
 
 
 export function ComponentProperties() {

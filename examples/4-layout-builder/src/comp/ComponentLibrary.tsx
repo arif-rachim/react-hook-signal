@@ -1,7 +1,6 @@
 import {IconType} from "react-icons";
 import {RiCoinFill, RiInputField, RiLayoutHorizontalLine, RiLayoutVerticalLine} from "react-icons/ri";
 import {CSSProperties} from "react";
-import {Component, InputComponent, LabelComponent} from "./Component.ts";
 
 type ComponentConfigType = Record<string, {
     icon: IconType,
@@ -29,8 +28,14 @@ export const ComponentConfig: ComponentConfigType = {
             border: `1px solid rgba(0,0,0,0)`,
             minWidth: 20,
             minHeight: 20,
-            margin: 0,
-            padding: 10,
+            marginLeft: 0,
+            marginRight:0,
+            marginTop:0,
+            marginBottom:0,
+            paddingLeft: 10,
+            paddingRight:10,
+            paddingTop:10,
+            paddingBottom : 10,
             borderRadius: 0
         },
     },
@@ -48,8 +53,14 @@ export const ComponentConfig: ComponentConfigType = {
             border: `1px solid rgba(0,0,0,0)`,
             minWidth: 20,
             minHeight: 20,
-            margin: 0,
-            padding: 10,
+            marginLeft: 0,
+            marginRight:0,
+            marginTop:0,
+            marginBottom:0,
+            paddingLeft: 10,
+            paddingRight:10,
+            paddingTop:10,
+            paddingBottom : 10,
             borderRadius: 0
         },
     },
@@ -87,17 +98,7 @@ export const ComponentConfig: ComponentConfigType = {
     }
 } as const;
 
-export function isContainer(type?: string): boolean {
-    return type === 'Vertical' || type === 'Horizontal';
-}
 
-export function isLabelComponent(comp?: Component): comp is LabelComponent {
-    return comp !== undefined && comp !== null && 'label' in comp && comp.label !== undefined
-}
-
-export function isInputComponent(comp?: Component): comp is InputComponent {
-    return comp !== undefined && comp !== null && 'value' in comp && comp.value !== undefined
-}
 
 export function ComponentLibrary() {
     return <div style={{display: 'flex', flexDirection: 'column'}}>

@@ -6,7 +6,10 @@ import {MdKeyboardArrowRight, MdOutlineBrokenImage} from "react-icons/md";
 import {Signal} from "signal-polyfill";
 import {Component, InputComponent, LabelComponent} from "./Component.ts";
 import {ComponentContext} from "./ComponentContext.ts";
-import {ComponentConfig, isContainer, isInputComponent, isLabelComponent} from "./ComponentLibrary.tsx";
+import {ComponentConfig} from "./ComponentLibrary.tsx";
+import {isInputComponent} from "../utils/isInputComponent.ts";
+import {isContainer} from "../utils/isContainer.ts";
+import {isLabelComponent} from "../utils/isLabelComponent.ts";
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -235,6 +238,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }
             const initialStyle = ComponentConfig[componentType].style;
             let result = {...initialStyle};
+            console.log('We have initial Style',result);
             result.background = isDraggedOver ? initialStyle.backgroundWhenDragOver : initialStyle.background;
             result.border = isMouseOver ? initialStyle.borderWhenHovered : isSelected ? initialStyle.borderWhenFocused : initialStyle.border;
             result = {...result, ...style};

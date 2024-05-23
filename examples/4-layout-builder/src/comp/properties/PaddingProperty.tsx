@@ -21,6 +21,7 @@ export function PaddingProperty(props: {
                 <div style={{display: 'flex', justifyContent: 'center'}}>
                     <notifiable.input
                         style={{width: '30%', padding: 5, borderRadius: 3, border: BORDER}} value={() => {
+                            console.log('We have padding top ',focusedComponent.get()?.style.paddingTop)
                         return focusedComponent.get()?.style.paddingTop ?? 0
                     }}
                         onChange={(e) => {
