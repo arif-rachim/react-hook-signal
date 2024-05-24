@@ -6,12 +6,14 @@ import {ComponentContext} from "./comp/ComponentContext.ts";
 import {ComponentLibrary} from "./comp/ComponentLibrary.tsx";
 import {BORDER} from "./comp/Border.ts";
 import {guid} from "./utils/guid.ts";
+import {useId} from "react";
 
 /**
  * Represents the main application comp.
  */
 function App() {
     const ROOT_ID = guid();
+    const componentID = useId();
     const components = useSignal<Component[]>([{
         style: {
             height: '100%',
@@ -27,11 +29,17 @@ function App() {
     const leftPanelWidth = useSignal<number | undefined>(150);
 
     function onMouseRightMove(e: MouseEvent) {
-        rightPanelWidth.set(window.innerWidth - e.clientX - 5);
+        const container = document.getElementById(componentID);
+        if(container === null) return;
+        const domRect = container.getBoundingClientRect();
+        rightPanelWidth.set((domRect.left + domRect.width) - e.clientX - 5);
     }
 
     function onMouseLeftMove(e: MouseEvent) {
-        leftPanelWidth.set(e.clientX)
+        const container = document.getElementById(componentID);
+        if(container === null) return;
+        const domRect = container.getBoundingClientRect();
+        leftPanelWidth.set(e.clientX - domRect.left)
     }
 
     function onMouseUp() {
@@ -41,7 +49,7 @@ function App() {
     }
 
     return <ComponentContext.Provider value={{components, focusedComponent}}>
-        <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'auto'}}>
+        <div id={componentID} style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'auto'}}>
             <notifiable.div style={() => {
                 const widthValue = leftPanelWidth.get();
                 return {
