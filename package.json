@@ -1,7 +1,7 @@
 {
   "name": "react-hook-signal",
   "private": false,
-  "version": "0.0.1-rc.16",
+  "version": "0.0.1-rc.17",
   "type": "module",
   "files": [
     "dist"

@@ -41,14 +41,16 @@ export type AnySignal<T> = { get(): T };
  * Function that converts props to computable.
  */
 type PropsToComputable<T> = {
-    [K in keyof T as T[K] extends (...args: unknown[]) => unknown ? never : K extends 'key' ? never : K]: Computable<T[K]>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [K in keyof T as T[K] extends (((...args: any[]) => any) | undefined) ? never : K extends 'key' ? never : K]: Computable<T[K]>;
 }
 
 /**
  * Function that appends 'Handler' to handler props.
  */
 type HandlerPropsToAppend<T> = {
-    [K in keyof T as T[K] extends (...args: unknown[]) => unknown ? K extends string ? `${K}Handler` : never : never]: T[K];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [K in keyof T as T[K] extends (((...args: any[]) => any) | undefined) ? K extends string ? `${K}Handler` : never : never]: T[K];
 }
 
 /**

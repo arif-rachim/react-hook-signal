@@ -98,12 +98,14 @@ test('It should test Notifiable component properly',async () => {
 })
 
 
-function MyComponentWithCallback(props:{count:number,addCount:() => void}){
+function MyComponentWithCallback(props:{hello:string,count:number,addCount:() => void,doSomething?:(params?:string) => void}){
     return <>
         <button data-testid={'increment-inside'} onClick={() => props.addCount()}>Increment</button>
         <div data-testid={'div'}>{props.count}</div>
     </>
 }
+
+
 
 function TestNotifiableWithCallback(){
     const count = useSignal(0);
@@ -114,7 +116,9 @@ function TestNotifiableWithCallback(){
             return count.get();
         }} addCountHandler={() => {
             count.set(count.get() + 1)
-        }}/>
+        }} doSomethingHandler={(params?:string) => {
+            console.log('HELLO WORLD',params)
+        }} hello={'world'} />
     </>
 }
 
