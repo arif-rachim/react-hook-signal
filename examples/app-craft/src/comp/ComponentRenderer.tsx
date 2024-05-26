@@ -103,7 +103,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 parent: containerId,
                 children: [],
                 componentType: componentTypeOrElementId,
-                style: {}
+                style: {...ComponentConfig[componentTypeOrElementId].style}
             }
             if (componentTypeOrElementId === 'Input') {
                 newComponent = {
@@ -268,10 +268,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 borderWhenHovered,
                 ...initialStyle
             } = ComponentConfig[componentType].style;
-            let result: CSSProperties = initialStyle;
+
+            const result: CSSProperties = style === undefined ? initialStyle : {...style};
             result.background = isDraggedOver ? backgroundWhenDragOver : initialStyle.background;
             result.border = isMouseOver ? borderWhenHovered : isSelected ? borderWhenFocused : initialStyle.border;
-            result = {...result, ...style};
+            //result = {...result, ...style};
             // we alter this because width and height to be maintained by container
             if (!isInputComponent(component)) {
                 return result;
