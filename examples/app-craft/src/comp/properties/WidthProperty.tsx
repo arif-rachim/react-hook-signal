@@ -1,7 +1,7 @@
 import {Signal} from "signal-polyfill";
 import {Component} from "../Component.ts";
 import {notifiable} from "react-hook-signal";
-import {BORDER} from "../Border.ts";
+import {BORDER_NONE} from "../Border.ts";
 import {HorizontalLabel} from "./HorizontalLabel.tsx";
 
 export function WidthProperty(props: {
@@ -9,8 +9,8 @@ export function WidthProperty(props: {
     updateValue: (callback: (thisComponent: Component) => void) => void
 }) {
     const {updateValue, focusedComponent} = props;
-    return <HorizontalLabel label={'Width'} width={'50%'}>
-        <notifiable.input style={{width: '100%', padding: 5, borderRadius: 3, border: BORDER}} value={() => {
+    return <HorizontalLabel label={'Width :'} width={'50%'}>
+        <notifiable.input style={{width: '100%', padding: 5, borderRadius: 3, border: BORDER_NONE}} value={() => {
             return focusedComponent.get()?.style.width ?? ''
         }} onChange={(e) => {
             let newValue: string | number = e.target.value;

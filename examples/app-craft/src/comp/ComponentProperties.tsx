@@ -30,7 +30,7 @@ export function ComponentProperties() {
         components.set([...components.get().filter(i => i.id !== componentId), newFocusedComponent]);
     }
 
-    return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 10}}>
+    return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 0}}>
         <notifiable.div>{() => focusedComponent.get()?.id.slice(-5)}</notifiable.div>
         <Visible when={() => {
             return isContainer(focusedComponent.get()?.componentType)

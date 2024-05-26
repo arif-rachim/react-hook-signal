@@ -11,7 +11,7 @@ export function MarginProperty(props: {
 }) {
     const {updateValue, focusedComponent} = props;
     return <div style={{display: 'flex', flexDirection: 'column', position: 'relative'}}>
-        <div style={{fontStyle: 'italic', position: 'absolute', top: 5}}>Margin</div>
+        <div style={{fontStyle: 'italic', position: 'absolute', top: 5,left:10}}>Margin :</div>
         <div style={{display: 'flex', justifyContent: 'center', padding: 5}}>
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{display: 'flex', justifyContent: 'center'}}>

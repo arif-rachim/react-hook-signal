@@ -10,7 +10,7 @@ export function PaddingProperty(props: {
 }) {
     const {updateValue, focusedComponent} = props;
     return <div style={{display: 'flex', flexDirection: 'column', position: 'relative'}}>
-        <div style={{fontStyle: 'italic', position: 'absolute', top: 0, left: 5,color:'white'}}>Padding</div>
+        <div style={{fontStyle: 'italic', position: 'absolute', top: 0, left: 5,color:'white'}}>Padding :</div>
         <div style={{
             display: 'flex',
             justifyContent: 'center',
