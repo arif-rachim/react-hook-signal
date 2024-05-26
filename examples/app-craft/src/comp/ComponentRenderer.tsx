@@ -10,6 +10,8 @@ import {ComponentConfig} from "./ComponentLibrary.tsx";
 import {isInputComponent} from "../utils/isInputComponent.ts";
 import {isContainer} from "../utils/isContainer.ts";
 import {isLabelComponent} from "../utils/isLabelComponent.ts";
+import {colors} from "../utils/colors.ts";
+import {isEmpty} from "../utils/isEmpty.ts";
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -93,7 +95,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             thisComponent.children = [...thisComponent.children, componentTypeOrElementId];
 
             componentsSignal.set(components);
-        } else {
+        } else if (isComponentType(componentTypeOrElementId)) {
             const containerId = props.comp.id;
             const childId = guid();
             let newComponent: Component = {
@@ -146,7 +148,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             e.stopPropagation();
             e.preventDefault();
             const component = componentSignal.get();
-            if(component === undefined){
+            if (component === undefined) {
                 return;
             }
             const {id} = component;
@@ -260,16 +262,28 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                     border: isMouseOver ? `1px dashed ${isSelected ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)'}` : `1px dashed ${isSelected ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0)'}`
                 }
             }
-            const initialStyle = ComponentConfig[componentType].style;
-            let result = {...initialStyle};
-            console.log('We have initial Style', result);
-            result.background = isDraggedOver ? initialStyle.backgroundWhenDragOver : initialStyle.background;
-            result.border = isMouseOver ? initialStyle.borderWhenHovered : isSelected ? initialStyle.borderWhenFocused : initialStyle.border;
+            const {
+                backgroundWhenDragOver,
+                borderWhenFocused,
+                borderWhenHovered,
+                ...initialStyle
+            } = ComponentConfig[componentType].style;
+            let result: CSSProperties = initialStyle;
+            result.background = isDraggedOver ? backgroundWhenDragOver : initialStyle.background;
+            result.border = isMouseOver ? borderWhenHovered : isSelected ? borderWhenFocused : initialStyle.border;
             result = {...result, ...style};
             // we alter this because width and height to be maintained by container
             if (!isInputComponent(component)) {
                 return result;
             }
+            const {borderWhenError} = (initialStyle as (typeof ComponentConfig)['Input']['style']);
+            if (!isEmpty(component.errorMessage)) {
+                result.border = borderWhenError;
+            }
+
+            /**
+             * We remove this for input because we do not want the input to be modified from the element.
+             */
             delete result.width;
             delete result.height;
             delete result.margin;
@@ -378,21 +392,24 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             result.marginBottom = component.style.marginBottom;
             return result;
         }} {...dragAndDropProps}>
-            <notifiable.div>{() => {
-                const component = componentSignal.get();
-                if (!isLabelComponent(component)) {
-                    return '';
-                }
-                return component.label
-            }}</notifiable.div>
+            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+                <notifiable.div style={{flexGrow: 1}}>{() => {
+                    const component = componentSignal.get();
+                    if (!isLabelComponent(component)) {
+                        return '';
+                    }
+                    return component.label
+                }}</notifiable.div>
+                <notifiable.div style={{fontSize: 12, color: colors.red}}>{() => {
+                    const component = componentSignal.get();
+                    if (!isInputComponent(component)) {
+                        return '';
+                    }
+                    return component.errorMessage
+                }}</notifiable.div>
+            </div>
             <notifiable.input {...inputProps} {...styleProps} autoComplete={'off'}/>
-            <notifiable.div>{() => {
-                const component = componentSignal.get();
-                if (!isInputComponent(component)) {
-                    return '';
-                }
-                return component.errorMessage
-            }}</notifiable.div>
+
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
@@ -415,4 +432,8 @@ function isMouseEvent(e: unknown): e is MouseEvent {
 
 function isDragEvent(e: unknown): e is DragEvent {
     return e !== undefined && e !== null && typeof e === 'object' && 'dataTransfer' in e;
+}
+
+function isComponentType(value: unknown): value is  keyof typeof ComponentConfig {
+    return typeof value === 'string' && Object.keys(ComponentConfig).indexOf(value) >= 0
 }

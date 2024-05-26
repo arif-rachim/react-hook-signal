@@ -22,7 +22,6 @@ export function WidthProperty(props: {
             }
             updateValue((thisComponent) => {
                 thisComponent.style.width = newValue as (number | `${number}%` | undefined);
-                console.log("UPDATING WIDTH ",thisComponent.style.width);
             });
         }}/>
     </HorizontalLabel>;

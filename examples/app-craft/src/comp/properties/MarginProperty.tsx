@@ -2,6 +2,7 @@ import {Signal} from "signal-polyfill";
 import {Component} from "../Component.ts";
 import {notifiable} from "react-hook-signal";
 import {BORDER} from "../Border.ts";
+import {colors} from "../../utils/colors.ts";
 
 
 export function MarginProperty(props: {
@@ -46,7 +47,7 @@ export function MarginProperty(props: {
                     />
                     <div style={{
                         flexGrow: 1,
-                        backgroundColor: '#CCC',
+                        backgroundColor: colors.grey,
                         margin: 5,
                         height: 50,
                         width: 50,

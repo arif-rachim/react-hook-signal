@@ -1,26 +1,42 @@
 import {IconType} from "react-icons";
 import {RiCoinFill, RiInputField, RiLayoutHorizontalLine, RiLayoutVerticalLine} from "react-icons/ri";
 import {CSSProperties} from "react";
+import {colors} from "../utils/colors.ts";
 
-type ComponentConfigType = Record<string, {
+interface BaseConfigType {
     icon: IconType,
-    label: string,
     style: CSSProperties & {
         borderWhenHovered: CSSProperties['border'],
         borderWhenFocused: CSSProperties['border'],
-        backgroundWhenDragOver: CSSProperties['background'],
+        backgroundWhenDragOver: CSSProperties['background']
     }
-}>
+}
 
+interface ComponentConfigType extends BaseConfigType {
+    label: 'Vertical' | 'Horizontal' | 'Button',
+}
 
-export const ComponentConfig: ComponentConfigType = {
+interface InputConfigType extends BaseConfigType {
+    label: 'Input'
+    style: ComponentConfigType['style'] & {
+        borderWhenError: CSSProperties['border']
+    }
+}
+
+type ConfigType = ComponentConfigType | InputConfigType
+
+function createConfig<T extends Record<string, ConfigType>>(params: T): T {
+    return params
+}
+
+export const ComponentConfig = createConfig({
     Vertical: {
         label: 'Vertical',
         icon: RiLayoutHorizontalLine,
         style: {
-            display:'flex',
-            flexDirection:'column',
-            gap:10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             background: 'rgba(0,0,0,0.1)',
             borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
@@ -29,13 +45,13 @@ export const ComponentConfig: ComponentConfigType = {
             minWidth: 20,
             minHeight: 20,
             marginLeft: 0,
-            marginRight:0,
-            marginTop:0,
-            marginBottom:0,
+            marginRight: 0,
+            marginTop: 0,
+            marginBottom: 0,
             paddingLeft: 10,
-            paddingRight:10,
-            paddingTop:10,
-            paddingBottom : 10,
+            paddingRight: 10,
+            paddingTop: 10,
+            paddingBottom: 10,
             borderRadius: 0
         },
     },
@@ -43,9 +59,9 @@ export const ComponentConfig: ComponentConfigType = {
         label: 'Horizontal',
         icon: RiLayoutVerticalLine,
         style: {
-            display:'flex',
-            flexDirection:'row',
-            gap:10,
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 10,
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             background: 'rgba(0,0,0,0.1)',
             borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
@@ -54,13 +70,13 @@ export const ComponentConfig: ComponentConfigType = {
             minWidth: 20,
             minHeight: 20,
             marginLeft: 0,
-            marginRight:0,
-            marginTop:0,
-            marginBottom:0,
+            marginRight: 0,
+            marginTop: 0,
+            marginBottom: 0,
             paddingLeft: 10,
-            paddingRight:10,
-            paddingTop:10,
-            paddingBottom : 10,
+            paddingRight: 10,
+            paddingTop: 10,
+            paddingBottom: 10,
             borderRadius: 0
         },
     },
@@ -72,6 +88,7 @@ export const ComponentConfig: ComponentConfigType = {
             background: 'rgba(255,255,255,0.8)',
             borderWhenHovered: `1px dashed #00B0F0`,
             borderWhenFocused: `1px solid #0070C0`,
+            borderWhenError: `1px solid ${colors.red}`,
             border: `1px solid rgba(0,0,0,0.2)`,
             minWidth: 20,
             minHeight: 20,
@@ -96,13 +113,11 @@ export const ComponentConfig: ComponentConfigType = {
             borderRadius: 10
         },
     }
-} as const;
-
-
+})
 
 export function ComponentLibrary() {
     return <div style={{display: 'flex', flexDirection: 'column'}}>
-        {Object.keys(ComponentConfig).map(key => {
+        {(Object.keys(ComponentConfig) as Array<keyof typeof ComponentConfig>).map(key => {
             return <ComponentItem icon={ComponentConfig[key].icon} label={ComponentConfig[key].label} componentId={key}
                                   key={key}/>
         })}

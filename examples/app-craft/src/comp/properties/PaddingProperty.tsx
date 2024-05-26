@@ -2,6 +2,7 @@ import {Signal} from "signal-polyfill";
 import {Component} from "../Component.ts";
 import {notifiable} from "react-hook-signal";
 import {BORDER} from "../Border.ts";
+import {colors} from "../../utils/colors.ts";
 
 export function PaddingProperty(props: {
     focusedComponent: Signal.State<Component | undefined>,
@@ -9,19 +10,18 @@ export function PaddingProperty(props: {
 }) {
     const {updateValue, focusedComponent} = props;
     return <div style={{display: 'flex', flexDirection: 'column', position: 'relative'}}>
-        <div style={{fontStyle: 'italic', position: 'absolute', top: 0, left: 5}}>Padding</div>
+        <div style={{fontStyle: 'italic', position: 'absolute', top: 0, left: 5,color:'white'}}>Padding</div>
         <div style={{
             display: 'flex',
             justifyContent: 'center',
             padding: 5,
-            backgroundColor: '#CCC',
+            backgroundColor: colors.grey,
             borderRadius: 5
         }}>
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{display: 'flex', justifyContent: 'center'}}>
                     <notifiable.input
                         style={{width: '30%', padding: 5, borderRadius: 3, border: BORDER}} value={() => {
-                            console.log('We have padding top ',focusedComponent.get()?.style.paddingTop)
                         return focusedComponent.get()?.style.paddingTop ?? 0
                     }}
                         onChange={(e) => {
