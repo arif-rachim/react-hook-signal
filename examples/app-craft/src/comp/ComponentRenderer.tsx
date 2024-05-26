@@ -265,10 +265,9 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             const {
                 backgroundWhenDragOver,
                 borderWhenFocused,
-                borderWhenHovered,
-                ...initialStyle
-            } = ComponentConfig[componentType].style;
-
+                borderWhenHovered
+            } = ComponentConfig[componentType].dragAndDropStyle;
+            const initialStyle = {...ComponentConfig[componentType].style};
             const result: CSSProperties = style === undefined ? initialStyle : {...style};
             result.background = isDraggedOver ? backgroundWhenDragOver : initialStyle.background;
             result.border = isMouseOver ? borderWhenHovered : isSelected ? borderWhenFocused : initialStyle.border;
@@ -277,7 +276,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             if (!isInputComponent(component)) {
                 return result;
             }
-            const {borderWhenError} = (initialStyle as (typeof ComponentConfig)['Input']['style']);
+            const {borderWhenError} = ComponentConfig.Input.errorStyle;
             if (!isEmpty(component.errorMessage)) {
                 result.border = borderWhenError;
             }

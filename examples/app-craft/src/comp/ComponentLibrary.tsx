@@ -5,11 +5,12 @@ import {colors} from "../utils/colors.ts";
 
 interface BaseConfigType {
     icon: IconType,
-    style: CSSProperties & {
+    dragAndDropStyle: {
         borderWhenHovered: CSSProperties['border'],
         borderWhenFocused: CSSProperties['border'],
         backgroundWhenDragOver: CSSProperties['background']
-    }
+    },
+    style: CSSProperties
 }
 
 interface ComponentConfigType extends BaseConfigType {
@@ -18,7 +19,7 @@ interface ComponentConfigType extends BaseConfigType {
 
 interface InputConfigType extends BaseConfigType {
     label: 'Input'
-    style: ComponentConfigType['style'] & {
+    errorStyle: {
         borderWhenError: CSSProperties['border']
     }
 }
@@ -33,14 +34,16 @@ export const ComponentConfig = createConfig({
     Vertical: {
         label: 'Vertical',
         icon: RiLayoutHorizontalLine,
+        dragAndDropStyle: {
+            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
+            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+        },
         style: {
             display: 'flex',
             flexDirection: 'column',
             gap: 10,
-            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             background: 'rgba(0,0,0,0.05)',
-            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
-            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`,
             border: `1px solid rgba(0,0,0,0)`,
             minWidth: 20,
             minHeight: 20,
@@ -58,6 +61,11 @@ export const ComponentConfig = createConfig({
     Horizontal: {
         label: 'Horizontal',
         icon: RiLayoutVerticalLine,
+        dragAndDropStyle: {
+            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
+            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+        },
         style: {
             display: 'flex',
             flexDirection: 'row',
@@ -83,12 +91,16 @@ export const ComponentConfig = createConfig({
     Input: {
         label: 'Input',
         icon: RiInputField,
-        style: {
-            backgroundWhenDragOver: 'rgba(255,255,255,0.8)',
-            background: 'rgba(255,255,255,1)',
-            borderWhenHovered: `1px dashed #00B0F0`,
-            borderWhenFocused: `1px solid #0070C0`,
+        dragAndDropStyle: {
+            backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
+            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+        },
+        errorStyle: {
             borderWhenError: `1px solid ${colors.red}`,
+        },
+        style: {
+            background: 'rgba(255,255,255,1)',
             border: `1px solid rgba(0,0,0,0.2)`,
             minWidth: 20,
             minHeight: 20,
@@ -100,11 +112,13 @@ export const ComponentConfig = createConfig({
     Button: {
         label: 'Button',
         icon: RiCoinFill,
-        style: {
+        dragAndDropStyle: {
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
+            borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
+            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+        },
+        style: {
             background: 'rgba(0,0,0,0.05)',
-            borderWhenHovered: `1px dashed #00B0F0`,
-            borderWhenFocused: `1px solid #0070C0`,
             border: `1px solid rgba(0,0,0,0.1)`,
             minWidth: 20,
             minHeight: 20,
