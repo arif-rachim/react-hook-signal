@@ -8,6 +8,7 @@ import {BORDER} from "./comp/Border.ts";
 import {useEffect, useId} from "react";
 import {View} from "./HomeScreen.tsx";
 import {MdArrowBack} from "react-icons/md";
+import {colors} from "./utils/colors.ts";
 
 /**
  * Represents the main application comp.
@@ -101,13 +102,25 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                         <notifiable.div style={{
                             fontSize: 12,
                             lineHeight: 1.1,
-                            paddingRight: 5
+                            paddingRight: 5,
+                            color: colors.red
                         }}>{() => errors.get().name}</notifiable.div>
                     </div>
-                    <notifiable.input style={{border: BORDER, padding: '5px 5px', borderRadius: 5, lineHeight: 1}}
+                    <notifiable.input style={() => {
+                        const hasErrors = !isEmpty(errors.get().name);
+                        return {
+                            border: hasErrors ? `1px solid ${colors.red}` : BORDER,
+                            padding: '5px 5px',
+                            borderRadius: 5,
+                            lineHeight: 1
+                        }
+                    }}
                                       placeholder={'Component Name'} maxLength={20}
                                       value={() => viewSignal.get().name}
                                       onChange={(e) => {
+                                          const err = {...errors.get()};
+                                          delete err.name;
+                                          errors.set(err);
                                           const value = e.target.value;
                                           viewSignal.set({...viewSignal.get(), name: value});
                                       }}
@@ -120,13 +133,24 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                         <notifiable.div style={{
                             fontSize: 12,
                             lineHeight: 1.1,
-                            paddingRight: 5
+                            paddingRight: 5,
+                            color: colors.red
                         }}>{() => errors.get().description}</notifiable.div>
                     </div>
-                    <notifiable.input style={{border: BORDER, padding: '5px 5px', borderRadius: 5, lineHeight: 1}}
-                                      placeholder={'Description'} maxLength={255}
+                    <notifiable.input style={() => {
+                        const hasErrors = !isEmpty(errors.get().description);
+                        return {
+                            border: hasErrors ? `1px solid ${colors.red}` : BORDER,
+                            padding: '5px 5px',
+                            borderRadius: 5,
+                            lineHeight: 1
+                        }
+                    }} placeholder={'Description'} maxLength={255}
                                       value={() => viewSignal.get().description}
                                       onChange={(e) => {
+                                          const err = {...errors.get()};
+                                          delete err.description;
+                                          errors.set(err);
                                           const value = e.target.value;
                                           viewSignal.set({...viewSignal.get(), description: value});
                                       }}
