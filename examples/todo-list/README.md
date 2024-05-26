@@ -6,7 +6,7 @@ The Todo List project is a basic to-do application constructed as a demonstratio
 
 Reactive programming is a paradigm that's been gaining quite a bit of attention lately. In this paradigm, signals form a central concept. This project leverages these concepts within a React and TypeScript environment, showing the strength of combining strong static typing and reactive programming.
 
-![Solving rerendering problem in react using signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/1-just-signal-sample-code-lite.gif)
+![Solving rerendering problem in react using signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/todo-list.gif)
 
 ## Key Objectives
 

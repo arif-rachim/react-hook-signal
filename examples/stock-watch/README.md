@@ -1,9 +1,9 @@
-### Stock Watch Application with React and TC39 Signal Proposal
+<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/stock-watch-social.jpg" width="1200" height="675" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
 
 > Live demo https://www.rach.im/tc39-signal-proposal-react/index.html
 
 
-![Stock application demo using react and tc39 signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/3-adaptive-list-stock-application.gif)
+![Stock application demo using react and tc39 signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/stock-watch.gif)
 
 
 The TC39 Signal Proposal in conjunction with React to build a performant stock watch application. 
