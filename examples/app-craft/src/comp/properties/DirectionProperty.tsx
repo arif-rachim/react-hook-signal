@@ -18,6 +18,7 @@ export function DirectionProperty(props: {
         const newValue = e.target.value;
         updateValue((thisComponent) => {
             thisComponent.componentType = newValue as ('Horizontal' | 'Vertical');
+            thisComponent.style.flexDirection = newValue === 'Horizontal' ? 'row' : 'column';
         });
     }}
 >
