@@ -32,7 +32,7 @@ function isComponentOneParentOfComponentTwo(props: {
 export function ComponentRenderer(props: { comp: Component, renderAsTree?: boolean }) {
 
     const {components: componentsSignal, focusedComponent} = useContext(ComponentContext)!;
-    const componentSignal = useSignal(props.comp);
+    const componentSignal = useSignal<Component | undefined>(props.comp);
     const renderAsTreeSignal = useSignal(props.renderAsTree);
     const displayChildrenSignal = useSignal(true);
 
@@ -44,6 +44,9 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         const component = componentSignal.get();
         const layoutTreeValue = componentsSignal.get();
         const renderAsTree = renderAsTreeSignal.get();
+        if (component === null || component === undefined) {
+            return [];
+        }
         return component.children.map(child => {
             return <ComponentRenderer comp={layoutTreeValue.find(t => t.id === child)!} key={child}
                                       renderAsTree={renderAsTree}/>
@@ -67,7 +70,9 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             const self = componentSignal.get();
             // you cant drop to your children this will be madness you will loose the chain
             // we need to check does current component is actually parent of this if yes then reject it
-
+            if (self === undefined) {
+                return;
+            }
             const droppedInComponent = components.find(i => i.id === componentTypeOrElementId)!;
             const thisComponent = components.find(layout => layout.id === self.id) ?? {id: '', children: []};
             if (isComponentOneParentOfComponentTwo({
@@ -140,7 +145,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }
             e.stopPropagation();
             e.preventDefault();
-            const {id} = componentSignal.get();
+            const component = componentSignal.get();
+            if(component === undefined){
+                return;
+            }
+            const {id} = component;
             mouseOverComponentId.set(id);
         },
         onDragOver: (e) => {
@@ -148,7 +157,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 return;
             }
             e.stopPropagation();
-            const {componentType} = componentSignal.get();
+            const component = componentSignal.get();
+            if (component === undefined) {
+                return;
+            }
+            const {componentType} = component;
 
             if (isContainer(componentType)) {
                 e.preventDefault();
@@ -169,8 +182,12 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }
             e.stopPropagation();
             e.preventDefault();
-            const {componentType} = componentSignal.get();
-            if (componentType === 'Input') {
+
+            const component = componentSignal.get();
+            if (component === undefined) {
+                return;
+            }
+            if (component.componentType === 'Input') {
                 return;
             }
             const id = e.dataTransfer.getData('text/plain');
@@ -183,7 +200,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 return;
             }
             e.stopPropagation();
-            e.dataTransfer.setData('text/plain', componentSignal.get().id);
+            const component = componentSignal.get();
+            if (component === undefined) {
+                return;
+            }
+            e.dataTransfer.setData('text/plain', component.id);
         },
         onClick: (e) => {
             if (!isMouseEvent(e)) {
@@ -220,10 +241,13 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         style: () => {
             const renderAsTree = renderAsTreeSignal.get();
             const component = componentSignal.get();
+            if (component === undefined) {
+                return {};
+            }
             const {style, componentType} = component;
             const isDraggedOver = isDraggedOverSignal.get();
-            const isMouseOver = mouseOverComponentId.get() === componentSignal.get().id;
-            const isSelected = focusedComponent.get()?.id === componentSignal.get().id;
+            const isMouseOver = mouseOverComponentId.get() === component.id;
+            const isSelected = focusedComponent.get()?.id === component.id;
 
             if (renderAsTree) {
                 return {
@@ -238,7 +262,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }
             const initialStyle = ComponentConfig[componentType].style;
             let result = {...initialStyle};
-            console.log('We have initial Style',result);
+            console.log('We have initial Style', result);
             result.background = isDraggedOver ? initialStyle.backgroundWhenDragOver : initialStyle.background;
             result.border = isMouseOver ? initialStyle.borderWhenHovered : isSelected ? initialStyle.borderWhenFocused : initialStyle.border;
             result = {...result, ...style};
@@ -265,8 +289,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
 
                     const displayChildren = displayChildrenSignal.get();
                     const elementsArray = elements.get();
-                    const {componentType} = componentSignal.get();
-                    const hasChildren = Array.isArray(elementsArray) && elementsArray.length > 0 && isContainer(componentType);
+                    const component = componentSignal.get();
+                    if (component === undefined) {
+                        return <div></div>
+                    }
+                    const hasChildren = Array.isArray(elementsArray) && elementsArray.length > 0 && isContainer(component.componentType);
                     if (hasChildren) {
                         return <MdKeyboardArrowRight style={{
                             fontSize: 17,
@@ -284,7 +311,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                         position: 'relative',
                         minHeight: 0
                     }}>{() => {
-                        const Icon = ComponentConfig[componentSignal.get().componentType].icon ?? MdOutlineBrokenImage;
+                        const component = componentSignal.get();
+                        if (component === undefined) {
+                            return <div></div>
+                        }
+                        const Icon = ComponentConfig[component.componentType].icon ?? MdOutlineBrokenImage;
                         return <Icon style={{fontSize: 25, marginLeft: -3}}/>
                     }}</notifiable.div>
                     <notifiable.div>{() => {
@@ -299,7 +330,11 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
 
             <notifiable.div style={() => {
                 const displayChildren = displayChildrenSignal.get();
-                const {componentType} = componentSignal.get();
+                const component = componentSignal.get();
+                if (component === undefined) {
+                    return {}
+                }
+                const {componentType} = component;
                 return {
                     display: isContainer(componentType) && displayChildren ? 'flex' : 'none',
                     flexDirection: 'column',
@@ -311,6 +346,9 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         </div>
     }
     const component = componentSignal.get();
+    if (component === undefined) {
+        return <div></div>
+    }
     const {componentType} = component;
     if (isContainer(componentType)) {
         return <notifiable.div {...styleProps} {...dragAndDropProps}>
@@ -321,6 +359,9 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
 
         return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
+            if (component === undefined) {
+                return {};
+            }
             const result: CSSProperties = {
                 display: 'flex',
                 flexDirection: 'column'

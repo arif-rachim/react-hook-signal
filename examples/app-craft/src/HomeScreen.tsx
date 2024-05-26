@@ -4,6 +4,7 @@ import {BORDER} from "./comp/Border.ts";
 import LayoutBuilder from "./LayoutBuilder.tsx";
 import {Component} from "./comp/Component.ts";
 import {CSSProperties} from "react";
+import {guid} from "./utils/guid.ts";
 
 export interface View {
     id: string,
@@ -11,19 +12,38 @@ export interface View {
     description: string,
     tag: string[],
     components: Component[],
-    componentsRootId: string
+}
+function createNewViewObject(){
+    const tempId = guid();
+    const newView:View = {
+        id: tempId,
+        name: "",
+        description: "",
+        tag: [],
+        components: [{
+            style: {
+                height: '100%',
+                overflow: 'auto'
+            },
+            componentType: 'Vertical',
+            id: tempId,
+            parent: '',
+            children: []
+        }],
+    }
+    return newView;
 }
 
 export function HomeScreen() {
     const data = useSignal<Array<View>>([]);
     const showDetailPanel = useSignal<boolean>(false);
-    const selectedView = useSignal<View|undefined>(undefined);
+    const selectedView = useSignal<View>(createNewViewObject());
     return <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: 10, position: 'relative'}}>
         <h1>Layout</h1>
         <div style={{display: 'flex', flexDirection: 'row'}}>
             <button style={{border: BORDER, background: 'rgba(0,0,0,0.1)', borderRadius: 10, padding: '5px 10px'}}
                     onClick={() => {
-                        selectedView.set(undefined);
+                        selectedView.set(createNewViewObject());
                         showDetailPanel.set(true);
                     }}>Add View
             </button>
@@ -50,7 +70,15 @@ export function HomeScreen() {
 
             <Notifiable component={LayoutBuilder} value={selectedView} onChangeHandler={(view?:View) => {
                 if(view) {
-                    data.set([...data.get(),view]);
+                    // in reality this should add to the sql directly !
+                    const currentViews = [...data.get()];
+                    const currentPosition = currentViews.findIndex(i => i.id === view.id);
+                    if(currentPosition > -1) {
+                        currentViews.splice(currentPosition,1,view);
+                    }else {
+                        currentViews.push(view);
+                    }
+                    data.set(currentViews);
                 }
                 showDetailPanel.set(false);
             }}/>
@@ -63,7 +91,7 @@ const List = createResponsiveList<View & {edit?:unknown}, {onEdit:(param:View) =
     name: ({value}) => value,
     description: ({value}) => value,
     tag: ({value}) => value.join(', '),
-    edit : ({onEdit,item}) => <button style={{border:BORDER,borderRadius:5,padding:'5px 10px'}} onClick={() => {
+    edit : ({onEdit,item}) => <button style={{border:BORDER,borderRadius:5,padding:'2px 10px'}} onClick={() => {
         onEdit(item)
     }}>Edit</button>
 }).template({
@@ -73,7 +101,7 @@ const List = createResponsiveList<View & {edit?:unknown}, {onEdit:(param:View) =
             <Slot for={'name'} style={{width:200,padding:5,flexShrink:0,borderRight:BORDER}}/>
             <Slot for={'description'} style={{flexGrow:1,padding:5,borderRight:BORDER}}/>
             <Slot for={'tag'} style={{width:100,padding:5,flexShrink:0,borderRight:BORDER}}/>
-            <Slot for={'edit'} style={{width:55,padding:5,flexShrink:0}}/>
+            <Slot for={'edit'} style={{width:55,padding:3,flexShrink:0}}/>
         </div>
     }
 })

@@ -5,7 +5,6 @@ import {ComponentProperties} from "./comp/ComponentProperties.tsx";
 import {ComponentContext} from "./comp/ComponentContext.ts";
 import {ComponentLibrary} from "./comp/ComponentLibrary.tsx";
 import {BORDER} from "./comp/Border.ts";
-import {guid} from "./utils/guid.ts";
 import {useEffect, useId} from "react";
 import {View} from "./HomeScreen.tsx";
 import {MdArrowBack} from "react-icons/md";
@@ -13,25 +12,8 @@ import {MdArrowBack} from "react-icons/md";
 /**
  * Represents the main application comp.
  */
-function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void }) {
-    const tempId = guid();
-    const {components, ...view} = props.value ?? {
-        componentsRootId: tempId,
-        name: '',
-        description: '',
-        tag: [],
-        id: tempId,
-        components: [{
-            style: {
-                height: '100%',
-                overflow: 'auto'
-            },
-            componentType: 'Vertical',
-            id: tempId,
-            parent: '',
-            children: []
-        }]
-    };
+function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }) {
+    const {components, ...view} = props.value;
     const componentID = useId();
     const componentsSignal = useSignal<Component[]>(components);
     useEffect(() => {
@@ -45,7 +27,7 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
     const rightPanelWidthSignal = useSignal<number | undefined>(undefined);
     const leftPanelWidthSignal = useSignal<number | undefined>(150);
 
-    const errors = useSignal<Record<string,string>>({})
+    const errors = useSignal<Record<string, string>>({})
 
     function onMouseRightMove(e: MouseEvent) {
         const container = document.getElementById(componentID);
@@ -67,24 +49,25 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
         document.removeEventListener('mouseup', onMouseUp);
     }
 
-    function validateView(){
+    function validateView() {
         const view = viewSignal.get();
         const newErrors = {...errors.get()};
-        if(isEmpty(view.name)){
+        if (isEmpty(view.name)) {
             newErrors.name = 'Name is required';
-        }else{
+        } else {
             delete newErrors.name;
         }
-        if(isEmpty(view.description)){
+        if (isEmpty(view.description)) {
             newErrors.description = 'Description is required';
-        }else{
+        } else {
             delete newErrors.description;
         }
         errors.set(newErrors);
     }
-    function onSaveClicked(){
+
+    function onSaveClicked() {
         validateView();
-        if(Object.keys(errors.get()).length > 0){
+        if (Object.keys(errors.get()).length > 0) {
             return;
         }
         if (props.onChange) {
@@ -93,9 +76,18 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
             props.onChange({...view, components});
         }
     }
+
     return <ComponentContext.Provider value={{components: componentsSignal, focusedComponent: focusedComponentSignal}}>
         <div style={{display: 'flex', flexDirection: 'column', width: '100%', height: '100%', overflow: 'auto'}}>
-            <div style={{background: 'white', display: 'flex',alignItems:'flex-end', flexDirection: 'row', borderBottom: BORDER,gap:10,padding:10}}>
+            <div style={{
+                background: 'white',
+                display: 'flex',
+                alignItems: 'flex-end',
+                flexDirection: 'row',
+                borderBottom: BORDER,
+                gap: 10,
+                padding: 10
+            }}>
                 <div style={{padding: 5, cursor: 'pointer'}} onClick={() => {
                     if (props.onChange) {
                         props.onChange();
@@ -103,13 +95,17 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
                 }}>
                     <MdArrowBack style={{fontSize: 32}}/>
                 </div>
-                <label style={{display:'flex',flexDirection:'column'}}>
-                    <div style={{display: 'flex', flexDirection: 'row',alignItems:'flex-end'}}>
-                        <div style={{paddingLeft: 5,flexGrow:1}}>Name :</div>
-                        <notifiable.div style={{fontSize:12,lineHeight:1.1,paddingRight:5}}>{() => errors.get().name}</notifiable.div>
+                <label style={{display: 'flex', flexDirection: 'column'}}>
+                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+                        <div style={{paddingLeft: 5, flexGrow: 1}}>Name :</div>
+                        <notifiable.div style={{
+                            fontSize: 12,
+                            lineHeight: 1.1,
+                            paddingRight: 5
+                        }}>{() => errors.get().name}</notifiable.div>
                     </div>
                     <notifiable.input style={{border: BORDER, padding: '5px 5px', borderRadius: 5, lineHeight: 1}}
-                           placeholder={'Component Name'} maxLength={20}
+                                      placeholder={'Component Name'} maxLength={20}
                                       value={() => viewSignal.get().name}
                                       onChange={(e) => {
                                           const value = e.target.value;
@@ -144,7 +140,7 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
             </div>
 
             <div id={componentID} style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'auto'}}>
-            <notifiable.div style={() => {
+                <notifiable.div style={() => {
                     const widthValue = leftPanelWidthSignal.get();
                     return {
                         width: widthValue,
@@ -160,7 +156,7 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
                     <div style={{borderBottom: BORDER}}></div>
                     <div style={{display: 'flex', flexDirection: 'column', marginRight: 5, marginTop: 5}}>
                         <Notifiable component={ComponentRenderer} comp={() => {
-                            const componentsRootId = viewSignal.get().componentsRootId;
+                            const componentsRootId = viewSignal.get().id;
                             return componentsSignal.get().find(i => i.id === componentsRootId)!
                         }} renderAsTree={true}/>
                     </div>
@@ -172,10 +168,11 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
                      }}></div>
                 <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
                     <Notifiable component={ComponentRenderer} comp={() => {
-                        const componentsRootId = viewSignal.get().componentsRootId;
-                        return componentsSignal.get().find(i => i.id === componentsRootId)!
+                        const componentsRootId = viewSignal.get().id;
+                        return componentsSignal.get().find(i => i.id === componentsRootId)!;
                     }}/>
                 </div>
+
                 <div style={{height: '100%', backgroundColor: 'rgba(0,0,0,0.3)', width: 5, cursor: 'ew-resize'}}
                      onMouseDown={() => {
                          document.addEventListener('mousemove', onMouseRightMove);
@@ -197,7 +194,8 @@ function LayoutBuilder(props: { value?: View, onChange?: (param?: View) => void 
     </ComponentContext.Provider>
 }
 
-function isEmpty(value:unknown){
+function isEmpty(value: unknown) {
     return value === undefined || value === null || value.toString().trim() === ''
 }
+
 export default LayoutBuilder;
