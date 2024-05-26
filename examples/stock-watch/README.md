@@ -1,6 +1,6 @@
-<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/stock-watch-social.jpg" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
+<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/stock-watch-social.png" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
 
-> Live demo https://www.rach.im/tc39-signal-proposal-react/index.html
+> Live demo https://www.rach.im/stock-watch/index.html
 
 
 ![Stock application demo using react and tc39 signal](https://github.com/arif-rachim/react-hook-signal/raw/main/assets/stock-watch.gif)
