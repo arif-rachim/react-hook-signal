@@ -103,7 +103,8 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 parent: containerId,
                 children: [],
                 componentType: componentTypeOrElementId,
-                style: {...ComponentConfig[componentTypeOrElementId].style}
+                style: {...ComponentConfig[componentTypeOrElementId].style},
+                signals : []
             }
             if (componentTypeOrElementId === 'Input') {
                 newComponent = {
@@ -423,7 +424,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             }}
         </notifiable.button>
     }
-    throw new Error('Unable to get element type')
+    throw new Error('Unable to get element valueType')
 }
 
 function isMouseEvent(e: unknown): e is MouseEvent {

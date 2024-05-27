@@ -13,9 +13,10 @@ export interface View {
     tag: string[],
     components: Component[],
 }
-function createNewViewObject(){
+
+function createNewViewObject() {
     const tempId = guid();
-    const newView:View = {
+    const newView: View = {
         id: tempId,
         name: "",
         description: "",
@@ -28,7 +29,8 @@ function createNewViewObject(){
             componentType: 'Vertical',
             id: tempId,
             parent: '',
-            children: []
+            children: [],
+            signals : []
         }],
     }
     return newView;
@@ -49,11 +51,11 @@ export function HomeScreen() {
             </button>
         </div>
 
-        <List.List style={{border:BORDER,marginTop:10,borderRadius:10}} data={data} onEdit={(view:View) => {
+        <List.List style={{border: BORDER, marginTop: 10, borderRadius: 10}} data={data} onEdit={(view: View) => {
             selectedView.set(view);
             showDetailPanel.set(true);
         }}></List.List>
-        <notifiable.div style={():CSSProperties => {
+        <notifiable.div style={(): CSSProperties => {
             const _showDetailPanel = showDetailPanel.get();
             return {
                 display: 'flex',
@@ -63,19 +65,19 @@ export function HomeScreen() {
                 position: 'absolute',
                 top: 0,
                 left: _showDetailPanel ? 0 : '100%',
-                transition : 'left 300ms linear',
-                background:'white'
+                transition: 'left 300ms linear',
+                background: 'white'
             }
         }}>
 
-            <Notifiable component={LayoutBuilder} value={selectedView} onChangeHandler={(view?:View) => {
-                if(view) {
+            <Notifiable component={LayoutBuilder} value={selectedView} onChangeHandler={(view?: View) => {
+                if (view) {
                     // in reality this should add to the sql directly !
                     const currentViews = [...data.get()];
                     const currentPosition = currentViews.findIndex(i => i.id === view.id);
-                    if(currentPosition > -1) {
-                        currentViews.splice(currentPosition,1,view);
-                    }else {
+                    if (currentPosition > -1) {
+                        currentViews.splice(currentPosition, 1, view);
+                    } else {
                         currentViews.push(view);
                     }
                     data.set(currentViews);
@@ -86,22 +88,24 @@ export function HomeScreen() {
     </div>
 }
 
-const List = createResponsiveList<View & {edit?:unknown}, {onEdit:(param:View) => void}>().breakPoint({s: 300}).renderer({
+const List = createResponsiveList<View & { edit?: unknown }, {
+    onEdit: (param: View) => void
+}>().breakPoint({s: 300}).renderer({
     id: ({value}) => value.slice(-12),
     name: ({value}) => value,
     description: ({value}) => value,
     tag: ({value}) => value.join(', '),
-    edit : ({onEdit,item}) => <button style={{border:BORDER,borderRadius:5,padding:'2px 10px'}} onClick={() => {
+    edit: ({onEdit, item}) => <button style={{border: BORDER, borderRadius: 5, padding: '2px 10px'}} onClick={() => {
         onEdit(item)
     }}>Edit</button>
 }).template({
     s: ({Slot}) => {
-        return <div style={{display: 'flex', flexDirection: 'row',borderBottom:BORDER}}>
-            <Slot for={'id'} style={{width:150,padding:5,flexShrink:0,borderRight:BORDER}}/>
-            <Slot for={'name'} style={{width:200,padding:5,flexShrink:0,borderRight:BORDER}}/>
-            <Slot for={'description'} style={{flexGrow:1,padding:5,borderRight:BORDER}}/>
-            <Slot for={'tag'} style={{width:100,padding:5,flexShrink:0,borderRight:BORDER}}/>
-            <Slot for={'edit'} style={{width:55,padding:3,flexShrink:0}}/>
+        return <div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER}}>
+            <Slot for={'id'} style={{width: 150, padding: 5, flexShrink: 0, borderRight: BORDER}}/>
+            <Slot for={'name'} style={{width: 200, padding: 5, flexShrink: 0, borderRight: BORDER}}/>
+            <Slot for={'description'} style={{flexGrow: 1, padding: 5, borderRight: BORDER}}/>
+            <Slot for={'tag'} style={{width: 100, padding: 5, flexShrink: 0, borderRight: BORDER}}/>
+            <Slot for={'edit'} style={{width: 55, padding: 3, flexShrink: 0}}/>
         </div>
     }
 })

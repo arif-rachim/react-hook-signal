@@ -9,6 +9,8 @@ import {useEffect, useId} from "react";
 import {View} from "./HomeScreen.tsx";
 import {MdArrowBack} from "react-icons/md";
 import {colors} from "./utils/colors.ts";
+import ComponentSignals from "./comp/ComponentSignals.tsx";
+import {Tab} from "./tab/Tab.tsx";
 
 /**
  * Represents the main application comp.
@@ -116,7 +118,9 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                         }
                     }}
                                       placeholder={'Component Name'} maxLength={20}
-                                      value={() => viewSignal.get().name}
+                                      value={() => {
+                                          return viewSignal.get().name;
+                                      }}
                                       onChange={(e) => {
                                           const err = {...errors.get()};
                                           delete err.name;
@@ -211,12 +215,24 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                         flexDirection: 'column'
                     }
                 }}>
-                    <ComponentProperties/>
+                    <div style={{display: 'flex', flexDirection: 'column',flexGrow:1}}>
+                        <Tab style={{flexGrow:1}} items={{
+                            properties: {
+                                title: 'Properties',
+                                component: ComponentProperties
+                            },
+                            signals: {
+                                title: 'Signals',
+                                component: ComponentSignals
+                            }
+                        }}></Tab>
+                    </div>
                 </notifiable.div>
             </div>
         </div>
     </ComponentContext.Provider>
 }
+
 
 function isEmpty(value: unknown) {
     return value === undefined || value === null || value.toString().trim() === ''
