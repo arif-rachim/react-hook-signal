@@ -5,13 +5,14 @@ import {ComponentProperties} from "./comp/ComponentProperties.tsx";
 import {ComponentContext} from "./comp/ComponentContext.ts";
 import {ComponentLibrary} from "./comp/ComponentLibrary.tsx";
 import {BORDER} from "./comp/Border.ts";
-import {useEffect, useId} from "react";
+import {ChangeEvent, useEffect, useId} from "react";
 import {View} from "./HomeScreen.tsx";
 import {MdArrowBack} from "react-icons/md";
 import {colors} from "./utils/colors.ts";
 import ComponentSignals from "./comp/ComponentSignals.tsx";
 import {Tab} from "./tab/Tab.tsx";
 import {ComponentEvents} from "./comp/ComponentEvents.tsx";
+import Input from "./elements/Input.tsx";
 
 /**
  * Represents the main application comp.
@@ -109,7 +110,7 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                             color: colors.red
                         }}>{() => errors.get().name}</notifiable.div>
                     </div>
-                    <notifiable.input style={() => {
+                    <Notifiable component={Input} style={() => {
                         const hasErrors = !isEmpty(errors.get().name);
                         return {
                             border: hasErrors ? `1px solid ${colors.red}` : BORDER,
@@ -118,17 +119,17 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                             lineHeight: 1
                         }
                     }}
-                                      placeholder={'Component Name'} maxLength={20}
-                                      value={() => {
-                                          return viewSignal.get().name;
-                                      }}
-                                      onChange={(e) => {
-                                          const err = {...errors.get()};
-                                          delete err.name;
-                                          errors.set(err);
-                                          const value = e.target.value;
-                                          viewSignal.set({...viewSignal.get(), name: value});
-                                      }}
+                                placeholder={'Component Name'} maxLength={20}
+                                value={() => {
+                                    return viewSignal.get().name;
+                                }}
+                                onChangeHandler={(e: ChangeEvent<HTMLInputElement>) => {
+                                    const err = {...errors.get()};
+                                    delete err.name;
+                                    errors.set(err);
+                                    const value = e.target.value;
+                                    viewSignal.set({...viewSignal.get(), name: value});
+                                }}
                     />
 
                 </label>
@@ -226,9 +227,9 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                                 title: 'Signals',
                                 component: ComponentSignals
                             },
-                            events : {
-                                title : 'Events',
-                                component : ComponentEvents
+                            events: {
+                                title: 'Events',
+                                component: ComponentEvents
                             }
                         }}/>
                     </div>
