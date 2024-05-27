@@ -215,8 +215,8 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                         flexDirection: 'column'
                     }
                 }}>
-                    <div style={{display: 'flex', flexDirection: 'column',flexGrow:1}}>
-                        <Tab style={{flexGrow:1}} items={{
+                    <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
+                        <Tab style={{flexGrow: 1}} items={{
                             properties: {
                                 title: 'Properties',
                                 component: ComponentProperties
@@ -225,7 +225,7 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                                 title: 'Signals',
                                 component: ComponentSignals
                             }
-                        }}></Tab>
+                        }}/>
                     </div>
                 </notifiable.div>
             </div>

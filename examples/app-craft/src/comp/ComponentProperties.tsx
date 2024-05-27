@@ -16,6 +16,7 @@ import {ErrorMessageProperty} from "./properties/ErrorMessageProperty.tsx";
 import {isContainer} from "../utils/isContainer.ts";
 import {isLabelComponent} from "../utils/isLabelComponent.ts";
 import {isInputComponent} from "../utils/isInputComponent.ts";
+import {isEmpty} from "../utils/isEmpty.ts";
 
 
 export function ComponentProperties() {
@@ -24,7 +25,14 @@ export function ComponentProperties() {
     function updateValue(callback: (thisComponent: Component) => void) {
         const componentId = focusedComponent.get()?.id;
         const comps = [...components.get()];
-        const newFocusedComponent = {...comps.find(i => i.id === componentId)} as Component;
+        if(isEmpty(componentId)){
+            return;
+        }
+        const compToUpdate = comps.find(i => i.id === componentId);
+        if(isEmpty(compToUpdate)){
+            return;
+        }
+        const newFocusedComponent = {...compToUpdate} as Component;
         callback(newFocusedComponent);
         focusedComponent.set(newFocusedComponent);
         components.set([...components.get().filter(i => i.id !== componentId), newFocusedComponent]);

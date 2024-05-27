@@ -94,7 +94,9 @@ const List = createResponsiveList<View & { edit?: unknown }, {
     id: ({value}) => value.slice(-12),
     name: ({value}) => value,
     description: ({value}) => value,
-    tag: ({value}) => value.join(', '),
+    tag: ({value}) => {
+        return value.join(', ');
+    },
     edit: ({onEdit, item}) => <button style={{border: BORDER, borderRadius: 5, padding: '2px 10px'}} onClick={() => {
         onEdit(item)
     }}>Edit</button>

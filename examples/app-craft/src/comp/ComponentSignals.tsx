@@ -10,28 +10,26 @@ import {EffectDialogPanel} from "./signals/EffectDialogPanel.tsx";
 import {AnySignalType, Component, SignalComputed, SignalEffect, SignalState} from "./Component.ts";
 import {createResponsiveList} from "stock-watch/src/responsive-list/createResponsiveList.tsx";
 import {useComputed} from "react-hook-signal";
+import {isEmpty} from "../utils/isEmpty.ts";
 
 export default function ComponentSignals() {
     const {components, focusedComponent} = useContext(ComponentContext)!;
     const showModal = useShowModal()
 
-    function update(callback: (components: Array<Component>) => void) {
-        console.log("UPDATE CALLBACK SHIT !")
+    function update(callback: (components: Component) => void) {
+        const componentId = focusedComponent.get()?.id;
         const comps = [...components.get()];
-        callback(comps);
-        const currentFocusedComponent = focusedComponent.get();
-        if (currentFocusedComponent) {
-            const compIdx = comps.findIndex(i => i.id === currentFocusedComponent.id);
-            if (compIdx >= 0) {
-                const clone = {...comps[compIdx]};
-                comps.splice(compIdx, 1, clone);
-                focusedComponent.set(clone);
-                components.set(comps);
-            }
-        } else {
-            components.set(comps);
+        if(isEmpty(componentId)){
+            return;
         }
-
+        const compToUpdate = comps.find(i => i.id === componentId);
+        if(isEmpty(compToUpdate)){
+            return;
+        }
+        const newFocusedComponent = {...compToUpdate} as Component;
+        callback(newFocusedComponent);
+        components.set([...components.get().filter(i => i.id !== componentId), newFocusedComponent]);
+        focusedComponent.set(newFocusedComponent);
     }
 
     async function onAddState() {
@@ -42,17 +40,13 @@ export default function ComponentSignals() {
         const state: SignalState = await showModal(closePanel => {
             return <StateDialogPanel closePanel={closePanel}/>
         });
-        update(components => {
-            const comp = components.find(i => i.id === component.id);
-            if(comp !== undefined){
-                const idx = comp.signals.findIndex(i => i.id === state.id);
-                if (idx >= 0) {
-                    comp.signals = [...comp.signals.splice(idx, 1, state)];
-                } else {
-                    comp.signals = [...comp.signals, state];
-                }
+        update(comp => {
+            const idx = comp.signals.findIndex(i => i.id === state.id);
+            if (idx >= 0) {
+                comp.signals = [...comp.signals.splice(idx, 1, state)];
+            } else {
+                comp.signals = [...comp.signals, state];
             }
-
         });
     }
 
@@ -64,15 +58,12 @@ export default function ComponentSignals() {
         const computed: SignalComputed = await showModal(closePanel => {
             return <ComputedDialogPanel closePanel={closePanel}/>
         });
-        update(components => {
-            const comp = components.find(i => i.id === component.id);
-            if(comp !== undefined){
-                const idx = comp.signals.findIndex(i => i.id === computed.id);
-                if (idx >= 0) {
-                    comp.signals = [...comp.signals.splice(idx, 1, computed)];
-                } else {
-                    comp.signals = [...comp.signals, computed];
-                }
+        update(comp => {
+            const idx = comp.signals.findIndex(i => i.id === computed.id);
+            if (idx >= 0) {
+                comp.signals = [...comp.signals.splice(idx, 1, computed)];
+            } else {
+                comp.signals = [...comp.signals, computed];
             }
         });
     }
@@ -85,38 +76,41 @@ export default function ComponentSignals() {
         const effect: SignalEffect = await showModal(closePanel => {
             return <EffectDialogPanel closePanel={closePanel}/>
         });
-        update(components => {
-            const comp = components.find(i => i.id === component.id);
-            if(comp !== undefined){
-                const idx = comp.signals.findIndex(i => i.id === effect.id);
-                if (idx >= 0) {
-                    comp.signals = [...comp.signals.splice(idx, 1, effect)];
-                } else {
-                    comp.signals = [...comp.signals, effect];
-                }
+        update(comp => {
+            const idx = comp.signals.findIndex(i => i.id === effect.id);
+            if (idx >= 0) {
+                comp.signals = [...comp.signals.splice(idx, 1, effect)];
+            } else {
+                comp.signals = [...comp.signals, effect];
             }
         });
     }
+
     const signalList = useComputed(() => {
         let component = focusedComponent.get();
         const comps = components.get();
-        if(component === undefined){
+        if (component === undefined) {
             return [];
         }
-        let result:Array<AnySignalType & {component:string}> = (component.signals ?? []).map(i => ({...i,component:component?.id})) as Array<AnySignalType & {component:string}>
-        while (component && component.parent){
+        let result: Array<AnySignalType & { component: string }> = (component.signals ?? []).map(i => ({
+            ...i,
+            component: component?.id
+        })) as Array<AnySignalType & { component: string }>
+        while (component && component.parent) {
             const parent = comps.find(i => i.id === component?.parent);
-            if(parent){
-                const parentSignals = parent.signals.map(i => ({...i,component:parent.id})) as Array<AnySignalType & {component:string}>;
-                result = [...result,...parentSignals]
-                component = parent;
+            if (parent) {
+                const parentSignals = parent.signals.map(i => ({...i, component: parent.id})) as Array<AnySignalType & {
+                    component: string
+                }>;
+                result = [...result, ...parentSignals]
             }
+            component = parent;
         }
         return result;
     })
 
-    return <div style={{display: 'flex', flexDirection: 'column',flexGrow:1}} data-id={'KRACK'}>
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop:10}}>
+    return <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}} data-id={'KRACK'}>
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: 10}}>
             <button style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -160,22 +154,31 @@ export default function ComponentSignals() {
                 <div>Effect</div>
             </button>
         </div>
-        <SignalList.List data={signalList} style={{border:BORDER_NONE,borderBottomLeftRadius:5,borderBottomRightRadius:5}}></SignalList.List>
+        <SignalList.List data={signalList} style={{
+            border: BORDER_NONE,
+            borderBottomLeftRadius: 5,
+            borderBottomRightRadius: 5
+        }}></SignalList.List>
     </div>
 }
 
-const SignalList = createResponsiveList<{name?:string,type?:string,valueType?:string,component?:string}, Record<string, unknown>>().breakPoint({s: 300}).renderer({
+const SignalList = createResponsiveList<{
+    name?: string,
+    type?: string,
+    valueType?: string,
+    component?: string
+}, Record<string, unknown>>().breakPoint({s: 300}).renderer({
     name: ({value}) => value,
     type: ({value}) => value,
     valueType: ({value}) => value,
-    component : ({value}) => (value ?? '').substring(-5)
+    component: ({value}) => (value ?? '').substring(-5)
 }).template({
     s: ({Slot}) => {
-        return <div style={{display:'flex',flexDirection:'row',borderBottom:BORDER}}>
-            <Slot for={'name'} style={{width:'25%',flexShrink:0,borderRight:BORDER,padding:'2px 5px'}}/>
-            <Slot for={'type'} style={{width:'25%',flexShrink:0,borderRight:BORDER,padding:'2px 5px'}}/>
-            <Slot for={'valueType'} style={{width:'25%',flexShrink:0,borderRight:BORDER,padding:'2px 5px'}}/>
-            <Slot for={'component'} style={{width:'25%',flexShrink:0,padding:'2px 5px'}}/>
+        return <div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER}}>
+            <Slot for={'name'} style={{width: '25%', flexShrink: 0, borderRight: BORDER, padding: '2px 5px'}}/>
+            <Slot for={'type'} style={{width: '25%', flexShrink: 0, borderRight: BORDER, padding: '2px 5px'}}/>
+            <Slot for={'valueType'} style={{width: '25%', flexShrink: 0, borderRight: BORDER, padding: '2px 5px'}}/>
+            <Slot for={'component'} style={{width: '25%', flexShrink: 0, padding: '2px 5px'}}/>
         </div>
     }
 })
