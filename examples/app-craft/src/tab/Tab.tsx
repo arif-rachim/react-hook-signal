@@ -1,7 +1,7 @@
 import {CSSProperties, FC, useEffect} from "react";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import Visible from "../comp/Visible.tsx";
-import {BORDER, BORDER_NONE} from "../comp/Border.ts";
+import {BORDER_NONE} from "../comp/Border.ts";
 import {colors} from "../utils/colors.ts";
 
 export function Tab(props: { items: Record<string, TabItem>, style?: CSSProperties }) {
@@ -27,11 +27,9 @@ export function Tab(props: { items: Record<string, TabItem>, style?: CSSProperti
                 const focusedTabKey = focusedTab.get();
                 const isSelected = focusedTabKey === key;
                 return {
-                    borderTop: BORDER_NONE,
-                    borderLeft: BORDER_NONE,
+                    border: '1px solid rgba(0,0,0,0.1)',
                     borderBottom: BORDER_NONE,
-                    borderRight: BORDER,
-                    backgroundColor : isSelected ? colors.grey : colors.grey10,
+                    backgroundColor : isSelected ? colors.grey : colors.white,
                     color : isSelected ? '#FFF' : '#999',
                     borderTopLeftRadius : 5,
                     borderTopRightRadius : 5,
@@ -42,7 +40,7 @@ export function Tab(props: { items: Record<string, TabItem>, style?: CSSProperti
         })
     })
     return <div style={{display: 'flex', flexDirection: 'column', ...style}}>
-        <notifiable.div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER,paddingTop:5,paddingLeft:5,paddingRight:5}}>
+        <notifiable.div style={{display: 'flex', flexDirection: 'row', borderBottom: '1px solid rgba(0,0,0,0.3)',paddingTop:5,paddingLeft:5,paddingRight:5}}>
             {buttons}
         </notifiable.div>
         <notifiable.div style={{display: 'flex', flexDirection: 'column',flexGrow:1}}>

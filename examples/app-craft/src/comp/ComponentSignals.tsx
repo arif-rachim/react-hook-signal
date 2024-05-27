@@ -2,7 +2,6 @@ import {useContext} from "react";
 import {ComponentContext} from "./ComponentContext.ts";
 import {BORDER, BORDER_NONE} from "./Border.ts";
 import {colors} from "../utils/colors.ts";
-import {MdAdd} from "react-icons/md";
 import {useShowModal} from "../modal/useShowModal.ts";
 import {StateDialogPanel} from "./signals/StateDialogPanel.tsx";
 import {ComputedDialogPanel} from "./signals/ComputedDialogPanel.tsx";
@@ -11,7 +10,23 @@ import {AnySignalType, Component, SignalComputed, SignalEffect, SignalState} fro
 import {createResponsiveList} from "stock-watch/src/responsive-list/createResponsiveList.tsx";
 import {useComputed} from "react-hook-signal";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
+import {LuFunctionSquare} from "react-icons/lu";
+import {TiSortNumerically} from "react-icons/ti";
+import {AiOutlineFieldString} from "react-icons/ai";
+import {TbToggleLeftFilled} from "react-icons/tb";
+import {MdDataArray, MdDataObject} from "react-icons/md";
 
+const Icon = {
+    State : PiTrafficSignal,
+    Computed : LuFunctionSquare,
+    Effect: PiWebhooksLogo,
+    number : TiSortNumerically,
+    string : AiOutlineFieldString,
+    boolean : TbToggleLeftFilled,
+    Record : MdDataObject,
+    Array : MdDataArray
+}
 export default function ComponentSignals() {
     const {components, focusedComponent} = useContext(ComponentContext)!;
     const showModal = useShowModal()
@@ -109,76 +124,89 @@ export default function ComponentSignals() {
         return result;
     })
 
-    return <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}} data-id={'KRACK'}>
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: 10}}>
+    return <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
             <button style={{
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
+                width:'33.33%',
                 border: BORDER_NONE,
+                backgroundColor : colors.white,
                 borderRight: BORDER,
-                backgroundColor: colors.grey10,
                 cursor: 'pointer',
-                borderTopLeftRadius: 10,
-                borderBottomLeftRadius: 10,
                 alignItems: 'center',
-                padding: '5px 10px'
+                padding: '5px 10px',
+                gap:5
             }} onClick={onAddState}>
-                <MdAdd/>
-                <div>State</div>
+                <Icon.State style={{fontSize:22}} />
+                <div >Add State</div>
             </button>
             <button style={{
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
+                width:'33.33%',
                 border: BORDER_NONE,
+                backgroundColor : colors.white,
                 borderRight: BORDER,
-                backgroundColor: colors.grey10,
                 cursor: 'pointer',
                 alignItems: 'center',
-                padding: '5px 10px'
+                padding: '5px 10px',
+                gap:5
             }} onClick={onAddComputed}>
-                <MdAdd/>
-                <div>Computed</div>
+                <Icon.Computed style={{fontSize:22}} />
+                <div>Add Computed</div>
             </button>
             <button style={{
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
+                width:'33.33%',
                 border: BORDER_NONE,
-                backgroundColor: colors.grey10,
+                backgroundColor : colors.white,
                 cursor: 'pointer',
-                borderTopRightRadius: 10,
-                borderBottomRightRadius: 10,
                 alignItems: 'center',
-                padding: '5px 10px'
+                padding: '5px 10px',
+                gap:5
             }} onClick={onAddEffect}>
-                <MdAdd/>
-                <div>Effect</div>
+                <Icon.Effect style={{fontSize:22}} />
+                <div>Add Effect</div>
             </button>
         </div>
         <SignalList.List data={signalList} style={{
             border: BORDER_NONE,
+            borderTop:BORDER,
             borderBottomLeftRadius: 5,
-            borderBottomRightRadius: 5
+            borderBottomRightRadius: 5,
         }}></SignalList.List>
     </div>
 }
 
 const SignalList = createResponsiveList<{
     name?: string,
-    type?: string,
-    valueType?: string,
+    type?: keyof typeof Icon,
+    valueType?: keyof typeof Icon,
     component?: string
 }, Record<string, unknown>>().breakPoint({s: 300}).renderer({
     name: ({value}) => value,
-    type: ({value}) => value,
-    valueType: ({value}) => value,
-    component: ({value}) => (value ?? '').substring(-5)
+    type: ({value}) => {
+        const Ico = Icon[value!];
+        return <Ico style={{fontSize:22,marginBottom:-5,marginTop:-2}} />
+    },
+    valueType: ({value}) => {
+        if(value === undefined){
+            return <div style={{height:22}}></div>
+        }
+        const Ico = Icon[value!];
+        return <Ico style={{fontSize:22,marginBottom:-5,marginTop:-2}} />
+    },
+    component: ({value}) => (value ?? '').slice(-5)
 }).template({
     s: ({Slot}) => {
-        return <div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER}}>
-            <Slot for={'name'} style={{width: '25%', flexShrink: 0, borderRight: BORDER, padding: '2px 5px'}}/>
-            <Slot for={'type'} style={{width: '25%', flexShrink: 0, borderRight: BORDER, padding: '2px 5px'}}/>
-            <Slot for={'valueType'} style={{width: '25%', flexShrink: 0, borderRight: BORDER, padding: '2px 5px'}}/>
-            <Slot for={'component'} style={{width: '25%', flexShrink: 0, padding: '2px 5px'}}/>
+        return <div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER,alignItems:'center'}}>
+            <Slot for={'type'} style={{width: 25, flexShrink: 0, padding: '2px 0px'}}/>
+            <Slot for={'valueType'} style={{width: 25, flexShrink: 0, padding: '2px 0px'}}/>
+
+            <Slot for={'name'} style={{flexGrow:1, flexShrink: 0, padding: '2px 5px'}}/>
+            <Slot for={'component'} style={{width: 50, flexShrink: 0, padding: '2px 5px'}}/>
         </div>
     }
 })

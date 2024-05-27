@@ -24,7 +24,11 @@ function createNewViewObject() {
         components: [{
             style: {
                 height: '100%',
-                overflow: 'auto'
+                overflow: 'auto',
+                paddingLeft:10,
+                paddingRight:10,
+                paddingTop:10,
+                paddingBottom:10
             },
             componentType: 'Vertical',
             id: tempId,

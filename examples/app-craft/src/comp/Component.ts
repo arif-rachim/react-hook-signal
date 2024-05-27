@@ -22,6 +22,7 @@ export interface InputComponent extends LabelComponent {
 interface Signal{
     id: string,
     name: string,
+    type : unknown
 }
 export interface SignalState extends Signal{
     type: 'State',

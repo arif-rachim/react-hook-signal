@@ -11,6 +11,7 @@ import {MdArrowBack} from "react-icons/md";
 import {colors} from "./utils/colors.ts";
 import ComponentSignals from "./comp/ComponentSignals.tsx";
 import {Tab} from "./tab/Tab.tsx";
+import {ComponentEvents} from "./comp/ComponentEvents.tsx";
 
 /**
  * Represents the main application comp.
@@ -224,6 +225,10 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                             signals: {
                                 title: 'Signals',
                                 component: ComponentSignals
+                            },
+                            events : {
+                                title : 'Events',
+                                component : ComponentEvents
                             }
                         }}/>
                     </div>

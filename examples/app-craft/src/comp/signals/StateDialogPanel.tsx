@@ -121,7 +121,9 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
 
         <HorizontalLabel label={'Value :'}>
             <notifiable.input style={{border: BORDER_NONE, padding: 5}}
-                              value={() => valueSignal.get().value ?? ''}
+                              value={() => {
+                                  return (valueSignal.get().value ?? '') as string
+                              }}
                               onChange={(e) => {
                                   const value = e.target.value;
                                   update((item, errors) => {

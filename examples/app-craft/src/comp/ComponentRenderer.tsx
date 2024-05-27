@@ -1,10 +1,19 @@
-import {ChangeEvent, CSSProperties, DragEvent, MouseEvent, useContext, useEffect} from "react";
-import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import  {
+    ChangeEvent,
+    createContext,
+    CSSProperties,
+    DragEvent,
+    MouseEvent,
+    useContext,
+    useEffect,
+    useState
+} from "react";
+import {AnySignal, effect, notifiable, useComputed, useSignal} from "react-hook-signal";
 import {guid, isGuid} from "../utils/guid.ts";
 import {ComputableProps} from "../../../../src/components.ts";
 import {MdKeyboardArrowRight, MdOutlineBrokenImage} from "react-icons/md";
 import {Signal} from "signal-polyfill";
-import {Component, InputComponent, LabelComponent} from "./Component.ts";
+import {AnySignalType, Component, InputComponent, LabelComponent} from "./Component.ts";
 import {ComponentContext} from "./ComponentContext.ts";
 import {ComponentConfig} from "./ComponentLibrary.tsx";
 import {isInputComponent} from "../utils/isInputComponent.ts";
@@ -70,8 +79,6 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         if (isGuid(componentTypeOrElementId)) {
             const components = [...componentsSignal.get()];
             const self = componentSignal.get();
-            // you cant drop to your children this will be madness you will loose the chain
-            // we need to check does current component is actually parent of this if yes then reject it
             if (self === undefined) {
                 return;
             }
@@ -272,7 +279,6 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             const result: CSSProperties = style === undefined ? initialStyle : {...style};
             result.background = isDraggedOver ? backgroundWhenDragOver : initialStyle.background;
             result.border = isMouseOver ? borderWhenHovered : isSelected ? borderWhenFocused : initialStyle.border;
-            //result = {...result, ...style};
             // we alter this because width and height to be maintained by container
             if (!isInputComponent(component)) {
                 return result;
@@ -295,6 +301,57 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             return result;
         }
     } as const;
+
+    const parentContext = useContext(SignalContext);
+
+    const component = componentSignal.get();
+
+    const {componentType,signals} = component ?? {componentType:undefined,signals:[]};
+    const [signalsState] = useState(() => {
+        return signals.reduce((result,s) => {
+            if(s.type === 'State'){
+                result[s.id] = {
+                    type : s,
+                    signal : new Signal.State(s.value)
+                };
+            }
+            if(s.type === 'Computed'){
+                result[s.id] = {
+                    type : s,
+                    signal : new Signal.Computed(() => {
+                        const values:Array<unknown> = [];
+                        const paramNames:string[] = [];
+                        for (const key of s.dependencySignals) {
+                            const {signal,type} = result[key];
+                            values.push(signal.get());
+                            paramNames.push(type.name);
+                        }
+                        const fun = new Function(...paramNames,s.formula);
+                        return fun(...values);
+                    })
+                }
+            }
+            if(s.type === 'Effect'){
+                effect(() => {
+                    const values:Array<unknown> = [];
+                    const paramNames:string[] = [];
+                    for (const key of s.dependencySignals) {
+                        const {signal,type} = result[key];
+                        values.push(signal.get());
+                        paramNames.push(type.name);
+                    }
+                    const fun = new Function(...paramNames,s.formula);
+                    return fun(...values);
+                })
+            }
+            return result;
+        },{...parentContext} as Record<string, {signal:AnySignal<unknown>,type:AnySignalType}>);
+    });
+
+
+    if (componentType === undefined) {
+        return <div></div>
+    }
     if (renderAsTreeSignal.get()) {
         return <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
             <div style={{display: 'flex', flexDirection: 'row'}}>
@@ -360,19 +417,16 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             </notifiable.div>
         </div>
     }
-    const component = componentSignal.get();
-    if (component === undefined) {
-        return <div></div>
-    }
-    const {componentType} = component;
+
+    
     if (isContainer(componentType)) {
-        return <notifiable.div {...styleProps} {...dragAndDropProps}>
+        return <SignalContext.Provider value={signalsState}><notifiable.div {...styleProps} {...dragAndDropProps}>
             {elements}
-        </notifiable.div>
+        </notifiable.div></SignalContext.Provider>
     }
     if (componentType === 'Input' && isInputComponent(component)) {
 
-        return <notifiable.label style={(): CSSProperties => {
+        return <SignalContext.Provider value={signalsState}><notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             if (component === undefined) {
                 return {};
@@ -410,11 +464,10 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 }}</notifiable.div>
             </div>
             <notifiable.input {...inputProps} {...styleProps} autoComplete={'off'}/>
-
-        </notifiable.label>
+        </notifiable.label></SignalContext.Provider>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
-        return <notifiable.button {...styleProps} {...dragAndDropProps}>
+        return <SignalContext.Provider value={signalsState}><notifiable.button {...styleProps} {...dragAndDropProps}>
             {() => {
                 const component = componentSignal.get();
                 if (!isLabelComponent(component)) {
@@ -422,7 +475,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 }
                 return component.label
             }}
-        </notifiable.button>
+        </notifiable.button></SignalContext.Provider>
     }
     throw new Error('Unable to get element valueType')
 }
@@ -438,3 +491,6 @@ function isDragEvent(e: unknown): e is DragEvent {
 function isComponentType(value: unknown): value is  keyof typeof ComponentConfig {
     return typeof value === 'string' && Object.keys(ComponentConfig).indexOf(value) >= 0
 }
+
+
+const SignalContext = createContext<Record<string, {signal:AnySignal<unknown>,type:AnySignalType}>>({});
