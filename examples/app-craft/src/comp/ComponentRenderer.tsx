@@ -44,21 +44,23 @@ function isComponentOneParentOfComponentTwo(props: {
 function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: SignalStateContextData) {
     const result: HTMLAttributes<HTMLElement> = {};
     result.onClick = () => {
-        const properties: Record<string, unknown> = {};
+        const propsValues:Array<unknown> = [];
+        const propsName:string[] = [];
         const component = componentSignal.get();
-        if(component === undefined || isEmpty(component) || isEmpty(component?.events.onClick) || isEmpty(component?.events.onClick?.formula)){
+        if(component === undefined || component.events === undefined || component.events.onClick === undefined || component.events.onClick.formula === undefined){
             return;
         }
         for (const key of component.events.onClick!.signals) {
             const signalState = signalsState.find(s => s.type.id === key);
-            if (isEmpty(signalState) || signalState === undefined) {
+            if (signalState === undefined) {
                 continue;
             }
-            properties[convertToVarName(signalState.type.name)] = signalState.signal;
+            propsName.push(convertToVarName(signalState.type.name));
+            propsValues.push(signalState.signal);
         }
         try {
-            const fun = new Function('props', component.events.onClick?.formula ?? '');
-            fun(properties);
+            const fun = new Function(...propsName, component.events.onClick?.formula);
+            fun(...propsValues);
         } catch (err) {
             console.error(err);
         }

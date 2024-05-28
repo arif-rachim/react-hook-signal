@@ -81,7 +81,7 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
 
             <HorizontalLabel label={'Signals :'}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.map(s => ({label:s.name,value:s.id}))}
+                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:s.name,value:s.id}))}
                             value={() => valueSignal.get().signals}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {
@@ -103,10 +103,8 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
                         }
                         return convertToVarName(signalType.name)
                     });
-
                     const varName = convertToVarName(name);
-
-                    return `function ${varName}(props:{${[...signalDependencies,...additionalParam]}}){`
+                    return `function ${varName}(${[...signalDependencies,...additionalParam].join(',')}){`
                 }}</notifiable.code>
                 <notifiable.textarea style={{border: BORDER_NONE, padding: 5, height: 200,marginLeft:20}}
                                      defaultValue={() => valueSignal.get().formula ?? ''}
