@@ -10,7 +10,6 @@ function createNewValue(): SignalState {
     return {
         name: '',
         value: undefined,
-        privacy: 'private',
         valueType: 'string',
         id: guid(),
         type : 'State'
@@ -35,13 +34,14 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
     function validate() {
         const errors = {...errorsSignal.get()};
         const record = valueSignal.get();
-        const validateKeys:Array<keyof SignalState> = ['name', 'privacy', 'valueType'];
+        const validateKeys:Array<keyof SignalState> = ['name', 'valueType'];
         for (const key of validateKeys) {
             const value = record[key]
             if (isEmpty(value)) {
                 errors[key] = key + ' is required';
             }
         }
+        console.log('WE GOT ERRORS',errors);
         errorsSignal.set(errors);
     }
 
@@ -65,23 +65,6 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
         <div style={{fontSize: 16, marginBottom: 10}}>Add New State</div>
-        <Notifiable component={HorizontalLabel} label={'Privacy :'} style={() => {
-            return {
-                borderBottom : isEmpty(errorsSignal.get().privacy) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`
-            }}}>
-            <notifiable.select style={{border: BORDER_NONE, padding: 5}}
-                               value={() => valueSignal.get().privacy}
-                               onChange={(e) => {
-                                   const value = e.target.value as SignalState['privacy'];
-                                   update((item, errors) => {
-                                       item.privacy = value;
-                                       errors.privacy = '';
-                                   });
-                               }}>
-                <option>Private</option>
-                <option>Scope</option>
-            </notifiable.select>
-        </Notifiable>
         <Notifiable component={HorizontalLabel} label={'Type :'} style={() => {
             return {
                 borderBottom : isEmpty(errorsSignal.get().type) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`
@@ -92,7 +75,7 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
                                    const value = e.target.value as SignalState['valueType'];
                                    update((item, errors) => {
                                        item.valueType = value;
-                                       errors.type = '';
+                                       errors.valueType = '';
                                    });
                                }}>
                 <option>number</option>

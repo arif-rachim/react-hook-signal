@@ -1,19 +1,19 @@
-import  {
+import {
     ChangeEvent,
     createContext,
     CSSProperties,
     DragEvent,
+    HTMLAttributes,
     MouseEvent,
     useContext,
-    useEffect,
-    useState
+    useEffect
 } from "react";
-import {AnySignal, effect, notifiable, useComputed, useSignal} from "react-hook-signal";
+import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 import {guid, isGuid} from "../utils/guid.ts";
 import {ComputableProps} from "../../../../src/components.ts";
 import {MdKeyboardArrowRight, MdOutlineBrokenImage} from "react-icons/md";
 import {Signal} from "signal-polyfill";
-import {AnySignalType, Component, InputComponent, LabelComponent} from "./Component.ts";
+import {AnySignalType, Component, InputComponent, LabelComponent, SignalStateContextData} from "./Component.ts";
 import {ComponentContext} from "./ComponentContext.ts";
 import {ComponentConfig} from "./ComponentLibrary.tsx";
 import {isInputComponent} from "../utils/isInputComponent.ts";
@@ -21,6 +21,7 @@ import {isContainer} from "../utils/isContainer.ts";
 import {isLabelComponent} from "../utils/isLabelComponent.ts";
 import {colors} from "../utils/colors.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {convertToVarName} from "../utils/convertToVarName.ts";
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -40,7 +41,63 @@ function isComponentOneParentOfComponentTwo(props: {
     return false
 }
 
-export function ComponentRenderer(props: { comp: Component, renderAsTree?: boolean }) {
+function populateEvents(component: Component, signalsState: SignalStateContextData) {
+    const result: HTMLAttributes<HTMLElement> = {};
+    if (component?.events.onClick?.formula) {
+        const properties: Record<string, unknown> = {}
+
+        for (const key of component.events.onClick.signals) {
+            const signalState = signalsState.find(s => s.type.id === key);
+            if (isEmpty(signalState) || signalState === undefined) {
+                continue;
+            }
+            properties[convertToVarName(signalState.type.name)] = signalState.signal;
+        }
+        // where the hell the signal lives !
+        result.onClick = () => {
+            try {
+                const fun = new Function('props', component.events.onClick?.formula ?? '');
+                fun(properties);
+            } catch (err) {
+                console.error(err);
+            }
+
+        }
+    }
+
+    if (isInputComponent(component) && component.events.onChange?.formula) {
+        const properties: Record<string, unknown> = {}
+        for (const key of component.events.onChange.signals) {
+            const signalState = signalsState.find(s => s.type.id === key);
+            if (isEmpty(signalState) || signalState === undefined) {
+                continue;
+            }
+            properties[convertToVarName(signalState.type.name)] = signalState.signal
+
+        }
+
+        // where the hell the signal lives !
+        result.onChange = (e) => {
+            try {
+                properties.value = 'value' in e.target ? e.target.value : '';
+                const fun = new Function('props', component.events.onClick?.formula ?? '');
+                fun(properties);
+            } catch (err) {
+                console.error(err);
+            }
+
+        }
+    }
+    return result;
+}
+
+
+export function ComponentRenderer(props: {
+    comp: Component,
+    renderAsTree?: boolean,
+    signals: AnySignal<AnySignalType[]>,
+    signalContext: AnySignal<SignalStateContextData>
+}) {
 
     const {components: componentsSignal, focusedComponent} = useContext(ComponentContext)!;
     const componentSignal = useSignal<Component | undefined>(props.comp);
@@ -60,7 +117,8 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
         }
         return component.children.map(child => {
             return <ComponentRenderer comp={layoutTreeValue.find(t => t.id === child)!} key={child}
-                                      renderAsTree={renderAsTree}/>
+                                      renderAsTree={renderAsTree} signals={props.signals}
+                                      signalContext={props.signalContext}/>
         })
     });
 
@@ -111,7 +169,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 children: [],
                 componentType: componentTypeOrElementId,
                 style: {...ComponentConfig[componentTypeOrElementId].style},
-                signals : []
+                events: {}
             }
             if (componentTypeOrElementId === 'Input') {
                 newComponent = {
@@ -171,9 +229,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             if (component === undefined) {
                 return;
             }
-            const {componentType} = component;
-
-            if (isContainer(componentType)) {
+            if (isContainer(component)) {
                 e.preventDefault();
             }
             isDraggedOverSignal.set(true);
@@ -301,54 +357,8 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             return result;
         }
     } as const;
-
-    const parentContext = useContext(SignalContext);
-
     const component = componentSignal.get();
-
-    const {componentType,signals} = component ?? {componentType:undefined,signals:[]};
-    const [signalsState] = useState(() => {
-        return signals.reduce((result,s) => {
-            if(s.type === 'State'){
-                result[s.id] = {
-                    type : s,
-                    signal : new Signal.State(s.value)
-                };
-            }
-            if(s.type === 'Computed'){
-                result[s.id] = {
-                    type : s,
-                    signal : new Signal.Computed(() => {
-                        const values:Array<unknown> = [];
-                        const paramNames:string[] = [];
-                        for (const key of s.dependencySignals) {
-                            const {signal,type} = result[key];
-                            values.push(signal.get());
-                            paramNames.push(type.name);
-                        }
-                        const fun = new Function(...paramNames,s.formula);
-                        return fun(...values);
-                    })
-                }
-            }
-            if(s.type === 'Effect'){
-                effect(() => {
-                    const values:Array<unknown> = [];
-                    const paramNames:string[] = [];
-                    for (const key of s.dependencySignals) {
-                        const {signal,type} = result[key];
-                        values.push(signal.get());
-                        paramNames.push(type.name);
-                    }
-                    const fun = new Function(...paramNames,s.formula);
-                    return fun(...values);
-                })
-            }
-            return result;
-        },{...parentContext} as Record<string, {signal:AnySignal<unknown>,type:AnySignalType}>);
-    });
-
-
+    const {componentType} = component ?? {componentType: undefined};
     if (componentType === undefined) {
         return <div></div>
     }
@@ -365,7 +375,7 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                     if (component === undefined) {
                         return <div></div>
                     }
-                    const hasChildren = Array.isArray(elementsArray) && elementsArray.length > 0 && isContainer(component.componentType);
+                    const hasChildren = Array.isArray(elementsArray) && elementsArray.length > 0 && isContainer(component);
                     if (hasChildren) {
                         return <MdKeyboardArrowRight style={{
                             fontSize: 17,
@@ -406,9 +416,8 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 if (component === undefined) {
                     return {}
                 }
-                const {componentType} = component;
                 return {
-                    display: isContainer(componentType) && displayChildren ? 'flex' : 'none',
+                    display: isContainer(component) && displayChildren ? 'flex' : 'none',
                     flexDirection: 'column',
                     paddingLeft: 10
                 };
@@ -417,16 +426,18 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
             </notifiable.div>
         </div>
     }
-
-    
-    if (isContainer(componentType)) {
-        return <SignalContext.Provider value={signalsState}><notifiable.div {...styleProps} {...dragAndDropProps}>
-            {elements}
-        </notifiable.div></SignalContext.Provider>
+    const signalsState = props.signalContext.get();
+    if (isContainer(component)) {
+        const events = populateEvents(component!, signalsState);
+        return <SignalStateContext.Provider value={signalsState}>
+            <notifiable.div {...styleProps} {...dragAndDropProps} {...events}>
+                {elements}
+            </notifiable.div>
+        </SignalStateContext.Provider>
     }
     if (componentType === 'Input' && isInputComponent(component)) {
-
-        return <SignalContext.Provider value={signalsState}><notifiable.label style={(): CSSProperties => {
+        const events = populateEvents(component!, signalsState);
+        return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             if (component === undefined) {
                 return {};
@@ -463,11 +474,12 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                     return component.errorMessage
                 }}</notifiable.div>
             </div>
-            <notifiable.input {...inputProps} {...styleProps} autoComplete={'off'}/>
-        </notifiable.label></SignalContext.Provider>
+            <notifiable.input {...inputProps} {...styleProps} {...events} autoComplete={'off'}/>
+        </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
-        return <SignalContext.Provider value={signalsState}><notifiable.button {...styleProps} {...dragAndDropProps}>
+        const events = populateEvents(component!, signalsState);
+        return <notifiable.button {...styleProps} {...dragAndDropProps} {...events}>
             {() => {
                 const component = componentSignal.get();
                 if (!isLabelComponent(component)) {
@@ -475,9 +487,9 @@ export function ComponentRenderer(props: { comp: Component, renderAsTree?: boole
                 }
                 return component.label
             }}
-        </notifiable.button></SignalContext.Provider>
+        </notifiable.button>
     }
-    throw new Error('Unable to get element valueType')
+    throw new Error('Unable to get element valueType ' + component?.componentType)
 }
 
 function isMouseEvent(e: unknown): e is MouseEvent {
@@ -492,5 +504,4 @@ function isComponentType(value: unknown): value is  keyof typeof ComponentConfig
     return typeof value === 'string' && Object.keys(ComponentConfig).indexOf(value) >= 0
 }
 
-
-const SignalContext = createContext<Record<string, {signal:AnySignal<unknown>,type:AnySignalType}>>({});
+const SignalStateContext = createContext<SignalStateContextData>([])

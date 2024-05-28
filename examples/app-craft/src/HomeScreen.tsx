@@ -2,17 +2,10 @@ import {createResponsiveList} from "stock-watch/src/responsive-list/createRespon
 import {Notifiable, notifiable, useSignal} from "react-hook-signal";
 import {BORDER} from "./comp/Border.ts";
 import LayoutBuilder from "./LayoutBuilder.tsx";
-import {Component} from "./comp/Component.ts";
+import {View} from "./comp/Component.ts";
 import {CSSProperties} from "react";
 import {guid} from "./utils/guid.ts";
 
-export interface View {
-    id: string,
-    name: string,
-    description: string,
-    tag: string[],
-    components: Component[],
-}
 
 function createNewViewObject() {
     const tempId = guid();
@@ -21,20 +14,21 @@ function createNewViewObject() {
         name: "",
         description: "",
         tag: [],
+        signals: [],
         components: [{
             style: {
                 height: '100%',
                 overflow: 'auto',
-                paddingLeft:10,
-                paddingRight:10,
-                paddingTop:10,
-                paddingBottom:10
+                paddingLeft: 10,
+                paddingRight: 10,
+                paddingTop: 10,
+                paddingBottom: 10
             },
             componentType: 'Vertical',
             id: tempId,
             parent: '',
             children: [],
-            signals : []
+            events : {}
         }],
     }
     return newView;

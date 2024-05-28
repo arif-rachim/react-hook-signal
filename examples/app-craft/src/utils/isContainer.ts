@@ -1,4 +1,7 @@
+import {Component} from "../comp/Component.ts";
 
-export function isContainer(type?: string): boolean {
-    return type === 'Vertical' || type === 'Horizontal';
+
+export function isContainer<T extends (Component|undefined)>(comp: T): boolean {
+
+    return comp !== undefined && comp !== null && 'componentType' in comp && ['Vertical','Horizontal'].indexOf(comp.componentType) >= 0;
 }

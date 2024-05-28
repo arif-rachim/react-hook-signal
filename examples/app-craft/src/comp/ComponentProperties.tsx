@@ -17,10 +17,13 @@ import {isContainer} from "../utils/isContainer.ts";
 import {isLabelComponent} from "../utils/isLabelComponent.ts";
 import {isInputComponent} from "../utils/isInputComponent.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {OnClickEvent} from "./events/OnClickEvent.tsx";
+import {OnChangeEvent} from "./events/OnChangeEvent.tsx";
+import {HorizontalLabelContext} from "./properties/HorizontalLabel.tsx";
 
 
 export function ComponentProperties() {
-    const {components, focusedComponent} = useContext(ComponentContext)!;
+    const {components, focusedComponent,signals} = useContext(ComponentContext)!;
 
     function updateValue(callback: (thisComponent: Component) => void) {
         const componentId = focusedComponent.get()?.id;
@@ -40,8 +43,9 @@ export function ComponentProperties() {
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 0}}>
         <notifiable.div>{() => focusedComponent.get()?.id.slice(-5)}</notifiable.div>
+        <HorizontalLabelContext.Provider value={{labelWidth: 80}}>
         <Visible when={() => {
-            return isContainer(focusedComponent.get()?.componentType)
+            return isContainer(focusedComponent.get())
         }}>
             <DirectionProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
         </Visible>
@@ -69,12 +73,21 @@ export function ComponentProperties() {
         <ErrorMessageProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
                               updateValue={updateValue  as unknown as (callback:(thisComponent:InputComponent) => void) => void} />
         </Visible>
+
+            <OnClickEvent focusedComponent={focusedComponent as Signal.State<Component>} updateValue={updateValue} signals={signals} />
+            <Visible when={() => {
+                return isInputComponent(focusedComponent.get())
+            }}>
+                <OnChangeEvent focusedComponent={focusedComponent as Signal.State<InputComponent>} updateValue={updateValue} signals={signals} />
+            </Visible>
+        </HorizontalLabelContext.Provider>
         <div style={{display: 'flex'}}>
             <WidthProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
             <HeightProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
         </div>
         <MarginProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
         <PaddingProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
+
     </div>
 }
 

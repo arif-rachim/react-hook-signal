@@ -1,5 +1,6 @@
 import {CSSProperties} from "react";
 import {ComponentConfig} from "./ComponentLibrary.tsx";
+import {AnySignal} from "../../../../dist";
 
 export interface Component {
     style: CSSProperties,
@@ -7,7 +8,15 @@ export interface Component {
     parent: string,
     children: string[],
     componentType: keyof (typeof ComponentConfig),
-    signals: Array<AnySignalType>
+    events : {
+        onClick ?: EventType
+    }
+}
+
+export interface EventType{
+    signals: string[],
+    formula: string,
+    name:string,
 }
 
 export interface LabelComponent extends Component {
@@ -17,8 +26,12 @@ export interface LabelComponent extends Component {
 export interface InputComponent extends LabelComponent {
     value: unknown,
     errorMessage: string,
-    name: string
+    name: string,
+    events : LabelComponent['events'] & {
+        onChange ?: EventType
+    }
 }
+
 interface Signal{
     id: string,
     name: string,
@@ -28,21 +41,33 @@ export interface SignalState extends Signal{
     type: 'State',
     valueType: "number" | "string" | "boolean" | "Record" | "Array",
     value: unknown,
-    privacy: 'private' | 'inheritable'
 }
 
 export interface SignalComputed extends Signal{
     type: 'Computed',
     valueType: number | string | boolean | Record<string, unknown> | Array<unknown>,
-    dependencySignals: string[],
+    signalDependencies: string[],
     formula: string,
-    privacy: 'private' | 'inheritable'
 }
 
 export interface SignalEffect extends Signal{
     type: 'Effect'
-    dependencySignals: string[],
+    signalDependencies: string[],
+    mutableSignals : string[],
     formula: string,
 }
 
-export type AnySignalType = SignalState | SignalComputed | SignalEffect
+
+export type AnySignalType = SignalState | SignalComputed | SignalEffect;
+
+
+export interface View {
+    id: string,
+    name: string,
+    description: string,
+    tag: string[],
+    components: Component[],
+    signals : AnySignalType[]
+}
+
+export type SignalStateContextData = Array<{signal: AnySignal<unknown>,type: AnySignalType}>
