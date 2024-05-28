@@ -8,7 +8,7 @@ function PopupPanel<T>(props: PopupParameter<T>) {
     const popupPanelContainerRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        const {containerScrolled, tapOutside, escapePressed} = config.dismissal ?? {
+        const { tapOutside, escapePressed} = config.dismissal ?? {
             containerScrolled: true,
             tapOutside: true,
             escapePressed: true,
@@ -58,7 +58,7 @@ function PopupPanel<T>(props: PopupParameter<T>) {
             })
         }
         return () => deregisterListeners.forEach(listener => listener())
-    }, [config, scrollY]);
+    }, [config]);
 
     const {left, top, width, height} = config.targetRect;
     const anchor = config.anchor ?? 'bottom-left';

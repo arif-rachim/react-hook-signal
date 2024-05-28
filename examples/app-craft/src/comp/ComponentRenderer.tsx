@@ -41,33 +41,40 @@ function isComponentOneParentOfComponentTwo(props: {
     return false
 }
 
-function populateEvents(component: Component, signalsState: SignalStateContextData) {
+function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: SignalStateContextData) {
     const result: HTMLAttributes<HTMLElement> = {};
-    if (component?.events.onClick?.formula) {
-        const properties: Record<string, unknown> = {}
-
-        for (const key of component.events.onClick.signals) {
+    result.onClick = () => {
+        const properties: Record<string, unknown> = {};
+        const component = componentSignal.get();
+        if(component === undefined || isEmpty(component) || isEmpty(component?.events.onClick) || isEmpty(component?.events.onClick?.formula)){
+            return;
+        }
+        for (const key of component.events.onClick!.signals) {
             const signalState = signalsState.find(s => s.type.id === key);
             if (isEmpty(signalState) || signalState === undefined) {
                 continue;
             }
             properties[convertToVarName(signalState.type.name)] = signalState.signal;
         }
-        // where the hell the signal lives !
-        result.onClick = () => {
-            try {
-                const fun = new Function('props', component.events.onClick?.formula ?? '');
-                fun(properties);
-            } catch (err) {
-                console.error(err);
-            }
-
+        try {
+            const fun = new Function('props', component.events.onClick?.formula ?? '');
+            fun(properties);
+        } catch (err) {
+            console.error(err);
         }
+
     }
 
-    if (isInputComponent(component) && component.events.onChange?.formula) {
+    result.onChange = (e) => {
         const properties: Record<string, unknown> = {}
-        for (const key of component.events.onChange.signals) {
+        const component = componentSignal.get();
+        if(!isInputComponent(component)){
+            return;
+        }
+        if(isEmpty(component) || isEmpty(component?.events.onChange) || isEmpty(component?.events.onChange?.formula)){
+            return;
+        }
+        for (const key of component.events.onChange!.signals) {
             const signalState = signalsState.find(s => s.type.id === key);
             if (isEmpty(signalState) || signalState === undefined) {
                 continue;
@@ -75,19 +82,15 @@ function populateEvents(component: Component, signalsState: SignalStateContextDa
             properties[convertToVarName(signalState.type.name)] = signalState.signal
 
         }
-
-        // where the hell the signal lives !
-        result.onChange = (e) => {
-            try {
-                properties.value = 'value' in e.target ? e.target.value : '';
-                const fun = new Function('props', component.events.onClick?.formula ?? '');
-                fun(properties);
-            } catch (err) {
-                console.error(err);
-            }
-
+        try {
+            properties.value = 'value' in e.target ? e.target.value : '';
+            const fun = new Function('props', component.events.onClick?.formula ?? '');
+            fun(properties);
+        } catch (err) {
+            console.error(err);
         }
     }
+
     return result;
 }
 
@@ -428,7 +431,7 @@ export function ComponentRenderer(props: {
     }
     const signalsState = props.signalContext.get();
     if (isContainer(component)) {
-        const events = populateEvents(component!, signalsState);
+        const events = populateEvents(componentSignal, signalsState);
         return <SignalStateContext.Provider value={signalsState}>
             <notifiable.div {...styleProps} {...dragAndDropProps} {...events}>
                 {elements}
@@ -436,7 +439,7 @@ export function ComponentRenderer(props: {
         </SignalStateContext.Provider>
     }
     if (componentType === 'Input' && isInputComponent(component)) {
-        const events = populateEvents(component!, signalsState);
+        const events = populateEvents(componentSignal, signalsState);
         return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             if (component === undefined) {
@@ -478,7 +481,7 @@ export function ComponentRenderer(props: {
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
-        const events = populateEvents(component!, signalsState);
+        const events = populateEvents(componentSignal, signalsState);
         return <notifiable.button {...styleProps} {...dragAndDropProps} {...events}>
             {() => {
                 const component = componentSignal.get();

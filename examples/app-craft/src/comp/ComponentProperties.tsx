@@ -78,7 +78,7 @@ export function ComponentProperties() {
             <Visible when={() => {
                 return isInputComponent(focusedComponent.get())
             }}>
-                <OnChangeEvent focusedComponent={focusedComponent as Signal.State<InputComponent>} updateValue={updateValue} signals={signals} />
+                <OnChangeEvent focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>} updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void} signals={signals} />
             </Visible>
         </HorizontalLabelContext.Provider>
         <div style={{display: 'flex'}}>

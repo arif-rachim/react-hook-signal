@@ -41,7 +41,6 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
                 errors[key] = key + ' is required';
             }
         }
-        console.log('WE GOT ERRORS',errors);
         errorsSignal.set(errors);
     }
 

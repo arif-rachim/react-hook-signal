@@ -1,14 +1,11 @@
 import {AnySignalType, EventType} from "../Component.ts";
-import {guid} from "../../utils/guid.ts";
 import {notifiable, Notifiable, useComputed, useSignal} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {HorizontalLabel, HorizontalLabelContext} from "../properties/HorizontalLabel.tsx";
 import {colors} from "../../utils/colors.ts";
 import {BORDER, BORDER_NONE} from "../Border.ts";
 import {Checkbox} from "../../elements/Checkbox.tsx";
-import {capFirstLetter, lowFirstLetter} from "../../utils/capFirstLetter.ts";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
-import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 
 function createNewValue(): EventType {
     return {

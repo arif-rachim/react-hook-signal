@@ -43,7 +43,6 @@ export function ComputedDialogPanel(props: { closePanel: (param?: SignalComputed
                 errors[key] = key + ' is required';
             }
         }
-        console.log("WE GOT ERRORS",errors)
         errorsSignal.set(errors);
     }
 
