@@ -13,7 +13,7 @@ import {LuFunctionSquare} from "react-icons/lu";
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbToggleLeftFilled} from "react-icons/tb";
-import {MdDataArray, MdDataObject} from "react-icons/md";
+import {MdDataArray, MdDataObject, MdEdit} from "react-icons/md";
 
 const Icon = {
     State: PiTrafficSignal,
@@ -42,12 +42,27 @@ export default function ComponentSignals() {
             }
         });
         const signalValues = signals.get();
+        signals.set([...signalValues, state]);
+    }
+
+    async function onEditSignal(signal:AnySignalType){
+        const state = await showModal<AnySignalType>(closePanel => {
+            if(signal.type === 'State'){
+                return <StateDialogPanel closePanel={closePanel} value={signal}/>
+            }
+            if(signal.type === 'Computed'){
+                return <ComputedDialogPanel closePanel={closePanel} signals={signals.get()} value={signal}/>
+            }
+            if(signal.type === 'Effect'){
+                return <EffectDialogPanel closePanel={closePanel} signals={signals.get()} value={signal}/>
+            }
+            return <></>
+        });
+        const signalValues = signals.get();
         const idx = signalValues.findIndex(i => i.id === state.id);
         if (idx >= 0) {
             signalValues.splice(idx, 1, state);
             signals.set([...signalValues])
-        } else {
-            signals.set([...signalValues, state]);
         }
     }
 
@@ -104,7 +119,7 @@ export default function ComponentSignals() {
             borderTop: BORDER,
             borderBottomLeftRadius: 5,
             borderBottomRightRadius: 5,
-        }}></SignalList.List>
+        }} onEditSignal={onEditSignal}></SignalList.List>
     </div>
 }
 
@@ -112,8 +127,9 @@ const SignalList = createResponsiveList<{
     name?: string,
     type?: keyof typeof Icon,
     valueType?: keyof typeof Icon,
-    component?: string
-}, Record<string, unknown>>().breakPoint({s: 300}).renderer({
+    component?: string,
+    edit?: string
+}, {onEditSignal:(param:AnySignalType) => void}>().breakPoint({s: 300}).renderer({
     name: ({value}) => value,
     type: ({value}) => {
         const Ico = Icon[value!];
@@ -126,7 +142,17 @@ const SignalList = createResponsiveList<{
         const Ico = Icon[value!];
         return <Ico style={{fontSize: 22, marginBottom: -5, marginTop: -2}}/>
     },
-    component: ({value}) => (value ?? '').slice(-5)
+    component: ({value}) => (value ?? '').slice(-5),
+    edit: ({item,onEditSignal}) => {
+        return <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 2
+        }} onClick={() => {
+            onEditSignal(item as AnySignalType);
+        }}><MdEdit style={{fontSize: 16}}/></div>
+    }
 }).template({
     s: ({Slot}) => {
         return <div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER, alignItems: 'center'}}>
@@ -135,6 +161,9 @@ const SignalList = createResponsiveList<{
 
             <Slot for={'name'} style={{flexGrow: 1, flexShrink: 0, padding: '2px 5px'}}/>
             <Slot for={'component'} style={{width: 50, flexShrink: 0, padding: '2px 5px'}}/>
+            <Slot for={'edit'}
+                  style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: 25, flexShrink: 0}}
+            />
         </div>
     }
 })

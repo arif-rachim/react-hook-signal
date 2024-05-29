@@ -63,7 +63,7 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
     }
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
-        <div style={{fontSize: 16, marginBottom: 10}}>Add New State</div>
+        <div style={{fontSize: 16, marginBottom: 10}}>State Signal</div>
         <Notifiable component={HorizontalLabel} label={'Type :'} style={() => {
             return {
                 borderBottom : isEmpty(errorsSignal.get().type) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`
@@ -77,11 +77,11 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
                                        errors.valueType = '';
                                    });
                                }}>
-                <option>number</option>
-                <option>string</option>
-                <option>boolean</option>
-                <option>Record</option>
-                <option>Array</option>
+                <option value={'number'}>Number</option>
+                <option value={'string'}>String</option>
+                <option value={'boolean'}>Boolean</option>
+                <option value={'Record'}>Record</option>
+                <option value={'Array'}>Array</option>
             </notifiable.select>
         </Notifiable>
         <Notifiable component={HorizontalLabel} label={'Name :'} style={() => {

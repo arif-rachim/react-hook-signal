@@ -66,7 +66,7 @@ export function EffectDialogPanel(props: { closePanel: (param?: SignalEffect) =>
 
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10, width: 600}}>
-            <div style={{fontSize: 16, marginBottom: 10}}>Add New Effect</div>
+            <div style={{fontSize: 16, marginBottom: 10}}>Signal Effect</div>
             <Notifiable component={HorizontalLabel}  label={'Name :'} style={() => {
                 return {
                     borderBottom: isEmpty(errorsSignal.get().name) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`
@@ -99,7 +99,7 @@ export function EffectDialogPanel(props: { closePanel: (param?: SignalEffect) =>
             </HorizontalLabel>
             <HorizontalLabel label={'Mutable Signals :'}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:s.name,value:s.id}))}
+                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:convertToSetterName(s.name),value:s.id}))}
                             value={() => valueSignal.get().mutableSignals}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {

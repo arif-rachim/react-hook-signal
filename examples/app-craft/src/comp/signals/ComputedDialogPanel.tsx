@@ -66,7 +66,7 @@ export function ComputedDialogPanel(props: { closePanel: (param?: SignalComputed
 
     return <HorizontalLabelContext.Provider value={{labelWidth :130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10,width:600}}>
-            <div style={{fontSize: 16, marginBottom: 10}}>Add New Computed</div>
+            <div style={{fontSize: 16, marginBottom: 10}}>Computed Signal</div>
             <Notifiable component={HorizontalLabel} label={'Type :'} style={() => {
                 return {
                     borderBottom: isEmpty(errorsSignal.get().type) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`
@@ -75,17 +75,17 @@ export function ComputedDialogPanel(props: { closePanel: (param?: SignalComputed
                 <notifiable.select style={{border: BORDER_NONE, padding: 5}}
                                    value={() => valueSignal.get().valueType.toString()}
                                    onChange={(e) => {
-                                       const value = e.target.value as SignalState['type'];
+                                       const value = e.target.value as SignalState['valueType'];
                                        update((item, errors) => {
                                            item.valueType = value;
                                            errors.valueType = '';
                                        });
                                    }}>
-                    <option>number</option>
-                    <option>string</option>
-                    <option>boolean</option>
-                    <option>Record</option>
-                    <option>Array</option>
+                    <option value={'number'}>Number</option>
+                    <option value={'string'}>String</option>
+                    <option value={'boolean'}>Boolean</option>
+                    <option value={'Record'}>Record</option>
+                    <option value={'Array'}>Array</option>
                 </notifiable.select>
             </Notifiable>
             <Notifiable component={HorizontalLabel} label={'Name :'} style={() => {
