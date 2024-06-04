@@ -14,7 +14,8 @@ export interface Component {
 }
 
 export interface EventType {
-    signals: string[],
+    signalDependencies: string[],
+    mutableSignals: string[],
     formula: string,
     name: string,
 }
@@ -32,8 +33,6 @@ export interface InputComponent extends LabelComponent {
     }
 }
 
-type ValueType = "number" | "string" | "boolean" | "Record" | "Array";
-
 interface Signal {
     id: string,
     name: string,
@@ -42,13 +41,11 @@ interface Signal {
 
 export interface SignalState extends Signal {
     type: 'State',
-    valueType: ValueType,
     value: unknown,
 }
 
 export interface SignalComputed extends Signal {
     type: 'Computed',
-    valueType: ValueType,
     signalDependencies: string[],
     formula: string,
 }

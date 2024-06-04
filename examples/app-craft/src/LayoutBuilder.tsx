@@ -292,11 +292,11 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
 }
 
 
-function isEmpty(value: unknown) {
+export function isEmpty(value: unknown) {
     return value === undefined || value === null || value.toString().trim() === ''
 }
 
-function isStateSignal(value:unknown):value is Signal.State<unknown>{
+export function isStateSignal(value:unknown):value is Signal.State<unknown>{
     return value !== undefined && value !== null && typeof value === 'object' && 'set' in value && 'get' in value;
 }
 

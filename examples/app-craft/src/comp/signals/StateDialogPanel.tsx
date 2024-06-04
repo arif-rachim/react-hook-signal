@@ -10,7 +10,6 @@ function createNewValue(): SignalState {
     return {
         name: '',
         value: undefined,
-        valueType: 'string',
         id: guid(),
         type : 'State'
     }
@@ -34,7 +33,7 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
     function validate() {
         const errors = {...errorsSignal.get()};
         const record = valueSignal.get();
-        const validateKeys:Array<keyof SignalState> = ['name', 'valueType'];
+        const validateKeys:Array<keyof SignalState> = ['name'];
         for (const key of validateKeys) {
             const value = record[key]
             if (isEmpty(value)) {
@@ -64,26 +63,6 @@ export function StateDialogPanel(props: { closePanel: (param?: SignalState) => v
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
         <div style={{fontSize: 16, marginBottom: 10}}>State Signal</div>
-        <Notifiable component={HorizontalLabel} label={'Type :'} style={() => {
-            return {
-                borderBottom : isEmpty(errorsSignal.get().type) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`
-            }}}>
-            <notifiable.select style={{border: BORDER_NONE, padding: 5}}
-                               value={() => valueSignal.get().valueType}
-                               onChange={(e) => {
-                                   const value = e.target.value as SignalState['valueType'];
-                                   update((item, errors) => {
-                                       item.valueType = value;
-                                       errors.valueType = '';
-                                   });
-                               }}>
-                <option value={'number'}>Number</option>
-                <option value={'string'}>String</option>
-                <option value={'boolean'}>Boolean</option>
-                <option value={'Record'}>Record</option>
-                <option value={'Array'}>Array</option>
-            </notifiable.select>
-        </Notifiable>
         <Notifiable component={HorizontalLabel} label={'Name :'} style={() => {
             return {
                 borderBottom : isEmpty(errorsSignal.get().name) ? `1px solid ${colors.grey10}` : `1px solid ${colors.red}`

@@ -6,12 +6,14 @@ import {colors} from "../../utils/colors.ts";
 import {BORDER, BORDER_NONE} from "../Border.ts";
 import {Checkbox} from "../../elements/Checkbox.tsx";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
+import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 
 function createNewValue(): EventType {
     return {
         formula : '',
         name : '',
-        signals : []
+        signalDependencies : [],
+        mutableSignals : []
     }
 }
 
@@ -79,32 +81,49 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
                 />
             </Notifiable>
 
-            <HorizontalLabel label={'Signals :'}>
+            <HorizontalLabel label={'Signals Dependency:'}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:s.name,value:s.id}))}
-                            value={() => valueSignal.get().signals}
+                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:convertToVarName(s.name),value:s.id}))}
+                            value={() => valueSignal.get().signalDependencies}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {
-                                    item.signals = values;
+                                    item.signalDependencies = values;
                                     errors.signals = '';
                                 })
                             }}
                 ></Notifiable>
-
             </HorizontalLabel>
-
+            <HorizontalLabel label={'Mutable Signals :'}>
+                <Notifiable component={Checkbox}
+                            data={() => signals.filter(s => s.type === 'State').map(s => ({label:convertToSetterName(s.name),value:s.id}))}
+                            value={() => valueSignal.get().mutableSignals}
+                            onChangeHandler={(values: string[]) => {
+                                update((item, errors) => {
+                                    item.mutableSignals = values;
+                                    errors.mutableSignals = '';
+                                })
+                            }}
+                ></Notifiable>
+            </HorizontalLabel>
             <HorizontalLabel label={'Formula :'} style={{alignItems: 'flex-start'}} styleLabel={{marginTop: 2}}>
                 <notifiable.code style={{marginTop:3}}>{() => {
                     const name = valueSignal.get().name;
-                    const signalDependencies = valueSignal.get().signals.map(depId => {
+                    const signalDependencies = valueSignal.get().signalDependencies.map(depId => {
                         const signalType = signals.find(s => s.id === depId);
                         if(signalType === undefined){
                             return '';
                         }
                         return convertToVarName(signalType.name)
                     });
+                    const mutableSignals = valueSignal.get().mutableSignals.map(depId => {
+                        const signalType = signals.find(s => s.id === depId);
+                        if(signalType === undefined){
+                            return '';
+                        }
+                        return convertToSetterName(signalType.name)
+                    });
                     const varName = convertToVarName(name);
-                    return `function ${varName}(${[...signalDependencies,...additionalParam].join(',')}){`
+                    return `function ${varName}(${[...signalDependencies,...mutableSignals,...additionalParam].join(',')}){`
                 }}</notifiable.code>
                 <notifiable.textarea style={{border: BORDER_NONE, padding: 5, height: 200,marginLeft:20}}
                                      defaultValue={() => valueSignal.get().formula ?? ''}

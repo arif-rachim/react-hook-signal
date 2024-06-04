@@ -86,7 +86,7 @@ export function EffectDialogPanel(props: { closePanel: (param?: SignalEffect) =>
 
             <HorizontalLabel label={'Signal Dependencies :'}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:s.name,value:s.id}))}
+                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:convertToVarName(s.name),value:s.id}))}
                             value={() => valueSignal.get().signalDependencies}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {
@@ -99,7 +99,7 @@ export function EffectDialogPanel(props: { closePanel: (param?: SignalEffect) =>
             </HorizontalLabel>
             <HorizontalLabel label={'Mutable Signals :'}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:convertToSetterName(s.name),value:s.id}))}
+                            data={() => signals.filter(s => s.type === 'State').map(s => ({label:convertToSetterName(s.name),value:s.id}))}
                             value={() => valueSignal.get().mutableSignals}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {

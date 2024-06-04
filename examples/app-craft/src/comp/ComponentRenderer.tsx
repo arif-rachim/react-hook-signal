@@ -22,6 +22,8 @@ import {isLabelComponent} from "../utils/isLabelComponent.ts";
 import {colors} from "../utils/colors.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {convertToVarName} from "../utils/convertToVarName.ts";
+import {convertToSetterName} from "../utils/convertToSetterName.ts";
+import {isStateSignal} from "../LayoutBuilder.tsx";
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -41,25 +43,40 @@ function isComponentOneParentOfComponentTwo(props: {
     return false
 }
 
-function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: SignalStateContextData) {
-    const result: HTMLAttributes<HTMLElement> = {};
-    result.onClick = () => {
+function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: SignalStateContextData,result:HTMLAttributes<HTMLElement>) {
+    const {onClick,onChange} = result;
+    result.onClick = (event) => {
+        if(onClick){
+            onClick(event);
+        }
         const propsValues:Array<unknown> = [];
         const propsName:string[] = [];
         const component = componentSignal.get();
-        if(component === undefined || component.events === undefined || component.events.onClick === undefined || component.events.onClick.formula === undefined){
+        if(isEmpty(component)|| isEmpty(component?.events) || isEmpty(component?.events.onClick) || isEmpty(component?.events.onClick?.formula)){
             return;
         }
-        for (const key of component.events.onClick!.signals) {
+        for (const key of component!.events.onClick!.signalDependencies) {
             const signalState = signalsState.find(s => s.type.id === key);
             if (signalState === undefined) {
                 continue;
             }
             propsName.push(convertToVarName(signalState.type.name));
-            propsValues.push(signalState.signal);
+            propsValues.push(signalState.signal.get());
+        }
+        for (const key of component!.events.onClick!.mutableSignals) {
+            const signalState = signalsState.find(s => s.type.id === key);
+            if (signalState === undefined) {
+                continue;
+            }
+            propsName.push(convertToSetterName(signalState.type.name));
+            propsValues.push((value:unknown) => {
+                if(isStateSignal(signalState.signal)){
+                    signalState.signal.set(value)
+                }
+            });
         }
         try {
-            const fun = new Function(...propsName, component.events.onClick?.formula);
+            const fun = new Function(...propsName, component!.events.onClick?.formula ?? '');
             fun(...propsValues);
         } catch (err) {
             console.error(err);
@@ -67,29 +84,40 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
 
     }
 
-    result.onChange = (e) => {
-        const properties: Record<string, unknown> = {}
+    result.onChange = (event) => {
+        if(onChange){
+            onChange(event);
+        }
+        const propsValues:Array<unknown> = [];
+        const propsName:string[] = [];
         const component = componentSignal.get();
-        if(!isInputComponent(component)){
-            return;
-        }
-        if(isEmpty(component) || isEmpty(component?.events.onChange) || isEmpty(component?.events.onChange?.formula)){
-            return;
-        }
-        for (const key of component.events.onChange!.signals) {
-            const signalState = signalsState.find(s => s.type.id === key);
-            if (isEmpty(signalState) || signalState === undefined) {
-                continue;
+        if(isInputComponent(component)){
+            for (const key of component.events.onChange!.signalDependencies) {
+                const signalState = signalsState.find(s => s.type.id === key);
+                if (signalState === undefined) {
+                    continue;
+                }
+                propsName.push(convertToVarName(signalState.type.name));
+                propsValues.push(signalState.signal.get());
             }
-            properties[convertToVarName(signalState.type.name)] = signalState.signal
-
-        }
-        try {
-            properties.value = 'value' in e.target ? e.target.value : '';
-            const fun = new Function('props', component.events.onClick?.formula ?? '');
-            fun(properties);
-        } catch (err) {
-            console.error(err);
+            for (const key of component.events.onChange!.mutableSignals) {
+                const signalState = signalsState.find(s => s.type.id === key);
+                if (signalState === undefined) {
+                    continue;
+                }
+                propsName.push(convertToSetterName(signalState.type.name));
+                propsValues.push((value:unknown) => {
+                    if(isStateSignal(signalState.signal)){
+                        signalState.signal.set(value)
+                    }
+                });
+            }
+            try {
+                const fun = new Function(...propsName, component.events.onChange?.formula ?? '');
+                fun(...propsValues);
+            } catch (err) {
+                console.error(err);
+            }
         }
     }
 
@@ -202,15 +230,7 @@ export function ComponentRenderer(props: {
         }
     }
 
-    const dragAndDropProps: ComputableProps<{
-        draggable: boolean,
-        onMouseOver: (e: unknown) => void,
-        onDragOver: (e: unknown) => void,
-        onDragLeave: (e: unknown) => void,
-        onDrop: (e: unknown) => void,
-        onDragStart: (e: unknown) => void,
-        onClick: (e: unknown) => void,
-    }> = {
+    const dragAndDropProps: HTMLAttributes<HTMLElement> = {
         draggable: true,
         onMouseOver: (e) => {
             if (!isMouseEvent(e)) {
@@ -433,15 +453,16 @@ export function ComponentRenderer(props: {
     }
     const signalsState = props.signalContext.get();
     if (isContainer(component)) {
-        const events = populateEvents(componentSignal, signalsState);
+        populateEvents(componentSignal, signalsState,dragAndDropProps);
         return <SignalStateContext.Provider value={signalsState}>
-            <notifiable.div {...styleProps} {...dragAndDropProps} {...events}>
+            <notifiable.div {...styleProps} {...dragAndDropProps}>
                 {elements}
             </notifiable.div>
         </SignalStateContext.Provider>
     }
     if (componentType === 'Input' && isInputComponent(component)) {
-        const events = populateEvents(componentSignal, signalsState);
+        const events:HTMLAttributes<HTMLElement> = {};
+        populateEvents(componentSignal, signalsState,events);
         return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             if (component === undefined) {
@@ -483,8 +504,8 @@ export function ComponentRenderer(props: {
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
-        const events = populateEvents(componentSignal, signalsState);
-        return <notifiable.button {...styleProps} {...dragAndDropProps} {...events}>
+        populateEvents(componentSignal, signalsState,dragAndDropProps);
+        return <notifiable.button {...styleProps} {...dragAndDropProps}>
             {() => {
                 const component = componentSignal.get();
                 if (!isLabelComponent(component)) {
