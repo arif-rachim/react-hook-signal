@@ -7,6 +7,7 @@ import {BORDER, BORDER_NONE} from "../Border.ts";
 import {Checkbox} from "../../elements/Checkbox.tsx";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
 import {convertToSetterName} from "../../utils/convertToSetterName.ts";
+import {Editor} from "@monaco-editor/react";
 
 function createNewValue(): EventType {
     return {
@@ -60,9 +61,30 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
         }
         closePanel(valueSignal.get())
     }
-
+    const functionName = useComputed(() => {
+        const name = valueSignal.get().name;
+        const signalDependencies = valueSignal.get().signalDependencies.map(depId => {
+            const signalType = signals.find(s => s.id === depId);
+            if(signalType === undefined){
+                return '';
+            }
+            return convertToVarName(signalType.name);
+        });
+        const mutableSignals = valueSignal.get().mutableSignals.map(depId => {
+            const signalType = signals.find(s => s.id === depId);
+            if(signalType === undefined){
+                return '';
+            }
+            return convertToSetterName(signalType.name)
+        });
+        const varName = convertToVarName(name);
+        return `function ${varName}(${[...signalDependencies,...mutableSignals,...additionalParam].join(',')}){`
+    });
+    const codeSignal = useComputed(() => {
+        return [functionName.get(),valueSignal.get().formula,'}'].join('\n');
+    });
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
-        <div style={{display: 'flex', flexDirection: 'column', padding: 10, width: 600}}>
+        <div style={{display: 'flex', flexDirection: 'column', padding: 10,width:'80vh',height:'80vh'}}>
             <div style={{fontSize: 16, marginBottom: 10}}>On Event</div>
             <Notifiable component={HorizontalLabel} label={'Name :'} style={() => {
                 return {
@@ -105,38 +127,21 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
                             }}
                 ></Notifiable>
             </HorizontalLabel>
-            <HorizontalLabel label={'Formula :'} style={{alignItems: 'flex-start'}} styleLabel={{marginTop: 2}}>
-                <notifiable.code style={{marginTop:3}}>{() => {
-                    const name = valueSignal.get().name;
-                    const signalDependencies = valueSignal.get().signalDependencies.map(depId => {
-                        const signalType = signals.find(s => s.id === depId);
-                        if(signalType === undefined){
-                            return '';
-                        }
-                        return convertToVarName(signalType.name)
-                    });
-                    const mutableSignals = valueSignal.get().mutableSignals.map(depId => {
-                        const signalType = signals.find(s => s.id === depId);
-                        if(signalType === undefined){
-                            return '';
-                        }
-                        return convertToSetterName(signalType.name)
-                    });
-                    const varName = convertToVarName(name);
-                    return `function ${varName}(${[...signalDependencies,...mutableSignals,...additionalParam].join(',')}){`
-                }}</notifiable.code>
-                <notifiable.textarea style={{border: BORDER_NONE, padding: 5, height: 200,marginLeft:20}}
-                                     defaultValue={() => valueSignal.get().formula ?? ''}
-                                     onChange={(e) => {
-                                         const value = e.target.value.toString();
-                                         update((item, errors) => {
-                                             item.formula = value;
-                                             errors.formula = '';
-                                         });
-                                     }}
-                />
-                <code>{'}'}</code>
-            </HorizontalLabel>
+            <Notifiable component={Editor}
+                        height="100%"
+                        language="javascript"
+                        value={() => codeSignal.get()}
+                        options={{
+                            selectOnLineNumbers: true
+                        }}
+                        onChangeHandler={(value?:string) => {
+                            const formula = (value??'').trim().split('\n').slice(1,-1).join('\n');
+                            update((item, errors) => {
+                                item.formula = formula;
+                                errors.formula = '';
+                            });
+                        }}
+            />
 
             <div style={{display: 'flex', flexDirection: 'row', marginTop: 10, gap: 10, justifyContent: 'flex-end'}}>
                 <button onClick={onSave} style={{
