@@ -24,9 +24,16 @@ export interface LabelComponent extends Component {
     label: string
 }
 
+export interface FormulaValue{
+    name:string,
+    formula:string,
+    signalDependencies: string[]
+
+}
+
 export interface InputComponent extends LabelComponent {
-    value: unknown,
-    errorMessage: string,
+    value: FormulaValue,
+    errorMessage: FormulaValue,
     name: string,
     events: LabelComponent['events'] & {
         onChange?: EventType

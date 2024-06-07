@@ -1,4 +1,4 @@
-import {AnySignalType, EventType} from "../Component.ts";
+import {AnySignalType, FormulaValue} from "../Component.ts";
 import {Notifiable, useComputed, useSignal} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {HorizontalLabel, HorizontalLabelContext} from "../properties/HorizontalLabel.tsx";
@@ -6,21 +6,25 @@ import {colors} from "../../utils/colors.ts";
 import {BORDER} from "../Border.ts";
 import {Checkbox} from "../../elements/Checkbox.tsx";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
-import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 import {Editor} from "@monaco-editor/react";
 
-function createNewValue(name:string): EventType {
+function createNewValue(name: string): FormulaValue {
     return {
-        formula : '',
-        name : name,
-        signalDependencies : [],
-        mutableSignals : []
+        formula: '',
+        signalDependencies: [],
+        name,
     }
 }
 
-export function EventDialogPanel(props: { closePanel: (param?: EventType) => void, value?: EventType,signals:AnySignalType[],additionalParam:string[],name:string }) {
-    const {closePanel,signals,additionalParam,name} = props;
-    const valueSignal = useSignal<EventType>(props.value ?? createNewValue(name));
+export function FormulaDialogPanel(props: {
+    closePanel: (param?: FormulaValue) => void,
+    value: FormulaValue,
+    signals: AnySignalType[],
+    additionalParam?: string[],
+    name: string
+}) {
+    const {closePanel, signals, additionalParam, name} = props;
+    const valueSignal = useSignal<FormulaValue>(props.value?.name === '' ? createNewValue(name) : props.value);
     const errorsSignal = useSignal<Record<string, string>>({});
     const hasErrorSignal = useComputed(() => {
         const errors = errorsSignal.get();
@@ -36,7 +40,7 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
     function validate() {
         const errors = {...errorsSignal.get()};
         const record = valueSignal.get();
-        const validateKeys: Array<keyof EventType> = ['formula'];
+        const validateKeys: Array<keyof FormulaValue> = ['formula'];
         for (const key of validateKeys) {
             const value = record[key]
             if (isEmpty(value)) {
@@ -46,7 +50,7 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
         errorsSignal.set(errors);
     }
 
-    function update(callback: (param: EventType, errors: Record<string, string>) => void) {
+    function update(callback: (param: FormulaValue, errors: Record<string, string>) => void) {
         const item = {...valueSignal.get()};
         const errors = {...errorsSignal.get()};
         callback(item, errors);
@@ -61,51 +65,33 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
         }
         closePanel(valueSignal.get())
     }
+
     const functionName = useComputed(() => {
-        const name = valueSignal.get().name;
         const signalDependencies = valueSignal.get().signalDependencies.map(depId => {
             const signalType = signals.find(s => s.id === depId);
-            if(signalType === undefined){
+            if (signalType === undefined) {
                 return '';
             }
             return convertToVarName(signalType.name);
         });
-        const mutableSignals = valueSignal.get().mutableSignals.map(depId => {
-            const signalType = signals.find(s => s.id === depId);
-            if(signalType === undefined){
-                return '';
-            }
-            return convertToSetterName(signalType.name)
-        });
-        const varName = convertToVarName(name);
-        return `function ${varName}(${[...signalDependencies,...mutableSignals,...additionalParam].join(',')}){`
+        return `function ${name}(${[...signalDependencies, ...(additionalParam ?? [])].join(',')}){`
     });
     const codeSignal = useComputed(() => {
-        return [functionName.get(),valueSignal.get().formula,'}'].join('\n');
+        return [functionName.get(), valueSignal.get().formula, '}'].join('\n');
     });
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
-        <div style={{display: 'flex', flexDirection: 'column', padding: 10,width:'80vh',height:'80vh'}}>
-            <div style={{fontSize: 16, marginBottom: 10}}>On Event</div>
+        <div style={{display: 'flex', flexDirection: 'column', padding: 10, width: '80vh', height: '80vh'}}>
             <HorizontalLabel label={'Signals Dependency:'}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({label:convertToVarName(s.name),value:s.id}))}
+                            data={() => signals.filter(s => s.type !== 'Effect').map(s => ({
+                                label: convertToVarName(s.name),
+                                value: s.id
+                            }))}
                             value={() => valueSignal.get().signalDependencies}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {
                                     item.signalDependencies = values;
                                     errors.signals = '';
-                                })
-                            }}
-                ></Notifiable>
-            </HorizontalLabel>
-            <HorizontalLabel label={'Mutable Signals :'}>
-                <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type === 'State').map(s => ({label:convertToSetterName(s.name),value:s.id}))}
-                            value={() => valueSignal.get().mutableSignals}
-                            onChangeHandler={(values: string[]) => {
-                                update((item, errors) => {
-                                    item.mutableSignals = values;
-                                    errors.mutableSignals = '';
                                 })
                             }}
                 ></Notifiable>
@@ -117,8 +103,8 @@ export function EventDialogPanel(props: { closePanel: (param?: EventType) => voi
                         options={{
                             selectOnLineNumbers: true
                         }}
-                        onChangeHandler={(value?:string) => {
-                            const formula = (value??'').trim().split('\n').slice(1,-1).join('\n');
+                        onChangeHandler={(value?: string) => {
+                            const formula = (value ?? '').trim().split('\n').slice(1, -1).join('\n');
                             update((item, errors) => {
                                 item.formula = formula;
                                 errors.formula = '';

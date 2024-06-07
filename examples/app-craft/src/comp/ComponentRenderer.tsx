@@ -1,5 +1,4 @@
 import {
-    ChangeEvent,
     createContext,
     CSSProperties,
     DragEvent,
@@ -43,7 +42,7 @@ function isComponentOneParentOfComponentTwo(props: {
     return false
 }
 
-function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: SignalStateContextData,result:HTMLAttributes<HTMLElement>) {
+function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: AnySignal<SignalStateContextData>,result:HTMLAttributes<HTMLElement>) {
     const {onClick,onChange} = result;
     result.onClick = (event) => {
         if(onClick){
@@ -56,7 +55,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
             return;
         }
         for (const key of component!.events.onClick!.signalDependencies) {
-            const signalState = signalsState.find(s => s.type.id === key);
+            const signalState = signalsState.get().find(s => s.type.id === key);
             if (signalState === undefined) {
                 continue;
             }
@@ -64,7 +63,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
             propsValues.push(signalState.signal.get());
         }
         for (const key of component!.events.onClick!.mutableSignals) {
-            const signalState = signalsState.find(s => s.type.id === key);
+            const signalState = signalsState.get().find(s => s.type.id === key);
             if (signalState === undefined) {
                 continue;
             }
@@ -93,7 +92,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
         const component = componentSignal.get();
         if(isInputComponent(component)){
             for (const key of component.events.onChange!.signalDependencies) {
-                const signalState = signalsState.find(s => s.type.id === key);
+                const signalState = signalsState.get().find(s => s.type.id === key);
                 if (signalState === undefined) {
                     continue;
                 }
@@ -101,7 +100,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
                 propsValues.push(signalState.signal.get());
             }
             for (const key of component.events.onChange!.mutableSignals) {
-                const signalState = signalsState.find(s => s.type.id === key);
+                const signalState = signalsState.get().find(s => s.type.id === key);
                 if (signalState === undefined) {
                     continue;
                 }
@@ -112,6 +111,12 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
                     }
                 });
             }
+
+            if('value' in event.target){
+                propsName.push('value');
+                propsValues.push(event.target.value);
+            }
+
             try {
                 const fun = new Function(...propsName, component.events.onChange?.formula ?? '');
                 fun(...propsValues);
@@ -124,6 +129,36 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
     return result;
 }
 
+
+function computeErrorMessage(componentSignal: Signal.State<Component | undefined>, props: {
+    comp: Component;
+    renderAsTree?: boolean;
+    signals: AnySignal<AnySignalType[]>;
+    signalContext: AnySignal<SignalStateContextData>
+}) {
+    const component = componentSignal.get();
+    const signalsState = props.signalContext.get()
+    if (!isInputComponent(component)) {
+        return '';
+    }
+    const propsName: Array<string> = [];
+    const propsValues: Array<unknown> = [];
+    for (const key of component.errorMessage.signalDependencies) {
+        const signalState = signalsState.find(s => s.type.id === key);
+        if (signalState === undefined) {
+            continue;
+        }
+        propsName.push(convertToVarName(signalState.type.name));
+        propsValues.push(signalState.signal.get());
+    }
+    try {
+        const fun = new Function(...propsName, component.errorMessage.formula ?? '');
+        return fun(...propsValues);
+    } catch (err) {
+        console.error(err);
+    }
+    return '';
+}
 
 export function ComponentRenderer(props: {
     comp: Component,
@@ -154,17 +189,6 @@ export function ComponentRenderer(props: {
                                       signalContext={props.signalContext}/>
         })
     });
-
-    function updateValue(callback: (thisComponent: InputComponent) => void) {
-        const componentId = componentSignal.get()?.id;
-        const comps = [...componentsSignal.get()];
-        const newFocusedComponent = {...comps.find(i => i.id === componentId)} as Component;
-        if (isInputComponent(newFocusedComponent)) {
-            callback(newFocusedComponent);
-        }
-        componentSignal.set(newFocusedComponent);
-        componentsSignal.set([...componentsSignal.get().filter(i => i.id !== componentId), newFocusedComponent]);
-    }
 
     function onDrop(componentTypeOrElementId: string) {
         if (isGuid(componentTypeOrElementId)) {
@@ -208,9 +232,17 @@ export function ComponentRenderer(props: {
                 newComponent = {
                     ...newComponent,
                     label: 'Label',
-                    value: '',
+                    value: {
+                        formula:'',
+                        signalDependencies:[],
+                        name : ''
+                    },
                     isRequired: false,
-                    errorMessage: '',
+                    errorMessage: {
+                        formula:'',
+                        signalDependencies:[],
+                        name:''
+                    },
                     name: 'Name'
                 } as InputComponent
             }
@@ -309,15 +341,27 @@ export function ComponentRenderer(props: {
     const inputProps = {
         value: (): string => {
             const component = componentSignal.get();
+            const signalsState = props.signalContext.get();
             if (!isInputComponent(component)) {
                 return '';
             }
-            return component.value ? component.value.toString() : '';
-        },
-        onChange: (e: ChangeEvent) => {
-            updateValue((component) => {
-                component.value = (e.currentTarget as HTMLInputElement).value
-            })
+            const propsName:Array<string> = [];
+            const propsValues:Array<unknown> = [];
+            for (const key of component.value.signalDependencies) {
+                const signalState = signalsState.find(s => s.type.id === key);
+                if (signalState === undefined) {
+                    continue;
+                }
+                propsName.push(convertToVarName(signalState.type.name));
+                propsValues.push(signalState.signal.get());
+            }
+            try {
+                const fun = new Function(...propsName, component.value.formula ?? '');
+                return fun(...propsValues);
+            } catch (err) {
+                console.error(err);
+            }
+            return '';
         },
         name: (): string => {
             const component = componentSignal.get();
@@ -365,7 +409,7 @@ export function ComponentRenderer(props: {
                 return result;
             }
             const {borderWhenError} = ComponentConfig.Input.errorStyle;
-            if (!isEmpty(component.errorMessage)) {
+            if (!isEmpty(computeErrorMessage(componentSignal, props))) {
                 result.border = borderWhenError;
             }
 
@@ -451,10 +495,10 @@ export function ComponentRenderer(props: {
             </notifiable.div>
         </div>
     }
-    const signalsState = props.signalContext.get();
+    // const signalsState = props.signalContext.get();
     if (isContainer(component)) {
-        populateEvents(componentSignal, signalsState,dragAndDropProps);
-        return <SignalStateContext.Provider value={signalsState}>
+        populateEvents(componentSignal, props.signalContext,dragAndDropProps);
+        return <SignalStateContext.Provider value={props.signalContext}>
             <notifiable.div {...styleProps} {...dragAndDropProps}>
                 {elements}
             </notifiable.div>
@@ -462,7 +506,7 @@ export function ComponentRenderer(props: {
     }
     if (componentType === 'Input' && isInputComponent(component)) {
         const events:HTMLAttributes<HTMLElement> = {};
-        populateEvents(componentSignal, signalsState,events);
+        populateEvents(componentSignal, props.signalContext,events);
         return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             if (component === undefined) {
@@ -493,18 +537,14 @@ export function ComponentRenderer(props: {
                     return component.label
                 }}</notifiable.div>
                 <notifiable.div style={{fontSize: 12, color: colors.red}}>{() => {
-                    const component = componentSignal.get();
-                    if (!isInputComponent(component)) {
-                        return '';
-                    }
-                    return component.errorMessage
+                    return computeErrorMessage(componentSignal, props);
                 }}</notifiable.div>
             </div>
             <notifiable.input {...inputProps} {...styleProps} {...events} autoComplete={'off'}/>
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
-        populateEvents(componentSignal, signalsState,dragAndDropProps);
+        populateEvents(componentSignal, props.signalContext,dragAndDropProps);
         return <notifiable.button {...styleProps} {...dragAndDropProps}>
             {() => {
                 const component = componentSignal.get();
@@ -530,4 +570,4 @@ function isComponentType(value: unknown): value is  keyof typeof ComponentConfig
     return typeof value === 'string' && Object.keys(ComponentConfig).indexOf(value) >= 0
 }
 
-const SignalStateContext = createContext<SignalStateContextData>([])
+const SignalStateContext = createContext<AnySignal<SignalStateContextData>|undefined>(undefined)

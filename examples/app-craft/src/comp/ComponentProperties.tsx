@@ -23,16 +23,16 @@ import {HorizontalLabelContext} from "./properties/HorizontalLabel.tsx";
 
 
 export function ComponentProperties() {
-    const {components, focusedComponent,signals} = useContext(ComponentContext)!;
+    const {components, focusedComponent, signals} = useContext(ComponentContext)!;
 
     function updateValue(callback: (thisComponent: Component) => void) {
         const componentId = focusedComponent.get()?.id;
         const comps = [...components.get()];
-        if(isEmpty(componentId)){
+        if (isEmpty(componentId)) {
             return;
         }
         const compToUpdate = comps.find(i => i.id === componentId);
-        if(isEmpty(compToUpdate)){
+        if (isEmpty(compToUpdate)) {
             return;
         }
         const newFocusedComponent = {...compToUpdate} as Component;
@@ -44,41 +44,46 @@ export function ComponentProperties() {
     return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 0}}>
         <notifiable.div>{() => focusedComponent.get()?.id.slice(-5)}</notifiable.div>
         <HorizontalLabelContext.Provider value={{labelWidth: 80}}>
-        <Visible when={() => {
-            return isContainer(focusedComponent.get())
-        }}>
-            <DirectionProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
-        </Visible>
-        <Visible when={() => {
-            return isLabelComponent(focusedComponent.get())
-        }}>
-            <LabelProperty focusedComponent={focusedComponent as unknown as Signal.State<LabelComponent>}
-                           updateValue={updateValue as unknown as (callback:(thisComponent:LabelComponent) => void) => void}/>
-        </Visible>
-        <Visible when={() => {
-            return isInputComponent(focusedComponent.get())
-        }}>
-            <NameProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
-                           updateValue={updateValue as unknown as (callback:(thisComponent:InputComponent) => void) => void}/>
-        </Visible>
-        <Visible when={() => {
-            return isInputComponent(focusedComponent.get())
-        }}>
-            <ValueProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
-                           updateValue={updateValue  as unknown as (callback:(thisComponent:InputComponent) => void) => void}/>
-        </Visible>
-        <Visible when={() => {
-            return isInputComponent(focusedComponent.get())
-        }}>
-        <ErrorMessageProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
-                              updateValue={updateValue  as unknown as (callback:(thisComponent:InputComponent) => void) => void} />
-        </Visible>
-
-            <OnClickEvent focusedComponent={focusedComponent as Signal.State<Component>} updateValue={updateValue} signals={signals} />
+            <Visible when={() => {
+                return isContainer(focusedComponent.get())
+            }}>
+                <DirectionProperty focusedComponent={focusedComponent} updateValue={updateValue}/>
+            </Visible>
+            <Visible when={() => {
+                return isLabelComponent(focusedComponent.get())
+            }}>
+                <LabelProperty focusedComponent={focusedComponent as unknown as Signal.State<LabelComponent>}
+                               updateValue={updateValue as unknown as (callback: (thisComponent: LabelComponent) => void) => void}/>
+            </Visible>
             <Visible when={() => {
                 return isInputComponent(focusedComponent.get())
             }}>
-                <OnChangeEvent focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>} updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void} signals={signals} />
+                <NameProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
+                              updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}/>
+            </Visible>
+            <Visible when={() => {
+                return isInputComponent(focusedComponent.get())
+            }}>
+                <ValueProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
+                               updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}
+                               signals={signals}/>
+            </Visible>
+            <Visible when={() => {
+                return isInputComponent(focusedComponent.get())
+            }}>
+                <ErrorMessageProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
+                                      updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}
+                                      signals={signals}/>
+            </Visible>
+
+            <OnClickEvent focusedComponent={focusedComponent as Signal.State<Component>} updateValue={updateValue}
+                          signals={signals}/>
+            <Visible when={() => {
+                return isInputComponent(focusedComponent.get())
+            }}>
+                <OnChangeEvent focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
+                               updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}
+                               signals={signals}/>
             </Visible>
         </HorizontalLabelContext.Provider>
         <div style={{display: 'flex'}}>

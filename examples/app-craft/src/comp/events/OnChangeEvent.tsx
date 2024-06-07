@@ -28,7 +28,7 @@ export function OnChangeEvent(props: {
             }} onClick={async () => {
                 const result = await showModal<EventType>(closePanel => {
                     const onChange = focusedComponent.get().events.onChange;
-                    return <EventDialogPanel closePanel={closePanel} value={onChange} signals={signals.get()} additionalParam={['value']}/>
+                    return <EventDialogPanel closePanel={closePanel} value={onChange} signals={signals.get()} additionalParam={['value']} name={'changeHandler'}/>
                 });
                 if (result) {
                     updateValue(thisComponent => {
