@@ -3,10 +3,7 @@ import {ComponentContext} from "./ComponentContext.ts";
 import {BORDER, BORDER_NONE} from "./Border.ts";
 import {colors} from "../utils/colors.ts";
 import {useShowModal} from "../modal/useShowModal.ts";
-import {StateDialogPanel} from "./signals/StateDialogPanel.tsx";
-import {ComputedDialogPanel} from "./signals/ComputedDialogPanel.tsx";
-import {EffectDialogPanel} from "./signals/EffectDialogPanel.tsx";
-import {AnySignalType} from "./Component.ts";
+import {AnySignalType, SignalComputed, SignalEffect, SignalState} from "./Component.ts";
 import {createResponsiveList} from "stock-watch/src/responsive-list/createResponsiveList.tsx";
 import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuFunctionSquare} from "react-icons/lu";
@@ -14,6 +11,7 @@ import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbToggleLeftFilled} from "react-icons/tb";
 import {MdDataArray, MdDataObject, MdEdit} from "react-icons/md";
+import {createNewValue, SignalDetailDialogPanel} from "./signals/SignalDetailDialogPanel.tsx";
 
 const Icon = {
     State: PiTrafficSignal,
@@ -32,11 +30,11 @@ export default function ComponentSignals() {
     async function onAddSignal(type: 'State' | 'Computed' | 'Effect') {
         const state = await showModal<AnySignalType>(closePanel => {
             if (type === "State") {
-                return <StateDialogPanel closePanel={closePanel}/>
+                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalState} requiredField={['name','value']} />
             } else if (type === "Computed") {
-                return <ComputedDialogPanel closePanel={closePanel} signals={signals.get()}/>
+                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalComputed} requiredField={['name','signalDependencies','formula']} />
             } else if (type === "Effect") {
-                return <EffectDialogPanel closePanel={closePanel} signals={signals.get()}/>
+                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalEffect} requiredField={['name','signalDependencies','formula']} />
             } else {
                 return <></>
             }
@@ -48,13 +46,13 @@ export default function ComponentSignals() {
     async function onEditSignal(signal:AnySignalType){
         const state = await showModal<AnySignalType>(closePanel => {
             if(signal.type === 'State'){
-                return <StateDialogPanel closePanel={closePanel} value={signal}/>
+                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','value']} />
             }
             if(signal.type === 'Computed'){
-                return <ComputedDialogPanel closePanel={closePanel} signals={signals.get()} value={signal}/>
+                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} />
             }
             if(signal.type === 'Effect'){
-                return <EffectDialogPanel closePanel={closePanel} signals={signals.get()} value={signal}/>
+                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} />
             }
             return <></>
         });
