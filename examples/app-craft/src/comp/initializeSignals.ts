@@ -7,7 +7,12 @@ export function initializeSignals(signals: AnySignalType[]): SignalStateContextD
     // first we iterate all state first
     for (const signalType of signals) {
         if (signalType.type === 'State') {
-            result.push({type: signalType, signal: new Signal.State(signalType.value)})
+            try {
+                const fun = new Function(signalType.formula);
+                result.push({type: signalType, signal: new Signal.State(fun())})
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
     // now we iterate all computed

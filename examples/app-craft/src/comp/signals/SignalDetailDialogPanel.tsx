@@ -9,6 +9,7 @@ import {Checkbox} from "../../elements/Checkbox.tsx";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
 import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 import {Editor} from "@monaco-editor/react";
+import {capFirstLetter} from "../../utils/capFirstLetter.ts";
 
 export function createNewValue<T extends AnySignalType>(type:T['type']): T {
     let result:AnySignalType|undefined = undefined;
@@ -34,7 +35,7 @@ export function createNewValue<T extends AnySignalType>(type:T['type']): T {
     if(type === 'State'){
         result = {
             name: '',
-            value: undefined,
+            formula: '',
             id: guid(),
             type : type
         } as SignalState;
@@ -98,6 +99,9 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
     const functionName = useComputed(() => {
         const name = valueSignal.get().name;
         const signal = valueSignal.get();
+        if(isState(signal)){
+            return `function init${capFirstLetter(convertToVarName(name))}(){`;
+        }
         let dependencySignals:string[] = [];
         if(isEffectOrComputed(signal)){
             const result = signal.signalDependencies.map(depId => {
@@ -125,12 +129,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
     const codeSignal = useComputed(() => {
         const signal = valueSignal.get();
         const functionName_ = functionName.get();
-        if(isEffectOrComputed(signal)){
-            return [functionName_,signal.formula,'}'].join('\n');
-        }
-        if(isState(signal)){
-            return '// there is no code for state';
-        }
+        return [functionName_,signal.formula,'}'].join('\n');
     });
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10,width:'80vh',height:'80vh'}}>
@@ -151,34 +150,6 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
                                   }}
                 />
             </Notifiable>
-
-            <Notifiable component={HorizontalLabel} label={'Value :'} style={() => {
-                const signal = valueSignal.get();
-                if(isState(signal)) {
-                    return {}
-                }
-                return {display:'none'}
-            }} >
-                <notifiable.input style={{border: BORDER_NONE, padding: 5}}
-                                  value={() => {
-                                      const signal = valueSignal.get();
-                                      if(isState(signal)) {
-                                        return (signal.value ?? '') as string
-                                      }
-                                      return ''
-                                  }}
-                                  onChange={(e) => {
-                                      const value = e.target.value;
-                                      update((item, errors) => {
-                                          if(isState(item)){
-                                              item.value = value;
-                                              errors.value = '';
-                                          }
-                                      });
-                                  }}
-                />
-            </Notifiable>
-
 
             <Notifiable component={HorizontalLabel} label={'Signal Dependencies :'} style={() => {
                 const signal = valueSignal.get();
@@ -244,10 +215,8 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
                             onChangeHandler={(value?:string) => {
                                 const formula = (value??'').trim().split('\n').slice(1,-1).join('\n');
                                 update((item, errors) => {
-                                    if(isEffectOrComputed(item)){
-                                        item.formula = formula;
-                                        errors.formula = '';
-                                    }
+                                    item.formula = formula;
+                                    errors.formula = '';
                                 });
                             }}
                 />
@@ -284,5 +253,6 @@ function isEffectSignal(signal:AnySignalType):signal is SignalEffect{
 function isState(signal:AnySignalType):signal is SignalState{
     return signal.type === 'State';
 }
+
 
 

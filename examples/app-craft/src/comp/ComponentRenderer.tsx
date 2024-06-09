@@ -340,7 +340,6 @@ export function ComponentRenderer(props: {
 
     const inputProps = {
         value: (): string => {
-            // FUCK THIS IS TO RENDER VALUE !!
             const component = componentSignal.get();
             const signalsState = props.signalContext.get();
             if (!isInputComponent(component)) {

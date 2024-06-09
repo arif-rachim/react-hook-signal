@@ -48,7 +48,7 @@ interface Signal {
 
 export interface SignalState extends Signal {
     type: 'State',
-    value: unknown,
+    formula: string,
 }
 
 export interface SignalComputed extends Signal {
