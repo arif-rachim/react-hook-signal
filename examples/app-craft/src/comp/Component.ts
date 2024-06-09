@@ -9,24 +9,18 @@ export interface Component {
     children: string[],
     componentType: keyof (typeof ComponentConfig),
     events: {
-        onClick?: EventType
+        onClick?: SignalEffect
     }
 }
 
-export interface EventType {
-    signalDependencies: string[],
-    mutableSignals: string[],
-    formula: string,
-    name: string,
-}
 
 export interface LabelComponent extends Component {
     label: string
 }
 
-export interface FormulaValue{
-    name:string,
-    formula:string,
+export interface FormulaValue {
+    name: string,
+    formula: string,
     signalDependencies: string[]
 
 }
@@ -36,7 +30,7 @@ export interface InputComponent extends LabelComponent {
     errorMessage: FormulaValue,
     name: string,
     events: LabelComponent['events'] & {
-        onChange?: EventType
+        onChange?: SignalEffect
     }
 }
 

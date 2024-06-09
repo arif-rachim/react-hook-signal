@@ -1,5 +1,4 @@
 import {AnySignalType, SignalComputed, SignalEffect, SignalState} from "../Component.ts";
-import {guid} from "../../utils/guid.ts";
 import {notifiable, Notifiable, useComputed, useSignal} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {HorizontalLabel, HorizontalLabelContext} from "../properties/HorizontalLabel.tsx";
@@ -11,45 +10,8 @@ import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 import {Editor} from "@monaco-editor/react";
 import {capFirstLetter} from "../../utils/capFirstLetter.ts";
 
-export function createNewValue<T extends AnySignalType>(type:T['type']): T {
-    let result:AnySignalType|undefined = undefined;
-    if(type ==='Computed'){
-        result = {
-            id: guid(),
-            name: '',
-            signalDependencies: [],
-            formula: '',
-            type : type
-        } as SignalComputed
-    }
-    if(type === 'Effect'){
-        result = {
-            id: guid(),
-            name: '',
-            signalDependencies: [],
-            formula: '',
-            type:type,
-            mutableSignals: []
-        } as SignalEffect
-    }
-    if(type === 'State'){
-        result = {
-            name: '',
-            formula: '',
-            id: guid(),
-            type : type
-        } as SignalState;
-    }
-    if(isT<T>(result)){
-        return result;
-    }
-    throw new Error('Unable to identify type');
-}
-function isT<T extends AnySignalType>(value:unknown): value is T {
-    return value !== undefined && value !== null && typeof value === 'object';
-}
-export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePanel: (param?: T) => void, value: T,signals:AnySignalType[],requiredField:Array<keyof T> }) {
-    const {closePanel,signals,requiredField} = props;
+export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePanel: (param?: T) => void, value: T,signals:AnySignalType[],requiredField:Array<keyof T>,additionalParams:string[] }) {
+    const {closePanel,signals,requiredField,additionalParams} = props;
     const valueSignal = useSignal<T>(props.value);
     const errorsSignal = useSignal<{[K in keyof T]? : string}>({});
     const hasErrorSignal = useComputed(() => {
@@ -99,9 +61,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
     const functionName = useComputed(() => {
         const name = valueSignal.get().name;
         const signal = valueSignal.get();
-        if(isState(signal)){
-            return `function init${capFirstLetter(convertToVarName(name))}(){`;
-        }
+
         let dependencySignals:string[] = [];
         if(isEffectOrComputed(signal)){
             const result = signal.signalDependencies.map(depId => {
@@ -123,7 +83,11 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
             });
             dependencySignals = [...dependencySignals,...result];
         }
+        dependencySignals = [...dependencySignals,...additionalParams];
         const varName = convertToVarName(name);
+        if(isState(signal)){
+            return `function init${capFirstLetter(varName)}(${[...dependencySignals].filter(i => i).join(', ')}){`;
+        }
         return `function ${varName}(${[...dependencySignals].filter(i => i).join(', ')}){`
     });
     const codeSignal = useComputed(() => {

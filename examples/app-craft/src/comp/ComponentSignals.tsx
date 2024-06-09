@@ -30,11 +30,11 @@ export default function ComponentSignals() {
     async function onAddSignal(type: 'State' | 'Computed' | 'Effect') {
         const state = await showModal<AnySignalType>(closePanel => {
             if (type === "State") {
-                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalState} requiredField={['name','formula']} />
+                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalState} requiredField={['name','formula']} additionalParams={[]}/>
             } else if (type === "Computed") {
-                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalComputed} requiredField={['name','signalDependencies','formula']} />
+                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalComputed} requiredField={['name','signalDependencies','formula']} additionalParams={[]} />
             } else if (type === "Effect") {
-                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalEffect} requiredField={['name','signalDependencies','formula']} />
+                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalEffect} requiredField={['name','signalDependencies','formula']} additionalParams={[]}/>
             } else {
                 return <></>
             }
@@ -46,13 +46,13 @@ export default function ComponentSignals() {
     async function onEditSignal(signal:AnySignalType){
         const state = await showModal<AnySignalType>(closePanel => {
             if(signal.type === 'State'){
-                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','formula']} />
+                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','formula']} additionalParams={[]} />
             }
             if(signal.type === 'Computed'){
-                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} />
+                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} additionalParams={[]} />
             }
             if(signal.type === 'Effect'){
-                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} />
+                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} additionalParams={[]} />
             }
             return <></>
         });

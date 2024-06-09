@@ -1,13 +1,13 @@
 import {Signal} from "signal-polyfill";
-import {AnySignalType, Component, EventType} from "../Component.ts";
+import {AnySignalType, Component, SignalEffect} from "../Component.ts";
 import {HorizontalLabel} from "../properties/HorizontalLabel.tsx";
 import {VscSymbolEvent} from "react-icons/vsc";
 import {BORDER} from "../Border.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
-import {EventDialogPanel} from "./EventDialogPanel.tsx";
 import {AnySignal, notifiable} from "react-hook-signal";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
+import {createNewValue, SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
 
 export function OnClickEvent(props: {
     focusedComponent: Signal.State<Component>,
@@ -26,9 +26,9 @@ export function OnClickEvent(props: {
                 border: BORDER,
                 borderRadius: 5
             }} onClick={async () => {
-                const result = await showModal<EventType>(closePanel => {
-                    const onClick = focusedComponent.get().events.onClick;
-                    return <EventDialogPanel closePanel={closePanel} value={onClick} signals={signals.get()} additionalParam={[]} name={'clickHandler'}/>
+                const result = await showModal<SignalEffect>(closePanel => {
+                    const onClick = focusedComponent.get().events.onClick ?? createNewValue<SignalEffect>('Effect');
+                    return <SignalDetailDialogPanel closePanel={closePanel} value={onClick} signals={signals.get()} requiredField={['name','formula']} additionalParams={['value']} />
                 });
                 if (result) {
                     updateValue(thisComponent => {

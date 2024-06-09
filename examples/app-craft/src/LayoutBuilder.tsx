@@ -12,8 +12,9 @@ import ComponentSignals from "./comp/ComponentSignals.tsx";
 import {Tab} from "./tab/Tab.tsx";
 import {convertToVarName} from "./utils/convertToVarName.ts";
 import {convertToSetterName} from "./utils/convertToSetterName.ts";
-import {Signal} from "signal-polyfill";
 import {initializeSignals} from "./comp/initializeSignals.ts";
+import {isEmpty} from "./utils/isEmpty.ts";
+import {isStateSignal} from "./utils/isStateSignal.ts";
 
 /**
  * Represents the main application comp.
@@ -292,12 +293,5 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
 }
 
 
-export function isEmpty(value: unknown) {
-    return value === undefined || value === null || value.toString().trim() === ''
-}
-
-export function isStateSignal(value:unknown):value is Signal.State<unknown>{
-    return value !== undefined && value !== null && typeof value === 'object' && 'set' in value && 'get' in value;
-}
 
 export default LayoutBuilder;
