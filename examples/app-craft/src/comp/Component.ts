@@ -13,25 +13,15 @@ export interface Component {
     }
 }
 
-
 export interface LabelComponent extends Component {
     label: string
 }
 
-export interface FormulaValue {
-    name: string,
-    formula: string,
-    signalDependencies: string[]
-
-}
-
 export interface InputComponent extends LabelComponent {
-    value: FormulaValue,
-    errorMessage: FormulaValue,
+    value?: SignalComputed,
+    errorMessage?: SignalComputed,
     name: string,
-    events: LabelComponent['events'] & {
-        onChange?: SignalEffect
-    }
+    events: LabelComponent['events'] & { onChange?: SignalEffect }
 }
 
 interface Signal {

@@ -7,7 +7,8 @@ import {useShowModal} from "../../modal/useShowModal.ts";
 import {AnySignal, notifiable} from "react-hook-signal";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
-import {createNewValue, SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
+import {SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
+import {createNewValue} from "../signals/createNewValue.ts";
 
 export function OnChangeEvent(props: {
     focusedComponent: Signal.State<InputComponent>,

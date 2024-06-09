@@ -22,7 +22,7 @@ import {colors} from "../utils/colors.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {convertToVarName} from "../utils/convertToVarName.ts";
 import {convertToSetterName} from "../utils/convertToSetterName.ts";
-import {isStateSignal} from "../LayoutBuilder.tsx";
+import {isStateSignal} from "../utils/isStateSignal.ts";
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -143,7 +143,7 @@ function computeErrorMessage(componentSignal: Signal.State<Component | undefined
     }
     const propsName: Array<string> = [];
     const propsValues: Array<unknown> = [];
-    for (const key of component.errorMessage.signalDependencies) {
+    for (const key of (component?.errorMessage?.signalDependencies ?? [])) {
         const signalState = signalsState.find(s => s.type.id === key);
         if (signalState === undefined) {
             continue;
@@ -152,7 +152,7 @@ function computeErrorMessage(componentSignal: Signal.State<Component | undefined
         propsValues.push(signalState.signal.get());
     }
     try {
-        const fun = new Function(...propsName, component.errorMessage.formula ?? '');
+        const fun = new Function(...propsName, component?.errorMessage?.formula ?? '');
         return fun(...propsValues);
     } catch (err) {
         console.error(err);
@@ -232,17 +232,7 @@ export function ComponentRenderer(props: {
                 newComponent = {
                     ...newComponent,
                     label: 'Label',
-                    value: {
-                        formula:'',
-                        signalDependencies:[],
-                        name : ''
-                    },
                     isRequired: false,
-                    errorMessage: {
-                        formula:'',
-                        signalDependencies:[],
-                        name:''
-                    },
                     name: 'Name'
                 } as InputComponent
             }
@@ -347,7 +337,7 @@ export function ComponentRenderer(props: {
             }
             const propsName:Array<string> = [];
             const propsValues:Array<unknown> = [];
-            for (const key of component.value.signalDependencies) {
+            for (const key of (component?.value?.signalDependencies ?? [])) {
                 const signalState = signalsState.find(s => s.type.id === key);
                 if (signalState === undefined) {
                     continue;
@@ -356,7 +346,7 @@ export function ComponentRenderer(props: {
                 propsValues.push(signalState.signal.get());
             }
             try {
-                const fun = new Function(...propsName, component.value.formula ?? '');
+                const fun = new Function(...propsName, component?.value?.formula ?? '');
                 return fun(...propsValues);
             } catch (err) {
                 console.error(err);

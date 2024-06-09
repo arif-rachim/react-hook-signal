@@ -1,13 +1,14 @@
 import {Signal} from "signal-polyfill";
-import {AnySignalType, FormulaValue, InputComponent} from "../Component.ts";
+import {AnySignalType, InputComponent, SignalComputed} from "../Component.ts";
 import {HorizontalLabel} from "./HorizontalLabel.tsx";
 import {AnySignal, notifiable} from "react-hook-signal";
 import {BORDER} from "../Border.ts";
-import {FormulaDialogPanel} from "./FormulaDialogPanel.tsx";
 import {VscSymbolEvent} from "react-icons/vsc";
 import {convertToVarName} from "../../utils/convertToVarName.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
+import {createNewValue} from "../signals/createNewValue.ts";
+import {SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
 
 export function ErrorMessageProperty(props: {
     focusedComponent: Signal.State<InputComponent>,
@@ -34,10 +35,10 @@ export function ErrorMessageProperty(props: {
                 border: BORDER,
                 borderRadius: 5
             }} onClick={async () => {
-                const result = await showModal<FormulaValue>(closePanel => {
-                    const formulaValue = focusedComponent.get().errorMessage;
-                    return <FormulaDialogPanel closePanel={closePanel} value={formulaValue} signals={signals.get()}
-                                               name={'computeError'}/>
+                const result = await showModal<SignalComputed>(closePanel => {
+                    const formulaValue = focusedComponent.get().errorMessage ?? createNewValue<SignalComputed>('Computed');
+                    return <SignalDetailDialogPanel closePanel={closePanel} value={formulaValue} signals={signals.get()}
+                                               requiredField={['name','signalDependencies','formula']} additionalParams={[]}/>
                 });
                 if (result) {
                     updateValue(thisComponent => {

@@ -10,6 +10,9 @@ import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 import {Editor} from "@monaco-editor/react";
 import {capFirstLetter} from "../../utils/capFirstLetter.ts";
 
+const start = "   //Below this line, start your code.";
+const end = "   //Above this line, end your code.";
+
 export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePanel: (param?: T) => void, value: T,signals:AnySignalType[],requiredField:Array<keyof T>,additionalParams:string[] }) {
     const {closePanel,signals,requiredField,additionalParams} = props;
     const valueSignal = useSignal<T>(props.value);
@@ -93,7 +96,8 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
     const codeSignal = useComputed(() => {
         const signal = valueSignal.get();
         const functionName_ = functionName.get();
-        return [functionName_,signal.formula,'}'].join('\n');
+
+        return [functionName_,start,signal.formula,end,'}'].join('\n');
     });
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10,width:'80vh',height:'80vh'}}>
@@ -177,7 +181,10 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
                                 selectOnLineNumbers: true
                             }}
                             onChangeHandler={(value?:string) => {
-                                const formula = (value??'').trim().split('\n').slice(1,-1).join('\n');
+                                const cleanFormula = (value??'').trim().split('\n');
+                                const indexOfStart = cleanFormula.findIndex(i => i === start);
+                                const indexOfEnd = cleanFormula.findIndex(i => i === end);
+                                const formula = cleanFormula.slice(indexOfStart+1,indexOfEnd).join('\n');
                                 update((item, errors) => {
                                     item.formula = formula;
                                     errors.formula = '';

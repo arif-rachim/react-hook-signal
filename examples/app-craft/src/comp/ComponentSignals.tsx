@@ -11,7 +11,8 @@ import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbToggleLeftFilled} from "react-icons/tb";
 import {MdDataArray, MdDataObject, MdEdit} from "react-icons/md";
-import {createNewValue, SignalDetailDialogPanel} from "./signals/SignalDetailDialogPanel.tsx";
+import {SignalDetailDialogPanel} from "./signals/SignalDetailDialogPanel.tsx";
+import {createNewValue} from "./signals/createNewValue.ts";
 
 const Icon = {
     State: PiTrafficSignal,
