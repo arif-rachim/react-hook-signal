@@ -4,8 +4,7 @@ import {HorizontalLabel} from "../properties/HorizontalLabel.tsx";
 import {VscSymbolEvent} from "react-icons/vsc";
 import {BORDER} from "../Border.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
-import {AnySignal, notifiable} from "react-hook-signal";
-import {convertToVarName} from "../../utils/convertToVarName.ts";
+import {notifiable} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
 import {createNewValue} from "../signals/createNewValue.ts";
@@ -13,7 +12,7 @@ import {createNewValue} from "../signals/createNewValue.ts";
 export function OnChangeEvent(props: {
     focusedComponent: Signal.State<InputComponent>,
     updateValue: (callback: (thisComponent: InputComponent) => void) => void,
-    signals: AnySignal<AnySignalType[]>
+    signals: Signal.State<AnySignalType[]>
 }) {
     const {updateValue, focusedComponent, signals} = props;
     const showModal = useShowModal();
@@ -29,7 +28,7 @@ export function OnChangeEvent(props: {
             }} onClick={async () => {
                 const result = await showModal<SignalEffect>(closePanel => {
                     const onChange = focusedComponent.get().events.onChange ?? createNewValue<SignalEffect>('Effect');
-                    return <SignalDetailDialogPanel closePanel={closePanel} value={onChange} signals={signals.get()} requiredField={['name','formula']} additionalParams={['value']} />
+                    return <SignalDetailDialogPanel closePanel={closePanel} value={onChange} signalsSignal={signals} requiredField={['name','formula']} additionalParams={['value']} />
                 });
                 if (result) {
                     updateValue(thisComponent => {
@@ -42,7 +41,7 @@ export function OnChangeEvent(props: {
                     if (component === undefined) {
                         return <VscSymbolEvent style={{fontSize: 16}}/>
                     }
-                    const value = convertToVarName(component.events.onChange?.name ?? '');
+                    const value = component.events.onChange?.name ?? '';
                     if (isEmpty(value)) {
                         return <VscSymbolEvent style={{fontSize: 16}}/>
                     }

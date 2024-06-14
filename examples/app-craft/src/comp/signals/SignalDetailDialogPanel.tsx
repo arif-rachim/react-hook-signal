@@ -9,12 +9,49 @@ import {convertToVarName} from "../../utils/convertToVarName.ts";
 import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 import {Editor} from "@monaco-editor/react";
 import {capFirstLetter} from "../../utils/capFirstLetter.ts";
+import {useShowModal} from "../../modal/useShowModal.ts";
+import RefactorDetailDialogPanel from "./RefactorDetailDialogPanel.tsx";
+import {Signal} from "signal-polyfill";
 
 const start = "   //Below this line, start your code.";
 const end = "   //Above this line, end your code.";
 
-export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePanel: (param?: T) => void, value: T,signals:AnySignalType[],requiredField:Array<keyof T>,additionalParams:string[] }) {
-    const {closePanel,signals,requiredField,additionalParams} = props;
+export function buildFunctionCode<T extends AnySignalType>(signal: T | (T & SignalEffect) | (T & SignalComputed), signals: AnySignalType[], additionalParams: string[]) {
+    let dependencySignals: string[] = [];
+    if (isEffectOrComputed(signal)) {
+        const result = signal.signalDependencies.map(depId => {
+            const signalType = signals.find(s => s.id === depId);
+            if (signalType === undefined) {
+                return '';
+            }
+            return signalType.name
+        });
+        dependencySignals = [...dependencySignals, ...result];
+    }
+    if (isEffect(signal)) {
+        const result = signal.mutableSignals.map(depId => {
+            const signalType = signals.find(s => s.id === depId);
+            if (signalType === undefined) {
+                return '';
+            }
+            return convertToSetterName(signalType.name)
+        });
+        dependencySignals = [...dependencySignals, ...result];
+    }
+    dependencySignals = [...dependencySignals, ...additionalParams];
+    const varName = signal.name;
+    let functionName = '';
+    if (isState(signal)) {
+        functionName = `function init${capFirstLetter(signal.name)}(${[...dependencySignals].filter(i => i).join(', ')}){`;
+    }
+    functionName = `function ${varName}(${[...dependencySignals].filter(i => i).join(', ')}){`
+    return [functionName,start,signal.formula,end,'}'].join('\n')
+
+}
+
+export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePanel: (param?: T) => void, value: T,signalsSignal:Signal.State<AnySignalType[]>,requiredField:Array<keyof T>,additionalParams:string[] }) {
+    const {closePanel,signalsSignal,requiredField,additionalParams} = props;
+    const showModal = useShowModal();
     const valueSignal = useSignal<T>(props.value);
     const errorsSignal = useSignal<{[K in keyof T]? : string}>({});
     const hasErrorSignal = useComputed(() => {
@@ -54,50 +91,41 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
         errorsSignal.set(errors);
     }
 
-    function onSave() {
+    async function onSave() {
         validate();
         if (hasErrorSignal.get()) {
             return;
         }
+        const signal = valueSignal.get();
+        const signals = signalsSignal.get();
+        if(isState(signal) || isComputed(signal)){
+            const nameIsChanged = props.value.name !== signal.name;
+            const nameWasNotEmpty = !isEmpty(props.value.name);
+            const referencingSignals = signals.filter(s => {
+                if(isEffectOrComputed(s)){
+                    return s.signalDependencies.includes(signal.id)
+                }
+                return false;
+            });
+            const hasReferencingSignals = referencingSignals.length > 0;
+            if(nameIsChanged && nameWasNotEmpty && hasReferencingSignals){
+                await showModal<{success:boolean}>(closePanel => {
+                    return <RefactorDetailDialogPanel
+                        closePanel={closePanel}
+                        signalsSignal={signalsSignal}
+                        newSignalName={signal.name}
+                        signalId={signal.id}
+                    />
+                });
+                alert('You are about to change the variable name consider to see the impact.');
+            }
+        }
         closePanel(valueSignal.get())
     }
-    const functionName = useComputed(() => {
-        const name = valueSignal.get().name;
-        const signal = valueSignal.get();
-
-        let dependencySignals:string[] = [];
-        if(isEffectOrComputed(signal)){
-            const result = signal.signalDependencies.map(depId => {
-                const signalType = signals.find(s => s.id === depId);
-                if(signalType === undefined){
-                    return '';
-                }
-                return convertToVarName(signalType.name)
-            });
-            dependencySignals = [...dependencySignals,...result];
-        }
-        if(isEffectSignal(signal)){
-            const result = signal.mutableSignals.map(depId => {
-                const signalType = signals.find(s => s.id === depId);
-                if(signalType === undefined){
-                    return '';
-                }
-                return convertToSetterName(signalType.name)
-            });
-            dependencySignals = [...dependencySignals,...result];
-        }
-        dependencySignals = [...dependencySignals,...additionalParams];
-        const varName = convertToVarName(name);
-        if(isState(signal)){
-            return `function init${capFirstLetter(varName)}(${[...dependencySignals].filter(i => i).join(', ')}){`;
-        }
-        return `function ${varName}(${[...dependencySignals].filter(i => i).join(', ')}){`
-    });
     const codeSignal = useComputed(() => {
         const signal = valueSignal.get();
-        const functionName_ = functionName.get();
-
-        return [functionName_,start,signal.formula,end,'}'].join('\n');
+        const signals = signalsSignal.get();
+        return buildFunctionCode(signal, signals, additionalParams);
     });
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10,width:'80vh',height:'80vh'}}>
@@ -112,7 +140,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
                                   onChange={(e) => {
                                       const value = e.target.value;
                                       update((item, errors) => {
-                                          item.name = value;
+                                          item.name = convertToVarName(value);
                                           errors.name = '';
                                       });
                                   }}
@@ -127,7 +155,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
                 return {display:'none'}
             }}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type !== 'Effect' && s.id !== valueSignal.get().id).map(s => ({label:convertToVarName(s.name),value:s.id}))}
+                            data={() => signalsSignal.get().filter(s => s.type !== 'Effect' && s.id !== valueSignal.get().id).map(s => ({label:s.name,value:s.id}))}
                             value={() => {
                                 const signal = valueSignal.get();
                                 if(isEffectOrComputed(signal)){
@@ -148,23 +176,23 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {closePa
             </Notifiable>
             <Notifiable component={HorizontalLabel} label={'Mutable Signals :'} style={() => {
                 const signal = valueSignal.get();
-                if(isEffectSignal(signal)) {
+                if(isEffect(signal)) {
                     return {}
                 }
                 return {display:'none'}
             }}>
                 <Notifiable component={Checkbox}
-                            data={() => signals.filter(s => s.type === 'State' && s.id !== valueSignal.get().id).map(s => ({label:convertToSetterName(s.name),value:s.id}))}
+                            data={() => signalsSignal.get().filter(s => s.type === 'State' && s.id !== valueSignal.get().id).map(s => ({label:convertToSetterName(s.name),value:s.id}))}
                             value={() => {
                                 const signal = valueSignal.get();
-                                if(isEffectSignal(signal)) {
+                                if(isEffect(signal)) {
                                     return signal.mutableSignals;
                                 }
                                 return [];
                             }}
                             onChangeHandler={(values: string[]) => {
                                 update((item, errors) => {
-                                    if(isEffectSignal(item)){
+                                    if(isEffect(item)){
                                         item.mutableSignals = values;
                                         errors.mutableSignals = '';
                                     }
@@ -217,7 +245,11 @@ function isEffectOrComputed(signal:AnySignalType):signal is SignalEffect|SignalC
     return signal.type === 'Effect' || signal.type === 'Computed';
 }
 
-function isEffectSignal(signal:AnySignalType):signal is SignalEffect{
+function isComputed(signal:AnySignalType):signal is SignalComputed{
+    return signal.type === 'Computed';
+}
+
+function isEffect(signal:AnySignalType):signal is SignalEffect{
     return signal.type === 'Effect';
 }
 

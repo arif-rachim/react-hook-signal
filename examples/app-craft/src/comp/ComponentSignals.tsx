@@ -3,7 +3,7 @@ import {ComponentContext} from "./ComponentContext.ts";
 import {BORDER, BORDER_NONE} from "./Border.ts";
 import {colors} from "../utils/colors.ts";
 import {useShowModal} from "../modal/useShowModal.ts";
-import {AnySignalType, SignalComputed, SignalEffect, SignalState} from "./Component.ts";
+import {AnySignalType} from "./Component.ts";
 import {createResponsiveList} from "stock-watch/src/responsive-list/createResponsiveList.tsx";
 import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuFunctionSquare} from "react-icons/lu";
@@ -30,15 +30,15 @@ export default function ComponentSignals() {
 
     async function onAddSignal(type: 'State' | 'Computed' | 'Effect') {
         const state = await showModal<AnySignalType>(closePanel => {
+            let requiredField:Array<keyof AnySignalType> = [];
             if (type === "State") {
-                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalState} requiredField={['name','formula']} additionalParams={[]}/>
+                requiredField = ['name','formula'];
             } else if (type === "Computed") {
-                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalComputed} requiredField={['name','signalDependencies','formula']} additionalParams={[]} />
+                requiredField = ['name','signalDependencies','formula'] as Array<keyof AnySignalType>
             } else if (type === "Effect") {
-                return <SignalDetailDialogPanel closePanel={closePanel} signals={signals.get()} value={createNewValue(type) as SignalEffect} requiredField={['name','signalDependencies','formula']} additionalParams={[]}/>
-            } else {
-                return <></>
+                requiredField = ['name','signalDependencies','formula'] as Array<keyof AnySignalType>
             }
+            return <SignalDetailDialogPanel closePanel={closePanel} signalsSignal={signals} value={createNewValue(type)} requiredField={requiredField} additionalParams={[]}/>
         });
         const signalValues = signals.get();
         signals.set([...signalValues, state]);
@@ -46,16 +46,16 @@ export default function ComponentSignals() {
 
     async function onEditSignal(signal:AnySignalType){
         const state = await showModal<AnySignalType>(closePanel => {
-            if(signal.type === 'State'){
-                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','formula']} additionalParams={[]} />
+            const type = signal.type;
+            let requiredField:Array<keyof AnySignalType> = [];
+            if (type === "State") {
+                requiredField = ['name','formula'];
+            } else if (type === "Computed") {
+                requiredField = ['name','signalDependencies','formula'] as Array<keyof AnySignalType>
+            } else if (type === "Effect") {
+                requiredField = ['name','signalDependencies','formula'] as Array<keyof AnySignalType>
             }
-            if(signal.type === 'Computed'){
-                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} additionalParams={[]} />
-            }
-            if(signal.type === 'Effect'){
-                return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signals={signals.get()} requiredField={['name','signalDependencies','formula']} additionalParams={[]} />
-            }
-            return <></>
+            return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signalsSignal={signals} requiredField={requiredField} additionalParams={[]} />
         });
         const signalValues = signals.get();
         const idx = signalValues.findIndex(i => i.id === state.id);

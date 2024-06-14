@@ -20,7 +20,6 @@ import {isContainer} from "../utils/isContainer.ts";
 import {isLabelComponent} from "../utils/isLabelComponent.ts";
 import {colors} from "../utils/colors.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
-import {convertToVarName} from "../utils/convertToVarName.ts";
 import {convertToSetterName} from "../utils/convertToSetterName.ts";
 import {isStateSignal} from "../utils/isStateSignal.ts";
 
@@ -59,7 +58,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
             if (signalState === undefined) {
                 continue;
             }
-            propsName.push(convertToVarName(signalState.type.name));
+            propsName.push(signalState.type.name);
             propsValues.push(signalState.signal.get());
         }
         for (const key of component!.events.onClick!.mutableSignals) {
@@ -96,7 +95,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
                 if (signalState === undefined) {
                     continue;
                 }
-                propsName.push(convertToVarName(signalState.type.name));
+                propsName.push(signalState.type.name);
                 propsValues.push(signalState.signal.get());
             }
             for (const key of component.events.onChange!.mutableSignals) {
@@ -148,7 +147,7 @@ function computeErrorMessage(componentSignal: Signal.State<Component | undefined
         if (signalState === undefined) {
             continue;
         }
-        propsName.push(convertToVarName(signalState.type.name));
+        propsName.push(signalState.type.name);
         propsValues.push(signalState.signal.get());
     }
     try {
@@ -342,7 +341,7 @@ export function ComponentRenderer(props: {
                 if (signalState === undefined) {
                     continue;
                 }
-                propsName.push(convertToVarName(signalState.type.name));
+                propsName.push(signalState.type.name);
                 propsValues.push(signalState.signal.get());
             }
             try {

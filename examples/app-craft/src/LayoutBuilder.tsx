@@ -10,7 +10,6 @@ import {MdArrowBack} from "react-icons/md";
 import {colors} from "./utils/colors.ts";
 import ComponentSignals from "./comp/ComponentSignals.tsx";
 import {Tab} from "./tab/Tab.tsx";
-import {convertToVarName} from "./utils/convertToVarName.ts";
 import {convertToSetterName} from "./utils/convertToSetterName.ts";
 import {initializeSignals} from "./comp/initializeSignals.ts";
 import {isEmpty} from "./utils/isEmpty.ts";
@@ -112,7 +111,7 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                         }
                         const {signal, type} = dependencySignal;
                         values.push(signal.get());
-                        paramNames.push(convertToVarName(type.name));
+                        paramNames.push(type.name);
                     }
                     for (const key of signalType.mutableSignals) {
                         const mutableSignal = signalsState.find(i => i.type.id === key);

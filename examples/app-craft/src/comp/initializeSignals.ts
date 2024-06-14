@@ -1,6 +1,5 @@
 import {AnySignalType, SignalStateContextData} from "./Component.ts";
 import {Signal} from "signal-polyfill";
-import {convertToVarName} from "../utils/convertToVarName.ts";
 
 export function initializeSignals(signals: AnySignalType[]): SignalStateContextData {
     const result: SignalStateContextData = [];
@@ -29,7 +28,7 @@ export function initializeSignals(signals: AnySignalType[]): SignalStateContextD
                         }
                         const {signal, type} = dependencySignal;
                         values.push(signal.get());
-                        paramNames.push(convertToVarName(type.name));
+                        paramNames.push(type.name);
                     }
                     try {
                         const fun = new Function(...paramNames, signalType.formula);
