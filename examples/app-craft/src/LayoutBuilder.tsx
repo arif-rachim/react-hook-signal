@@ -14,6 +14,8 @@ import {convertToSetterName} from "./utils/convertToSetterName.ts";
 import {initializeSignals} from "./comp/initializeSignals.ts";
 import {isEmpty} from "./utils/isEmpty.ts";
 import {isStateSignal} from "./utils/isStateSignal.ts";
+import {convertToVarName} from "./utils/convertToVarName.ts";
+import {capFirstLetter} from "./utils/capFirstLetter.ts";
 
 /**
  * Represents the main application comp.
@@ -184,8 +186,12 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
                                           const err = {...errors.get()};
                                           delete err.name;
                                           errors.set(err);
-                                          const value = e.target.value;
+                                          const value = capFirstLetter(convertToVarName(e.target.value));
+                                          const selectionStart = e.target.selectionStart;
                                           viewSignal.set({...viewSignal.get(), name: value});
+                                          setTimeout(() => {
+                                              e.target.setSelectionRange(selectionStart,selectionStart);
+                                          },0)
                                       }}
                     />
 

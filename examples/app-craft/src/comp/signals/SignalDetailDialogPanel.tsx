@@ -74,9 +74,12 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
         if (isState(signal) || isComputed(signal)) {
             const nameIsChanged = props.value.name !== signal.name;
             const nameWasNotEmpty = !isEmpty(props.value.name);
+            const signalId = signal.id;
             const referencingSignals = signals.get().filter(s => {
                 if (isEffectOrComputed(s)) {
-                    return s.signalDependencies.includes(signal.id)
+                    const hasReference = s.signalDependencies.includes(signalId);
+                    const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
+                    return hasReference || hasMutatorReference;
                 }
                 return false;
             });
@@ -102,6 +105,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
         const signal = valueSignal.get();
         return generateSignalFunction(signal, signals.get(), additionalParams);
     });
+
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10, width: '80vh', height: '80vh'}}>
             <div style={{fontSize: 16, marginBottom: 10}}>Signal Effect</div>
@@ -114,10 +118,14 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
                                   value={() => valueSignal.get().name}
                                   onChange={(e) => {
                                       const value = e.target.value;
+                                      const selection = e.target.selectionStart;
                                       update((item, errors) => {
                                           item.name = convertToVarName(value);
                                           errors.name = '';
                                       });
+                                      setTimeout(() => {
+                                          e.target.setSelectionRange(selection,selection);
+                                      },0)
                                   }}
                 />
             </Notifiable>

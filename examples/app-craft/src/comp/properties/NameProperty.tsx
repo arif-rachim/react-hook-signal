@@ -3,6 +3,7 @@ import {InputComponent} from "../Component.ts";
 import {HorizontalLabel} from "./HorizontalLabel.tsx";
 import {notifiable} from "react-hook-signal";
 import {BORDER_NONE} from "../Border.ts";
+import {convertToVarName} from "../../utils/convertToVarName.ts";
 
 
 export function NameProperty(props: {
@@ -15,9 +16,13 @@ export function NameProperty(props: {
             return focusedComponent.get()?.name ?? ''
         }} onChange={(e) => {
             const newValue: string = e.target.value;
+            const selectionStart = e.target.selectionStart
             updateValue((thisComponent) => {
-                thisComponent.name = newValue;
+                thisComponent.name = convertToVarName(newValue);
             });
+            setTimeout(() => {
+                e.target.setSelectionRange(selectionStart, selectionStart);
+            },0)
         }}/>
     </HorizontalLabel>;
 }
