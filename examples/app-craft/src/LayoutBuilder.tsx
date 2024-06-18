@@ -24,6 +24,7 @@ function LayoutBuilder(props: { value: View, onChange?: (param?: View) => void }
 
     const viewSignal = useSignal<Omit<View, 'components' | 'signals'>>(view);
     const componentsSignal = useSignal<Component[]>(components);
+
     const signalsSignal = useSignal<AnySignalType[]>(signals);
 
     useEffect(() => {
