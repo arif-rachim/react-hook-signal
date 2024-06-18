@@ -25,7 +25,8 @@ const Icon = {
     Array: MdDataArray
 }
 export default function ComponentSignals() {
-    const {signals} = useContext(ComponentContext)!;
+    const componentContext = useContext(ComponentContext)!;
+    const {signals} = componentContext;
     const showModal = useShowModal()
 
     async function onAddSignal(type: 'State' | 'Computed' | 'Effect') {
@@ -38,7 +39,9 @@ export default function ComponentSignals() {
             } else if (type === "Effect") {
                 requiredField = ['name','signalDependencies','formula'] as Array<keyof AnySignalType>
             }
-            return <SignalDetailDialogPanel closePanel={closePanel} signalsSignal={signals} value={createNewValue(type)} requiredField={requiredField} additionalParams={[]}/>
+            return <ComponentContext.Provider value={componentContext}>
+                <SignalDetailDialogPanel closePanel={closePanel}  value={createNewValue(type)} requiredField={requiredField} additionalParams={[]}/>
+            </ComponentContext.Provider>
         });
         const signalValues = signals.get();
         signals.set([...signalValues, state]);
@@ -55,7 +58,9 @@ export default function ComponentSignals() {
             } else if (type === "Effect") {
                 requiredField = ['name','signalDependencies','formula'] as Array<keyof AnySignalType>
             }
-            return <SignalDetailDialogPanel closePanel={closePanel} value={signal} signalsSignal={signals} requiredField={requiredField} additionalParams={[]} />
+            return <ComponentContext.Provider value={componentContext}>
+                <SignalDetailDialogPanel closePanel={closePanel} value={signal} requiredField={requiredField} additionalParams={[]} />
+            </ComponentContext.Provider>
         });
         const signalValues = signals.get();
         const idx = signalValues.findIndex(i => i.id === state.id);

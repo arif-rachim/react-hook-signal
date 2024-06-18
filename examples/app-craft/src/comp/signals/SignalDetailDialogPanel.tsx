@@ -10,19 +10,21 @@ import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 import {Editor} from "@monaco-editor/react";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import RefactorDetailDialogPanel from "./RefactorDetailDialogPanel.tsx";
-import {Signal} from "signal-polyfill";
 import {getFunctionSymbolWithParams} from "./getFunctionSymbolWithParams.ts";
 import {generateSignalFunction} from "./generateSignalFunction.ts";
+import {useContext} from "react";
+import {ComponentContext} from "../ComponentContext.ts";
 
 
 export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
     closePanel: (param?: T) => void,
     value: T,
-    signalsSignal: Signal.State<AnySignalType[]>,
     requiredField: Array<keyof T>,
     additionalParams: string[]
 }) {
-    const {closePanel, signalsSignal, requiredField, additionalParams} = props;
+    const componentContext = useContext(ComponentContext)!;
+    const {signals} = componentContext;
+    const {closePanel, requiredField, additionalParams} = props;
     const showModal = useShowModal();
     const valueSignal = useSignal<T>(props.value);
     const errorsSignal = useSignal<{ [K in keyof T]?: string }>({});
@@ -69,11 +71,10 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
             return;
         }
         const signal = valueSignal.get();
-        const signals = signalsSignal.get();
         if (isState(signal) || isComputed(signal)) {
             const nameIsChanged = props.value.name !== signal.name;
             const nameWasNotEmpty = !isEmpty(props.value.name);
-            const referencingSignals = signals.filter(s => {
+            const referencingSignals = signals.get().filter(s => {
                 if (isEffectOrComputed(s)) {
                     return s.signalDependencies.includes(signal.id)
                 }
@@ -82,12 +83,12 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
             const hasReferencingSignals = referencingSignals.length > 0;
             if (nameIsChanged && nameWasNotEmpty && hasReferencingSignals) {
                 const {success} = await showModal<{ success: boolean }>(closePanel => {
-                    return <RefactorDetailDialogPanel
+                    return <ComponentContext.Provider value={componentContext}>
+                        <RefactorDetailDialogPanel
                         closePanel={closePanel}
-                        signalsSignal={signalsSignal}
                         newSignalName={signal.name}
                         signalId={signal.id}
-                    />
+                    /></ComponentContext.Provider>
                 });
                 if (!success) {
                     closePanel(undefined);
@@ -99,8 +100,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
 
     const codeSignal = useComputed(() => {
         const signal = valueSignal.get();
-        const signals = signalsSignal.get();
-        return generateSignalFunction(signal, signals, additionalParams);
+        return generateSignalFunction(signal, signals.get(), additionalParams);
     });
     return <HorizontalLabelContext.Provider value={{labelWidth: 130}}>
         <div style={{display: 'flex', flexDirection: 'column', padding: 10, width: '80vh', height: '80vh'}}>
@@ -130,7 +130,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
                 return {display: 'none'}
             }}>
                 <Notifiable component={Checkbox}
-                            data={() => signalsSignal.get().filter(s => s.type !== 'Effect' && s.id !== valueSignal.get().id).map(s => ({
+                            data={() => signals.get().filter(s => s.type !== 'Effect' && s.id !== valueSignal.get().id).map(s => ({
                                 label: s.name,
                                 value: s.id
                             }))}
@@ -160,7 +160,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
                 return {display: 'none'}
             }}>
                 <Notifiable component={Checkbox}
-                            data={() => signalsSignal.get().filter(s => s.type === 'State' && s.id !== valueSignal.get().id).map(s => ({
+                            data={() => signals.get().filter(s => s.type === 'State' && s.id !== valueSignal.get().id).map(s => ({
                                 label: convertToSetterName(s.name),
                                 value: s.id
                             }))}
@@ -192,7 +192,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
                             }}
                             onChangeHandler={(value?: string) => {
                                 const cleanFormula = (value ?? '').trim();
-                                const functionName = getFunctionSymbolWithParams(valueSignal.get(), signalsSignal.get(), additionalParams);
+                                const functionName = getFunctionSymbolWithParams(valueSignal.get(), signals.get(), additionalParams);
                                 const indexOfStart = cleanFormula.indexOf(functionName) + functionName.length;
                                 const indexOfEnd = cleanFormula.lastIndexOf('}');
                                 const formula = cleanFormula.slice(indexOfStart, indexOfEnd).split('\n').filter(i => i).join('\n');

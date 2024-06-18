@@ -23,7 +23,7 @@ import {HorizontalLabelContext} from "./properties/HorizontalLabel.tsx";
 
 
 export function ComponentProperties() {
-    const {components, focusedComponent, signals} = useContext(ComponentContext)!;
+    const {components, focusedComponent} = useContext(ComponentContext)!;
 
     function updateValue(callback: (thisComponent: Component) => void) {
         const componentId = focusedComponent.get()?.id;
@@ -66,24 +66,22 @@ export function ComponentProperties() {
             }}>
                 <ValueProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
                                updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}
-                               signals={signals}/>
+                />
             </Visible>
             <Visible when={() => {
                 return isInputComponent(focusedComponent.get())
             }}>
                 <ErrorMessageProperty focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
                                       updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}
-                                      signals={signals}/>
+                />
             </Visible>
 
-            <OnClickEvent focusedComponent={focusedComponent as Signal.State<Component>} updateValue={updateValue}
-                          signals={signals}/>
+            <OnClickEvent focusedComponent={focusedComponent as Signal.State<Component>} updateValue={updateValue}/>
             <Visible when={() => {
                 return isInputComponent(focusedComponent.get())
             }}>
                 <OnChangeEvent focusedComponent={focusedComponent as unknown as Signal.State<InputComponent>}
-                               updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}
-                               signals={signals}/>
+                               updateValue={updateValue as unknown as (callback: (thisComponent: InputComponent) => void) => void}/>
             </Visible>
         </HorizontalLabelContext.Provider>
         <div style={{display: 'flex'}}>

@@ -1,5 +1,5 @@
 import {Signal} from "signal-polyfill";
-import {AnySignalType, InputComponent, SignalComputed} from "../Component.ts";
+import {InputComponent, SignalComputed} from "../Component.ts";
 import {HorizontalLabel} from "./HorizontalLabel.tsx";
 import {notifiable} from "react-hook-signal";
 import {BORDER} from "../Border.ts";
@@ -8,13 +8,15 @@ import {isEmpty} from "../../utils/isEmpty.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {createNewValue} from "../signals/createNewValue.ts";
 import {SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
+import {ComponentContext} from "../ComponentContext.ts";
+import {useContext} from "react";
 
 export function ValueProperty(props: {
     focusedComponent: Signal.State<InputComponent>,
-    updateValue: (callback: (thisComponent: InputComponent) => void) => void,
-    signals: Signal.State<AnySignalType[]>
+    updateValue: (callback: (thisComponent: InputComponent) => void) => void
 }) {
-    const {updateValue, focusedComponent, signals} = props;
+    const componentContext = useContext(ComponentContext)!;
+    const {updateValue, focusedComponent} = props;
     const showModal = useShowModal();
     return <HorizontalLabel label={'Value :'}>
         <div style={{
@@ -36,7 +38,9 @@ export function ValueProperty(props: {
             }} onClick={async () => {
                 const result = await showModal<SignalComputed>(closePanel => {
                     const formulaValue = focusedComponent.get().value ?? createNewValue<SignalComputed>('Computed');
-                    return <SignalDetailDialogPanel closePanel={closePanel} value={formulaValue} signalsSignal={signals} requiredField={['name','signalDependencies','formula']} additionalParams={[]}/>
+                    return <ComponentContext.Provider value={componentContext}>
+                        <SignalDetailDialogPanel closePanel={closePanel} value={formulaValue} requiredField={['name','signalDependencies','formula']} additionalParams={[]}/>
+                    </ComponentContext.Provider>
                 });
                 if (result) {
                     updateValue(thisComponent => {

@@ -1,5 +1,4 @@
 import {AnySignalType, SignalComputed, SignalEffect} from "../Component.ts";
-import {Signal} from "signal-polyfill";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {DiffEditor} from '@monaco-editor/react';
 import {BORDER} from "../Border.ts";
@@ -7,51 +6,62 @@ import {colors} from "../../utils/colors.ts";
 import {refactorSymbol} from "./refactorSymbol.ts";
 import {getFunctionSymbol} from "./getFunctionSymbol.ts";
 import {generateSignalFunction} from "./generateSignalFunction.ts";
+import {useContext} from "react";
+import {ComponentContext} from "../ComponentContext.ts";
+import {convertToSetterName} from "../../utils/convertToSetterName.ts";
 
 export default function RefactorDetailDialogPanel(props: {
     closePanel: (param?: { success: boolean }) => void,
-    signalsSignal: Signal.State<AnySignalType[]>,
     signalId: string,
     newSignalName: string
 }) {
-    const {closePanel, newSignalName, signalId, signalsSignal} = props;
+    const componentContext = useContext(ComponentContext)!;
+    const { signals } = componentContext;
+    const {closePanel, newSignalName, signalId} = props;
     const codes = useComputed(() => {
-        const signals = signalsSignal.get();
-        const signalToChange = signals.find(s => s.id === signalId);
+        const signalz = signals.get();
+        const signalToChange = signalz.find(s => s.id === signalId);
         if (signalToChange === undefined) {
             return;
         }
-        const referencingSignals = signals.filter(s => {
+        const referencingSignals = signalz.filter(s => {
             if (isEffectOrComputed(s)) {
-                return s.signalDependencies.includes(signalId)
+                const hasReference = s.signalDependencies.includes(signalId);
+                const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
+                return hasReference || hasMutatorReference;
             }
             return false;
         });
+
         const buildCodes: string[] = [];
         referencingSignals.forEach(s => {
-            buildCodes.push(generateSignalFunction(s, signals, []));
+            buildCodes.push(generateSignalFunction(s, signalz, []));
         });
+
         return buildCodes.join("\n\n");
     });
     const refactoredCodes = useSignal('');
     useSignalEffect(() => {
-        const original = codes.get();
-        const signals = signalsSignal.get();
-        const signalToChange = signals.find(s => s.id === signalId);
+        let original = codes.get();
+        const signalToChange = signals.get().find(s => s.id === signalId);
         if (signalToChange === undefined) {
             return;
         }
         if(original){
+            if(isState(signalToChange)){
+                original = refactorSymbol(original??'', convertToSetterName(signalToChange.name),convertToSetterName(newSignalName));
+            }
             refactoredCodes.set(refactorSymbol(original??'',signalToChange.name,newSignalName))
         }
     })
     function applyChanges(){
         const modified = refactoredCodes.get();
-        const signals = signalsSignal.get();
 
-        const referencingSignals = signals.filter(s => {
+        const referencingSignals = signals.get().filter(s => {
             if (isEffectOrComputed(s)) {
-                return s.signalDependencies.includes(signalId)
+                const hasReference = s.signalDependencies.includes(signalId);
+                const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
+                return hasReference || hasMutatorReference;
             }
             return false;
         });
@@ -74,7 +84,7 @@ export default function RefactorDetailDialogPanel(props: {
             const signalContent = modified.substring(startBracketOfTheSignal+1,closingBracketOfTheSignal);
             referencingSignalsToBeUpdated.push({...signal,formula:'\t'+signalContent.trim()});
         }
-        signalsSignal.set(signalsSignal.get().map(s => {
+        signals.set(signals.get().map(s => {
             const updatedSignal = referencingSignalsToBeUpdated.find(g => g.id === s.id);
             return updatedSignal !== undefined ? updatedSignal : s;
         }));
@@ -121,4 +131,12 @@ export default function RefactorDetailDialogPanel(props: {
 
 function isEffectOrComputed(signal: AnySignalType): signal is SignalEffect | SignalComputed {
     return signal.type === 'Effect' || signal.type === 'Computed';
+}
+
+function isEffect(signal: AnySignalType): signal is SignalEffect {
+    return signal.type === 'Effect';
+}
+
+function isState(signal: AnySignalType): signal is SignalEffect {
+    return signal.type === 'State';
 }

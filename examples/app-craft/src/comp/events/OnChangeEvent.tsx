@@ -1,5 +1,5 @@
 import {Signal} from "signal-polyfill";
-import {AnySignalType, InputComponent, SignalEffect} from "../Component.ts";
+import {InputComponent, SignalEffect} from "../Component.ts";
 import {HorizontalLabel} from "../properties/HorizontalLabel.tsx";
 import {VscSymbolEvent} from "react-icons/vsc";
 import {BORDER} from "../Border.ts";
@@ -8,13 +8,15 @@ import {notifiable} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
 import {createNewValue} from "../signals/createNewValue.ts";
+import {ComponentContext} from "../ComponentContext.ts";
+import {useContext} from "react";
 
 export function OnChangeEvent(props: {
     focusedComponent: Signal.State<InputComponent>,
-    updateValue: (callback: (thisComponent: InputComponent) => void) => void,
-    signals: Signal.State<AnySignalType[]>
+    updateValue: (callback: (thisComponent: InputComponent) => void) => void
 }) {
-    const {updateValue, focusedComponent, signals} = props;
+    const componentContext = useContext(ComponentContext)!;
+    const {updateValue, focusedComponent} = props;
     const showModal = useShowModal();
     return <HorizontalLabel label={'OnChange :'} style={{overflow:'hidden'}}>
         <div style={{minHeight: 27, display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 5,marginRight:5,overflow:'hidden'}}>
@@ -28,7 +30,9 @@ export function OnChangeEvent(props: {
             }} onClick={async () => {
                 const result = await showModal<SignalEffect>(closePanel => {
                     const onChange = focusedComponent.get().events.onChange ?? createNewValue<SignalEffect>('Effect');
-                    return <SignalDetailDialogPanel closePanel={closePanel} value={onChange} signalsSignal={signals} requiredField={['name','formula']} additionalParams={['value']} />
+                    return <ComponentContext.Provider value={componentContext}>
+                        <SignalDetailDialogPanel closePanel={closePanel} value={onChange} requiredField={['name','formula']} additionalParams={['value']} />
+                    </ComponentContext.Provider>
                 });
                 if (result) {
                     updateValue(thisComponent => {

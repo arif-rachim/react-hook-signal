@@ -8,13 +8,15 @@ import {notifiable} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {SignalDetailDialogPanel} from "../signals/SignalDetailDialogPanel.tsx";
 import {createNewValue} from "../signals/createNewValue.ts";
+import {ComponentContext} from "../ComponentContext.ts";
+import {useContext} from "react";
 
 export function OnClickEvent(props: {
     focusedComponent: Signal.State<Component>,
-    updateValue: (callback: (thisComponent: Component) => void) => void,
-    signals: Signal.State<AnySignalType[]>
+    updateValue: (callback: (thisComponent: Component) => void) => void
 }) {
-    const {updateValue, focusedComponent, signals} = props;
+    const componentContext = useContext(ComponentContext)!;
+    const {updateValue, focusedComponent} = props;
     const showModal = useShowModal();
     return <HorizontalLabel label={'OnClick :'} style={{overflow:'hidden'}}>
         <div style={{minHeight: 27, display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 5,marginRight:5,overflow:'hidden'}}>
@@ -28,7 +30,9 @@ export function OnClickEvent(props: {
             }} onClick={async () => {
                 const result = await showModal<SignalEffect>(closePanel => {
                     const onClick = focusedComponent.get().events.onClick ?? createNewValue<SignalEffect>('Effect');
-                    return <SignalDetailDialogPanel closePanel={closePanel as (param:AnySignalType|undefined) => void} value={onClick} signalsSignal={signals} requiredField={['name','formula']} additionalParams={['value']} />
+                    return <ComponentContext.Provider value={componentContext}>
+                        <SignalDetailDialogPanel closePanel={closePanel as (param:AnySignalType|undefined) => void} value={onClick} requiredField={['name','formula']} additionalParams={['value']} />
+                    </ComponentContext.Provider>
                 });
                 if (result) {
                     updateValue(thisComponent => {
