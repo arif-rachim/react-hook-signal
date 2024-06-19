@@ -1,5 +1,5 @@
 import {Signal} from "signal-polyfill";
-import {AnySignalType, Component, SignalEffect} from "../Component.ts";
+import {Component, SignalEffect} from "../Component.ts";
 import {HorizontalLabel} from "../properties/HorizontalLabel.tsx";
 import {VscSymbolEvent} from "react-icons/vsc";
 import {BORDER} from "../Border.ts";
@@ -29,14 +29,14 @@ export function OnClickEvent(props: {
                 borderRadius: 5
             }} onClick={async () => {
                 const result = await showModal<SignalEffect>(closePanel => {
-                    const onClick = focusedComponent.get().events.onClick ?? createNewValue<SignalEffect>('Effect');
+                    const onClick = focusedComponent.get().onClick ?? createNewValue<SignalEffect>('Effect');
                     return <ComponentContext.Provider value={componentContext}>
-                        <SignalDetailDialogPanel closePanel={closePanel as (param:AnySignalType|undefined) => void} value={onClick} requiredField={['name','formula']} additionalParams={['value']} />
+                        <SignalDetailDialogPanel value={onClick} closePanel={closePanel} requiredField={['name','formula']} additionalParams={['value']} />
                     </ComponentContext.Provider>
                 });
                 if (result) {
                     updateValue(thisComponent => {
-                        thisComponent.events.onClick = result;
+                        thisComponent.onClick = result;
                     })
                 }
             }}>
@@ -45,7 +45,7 @@ export function OnClickEvent(props: {
                     if (component === undefined) {
                         return <VscSymbolEvent style={{fontSize: 16}}/>
                     }
-                    const value = component.events.onClick?.name ?? '';
+                    const value = component.onClick?.name ?? '';
                     if (isEmpty(value)) {
                         return <VscSymbolEvent style={{fontSize: 16}}/>
                     }

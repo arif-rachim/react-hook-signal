@@ -9,6 +9,7 @@ interface BaseConfigType {
         borderWhenHovered: CSSProperties['border'],
         borderWhenFocused: CSSProperties['border'],
         backgroundWhenDragOver: CSSProperties['background']
+        backgroundWhenHovered: CSSProperties['background']
     },
     style: CSSProperties
 }
@@ -37,7 +38,8 @@ export const ComponentConfig = createConfig({
         dragAndDropStyle: {
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
-            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+            borderWhenFocused: `1px solid ${colors.blue}`,
+            backgroundWhenHovered : `rgba(255,192,0,0.1)`
         },
         style: {
             display: 'flex',
@@ -64,7 +66,8 @@ export const ComponentConfig = createConfig({
         dragAndDropStyle: {
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
-            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+            borderWhenFocused: `1px solid ${colors.blue}`,
+            backgroundWhenHovered : `rgba(255,192,0,0.1)`
         },
         style: {
             display: 'flex',
@@ -94,7 +97,8 @@ export const ComponentConfig = createConfig({
         dragAndDropStyle: {
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
-            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+            borderWhenFocused: `1px solid ${colors.blue}`,
+            backgroundWhenHovered : `rgba(255,192,0,0.1)`
         },
         errorStyle: {
             borderWhenError: `1px solid ${colors.red}`,
@@ -115,7 +119,8 @@ export const ComponentConfig = createConfig({
         dragAndDropStyle: {
             backgroundWhenDragOver: 'rgba(0,0,0,0.3)',
             borderWhenHovered: `1px dashed rgba(0,0,0,0.2)`,
-            borderWhenFocused: `1px dashed rgba(0,0,0,0.5)`
+            borderWhenFocused: `1px solid ${colors.blue}`,
+            backgroundWhenHovered : `rgba(255,192,0,0.1)`
         },
         style: {
             background: 'rgba(0,0,0,0.05)',

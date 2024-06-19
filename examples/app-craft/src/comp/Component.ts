@@ -8,9 +8,7 @@ export interface Component {
     parent: string,
     children: string[],
     componentType: keyof (typeof ComponentConfig),
-    events: {
-        onClick?: SignalEffect
-    }
+    onClick?: SignalEffect,
 }
 
 export interface LabelComponent extends Component {
@@ -21,31 +19,28 @@ export interface InputComponent extends LabelComponent {
     value?: SignalComputed,
     errorMessage?: SignalComputed,
     name: string,
-    events: LabelComponent['events'] & { onChange?: SignalEffect }
+    onChange?: SignalEffect
 }
 
 interface Signal {
     id: string,
     name: string,
-    type: unknown
+    formula: string,
 }
 
 export interface SignalState extends Signal {
     type: 'State',
-    formula: string,
 }
 
 export interface SignalComputed extends Signal {
     type: 'Computed',
     signalDependencies: string[],
-    formula: string,
 }
 
 export interface SignalEffect extends Signal {
     type: 'Effect'
     signalDependencies: string[],
     mutableSignals: string[],
-    formula: string,
 }
 
 

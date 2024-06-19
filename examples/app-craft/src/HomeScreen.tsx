@@ -27,8 +27,7 @@ function createNewViewObject() {
             componentType: 'Vertical',
             id: tempId,
             parent: '',
-            children: [],
-            events : {}
+            children: []
         }],
     }
     return newView;

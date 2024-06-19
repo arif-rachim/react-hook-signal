@@ -9,6 +9,7 @@ import {generateSignalFunction} from "./generateSignalFunction.ts";
 import {useContext} from "react";
 import {ComponentContext} from "../ComponentContext.ts";
 import {convertToSetterName} from "../../utils/convertToSetterName.ts";
+import {extractSignalsFromComponents} from "./SignalDetailDialogPanel.tsx";
 
 export default function RefactorDetailDialogPanel(props: {
     closePanel: (param?: { success: boolean }) => void,
@@ -16,14 +17,24 @@ export default function RefactorDetailDialogPanel(props: {
     newSignalName: string
 }) {
     const componentContext = useContext(ComponentContext)!;
-    const { signals } = componentContext;
+    const { signals,components,focusedComponent } = componentContext;
     const {closePanel, newSignalName, signalId} = props;
     const codes = useComputed(() => {
         const signalz = signals.get();
+        const componentz = components.get();
         const signalToChange = signalz.find(s => s.id === signalId);
         if (signalToChange === undefined) {
             return;
         }
+        const referencingAttributesSignal = extractSignalsFromComponents(componentz).filter(item => {
+            const s = item.signal;
+            if (isEffectOrComputed(s)) {
+                const hasReference = s.signalDependencies.includes(signalId);
+                const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
+                return hasReference || hasMutatorReference;
+            }
+            return false;
+        })
         const referencingSignals = signalz.filter(s => {
             if (isEffectOrComputed(s)) {
                 const hasReference = s.signalDependencies.includes(signalId);
@@ -34,7 +45,7 @@ export default function RefactorDetailDialogPanel(props: {
         });
 
         const buildCodes: string[] = [];
-        referencingSignals.forEach(s => {
+        [...referencingSignals,...referencingAttributesSignal.map(s => s.signal)].forEach(s => {
             buildCodes.push(generateSignalFunction(s, signalz, []));
         });
 
@@ -57,7 +68,17 @@ export default function RefactorDetailDialogPanel(props: {
     function applyChanges(){
         const modified = refactoredCodes.get();
 
-        const referencingSignals = signals.get().filter(s => {
+        const attributesSignal = extractSignalsFromComponents(components.get()).filter(item => {
+            const s = item.signal;
+            if (isEffectOrComputed(s)) {
+                const hasReference = s.signalDependencies.includes(signalId);
+                const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
+                return hasReference || hasMutatorReference;
+            }
+            return false;
+        })
+
+        const pageSignals = signals.get().filter(s => {
             if (isEffectOrComputed(s)) {
                 const hasReference = s.signalDependencies.includes(signalId);
                 const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
@@ -65,10 +86,10 @@ export default function RefactorDetailDialogPanel(props: {
             }
             return false;
         });
-
+        const referencingSignals = [...pageSignals,...attributesSignal.map(s => s.signal)]
         const referencingSignalsToBeUpdated:AnySignalType[] = [];
         for (let i = 0; i < referencingSignals.length; i++) {
-            const signal = referencingSignals[i];
+            const signal:AnySignalType = referencingSignals[i];
             const functionName = getFunctionSymbol(signal);
             const startOfTheSignal = modified.lastIndexOf(functionName);
             const startBracketOfTheSignal = modified.indexOf('{',startOfTheSignal);
@@ -82,12 +103,31 @@ export default function RefactorDetailDialogPanel(props: {
                 closingBracketOfTheSignal = modified.lastIndexOf('}',startTheNextSignal);
             }
             const signalContent = modified.substring(startBracketOfTheSignal+1,closingBracketOfTheSignal);
-            referencingSignalsToBeUpdated.push({...signal,formula:'\t'+signalContent.trim()});
+            const newSignal = {...signal,formula:'\t'+signalContent.trim()} as AnySignalType;
+            referencingSignalsToBeUpdated.push(newSignal);
         }
         signals.set(signals.get().map(s => {
             const updatedSignal = referencingSignalsToBeUpdated.find(g => g.id === s.id);
             return updatedSignal !== undefined ? updatedSignal : s;
         }));
+        components.set(components.get().map(s => {
+            const componentId = s.id;
+            const componentAttributes = attributesSignal.filter(s => s.componentId === componentId);
+            if(componentAttributes.length === 0){
+                return s;
+            }
+            const newComponent = {...s};
+            for (const a of componentAttributes) {
+                const val = referencingSignalsToBeUpdated.find(g => g.id === a.signal.id)!;
+                Object.assign(newComponent,{[a.attribute]:val})
+            }
+            return newComponent;
+        }));
+        const focusedComponentUpdated = attributesSignal.find(i => i.componentId === focusedComponent.get()?.id) !== undefined;
+        if(focusedComponentUpdated){
+            const newUpdatedComponent = components.get().find(i => i.id === focusedComponent.get()?.id)!;
+            focusedComponent.set(newUpdatedComponent);
+        }
         closePanel({success:true});
     }
     return <div style={{height: '90vh', width: '90vw', display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
@@ -98,7 +138,7 @@ export default function RefactorDetailDialogPanel(props: {
         </div>
         <notifiable.div style={{flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
             {() => {
-                const original = codes.get();
+                const original = codes.get() ?? '';
                 const modified = refactoredCodes.get();
                 return <DiffEditor original={original} modified={modified} language={'javascript'}/>
             }}

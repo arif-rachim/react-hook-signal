@@ -1,12 +1,4 @@
-import {
-    createContext,
-    CSSProperties,
-    DragEvent,
-    HTMLAttributes,
-    MouseEvent,
-    useContext,
-    useEffect
-} from "react";
+import {createContext, CSSProperties, DragEvent, HTMLAttributes, MouseEvent, useContext, useEffect} from "react";
 import {AnySignal, notifiable, useComputed, useSignal} from "react-hook-signal";
 import {guid, isGuid} from "../utils/guid.ts";
 import {ComputableProps} from "../../../../src/components.ts";
@@ -22,6 +14,7 @@ import {colors} from "../utils/colors.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {convertToSetterName} from "../utils/convertToSetterName.ts";
 import {isStateSignal} from "../utils/isStateSignal.ts";
+import Visible from "./Visible.tsx";
 
 const mouseOverComponentId = new Signal.State('');
 
@@ -50,10 +43,10 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
         const propsValues:Array<unknown> = [];
         const propsName:string[] = [];
         const component = componentSignal.get();
-        if(isEmpty(component)|| isEmpty(component?.events) || isEmpty(component?.events.onClick) || isEmpty(component?.events.onClick?.formula)){
+        if(isEmpty(component) || isEmpty(component?.onClick) || isEmpty(component?.onClick?.formula)){
             return;
         }
-        for (const key of component!.events.onClick!.signalDependencies) {
+        for (const key of component!.onClick!.signalDependencies) {
             const signalState = signalsState.get().find(s => s.type.id === key);
             if (signalState === undefined) {
                 continue;
@@ -61,7 +54,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
             propsName.push(signalState.type.name);
             propsValues.push(signalState.signal.get());
         }
-        for (const key of component!.events.onClick!.mutableSignals) {
+        for (const key of component!.onClick!.mutableSignals) {
             const signalState = signalsState.get().find(s => s.type.id === key);
             if (signalState === undefined) {
                 continue;
@@ -74,7 +67,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
             });
         }
         try {
-            const fun = new Function(...propsName, component!.events.onClick?.formula ?? '');
+            const fun = new Function(...propsName, component!.onClick?.formula ?? '');
             fun(...propsValues);
         } catch (err) {
             console.error(err);
@@ -90,7 +83,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
         const propsName:string[] = [];
         const component = componentSignal.get();
         if(isInputComponent(component)){
-            for (const key of component.events.onChange!.signalDependencies) {
+            for (const key of component.onChange!.signalDependencies) {
                 const signalState = signalsState.get().find(s => s.type.id === key);
                 if (signalState === undefined) {
                     continue;
@@ -98,7 +91,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
                 propsName.push(signalState.type.name);
                 propsValues.push(signalState.signal.get());
             }
-            for (const key of component.events.onChange!.mutableSignals) {
+            for (const key of component.onChange!.mutableSignals) {
                 const signalState = signalsState.get().find(s => s.type.id === key);
                 if (signalState === undefined) {
                     continue;
@@ -117,7 +110,7 @@ function populateEvents(componentSignal: AnySignal<Component|undefined>, signals
             }
 
             try {
-                const fun = new Function(...propsName, component.events.onChange?.formula ?? '');
+                const fun = new Function(...propsName, component.onChange?.formula ?? '');
                 fun(...propsValues);
             } catch (err) {
                 console.error(err);
@@ -224,15 +217,14 @@ export function ComponentRenderer(props: {
                 parent: containerId,
                 children: [],
                 componentType: componentTypeOrElementId,
-                style: {...ComponentConfig[componentTypeOrElementId].style},
-                events: {}
+                style: {...ComponentConfig[componentTypeOrElementId].style}
             }
             if (componentTypeOrElementId === 'Input') {
                 newComponent = {
                     ...newComponent,
                     label: 'Label',
                     isRequired: false,
-                    name: 'Name'
+                    name: ''
                 } as InputComponent
             }
             if (componentTypeOrElementId === 'Button') {
@@ -387,12 +379,14 @@ export function ComponentRenderer(props: {
             const {
                 backgroundWhenDragOver,
                 borderWhenFocused,
-                borderWhenHovered
+                borderWhenHovered,
+                backgroundWhenHovered
             } = ComponentConfig[componentType].dragAndDropStyle;
             const initialStyle = {...ComponentConfig[componentType].style};
             const result: CSSProperties = style === undefined ? initialStyle : {...style};
-            result.background = isDraggedOver ? backgroundWhenDragOver : initialStyle.background;
-            result.border = isMouseOver ? borderWhenHovered : isSelected ? borderWhenFocused : initialStyle.border;
+            result.position = 'relative';
+            result.background = isDraggedOver ? backgroundWhenDragOver : isMouseOver ? backgroundWhenHovered : initialStyle.background;
+            result.border =  isSelected ? borderWhenFocused : isMouseOver ? borderWhenHovered : initialStyle.border;
             // we alter this because width and height to be maintained by container
             if (!isInputComponent(component)) {
                 return result;
@@ -503,11 +497,13 @@ export function ComponentRenderer(props: {
             }
             const result: CSSProperties = {
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                position:'relative'
             };
             if (!isInputComponent(component)) {
                 return result;
             }
+
             result.width = component.style.width;
             result.height = component.style.height;
             result.margin = component.style.margin;
@@ -530,6 +526,10 @@ export function ComponentRenderer(props: {
                 }}</notifiable.div>
             </div>
             <notifiable.input {...inputProps} {...styleProps} {...events} autoComplete={'off'}/>
+            <Visible when={() => {
+                return focusedComponent.get()?.id === component?.id
+            }}>
+            </Visible>
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {

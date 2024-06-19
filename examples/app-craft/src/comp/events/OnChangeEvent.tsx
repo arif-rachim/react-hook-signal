@@ -29,14 +29,14 @@ export function OnChangeEvent(props: {
                 borderRadius: 5
             }} onClick={async () => {
                 const result = await showModal<SignalEffect>(closePanel => {
-                    const onChange = focusedComponent.get().events.onChange ?? createNewValue<SignalEffect>('Effect');
+                    const onChange = focusedComponent.get().onChange ?? createNewValue<SignalEffect>('Effect');
                     return <ComponentContext.Provider value={componentContext}>
                         <SignalDetailDialogPanel closePanel={closePanel} value={onChange} requiredField={['name','formula']} additionalParams={['value']} />
                     </ComponentContext.Provider>
                 });
                 if (result) {
                     updateValue(thisComponent => {
-                        thisComponent.events.onChange = result;
+                        thisComponent.onChange = result;
                     })
                 }
             }}>
@@ -45,7 +45,7 @@ export function OnChangeEvent(props: {
                     if (component === undefined) {
                         return <VscSymbolEvent style={{fontSize: 16}}/>
                     }
-                    const value = component.events.onChange?.name ?? '';
+                    const value = component.onChange?.name ?? '';
                     if (isEmpty(value)) {
                         return <VscSymbolEvent style={{fontSize: 16}}/>
                     }

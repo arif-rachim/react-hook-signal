@@ -1,4 +1,4 @@
-import {AnySignalType, SignalComputed, SignalEffect, SignalState} from "../Component.ts";
+import {AnySignalType, Component, SignalComputed, SignalEffect, SignalState} from "../Component.ts";
 import {notifiable, Notifiable, useComputed, useSignal} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {HorizontalLabel, HorizontalLabelContext} from "../properties/HorizontalLabel.tsx";
@@ -23,7 +23,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
     additionalParams: string[]
 }) {
     const componentContext = useContext(ComponentContext)!;
-    const {signals} = componentContext;
+    const {signals,components} = componentContext;
     const {closePanel, requiredField, additionalParams} = props;
     const showModal = useShowModal();
     const valueSignal = useSignal<T>(props.value);
@@ -75,6 +75,15 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
             const nameIsChanged = props.value.name !== signal.name;
             const nameWasNotEmpty = !isEmpty(props.value.name);
             const signalId = signal.id;
+            const referencingAttributesSignal = extractSignalsFromComponents(components.get()).filter(item => {
+                const s = item.signal;
+                if (isEffectOrComputed(s)) {
+                    const hasReference = s.signalDependencies.includes(signalId);
+                    const hasMutatorReference = isEffect(s) ? s.mutableSignals.includes(signalId) : false;
+                    return hasReference || hasMutatorReference;
+                }
+                return false;
+            })
             const referencingSignals = signals.get().filter(s => {
                 if (isEffectOrComputed(s)) {
                     const hasReference = s.signalDependencies.includes(signalId);
@@ -83,7 +92,7 @@ export function SignalDetailDialogPanel<T extends AnySignalType>(props: {
                 }
                 return false;
             });
-            const hasReferencingSignals = referencingSignals.length > 0;
+            const hasReferencingSignals = referencingSignals.length > 0 || referencingAttributesSignal.length > 0;
             if (nameIsChanged && nameWasNotEmpty && hasReferencingSignals) {
                 const {success} = await showModal<{ success: boolean }>(closePanel => {
                     return <ComponentContext.Provider value={componentContext}>
@@ -237,17 +246,31 @@ function isEffectOrComputed(signal: AnySignalType): signal is SignalEffect | Sig
     return signal.type === 'Effect' || signal.type === 'Computed';
 }
 
-function isComputed(signal: AnySignalType): signal is SignalComputed {
-    return signal.type === 'Computed';
+function isComputed(signal: unknown): signal is SignalComputed {
+    return signal !== null && signal !== undefined && typeof signal === 'object' && 'type' in signal && signal.type === 'Computed';
 }
 
-function isEffect(signal: AnySignalType): signal is SignalEffect {
-    return signal.type === 'Effect';
+function isEffect(signal: unknown): signal is SignalEffect {
+    return signal !== null && signal !== undefined && typeof signal === 'object' && 'type' in signal && signal.type === 'Effect';
 }
 
-function isState(signal: AnySignalType): signal is SignalState {
-    return signal.type === 'State';
+function isState(signal: unknown): signal is SignalState {
+    return signal !== null && signal !== undefined && typeof signal === 'object' && 'type' in signal && signal.type === 'State';
 }
 
-
-
+export function extractSignalsFromComponents<T extends Component>(components:T[]){
+    const result:Array<{signal:AnySignalType,componentId:string,attribute:keyof T}> = [];
+    for (const component of components) {
+        const componentId = component.id;
+        const keys = Object.keys(component) as Array<keyof typeof component>;
+        for (const attribute of keys) {
+            if(attribute){
+                const signal = component[attribute];
+                if(isEffect(signal) || isComputed(signal)){
+                    result.push({componentId,signal,attribute})
+                }
+            }
+        }
+    }
+    return result;
+}
