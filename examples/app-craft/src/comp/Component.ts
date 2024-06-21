@@ -22,6 +22,8 @@ export interface InputComponent extends LabelComponent {
     onChange?: SignalEffect
 }
 
+
+
 interface Signal {
     id: string,
     name: string,

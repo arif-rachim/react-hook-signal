@@ -4,7 +4,14 @@ import {guid, isGuid} from "../utils/guid.ts";
 import {ComputableProps} from "../../../../src/components.ts";
 import {MdKeyboardArrowRight, MdOutlineBrokenImage} from "react-icons/md";
 import {Signal} from "signal-polyfill";
-import {AnySignalType, Component, InputComponent, LabelComponent, SignalStateContextData} from "./Component.ts";
+import {
+    AnySignalType,
+    Component,
+    InputComponent,
+    LabelComponent,
+    SignalEffect,
+    SignalStateContextData
+} from "./Component.ts";
 import {ComponentContext} from "./ComponentContext.ts";
 import {ComponentConfig} from "./ComponentLibrary.tsx";
 import {isInputComponent} from "../utils/isInputComponent.ts";
@@ -18,106 +25,104 @@ import Visible from "./Visible.tsx";
 
 const mouseOverComponentId = new Signal.State('');
 
-function isComponentOneParentOfComponentTwo(props: {
-    componentOne: Component,
-    componentTwo: Component,
-    components: Component[]
-}) {
-    const {componentOne, componentTwo, components} = props;
-    if (componentTwo.parent) {
-        if (componentTwo.parent === componentOne.id) {
-            return true;
-        }
-        const componentTwoParent = components.find(i => i.id === componentTwo.parent)!;
-        return isComponentOneParentOfComponentTwo({componentOne, componentTwo: componentTwoParent, components});
-    }
-    return false
+function findParentComponent(components: Component[], parentId: string): Component {
+    return components.find(i => i.id === parentId)!;
 }
 
-function populateEvents(componentSignal: AnySignal<Component|undefined>, signalsState: AnySignal<SignalStateContextData>,result:HTMLAttributes<HTMLElement>) {
-    const {onClick,onChange} = result;
-    result.onClick = (event) => {
-        if(onClick){
-            onClick(event);
+function isChildComponent(props: { parent: Component, child: Component, components: Component[] }) {
+    const {parent, child, components} = props;
+    if (child.parent) {
+        if (child.parent === parent.id) {
+            return true;
         }
-        const propsValues:Array<unknown> = [];
-        const propsName:string[] = [];
-        const component = componentSignal.get();
-        if(isEmpty(component) || isEmpty(component?.onClick) || isEmpty(component?.onClick?.formula)){
+        const parentComponent = findParentComponent(components, child.parent);
+        return isChildComponent({parent: parent, child: parentComponent, components});
+    }
+    return false;
+}
+
+type HandlerAttributeType<T extends Component> = {
+    [K in keyof T]: T[K] extends (SignalEffect | undefined) ? K : never;
+}[keyof T];
+
+function populateEvents(componentSignal: AnySignal<Component | undefined>, signalsState: AnySignal<SignalStateContextData>, result: HTMLAttributes<HTMLElement>) {
+    const {onClick, onChange} = result;
+
+    const executeSignalEffect = <C extends Component>(props: {
+        component: C,
+        attributeName: HandlerAttributeType<C>,
+        propsValues: Array<unknown>,
+        propsName: string[]
+    }) => {
+        const {attributeName, propsName, propsValues, component} = props;
+        if (component === undefined) {
             return;
         }
-        for (const key of component!.onClick!.signalDependencies) {
-            const signalState = signalsState.get().find(s => s.type.id === key);
-            if (signalState === undefined) {
-                continue;
-            }
-            propsName.push(signalState.type.name);
-            propsValues.push(signalState.signal.get());
+        const signalEffect = component[attributeName] as SignalEffect;
+        if (isEmpty(signalEffect)) {
+            return;
         }
-        for (const key of component!.onClick!.mutableSignals) {
+        parseSignalDependencies({signalEffect,propsName,propsValues});
+        executeSignalFormula({signalEffect, propsValues, propsName});
+    };
+
+    const parseSignalDependencies = (props: {
+        signalEffect: SignalEffect,
+        propsValues: Array<unknown>,
+        propsName: string[]
+    }) => {
+        const {signalEffect, propsName, propsValues} = props;
+        for (const key of signalEffect.signalDependencies) {
             const signalState = signalsState.get().find(s => s.type.id === key);
-            if (signalState === undefined) {
-                continue;
+            if (signalState) {
+                propsName.push(signalState.type.name);
+                propsValues.push(signalState.signal.get());
             }
-            propsName.push(convertToSetterName(signalState.type.name));
-            propsValues.push((value:unknown) => {
-                if(isStateSignal(signalState.signal)){
-                    signalState.signal.set(value)
-                }
-            });
         }
+
+        for (const key of signalEffect.mutableSignals) {
+            const signalState = signalsState.get().find(s => s.type.id === key);
+            if (signalState) {
+                propsName.push(convertToSetterName(signalState.type.name));
+                propsValues.push((value: unknown) => isStateSignal(signalState.signal) ? signalState.signal.set(value) : null);
+            }
+        }
+    };
+
+    const executeSignalFormula = (props: {
+        signalEffect: SignalEffect | undefined,
+        propsValues: Array<unknown>,
+        propsName: string[]
+    }) => {
+        const {signalEffect, propsName, propsValues} = props;
         try {
-            const fun = new Function(...propsName, component!.onClick?.formula ?? '');
+            if (signalEffect === undefined) {
+                return;
+            }
+            const fun = new Function(...propsName, signalEffect?.formula ?? '');
             fun(...propsValues);
         } catch (err) {
             console.error(err);
         }
+    };
 
-    }
-
+    result.onClick = (event) => {
+        if(onClick){
+            onClick(event);
+        }
+        executeSignalEffect<Component>({component:componentSignal.get()!, attributeName:'onClick',  propsValues:[], propsName:[]});
+    };
     result.onChange = (event) => {
         if(onChange){
             onChange(event);
         }
-        const propsValues:Array<unknown> = [];
-        const propsName:string[] = [];
         const component = componentSignal.get();
-        if(isInputComponent(component)){
-            for (const key of component.onChange!.signalDependencies) {
-                const signalState = signalsState.get().find(s => s.type.id === key);
-                if (signalState === undefined) {
-                    continue;
-                }
-                propsName.push(signalState.type.name);
-                propsValues.push(signalState.signal.get());
-            }
-            for (const key of component.onChange!.mutableSignals) {
-                const signalState = signalsState.get().find(s => s.type.id === key);
-                if (signalState === undefined) {
-                    continue;
-                }
-                propsName.push(convertToSetterName(signalState.type.name));
-                propsValues.push((value:unknown) => {
-                    if(isStateSignal(signalState.signal)){
-                        signalState.signal.set(value)
-                    }
-                });
-            }
-
-            if('value' in event.target){
-                propsName.push('value');
-                propsValues.push(event.target.value);
-            }
-
-            try {
-                const fun = new Function(...propsName, component.onChange?.formula ?? '');
-                fun(...propsValues);
-            } catch (err) {
-                console.error(err);
-            }
+        if (isInputComponent(component) && 'value' in event.target) {
+            const propsName = ['value'];
+            const propsValues = [event.target.value];
+            executeSignalEffect<InputComponent>({component:component, attributeName:'onChange', propsValues, propsName});
         }
     }
-
     return result;
 }
 
@@ -191,9 +196,9 @@ export function ComponentRenderer(props: {
             }
             const droppedInComponent = components.find(i => i.id === componentTypeOrElementId)!;
             const thisComponent = components.find(layout => layout.id === self.id) ?? {id: '', children: []};
-            if (isComponentOneParentOfComponentTwo({
-                componentOne: droppedInComponent,
-                componentTwo: thisComponent as Component,
+            if (isChildComponent({
+                parent: droppedInComponent,
+                child: thisComponent as Component,
                 components
             })) {
                 return;
@@ -326,8 +331,8 @@ export function ComponentRenderer(props: {
             if (!isInputComponent(component)) {
                 return '';
             }
-            const propsName:Array<string> = [];
-            const propsValues:Array<unknown> = [];
+            const propsName: Array<string> = [];
+            const propsValues: Array<unknown> = [];
             for (const key of (component?.value?.signalDependencies ?? [])) {
                 const signalState = signalsState.find(s => s.type.id === key);
                 if (signalState === undefined) {
@@ -386,7 +391,7 @@ export function ComponentRenderer(props: {
             const result: CSSProperties = style === undefined ? initialStyle : {...style};
             result.position = 'relative';
             result.background = isDraggedOver ? backgroundWhenDragOver : isMouseOver ? backgroundWhenHovered : initialStyle.background;
-            result.border =  isSelected ? borderWhenFocused : isMouseOver ? borderWhenHovered : initialStyle.border;
+            result.border = isSelected ? borderWhenFocused : isMouseOver ? borderWhenHovered : initialStyle.border;
             // we alter this because width and height to be maintained by container
             if (!isInputComponent(component)) {
                 return result;
@@ -480,7 +485,7 @@ export function ComponentRenderer(props: {
     }
     // const signalsState = props.signalContext.get();
     if (isContainer(component)) {
-        populateEvents(componentSignal, props.signalContext,dragAndDropProps);
+        populateEvents(componentSignal, props.signalContext, dragAndDropProps);
         return <SignalStateContext.Provider value={props.signalContext}>
             <notifiable.div {...styleProps} {...dragAndDropProps}>
                 {elements}
@@ -488,8 +493,8 @@ export function ComponentRenderer(props: {
         </SignalStateContext.Provider>
     }
     if (componentType === 'Input' && isInputComponent(component)) {
-        const events:HTMLAttributes<HTMLElement> = {};
-        populateEvents(componentSignal, props.signalContext,events);
+        const events: HTMLAttributes<HTMLElement> = {};
+        populateEvents(componentSignal, props.signalContext, events);
         return <notifiable.label style={(): CSSProperties => {
             const component = componentSignal.get();
             if (component === undefined) {
@@ -498,7 +503,7 @@ export function ComponentRenderer(props: {
             const result: CSSProperties = {
                 display: 'flex',
                 flexDirection: 'column',
-                position:'relative'
+                position: 'relative'
             };
             if (!isInputComponent(component)) {
                 return result;
@@ -533,7 +538,7 @@ export function ComponentRenderer(props: {
         </notifiable.label>
     }
     if (componentType === 'Button' && isLabelComponent(component)) {
-        populateEvents(componentSignal, props.signalContext,dragAndDropProps);
+        populateEvents(componentSignal, props.signalContext, dragAndDropProps);
         return <notifiable.button {...styleProps} {...dragAndDropProps}>
             {() => {
                 const component = componentSignal.get();
@@ -559,4 +564,4 @@ function isComponentType(value: unknown): value is  keyof typeof ComponentConfig
     return typeof value === 'string' && Object.keys(ComponentConfig).indexOf(value) >= 0
 }
 
-const SignalStateContext = createContext<AnySignal<SignalStateContextData>|undefined>(undefined)
+const SignalStateContext = createContext<AnySignal<SignalStateContextData> | undefined>(undefined)
