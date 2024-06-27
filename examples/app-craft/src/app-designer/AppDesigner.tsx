@@ -12,8 +12,8 @@ import {
 } from "react-icons/md";
 import {IconType} from "react-icons";
 
-import {guid} from "../../utils/guid.ts";
-import {useRefresh} from "../../utils/useRefresh.ts";
+import {guid} from "../utils/guid.ts";
+import {useRefresh} from "../utils/useRefresh.ts";
 
 type Container = {
     id: string,
@@ -45,32 +45,32 @@ const ContainerContext = createContext<{
     activeDropZoneIdSignal: Signal.State<string>,
     selectedDragContainerIdSignal: Signal.State<string>,
     hoveredDragContainerIdSignal: Signal.State<string>,
-    layoutNodesSignal: Signal.State<Array<Container>>,
+    allContainersSignal: Signal.State<Array<Container>>,
     uiDisplayModeSignal: Signal.State<'design' | 'view'>
 } & LayoutBuilderProps>({
     activeDropZoneIdSignal: new Signal.State<string>(''),
     selectedDragContainerIdSignal: new Signal.State<string>(''),
     hoveredDragContainerIdSignal: new Signal.State<string>(''),
     uiDisplayModeSignal: new Signal.State<"design" | "view">('design'),
-    layoutNodesSignal: new Signal.State<Array<Container>>([]),
+    allContainersSignal: new Signal.State<Array<Container>>([]),
     elements: {}
 })
 
-export default function LayoutBuilder(props: LayoutBuilderProps) {
+export default function AppDesigner(props: LayoutBuilderProps) {
     const activeDropZoneIdSignal = useSignal('');
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-    const layoutNodesSignal = useSignal<Array<Container>>([{id: guid(), type: 'vertical', gap: 0, children: [], parent: '', height: 'auto', width: 'auto', margin: 'unset', padding: 'unset'}]);
+    const allContainersSignal = useSignal<Array<Container>>([{id: guid(), type: 'vertical', gap: 0, children: [], parent: '', height: 'auto', width: 'auto', margin: 'unset', padding: 'unset'}]);
     const renderedElements = useComputed(() => {
-        const container = layoutNodesSignal.get().find(item => item.parent === '');
+        const container = allContainersSignal.get().find(item => item.parent === '');
         if (container) {
-            return <DraggableContainer nodes={layoutNodesSignal} container={container}/>
+            return <DraggableContainer allContainersSignal={allContainersSignal} container={container}/>
         }
         return <></>
     });
     return <ContainerContext.Provider
-        value={{hoveredDragContainerIdSignal: hoveredDragContainerIdSignal, selectedDragContainerIdSignal: selectedDragContainerIdSignal, activeDropZoneIdSignal: activeDropZoneIdSignal, uiDisplayModeSignal: uiDisplayModeSignal, layoutNodesSignal: layoutNodesSignal, ...props}}>
+        value={{hoveredDragContainerIdSignal: hoveredDragContainerIdSignal, selectedDragContainerIdSignal: selectedDragContainerIdSignal, activeDropZoneIdSignal: activeDropZoneIdSignal, uiDisplayModeSignal: uiDisplayModeSignal, allContainersSignal: allContainersSignal, ...props}}>
 
         <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
             <div
@@ -109,8 +109,8 @@ function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
 
 function swapContainerLocation(containerStateSignal: Signal.State<Array<Container>>, containerToBeSwapped: string, dropZoneId: Signal.State<string>) {
     const childId = dropZoneId.get();
-    const dropZoneNode = document.getElementById(childId);
-    if (dropZoneNode === null) {
+    const dropZoneElement = document.getElementById(childId);
+    if (dropZoneElement === null) {
         return;
     }
     const {precedingSiblingId, parentContainerId} = dropZones.find(s => s.id === childId)!;
@@ -134,21 +134,21 @@ function swapContainerLocation(containerStateSignal: Signal.State<Array<Containe
     dropZoneId.set('');
 }
 
-function getContainerIdAndIndexToPlaced(nodes: Signal.State<Array<Container>>, dropZoneId: Signal.State<string>) {
+function getContainerIdAndIndexToPlaced(allContainersSignal: Signal.State<Array<Container>>, dropZoneId: Signal.State<string>) {
     const dropZoneElementId = dropZoneId.get();
     const dropZoneElement = document.getElementById(dropZoneElementId);
     if (dropZoneElement === null) {
         return {parentContainerId: '', insertionIndex: 0};
     }
     const {parentContainerId, precedingSiblingId} = dropZones.find(s => s.id === dropZoneElementId)!;
-    const container = nodes.get().find(i => i.id === parentContainerId);
+    const container = allContainersSignal.get().find(i => i.id === parentContainerId);
     const insertionIndex = container?.children.indexOf(precedingSiblingId ?? '') ?? 0;
     return {parentContainerId, insertionIndex};
 }
 
-function addNewContainer(nodes: Signal.State<Array<Container>>, config: { type: 'vertical' | 'horizontal' | string }, dropZoneId: Signal.State<string>) {
-    const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(nodes, dropZoneId);
-    const newNodeItem: Container = {
+function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, config: { type: 'vertical' | 'horizontal' | string }, dropZoneId: Signal.State<string>) {
+    const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
+    const newContainer: Container = {
         id: guid(),
         type: config.type,
         gap: 0,
@@ -160,26 +160,26 @@ function addNewContainer(nodes: Signal.State<Array<Container>>, config: { type: 
         margin: 'unset'
     }
 
-    const newNodes = [...nodes.get().map(n => {
+    const newAllContainers = [...allContainersSignal.get().map(n => {
         if (n.id === parentContainerId) {
             if (insertionIndex >= 0) {
-                n.children.splice(insertionIndex + 1, 0, newNodeItem.id);
+                n.children.splice(insertionIndex + 1, 0, newContainer.id);
                 n.children = [...n.children];
             } else {
-                n.children = [newNodeItem.id, ...n.children];
+                n.children = [newContainer.id, ...n.children];
             }
             return {...n}
         }
         return n;
-    }), newNodeItem];
-    nodes.set(JSON.parse(JSON.stringify(newNodes)));
+    }), newContainer];
+    allContainersSignal.set(JSON.parse(JSON.stringify(newAllContainers)));
 }
 
 function DraggableContainer(props: {
-    nodes: Signal.State<Array<Container>>,
+    allContainersSignal: Signal.State<Array<Container>>,
     container: Container
 }) {
-    const {container, nodes} = props;
+    const {container, allContainersSignal} = props;
     const {elements: elementsLib, activeDropZoneIdSignal, hoveredDragContainerIdSignal, selectedDragContainerIdSignal, uiDisplayModeSignal} = useContext(ContainerContext);
     const {refresh} = useRefresh('DraggableContainer');
     useSignalEffect(() => {
@@ -213,19 +213,19 @@ function DraggableContainer(props: {
         if (mouseX <= 0 || mouseY <= 0) {
             return;
         }
-        let nearestNode = '';
+        let nearestDropZoneId = '';
         // const elementsSize:Record<string, DOMRect> = {};
         for (const dropZone of dropZones) {
-            const element = document.getElementById(dropZone.id);
-            const rect = element?.getBoundingClientRect();
+            const dropZoneElement = document.getElementById(dropZone.id);
+            const rect = dropZoneElement?.getBoundingClientRect();
             if (rect === undefined) {
                 continue;
             }
             if (mouseX >= (rect.left - FEATHER) && mouseX <= (rect.right + FEATHER) && mouseY >= (rect.top - FEATHER) && mouseY <= (rect.bottom + FEATHER)) {
-                nearestNode = dropZone.id;
+                nearestDropZoneId = dropZone.id;
             }
         }
-        if (nearestNode === '') {
+        if (nearestDropZoneId === '') {
             const nearestDropZone = {distance: Number.MAX_VALUE, dropZoneId: ''}
             for (const dropZone of dropZones) {
                 if (dropZone.parentContainerId === container.id) {
@@ -243,9 +243,9 @@ function DraggableContainer(props: {
                     }
                 }
             }
-            nearestNode = nearestDropZone.dropZoneId;
+            nearestDropZoneId = nearestDropZone.dropZoneId;
         }
-        activeDropZoneIdSignal.set(nearestNode);
+        activeDropZoneIdSignal.set(nearestDropZoneId);
     })
 
 
@@ -255,9 +255,9 @@ function DraggableContainer(props: {
         const id = event.dataTransfer.getData('text');
         const keys = Object.keys(elementsLib);
         if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
-            addNewContainer(nodes, {type: id}, activeDropZoneIdSignal);
+            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal);
         } else if (id) {
-            swapContainerLocation(nodes, id, activeDropZoneIdSignal);
+            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal);
         }
     }
 
@@ -278,13 +278,13 @@ function DraggableContainer(props: {
     }
 
     function onDelete() {
-        let nodeArray = nodes.get();
-        const parent = nodeArray.find(s => s.id === container.parent);
+        let allContainers = allContainersSignal.get();
+        const parent = allContainers.find(s => s.id === container.parent);
         if (parent) {
             parent.children = parent.children.filter(s => s !== container.id);
         }
-        nodeArray = nodeArray.filter(s => s.id !== container.id);
-        nodes.set(JSON.parse(JSON.stringify(nodeArray)));
+        allContainers = allContainers.filter(s => s.id !== container.id);
+        allContainersSignal.set(JSON.parse(JSON.stringify(allContainers)));
     }
 
     const elements = (() => {
@@ -304,8 +304,8 @@ function DraggableContainer(props: {
             }
             for (let i = 0; i < children?.length; i++) {
                 const childId = children[i];
-                const childContainer = nodes.get().find(i => i.id === childId)!;
-                result.push(<DraggableContainer nodes={nodes} container={childContainer} key={childId}/>)
+                const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
+                result.push(<DraggableContainer allContainersSignal={allContainersSignal} container={childContainer} key={childId}/>)
                 if (mode === 'design') {
                     result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container.id}`}
                                           parentContainerId={container.id}/>);
