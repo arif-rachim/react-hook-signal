@@ -41,7 +41,7 @@ type LayoutBuilderProps = {
     elements: Record<string, { component: React.FC, icon: IconType }>
 }
 
-const ContainerContext = createContext<{
+export const AppDesignerContext = createContext<{
     activeDropZoneIdSignal: Signal.State<string>,
     selectedDragContainerIdSignal: Signal.State<string>,
     hoveredDragContainerIdSignal: Signal.State<string>,
@@ -69,7 +69,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         }
         return <></>
     });
-    return <ContainerContext.Provider
+
+    return <AppDesignerContext.Provider
         value={{hoveredDragContainerIdSignal: hoveredDragContainerIdSignal, selectedDragContainerIdSignal: selectedDragContainerIdSignal, activeDropZoneIdSignal: activeDropZoneIdSignal, uiDisplayModeSignal: uiDisplayModeSignal, allContainersSignal: allContainersSignal, ...props}}>
 
         <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
@@ -95,29 +96,33 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             </div>
         </div>
 
-    </ContainerContext.Provider>
+    </AppDesignerContext.Provider>
 }
 
 
 function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
     const Icon = props.icon;
-    const {activeDropZoneIdSignal} = useContext(ContainerContext);
+    const {activeDropZoneIdSignal} = useContext(AppDesignerContext);
     return <ButtonWithIcon onDragStart={(e) => e.dataTransfer.setData('text/plain', props.draggableDataType)}
                            draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')} icon={Icon}/>
 
 }
 
-function swapContainerLocation(containerStateSignal: Signal.State<Array<Container>>, containerToBeSwapped: string, dropZoneId: Signal.State<string>) {
-    const childId = dropZoneId.get();
-    const dropZoneElement = document.getElementById(childId);
+function swapContainerLocation(allContainersSignal: Signal.State<Array<Container>>, containerToBeSwapped: string, activeDropZoneIdSignal: Signal.State<string>) {
+    const activeDropZoneId = activeDropZoneIdSignal.get();
+    const dropZoneElement = document.getElementById(activeDropZoneId);
     if (dropZoneElement === null) {
         return;
     }
-    const {precedingSiblingId, parentContainerId} = dropZones.find(s => s.id === childId)!;
-    const allContainers = containerStateSignal.get();
-    const targetContainer = allContainers.find(i => i.id === containerToBeSwapped)!;
-    const currentParentContainer = allContainers.find(i => i.id === targetContainer.parent)!;
-    const newParentContainer = allContainers.find(i => i.id === parentContainerId)!;
+    const {precedingSiblingId, parentContainerId} = dropZones.find(s => s.id === activeDropZoneId)!;
+    const allContainers = [...allContainersSignal.get()];
+    const targetContainerIndex = allContainers.findIndex(i => i.id === containerToBeSwapped)!;
+    const targetContainer = allContainers[targetContainerIndex];
+    const currentParentContainerIndex = allContainers.findIndex(i => i.id === targetContainer.parent)!;
+    const currentParentContainer = allContainers[currentParentContainerIndex];
+    const newParentContainerIndex = allContainers.findIndex(i => i.id === parentContainerId)!;
+    const newParentContainer = allContainers[newParentContainerIndex];
+
     // here we remove the parent children position
     currentParentContainer.children = currentParentContainer.children.filter(s => s !== targetContainer.id);
     // now we have new parent
@@ -130,8 +135,13 @@ function swapContainerLocation(containerStateSignal: Signal.State<Array<Containe
     } else {
         newParentContainer.children.unshift(containerToBeSwapped);
     }
-    containerStateSignal.set(JSON.parse(JSON.stringify(allContainers)));
-    dropZoneId.set('');
+
+    allContainers.splice(targetContainerIndex,1,{...targetContainer});
+    allContainers.splice(currentParentContainerIndex,1,{...currentParentContainer});
+    allContainers.splice(newParentContainerIndex,1,{...newParentContainer});
+
+    allContainersSignal.set(allContainers);
+    activeDropZoneIdSignal.set('');
 }
 
 function getContainerIdAndIndexToPlaced(allContainersSignal: Signal.State<Array<Container>>, dropZoneId: Signal.State<string>) {
@@ -163,24 +173,28 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
     const newAllContainers = [...allContainersSignal.get().map(n => {
         if (n.id === parentContainerId) {
             if (insertionIndex >= 0) {
-                n.children.splice(insertionIndex + 1, 0, newContainer.id);
-                n.children = [...n.children];
+                const newChildren = [...n.children]
+                newChildren.splice(insertionIndex + 1, 0, newContainer.id);
+                return {...n,children:newChildren}
             } else {
-                n.children = [newContainer.id, ...n.children];
+                return {...n,children:[newContainer.id, ...n.children]}
             }
-            return {...n}
         }
         return n;
     }), newContainer];
-    allContainersSignal.set(JSON.parse(JSON.stringify(newAllContainers)));
+    allContainersSignal.set(newAllContainers);
 }
 
 function DraggableContainer(props: {
     allContainersSignal: Signal.State<Array<Container>>,
     container: Container
 }) {
-    const {container, allContainersSignal} = props;
-    const {elements: elementsLib, activeDropZoneIdSignal, hoveredDragContainerIdSignal, selectedDragContainerIdSignal, uiDisplayModeSignal} = useContext(ContainerContext);
+    const {container:contanerProp, allContainersSignal} = props;
+    const containerSignal = useSignal(contanerProp);
+    useEffect(() => {
+        containerSignal.set(contanerProp);
+    }, [contanerProp]);
+    const {elements: elementsLib, activeDropZoneIdSignal, hoveredDragContainerIdSignal, selectedDragContainerIdSignal, uiDisplayModeSignal} = useContext(AppDesignerContext);
     const {refresh} = useRefresh('DraggableContainer');
     useSignalEffect(() => {
         uiDisplayModeSignal.get();
@@ -193,7 +207,7 @@ function DraggableContainer(props: {
 
     function onDragStart(event: React.DragEvent) {
         event.stopPropagation();
-        event.dataTransfer.setData('text/plain', container.id);
+        event.dataTransfer.setData('text/plain', containerSignal.get().id);
     }
 
     function onDragOver(event: React.DragEvent) {
@@ -205,11 +219,12 @@ function DraggableContainer(props: {
     function onMouseOver(event: React.MouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
-        hoveredDragContainerIdSignal.set(container.id);
+        hoveredDragContainerIdSignal.set(containerSignal.get().id);
     }
 
     useSignalEffect(() => {
         const {clientX: mouseX, clientY: mouseY} = mousePosition.get();
+        const container:Container|undefined = containerSignal.get();
         if (mouseX <= 0 || mouseY <= 0) {
             return;
         }
@@ -221,6 +236,7 @@ function DraggableContainer(props: {
             if (rect === undefined) {
                 continue;
             }
+
             if (mouseX >= (rect.left - FEATHER) && mouseX <= (rect.right + FEATHER) && mouseY >= (rect.top - FEATHER) && mouseY <= (rect.bottom + FEATHER)) {
                 nearestDropZoneId = dropZone.id;
             }
@@ -228,7 +244,7 @@ function DraggableContainer(props: {
         if (nearestDropZoneId === '') {
             const nearestDropZone = {distance: Number.MAX_VALUE, dropZoneId: ''}
             for (const dropZone of dropZones) {
-                if (dropZone.parentContainerId === container.id) {
+                if (dropZone.parentContainerId === container?.id) {
                     // nice !
                     const rect = document.getElementById(dropZone.id)?.getBoundingClientRect();
                     if (rect === undefined) {
@@ -247,7 +263,6 @@ function DraggableContainer(props: {
         }
         activeDropZoneIdSignal.set(nearestDropZoneId);
     })
-
 
     function onDrop(event: React.DragEvent) {
         event.stopPropagation();
@@ -268,76 +283,80 @@ function DraggableContainer(props: {
     function onSelected(event: React.MouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
-        selectedDragContainerIdSignal.set(container.id);
+        selectedDragContainerIdSignal.set(containerSignal.get().id);
     }
 
     function onFocusUp() {
-        if (container.parent) {
-            selectedDragContainerIdSignal.set(container.parent);
+        if (containerSignal.get().parent) {
+            selectedDragContainerIdSignal.set(containerSignal.get().parent);
         }
     }
 
     function onDelete() {
         let allContainers = allContainersSignal.get();
-        const parent = allContainers.find(s => s.id === container.parent);
+        allContainers = allContainers.filter(s => s.id !== containerSignal.get().id);
+        const parent = allContainers.find(s => s.id === containerSignal.get().parent);
         if (parent) {
-            parent.children = parent.children.filter(s => s !== container.id);
+            const newParent = {...parent};
+            newParent.children = newParent.children.filter(s => s !== containerSignal.get().id);
+            allContainers.splice(allContainers.indexOf(parent),1,newParent);
         }
-        allContainers = allContainers.filter(s => s.id !== container.id);
-        allContainersSignal.set(JSON.parse(JSON.stringify(allContainers)));
+        allContainersSignal.set(allContainers);
     }
-
-    const elements = (() => {
+    const elements = useComputed(() => {
         const mode = uiDisplayModeSignal.get();
-        const children = container.children ?? [];
+        const container:Container|undefined = containerSignal.get();
+        const children = container?.children ?? [];
 
-        const isContainer = container.type === 'vertical' || container.type === 'horizontal'
+        const isContainer = container?.type === 'vertical' || container?.type === 'horizontal'
         const result: Array<JSX.Element> = [];
         if (mode === 'design') {
-            result.push(<ToolBar key={`toolbar-${container.id}`} container={container} onFocusUp={onFocusUp}
+            result.push(<ToolBar key={`toolbar-${container?.id}`} container={container} onFocusUp={onFocusUp}
                                  onDelete={onDelete}/>)
         }
         if (isContainer) {
             if (mode === 'design') {
-                result.push(<DropZone precedingSiblingId={''} key={`drop-zone-root-${container.id}`}
-                                      parentContainerId={container.id}/>)
+                result.push(<DropZone precedingSiblingId={''} key={`drop-zone-root-${container?.id}`}
+                                      parentContainerId={container?.id}/>)
             }
             for (let i = 0; i < children?.length; i++) {
                 const childId = children[i];
                 const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
                 result.push(<DraggableContainer allContainersSignal={allContainersSignal} container={childContainer} key={childId}/>)
                 if (mode === 'design') {
-                    result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container.id}`}
-                                          parentContainerId={container.id}/>);
+                    result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
+                                          parentContainerId={container?.id}/>);
                 }
             }
-        } else {
-            const {component: Component} = elementsLib[container.type];
-            result.push(<Component/>)
+        } else if(elementsLib[container?.type]){
+            const {component: Component} = elementsLib[container?.type];
+            result.push(<Component key={container?.id}/>)
         }
         return result;
-    })();
+    });
 
 
     const computedStyle = useComputed((): CSSProperties => {
         const mode = uiDisplayModeSignal.get();
-        const isRoot = container.parent === '';
+        const container:Container = containerSignal.get();
+
+        const isRoot = container?.parent === '';
         const styleFromSignal = {
             border: mode === 'design' ? '1px dashed rgba(0,0,0,0.1)' : '1px solid rgba(0,0,0,0)',
             background: 'white',
             minWidth: 10,
             minHeight: 10,
-            padding: mode === 'design' ? 5 : container.padding,
+            padding: mode === 'design' ? 5 : container?.padding,
             display: 'flex',
-            flexDirection: container.type === 'horizontal' ? 'row' : 'column',
-            width: isRoot ? '100%' : container.width,
-            height: isRoot ? '100%' : container.height,
+            flexDirection: container?.type === 'horizontal' ? 'row' : 'column',
+            width: isRoot ? '100%' : container?.width,
+            height: isRoot ? '100%' : container?.height,
             position: 'relative',
-            gap: container.gap,
-            margin: container.margin
+            gap: container?.gap,
+            margin: container?.margin
         };
-        const isFocused = selectedDragContainerIdSignal.get() === container.id;
-        const isHovered = hoveredDragContainerIdSignal.get() === container.id;
+        const isFocused = selectedDragContainerIdSignal.get() === container?.id;
+        const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         if (isRoot) {
             return styleFromSignal as CSSProperties
         }
@@ -350,13 +369,14 @@ function DraggableContainer(props: {
         }
         return styleFromSignal as CSSProperties;
     });
+
     return <notifiable.div draggable={true} style={computedStyle}
                            onDragStart={onDragStart}
                            onDragOver={onDragOver}
                            onDrop={onDrop}
                            onDragEnd={onDragEnd}
                            onMouseOver={onMouseOver}
-                           onClick={onSelected} data-container-id={container.id}>
+                           onClick={onSelected} data-container-id={containerSignal.get().id}>
         {elements}
     </notifiable.div>
 
@@ -367,7 +387,7 @@ function DropZone(props: {
     parentContainerId: string
 }) {
     const id = useId();
-    const {activeDropZoneIdSignal} = useContext(ContainerContext)
+    const {activeDropZoneIdSignal} = useContext(AppDesignerContext)
     useEffect(() => {
         const item = {
             id: id,
@@ -377,7 +397,7 @@ function DropZone(props: {
         return () => {
             dropZones.splice(dropZones.indexOf(item), 1);
         }
-    }, []);
+    }, [id, props]);
     const computedStyle = useComputed(() => {
         const isFocused = id === activeDropZoneIdSignal.get();
         const style: CSSProperties = {top: -5, left: -5, minWidth: 10, minHeight: 10, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 10, flexGrow: 1, position: 'absolute', height: `calc(100% + 10px)`, width: `calc(100% + 10px)`, transition: 'background-color 300ms ease-in-out', zIndex: -1};
@@ -395,7 +415,7 @@ function DropZone(props: {
 
 function ToolBar(props: { container: Container, onDelete: () => void, onFocusUp: () => void }) {
     const {container, onDelete, onFocusUp} = props;
-    const {selectedDragContainerIdSignal} = useContext(ContainerContext);
+    const {selectedDragContainerIdSignal} = useContext(AppDesignerContext);
 
     function preventClick(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
