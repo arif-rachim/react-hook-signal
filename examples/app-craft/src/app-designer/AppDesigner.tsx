@@ -1,4 +1,12 @@
-import {createContext, CSSProperties, HTMLAttributes, useContext, useEffect, useId} from "react";
+import React, {
+    createContext,
+    CSSProperties,
+    HTMLAttributes,
+    PropsWithChildren,
+    useContext,
+    useEffect,
+    useId
+} from "react";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {
@@ -10,11 +18,12 @@ import {
     MdPreview,
     MdVerticalDistribute
 } from "react-icons/md";
-import {IconType} from "react-icons";
 
 import {guid} from "../utils/guid.ts";
 import {useRefresh} from "../utils/useRefresh.ts";
+import {BORDER, BORDER_NONE} from "../comp/Border.ts";
 
+type IconType = any;
 type Container = {
     id: string,
     children: string[],
@@ -22,9 +31,20 @@ type Container = {
     type: 'horizontal' | 'vertical' | string,
     width: CSSProperties['width'],
     height: CSSProperties['height'],
+    minWidth: CSSProperties['minWidth'],
+    minHeight: CSSProperties['minHeight'],
+
     gap: CSSProperties['gap'],
-    margin: CSSProperties['margin'],
-    padding: CSSProperties['padding']
+
+    paddingTop: CSSProperties['paddingTop'],
+    paddingRight: CSSProperties['paddingRight'],
+    paddingBottom: CSSProperties['paddingBottom'],
+    paddingLeft: CSSProperties['paddingLeft'],
+
+    marginTop: CSSProperties['marginTop'],
+    marginRight: CSSProperties['marginRight'],
+    marginBottom: CSSProperties['marginBottom'],
+    marginLeft: CSSProperties['marginLeft']
 }
 
 const VERTICAL = 'vertical';
@@ -38,7 +58,11 @@ const dropZones: Array<{
 }> = [];
 
 type LayoutBuilderProps = {
-    elements: Record<string, { component: React.FC, icon: IconType }>
+    elements: Record<string, {
+        icon: IconType,
+        component : React.FC,
+        property : Record<string,'effect'|'computed'>
+    }>
 }
 
 export const AppDesignerContext = createContext<{
@@ -61,7 +85,28 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-    const allContainersSignal = useSignal<Array<Container>>([{id: guid(), type: 'vertical', gap: 0, children: [], parent: '', height: 'auto', width: 'auto', margin: 'unset', padding: 'unset'}]);
+    const allContainersSignal = useSignal<Array<Container>>([{
+        id: guid(),
+        type: 'vertical',
+        gap: 0,
+        children: [],
+        parent: '',
+        height: '',
+        width: '',
+        minWidth: '100px',
+        minHeight: '100px',
+
+        marginTop: '',
+        marginRight: '',
+        marginBottom: '',
+        marginLeft: '',
+
+        paddingTop: '',
+        paddingRight: '',
+        paddingBottom: '',
+        paddingLeft: ''
+
+    }]);
     const renderedElements = useComputed(() => {
         const container = allContainersSignal.get().find(item => item.parent === '');
         if (container) {
@@ -69,13 +114,90 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         }
         return <></>
     });
+    const propertyEditors = useComputed(() => {
+        const selectedDragContainerId = selectedDragContainerIdSignal.get();
+        const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
+        const key = selectedDragContainer?.type;
+        const result: Array<JSX.Element> = [];
+        result.push(<div style={{display:'flex',flexDirection:'row',gap:10}} key={'height-width'}>
+            <NumericalPercentagePropertyEditor property={'height'} label={'Height'} key={'height-editor'} style={{width:'50%'}} styleLabel={{width:30}}/>
+            <NumericalPercentagePropertyEditor property={'width'} label={'Width'} key={'width-editor'} style={{width:'50%'}} styleLabel={{width:30}}/>
+        </div>);
+        result.push(<LabelContainer label={'Padding'} style={{marginTop: 10}} styleLabel={{width: 54, flexShrink: 0}}
+                                     key={'padding-editor'}>
+            <div style={{display: 'flex', flexDirection: 'column'}}>
+                <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <NumericalPercentagePropertyEditor property={'paddingTop'} label={'pT'} key={'padding-top'}
+                                                       style={{width: '33.33%'}} styleLabel={{display: 'none'}}/>
+                </div>
+                <div style={{display: 'flex'}}>
+                    <NumericalPercentagePropertyEditor property={'paddingLeft'} label={'pL'} key={'padding-left'}
+                                                       style={{width: '33.33%'}} styleLabel={{display: 'none'}}/>
+                    <div style={{flexGrow: 1}}></div>
+                    <NumericalPercentagePropertyEditor property={'paddingRight'} label={'pR'} key={'padding-right'}
+                                                       style={{width: '33.33%'}} styleLabel={{display: 'none'}}/>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <NumericalPercentagePropertyEditor property={'paddingBottom'} label={'pB'}
+                                                       key={'padding-bottom'} style={{width: '33.33%'}}
+                                                       styleLabel={{display: 'none'}}/>
+                </div>
+            </div>
+        </LabelContainer>)
+        result.push(<LabelContainer label={'Margin'} style={{marginTop: 10}} styleLabel={{width: 54, flexShrink: 0}}
+                                     key={'margin-editor'}>
+            <div style={{display: 'flex', flexDirection: 'column'}}>
+                <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <NumericalPercentagePropertyEditor property={'marginTop'} label={'mT'} key={'margin-top'}
+                                                       style={{width: '33.33%'}} styleLabel={{display: 'none'}}/>
+                </div>
+                <div style={{display: 'flex'}}>
+                    <NumericalPercentagePropertyEditor property={'marginLeft'} label={'mL'} key={'margin-left'}
+                                                       style={{width: '33.33%'}} styleLabel={{display: 'none'}}/>
+                    <div style={{flexGrow: 1}}></div>
+                    <NumericalPercentagePropertyEditor property={'marginRight'} label={'mR'} key={'margin-right'}
+                                                       style={{width: '33.33%'}} styleLabel={{display: 'none'}}/>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <NumericalPercentagePropertyEditor property={'marginBottom'} label={'mB'}
+                                                       key={'margin-bottom'} style={{width: '33.33%'}}
+                                                       styleLabel={{display: 'none'}}/>
+                </div>
+            </div>
+        </LabelContainer>)
+        if (key in props.elements) {
+            const property = props.elements[key].property;
+            result.push(<div key={'prop-editor'} style={{display:'flex',flexDirection:'column'}}>
+                {Object.keys(property).map(key => {
+                    return <LabelContainer key={key} label={key} style={{flexDirection:'row',alignItems:'center'}} styleLabel={{width:80}}>
+                        <button>Geledek</button>
+                    </LabelContainer>
+                })}
+            </div>);
+        }
+        return result
+    })
 
     return <AppDesignerContext.Provider
-        value={{hoveredDragContainerIdSignal: hoveredDragContainerIdSignal, selectedDragContainerIdSignal: selectedDragContainerIdSignal, activeDropZoneIdSignal: activeDropZoneIdSignal, uiDisplayModeSignal: uiDisplayModeSignal, allContainersSignal: allContainersSignal, ...props}}>
+        value={{
+            hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
+            selectedDragContainerIdSignal: selectedDragContainerIdSignal,
+            activeDropZoneIdSignal: activeDropZoneIdSignal,
+            uiDisplayModeSignal: uiDisplayModeSignal,
+            allContainersSignal: allContainersSignal, ...props
+        }}>
 
         <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
             <div
-                style={{width: 200, padding: 20, backgroundColor: 'rgba(0,0,0,0.1)', borderRight: '1px solid rgba(0,0,0,0.1)', display: 'flex', gap: 10, alignItems: 'flex-start'}}>
+                style={{
+                    width: 200,
+                    padding: 20,
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    borderRight: '1px solid rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'flex-start'
+                }}>
                 <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
                 <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
                 {
@@ -94,6 +216,17 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     {renderedElements}
                 </notifiable.div>
             </div>
+            <notifiable.div
+                style={{
+                    width: 200,
+                    padding: 5,
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    borderLeft: '1px solid rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
+                {propertyEditors}
+            </notifiable.div>
         </div>
 
     </AppDesignerContext.Provider>
@@ -136,9 +269,9 @@ function swapContainerLocation(allContainersSignal: Signal.State<Array<Container
         newParentContainer.children.unshift(containerToBeSwapped);
     }
 
-    allContainers.splice(targetContainerIndex,1,{...targetContainer});
-    allContainers.splice(currentParentContainerIndex,1,{...currentParentContainer});
-    allContainers.splice(newParentContainerIndex,1,{...newParentContainer});
+    allContainers.splice(targetContainerIndex, 1, {...targetContainer});
+    allContainers.splice(currentParentContainerIndex, 1, {...currentParentContainer});
+    allContainers.splice(newParentContainerIndex, 1, {...newParentContainer});
 
     allContainersSignal.set(allContainers);
     activeDropZoneIdSignal.set('');
@@ -156,7 +289,30 @@ function getContainerIdAndIndexToPlaced(allContainersSignal: Signal.State<Array<
     return {parentContainerId, insertionIndex};
 }
 
-function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, config: { type: 'vertical' | 'horizontal' | string }, dropZoneId: Signal.State<string>) {
+function useSelectedDragContainer() {
+    const {selectedDragContainerIdSignal, allContainersSignal} = useContext(AppDesignerContext);
+    return useComputed(() => {
+        const selectedDragContainerId = selectedDragContainerIdSignal.get();
+        return allContainersSignal.get().find(i => i.id === selectedDragContainerId);
+    })
+}
+
+function useUpdateSelectedDragContainer() {
+    const {selectedDragContainerIdSignal, allContainersSignal} = useContext(AppDesignerContext);
+
+    return function update(callback: (selectedContainer: Container) => void) {
+        const allContainers = [...allContainersSignal.get()];
+        const currentSignalIndex = allContainers.findIndex(i => i.id === selectedDragContainerIdSignal.get());
+        const container = {...allContainers[currentSignalIndex]};
+        callback(container);
+        allContainers.splice(currentSignalIndex, 1, container);
+        allContainersSignal.set(allContainers);
+    }
+}
+
+function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, config: {
+    type: 'vertical' | 'horizontal' | string
+}, dropZoneId: Signal.State<string>) {
     const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
     const newContainer: Container = {
         id: guid(),
@@ -164,10 +320,20 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
         gap: 0,
         children: [],
         parent: parentContainerId,
-        width: 'auto',
-        height: 'auto',
-        padding: 'unset',
-        margin: 'unset'
+        width: '',
+        height: '',
+        minWidth: '24px',
+        minHeight: '24px',
+
+        paddingTop: '',
+        paddingRight: '',
+        paddingBottom: '',
+        paddingLeft: '',
+
+        marginTop: '',
+        marginRight: '',
+        marginBottom: '',
+        marginLeft: ''
     }
 
     const newAllContainers = [...allContainersSignal.get().map(n => {
@@ -175,9 +341,9 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
             if (insertionIndex >= 0) {
                 const newChildren = [...n.children]
                 newChildren.splice(insertionIndex + 1, 0, newContainer.id);
-                return {...n,children:newChildren}
+                return {...n, children: newChildren}
             } else {
-                return {...n,children:[newContainer.id, ...n.children]}
+                return {...n, children: [newContainer.id, ...n.children]}
             }
         }
         return n;
@@ -189,20 +355,26 @@ function DraggableContainer(props: {
     allContainersSignal: Signal.State<Array<Container>>,
     container: Container
 }) {
-    const {container:contanerProp, allContainersSignal} = props;
+    const {container: contanerProp, allContainersSignal} = props;
     const containerSignal = useSignal(contanerProp);
     useEffect(() => {
         containerSignal.set(contanerProp);
     }, [contanerProp]);
-    const {elements: elementsLib, activeDropZoneIdSignal, hoveredDragContainerIdSignal, selectedDragContainerIdSignal, uiDisplayModeSignal} = useContext(AppDesignerContext);
+    const {
+        elements: elementsLib,
+        activeDropZoneIdSignal,
+        hoveredDragContainerIdSignal,
+        selectedDragContainerIdSignal,
+        uiDisplayModeSignal
+    } = useContext(AppDesignerContext);
     const {refresh} = useRefresh('DraggableContainer');
     useSignalEffect(() => {
         uiDisplayModeSignal.get();
         refresh();
     })
     const mousePosition = useSignal<{
-        clientX: number,
-        clientY: number
+        clientX?: number,
+        clientY?: number
     }>({clientX: 0, clientY: 0})
 
     function onDragStart(event: React.DragEvent) {
@@ -213,6 +385,7 @@ function DraggableContainer(props: {
     function onDragOver(event: React.DragEvent) {
         event.preventDefault();
         event.stopPropagation();
+
         mousePosition.set(event);
     }
 
@@ -224,7 +397,7 @@ function DraggableContainer(props: {
 
     useSignalEffect(() => {
         const {clientX: mouseX, clientY: mouseY} = mousePosition.get();
-        const container:Container|undefined = containerSignal.get();
+        const container: Container | undefined = containerSignal.get();
         if (mouseX <= 0 || mouseY <= 0) {
             return;
         }
@@ -299,13 +472,14 @@ function DraggableContainer(props: {
         if (parent) {
             const newParent = {...parent};
             newParent.children = newParent.children.filter(s => s !== containerSignal.get().id);
-            allContainers.splice(allContainers.indexOf(parent),1,newParent);
+            allContainers.splice(allContainers.indexOf(parent), 1, newParent);
         }
         allContainersSignal.set(allContainers);
     }
+
     const elements = useComputed(() => {
         const mode = uiDisplayModeSignal.get();
-        const container:Container|undefined = containerSignal.get();
+        const container: Container | undefined = containerSignal.get();
         const children = container?.children ?? [];
 
         const isContainer = container?.type === 'vertical' || container?.type === 'horizontal'
@@ -317,18 +491,19 @@ function DraggableContainer(props: {
         if (isContainer) {
             if (mode === 'design') {
                 result.push(<DropZone precedingSiblingId={''} key={`drop-zone-root-${container?.id}`}
-                                      parentContainerId={container?.id}/>)
+                                      parentContainerId={container?.id ?? ''}/>)
             }
             for (let i = 0; i < children?.length; i++) {
                 const childId = children[i];
                 const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-                result.push(<DraggableContainer allContainersSignal={allContainersSignal} container={childContainer} key={childId}/>)
+                result.push(<DraggableContainer allContainersSignal={allContainersSignal} container={childContainer}
+                                                key={childId}/>)
                 if (mode === 'design') {
                     result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
-                                          parentContainerId={container?.id}/>);
+                                          parentContainerId={container?.id ?? ''}/>);
                 }
             }
-        } else if(elementsLib[container?.type]){
+        } else if (elementsLib[container?.type]) {
             const {component: Component} = elementsLib[container?.type];
             result.push(<Component key={container?.id}/>)
         }
@@ -338,22 +513,31 @@ function DraggableContainer(props: {
 
     const computedStyle = useComputed((): CSSProperties => {
         const mode = uiDisplayModeSignal.get();
-        const container:Container = containerSignal.get();
-
+        const container: Container = containerSignal.get();
         const isRoot = container?.parent === '';
         const styleFromSignal = {
             border: mode === 'design' ? '1px dashed rgba(0,0,0,0.1)' : '1px solid rgba(0,0,0,0)',
             background: 'white',
-            minWidth: 10,
-            minHeight: 10,
-            padding: mode === 'design' ? 5 : container?.padding,
+            minWidth: container?.minWidth,
+            minHeight: container?.minHeight,
+
+            paddingTop: mode === 'design' && container?.paddingTop === '' ? 5 : container?.paddingTop,
+            paddingRight: mode === 'design' && container?.paddingRight === '' ? 5 : container?.paddingRight,
+            paddingBottom: mode === 'design' && container?.paddingBottom === '' ? 5 : container?.paddingBottom,
+            paddingLeft: mode === 'design' && container?.paddingLeft === '' ? 5 : container?.paddingLeft,
+
+            marginTop: container?.marginTop,
+            marginRight: container?.marginRight,
+            marginBottom: container?.marginBottom,
+            marginLeft: container?.marginLeft,
+
             display: 'flex',
             flexDirection: container?.type === 'horizontal' ? 'row' : 'column',
             width: isRoot ? '100%' : container?.width,
             height: isRoot ? '100%' : container?.height,
             position: 'relative',
+
             gap: container?.gap,
-            margin: container?.margin
         };
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
@@ -400,14 +584,34 @@ function DropZone(props: {
     }, [id, props]);
     const computedStyle = useComputed(() => {
         const isFocused = id === activeDropZoneIdSignal.get();
-        const style: CSSProperties = {top: -5, left: -5, minWidth: 10, minHeight: 10, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 10, flexGrow: 1, position: 'absolute', height: `calc(100% + 10px)`, width: `calc(100% + 10px)`, transition: 'background-color 300ms ease-in-out', zIndex: -1};
+        const style: CSSProperties = {
+            top: -5,
+            left: -5,
+            minWidth: 10,
+            minHeight: 10,
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: 10,
+            flexGrow: 1,
+            position: 'absolute',
+            height: `calc(100% + 10px)`,
+            width: `calc(100% + 10px)`,
+            transition: 'background-color 300ms ease-in-out',
+            zIndex: -1
+        };
         if (isFocused) {
             style.backgroundColor = `rgba(84, 193, 240, 0.5)`;
             style.zIndex = 1;
         }
         return style;
     })
-    const containerStyle: CSSProperties = {minWidth: 0, minHeight: 0, backgroundColor: 'rgba(84,193,240,0.5)', position: 'relative', display: 'flex', flexDirection: 'column'};
+    const containerStyle: CSSProperties = {
+        minWidth: 0,
+        minHeight: 0,
+        backgroundColor: 'rgba(84,193,240,0.5)',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column'
+    };
     return <div style={containerStyle}>
         <notifiable.div id={id} style={computedStyle}></notifiable.div>
     </div>
@@ -423,7 +627,17 @@ function ToolBar(props: { container: Container, onDelete: () => void, onFocusUp:
     }
 
     const computedStyle = useComputed(() => {
-        const style = {display: 'none', alignItems: 'center', justifyContent: 'center', background: '#666', position: 'absolute', top: -17, right: -1, color: 'white', zIndex: -1};
+        const style = {
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#666',
+            position: 'absolute',
+            top: -17,
+            right: -1,
+            color: 'white',
+            zIndex: -1
+        };
         const isFocused = selectedDragContainerIdSignal.get() === container.id;
         if (isFocused) {
             style.display = 'flex';
@@ -442,7 +656,112 @@ function ToolBar(props: { container: Container, onDelete: () => void, onFocusUp:
 function ButtonWithIcon(props: HTMLAttributes<HTMLDivElement> & { icon: IconType }) {
     const {icon: Icon, ...properties} = props;
     return <div
-        style={{border: '1px solid rgba(0,0,0,0.3)', padding: 5, borderRadius: 5, backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'}} {...properties}>
+        style={{
+            border: '1px solid rgba(0,0,0,0.3)',
+            padding: 5,
+            borderRadius: 5,
+            backgroundColor: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        }} {...properties}>
         <Icon/>
     </div>
+}
+
+type PropertyType = keyof Pick<Container, 'height' | 'width' | 'paddingTop' | 'paddingLeft' | 'paddingRight' | 'paddingBottom' | 'marginRight' | 'marginTop' | 'marginBottom' | 'marginLeft'>;
+
+function NumericalPercentagePropertyEditor(props: {
+    property: PropertyType,
+    label: string,
+    style?: CSSProperties,
+    styleLabel?: CSSProperties
+}) {
+    const selectedDragContainer = useSelectedDragContainer();
+    const updateSelectedDragContainer = useUpdateSelectedDragContainer();
+    const typeOfValue = useSignal('n/a');
+    const {property, label} = props;
+    useSignalEffect(() => {
+        const dragContainer = selectedDragContainer.get();
+        if (dragContainer === undefined) {
+            return;
+        }
+        const val: string = (dragContainer[property] ?? '') as unknown as string;
+        if (val.endsWith('%')) {
+            typeOfValue.set('%');
+        } else if (val.endsWith('px')) {
+            typeOfValue.set('px');
+        } else {
+            typeOfValue.set('n.a');
+        }
+    })
+
+    function extractValue() {
+        if (selectedDragContainer.get() === undefined) {
+            return '';
+        }
+        const val: string = (selectedDragContainer.get()[property] ?? '') as unknown as string;
+        if (val.endsWith('%')) {
+            return parseInt(val.replace('%', ''))
+        }
+        if (val.endsWith('px')) {
+            return parseInt(val.replace('px', ''))
+        }
+        return selectedDragContainer.get()[property] ?? ''
+    }
+
+    return <div style={{display: 'flex', flexDirection: 'row', ...props.style}}>
+        <LabelContainer label={label} styleLabel={{width: 100, ...props.styleLabel}}>
+            <notifiable.input style={{width: '100%', border: BORDER, borderRight: BORDER_NONE}} value={extractValue}
+                              onChange={(e) => {
+                                  const val = e.target.value;
+
+                                  updateSelectedDragContainer((selectedContainer) => {
+                                      const typeVal = typeOfValue.get();
+                                      const isNanValue = isNaN(parseInt(val));
+
+                                      if (typeVal === 'n.a') {
+                                          selectedContainer[property] = val;
+                                      } else if (typeVal === 'px' && !isNanValue) {
+                                          selectedContainer[property] = `${val}${typeOfValue.get()}`;
+                                      } else if (typeVal === '%' && !isNanValue) {
+                                          selectedContainer[property] = `${val}${typeOfValue.get()}`;
+                                      } else {
+                                          console.log("Setting value ", val);
+                                          selectedContainer[property] = val;
+                                      }
+                                  })
+
+                              }}/>
+            <notifiable.select style={{border: BORDER}} value={typeOfValue} onChange={(e) => {
+                const typeValue = e.target.value;
+                const value = extractValue();
+                updateSelectedDragContainer((selectedContainer) => {
+                    if (typeValue !== 'n.a') {
+                        selectedContainer[property] = `${value}${typeValue}`
+                    } else {
+                        selectedContainer[property] = `${value}`
+                    }
+
+                })
+            }}>
+                <option value={'n.a'}></option>
+                <option value={'px'}>px</option>
+                <option value={'%'}>%</option>
+            </notifiable.select>
+        </LabelContainer>
+    </div>
+}
+
+function LabelContainer(props: PropsWithChildren<{
+    label: string,
+    style?: CSSProperties,
+    styleLabel?: CSSProperties
+}>) {
+    return <label style={{display: 'flex', flexDirection: 'column',gap: 0, ...props.style}}>
+        <div style={props.styleLabel}>{props.label}</div>
+        <div style={{display:'flex',flexDirection:'row'}}>
+            {props.children}
+        </div>
+    </label>
 }
