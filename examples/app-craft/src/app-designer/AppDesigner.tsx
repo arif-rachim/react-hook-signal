@@ -7,7 +7,7 @@ import React, {
     useEffect,
     useId
 } from "react";
-import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {Notifiable, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {
     MdArrowUpward,
@@ -22,9 +22,13 @@ import {
 import {guid} from "../utils/guid.ts";
 import {useRefresh} from "../utils/useRefresh.ts";
 import {BORDER, BORDER_NONE} from "../comp/Border.ts";
+import {IconType} from "react-icons";
+import {LuSigmaSquare} from "react-icons/lu";
+import {PiWebhooksLogo} from "react-icons/pi";
+import {useShowModal} from "../modal/useShowModal.ts";
+import {Editor} from "@monaco-editor/react";
 
-type IconType = any;
-type Container = {
+export type Container = {
     id: string,
     children: string[],
     parent: string
@@ -44,7 +48,8 @@ type Container = {
     marginTop: CSSProperties['marginTop'],
     marginRight: CSSProperties['marginRight'],
     marginBottom: CSSProperties['marginBottom'],
-    marginLeft: CSSProperties['marginLeft']
+    marginLeft: CSSProperties['marginLeft'],
+    properties:Record<string,{formula:string,type:ValueCallbackType}>
 }
 
 const VERTICAL = 'vertical';
@@ -57,15 +62,17 @@ const dropZones: Array<{
     parentContainerId: string
 }> = [];
 
+type ValueCallbackType = 'value'|'callback';
+
 type LayoutBuilderProps = {
     elements: Record<string, {
         icon: IconType,
         component : React.FC,
-        property : Record<string,'effect'|'computed'>
+        property : Record<string,ValueCallbackType>
     }>
 }
 
-export const AppDesignerContext = createContext<{
+const AppDesignerContext = createContext<{
     activeDropZoneIdSignal: Signal.State<string>,
     selectedDragContainerIdSignal: Signal.State<string>,
     hoveredDragContainerIdSignal: Signal.State<string>,
@@ -85,6 +92,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
+    const showModal = useShowModal();
     const allContainersSignal = useSignal<Array<Container>>([{
         id: guid(),
         type: 'vertical',
@@ -104,7 +112,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         paddingTop: '',
         paddingRight: '',
         paddingBottom: '',
-        paddingLeft: ''
+        paddingLeft: '',
+        properties : {}
 
     }]);
     const renderedElements = useComputed(() => {
@@ -117,7 +126,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const propertyEditors = useComputed(() => {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
-        const key = selectedDragContainer?.type;
+        const elementName = selectedDragContainer?.type;
         const result: Array<JSX.Element> = [];
         result.push(<div style={{display:'flex',flexDirection:'row',gap:10}} key={'height-width'}>
             <NumericalPercentagePropertyEditor property={'height'} label={'Height'} key={'height-editor'} style={{width:'50%'}} styleLabel={{width:30}}/>
@@ -165,12 +174,31 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                 </div>
             </div>
         </LabelContainer>)
-        if (key in props.elements) {
-            const property = props.elements[key].property;
-            result.push(<div key={'prop-editor'} style={{display:'flex',flexDirection:'column'}}>
-                {Object.keys(property).map(key => {
-                    return <LabelContainer key={key} label={key} style={{flexDirection:'row',alignItems:'center'}} styleLabel={{width:80}}>
-                        <button>Geledek</button>
+
+        if (elementName && elementName in props.elements) {
+            const element = props.elements[elementName];
+            const property = element.property;
+            result.push(<div key={'prop-editor'} style={{display:'flex',flexDirection:'column',gap:5,marginTop:5}}>
+                {Object.keys(property).map(propertyName => {
+                    const type = property[propertyName];
+                    return <LabelContainer key={propertyName} label={propertyName} style={{flexDirection:'row',alignItems:'center'}} styleLabel={{width:65,fontSize:13}}>
+                        <button style={{width:'100%',border:BORDER,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}} onClick={async () => {
+                            const result = await showModal(closePanel => {
+                                return <AppDesignerContext.Provider
+                                    value={{
+                                        hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
+                                        selectedDragContainerIdSignal: selectedDragContainerIdSignal,
+                                        activeDropZoneIdSignal: activeDropZoneIdSignal,
+                                        uiDisplayModeSignal: uiDisplayModeSignal,
+                                        allContainersSignal: allContainersSignal, ...props
+                                    }}><ComponentPropertyEditor closePanel={closePanel} name={propertyName} type={property[propertyName]}/>
+                                </AppDesignerContext.Provider>
+                            });
+                            console.log("We got result ",result);
+                        }}>
+                            {type === 'callback' && <PiWebhooksLogo/>}
+                            {type === 'value' && <LuSigmaSquare/>}
+                        </button>
                     </LabelContainer>
                 })}
             </div>);
@@ -333,7 +361,8 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
         marginTop: '',
         marginRight: '',
         marginBottom: '',
-        marginLeft: ''
+        marginLeft: '',
+        properties : {}
     }
 
     const newAllContainers = [...allContainersSignal.get().map(n => {
@@ -398,7 +427,7 @@ function DraggableContainer(props: {
     useSignalEffect(() => {
         const {clientX: mouseX, clientY: mouseY} = mousePosition.get();
         const container: Container | undefined = containerSignal.get();
-        if (mouseX <= 0 || mouseY <= 0) {
+        if (mouseX === undefined || mouseY === undefined || mouseX <= 0 || mouseY <= 0) {
             return;
         }
         let nearestDropZoneId = '';
@@ -633,15 +662,13 @@ function ToolBar(props: { container: Container, onDelete: () => void, onFocusUp:
             justifyContent: 'center',
             background: '#666',
             position: 'absolute',
-            top: -17,
+            top: -15,
             right: -1,
             color: 'white',
-            zIndex: -1
         };
         const isFocused = selectedDragContainerIdSignal.get() === container.id;
         if (isFocused) {
             style.display = 'flex';
-            style.zIndex = 100;
         }
         return style as CSSProperties;
     })
@@ -697,17 +724,18 @@ function NumericalPercentagePropertyEditor(props: {
     })
 
     function extractValue() {
-        if (selectedDragContainer.get() === undefined) {
+        const selectedDragContainerItem = selectedDragContainer.get();
+        if (selectedDragContainerItem === undefined) {
             return '';
         }
-        const val: string = (selectedDragContainer.get()[property] ?? '') as unknown as string;
+        const val: string = (selectedDragContainerItem[property] ?? '') as unknown as string;
         if (val.endsWith('%')) {
             return parseInt(val.replace('%', ''))
         }
         if (val.endsWith('px')) {
             return parseInt(val.replace('px', ''))
         }
-        return selectedDragContainer.get()[property] ?? ''
+        return selectedDragContainerItem[property] ?? ''
     }
 
     return <div style={{display: 'flex', flexDirection: 'row', ...props.style}}>
@@ -760,8 +788,41 @@ function LabelContainer(props: PropsWithChildren<{
 }>) {
     return <label style={{display: 'flex', flexDirection: 'column',gap: 0, ...props.style}}>
         <div style={props.styleLabel}>{props.label}</div>
-        <div style={{display:'flex',flexDirection:'row'}}>
+        <div style={{display:'flex',flexDirection:'row',flexGrow:1}}>
             {props.children}
         </div>
     </label>
+}
+
+
+
+function ComponentPropertyEditor(props: { closePanel: () => void, name: string, type: 'value' | 'callback' }) {
+    const selectedDragContainer = useSelectedDragContainer();
+    const update = useUpdateSelectedDragContainer();
+    return <div style={{backgroundColor: '#FAFAFA',width:600,height:800,display:'flex',flexDirection:'column'}}>
+        <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+            <Notifiable component={Editor}
+                        language="javascript"
+                        value={() => {
+                            const container = selectedDragContainer.get();
+                            if(container === undefined) {
+                                return '';
+                            }
+                            return container.properties[props.name]?.formula ?? ''
+                        }}
+                        options={{
+                            selectOnLineNumbers: true
+                        }}
+                        onChangeHandler={(value?:string) => {
+                            update((item:Container) => {
+                                const name = props.name;
+                                const cloneProps = {...item.properties} as Record<string, {formula:string,type:ValueCallbackType}>;
+                                cloneProps[name] = {formula:value??'',type:props.type}
+                                item.properties = cloneProps;
+                            })
+                        }}
+            />
+        </div>
+        <button onClick={props.closePanel}>Close</button>
+    </div>
 }
