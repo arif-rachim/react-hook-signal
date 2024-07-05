@@ -26,7 +26,7 @@ import {IconType} from "react-icons";
 import {LuSigmaSquare} from "react-icons/lu";
 import {PiWebhooksLogo} from "react-icons/pi";
 import {useShowModal} from "../modal/useShowModal.ts";
-import {Editor} from "@monaco-editor/react";
+import {Editor, Monaco} from "@monaco-editor/react";
 
 export type Container = {
     id: string,
@@ -803,6 +803,31 @@ function ComponentPropertyEditor(props: { closePanel: () => void, name: string, 
         <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
             <Notifiable component={Editor}
                         language="javascript"
+                        beforeMountHandler={(monaco:Monaco) => {
+                            // validation settings
+                            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                                noSemanticValidation: true,
+                                noSyntaxValidation: false,
+                            });
+
+                            // compiler options
+                            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                                target: monaco.languages.typescript.ScriptTarget.ES2015,
+                                allowNonTsExtensions: true,
+                            });
+                            // extra libraries
+                            const libSource = [
+                                "declare class Facts {",
+                                "    /**",
+                                "     * Returns the next fact",
+                                "     */",
+                                "    static next():string",
+                                "	 hello(a:string):string",
+                                "}",
+                            ].join("\n");
+                            const libUri = "ts:filename/facts.d.ts";
+                            monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
+                        }}
                         value={() => {
                             const container = selectedDragContainer.get();
                             if(container === undefined) {
