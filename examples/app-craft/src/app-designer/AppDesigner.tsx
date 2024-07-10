@@ -1,17 +1,22 @@
-import React, {
+import {
     createContext,
     CSSProperties,
     HTMLAttributes,
     PropsWithChildren,
     useContext,
     useEffect,
-    useId
+    useId,
+    useState
 } from "react";
 import {Notifiable, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {
+    MdAdd,
     MdArrowUpward,
     MdCancel,
+    MdCheck,
+    MdDataArray,
+    MdDataObject,
     MdDesignServices,
     MdDragIndicator,
     MdHorizontalDistribute,
@@ -22,11 +27,38 @@ import {
 import {guid} from "../utils/guid.ts";
 import {useRefresh} from "../utils/useRefresh.ts";
 import {BORDER, BORDER_NONE} from "../comp/Border.ts";
-import {IconType} from "react-icons";
 import {LuSigmaSquare} from "react-icons/lu";
-import {PiWebhooksLogo} from "react-icons/pi";
+import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {useShowModal} from "../modal/useShowModal.ts";
 import {Editor, Monaco} from "@monaco-editor/react";
+import {TiSortNumerically} from "react-icons/ti";
+import {AiOutlineFieldString} from "react-icons/ai";
+import {TbToggleLeftFilled} from "react-icons/tb";
+import {IoMenuOutline, IoTrashOutline} from "react-icons/io5";
+import {IconType} from "react-icons";
+
+const Icon = {
+    State: PiTrafficSignal,
+    Computed: LuSigmaSquare,
+    Effect: PiWebhooksLogo,
+    Delete: IoTrashOutline,
+    Detail: IoMenuOutline,
+    Number: TiSortNumerically,
+    String: AiOutlineFieldString,
+    Boolean: TbToggleLeftFilled,
+    Record: MdDataObject,
+    Array: MdDataArray,
+    Checked: MdCheck
+}
+
+export type Variable = {
+    type: 'state' | 'computed' | 'effect',
+    id: string,
+    name: string,
+    functionCode: string,
+    value?: unknown, // this is only for state
+    dependency?: Array<string> // this is only for computed and effect
+}
 
 export type Container = {
     id: string,
@@ -49,7 +81,7 @@ export type Container = {
     marginRight: CSSProperties['marginRight'],
     marginBottom: CSSProperties['marginBottom'],
     marginLeft: CSSProperties['marginLeft'],
-    properties:Record<string,{formula:string,type:ValueCallbackType}>
+    properties: Record<string, { formula: string, type: ValueCallbackType }>
 }
 
 const VERTICAL = 'vertical';
@@ -62,14 +94,16 @@ const dropZones: Array<{
     parentContainerId: string
 }> = [];
 
-type ValueCallbackType = 'value'|'callback';
+type ValueCallbackType = 'value' | 'callback';
 
 type LayoutBuilderProps = {
     elements: Record<string, {
         icon: IconType,
-        component : React.FC,
-        property : Record<string,ValueCallbackType>
-    }>
+        component: React.FC,
+        property: Record<string, ValueCallbackType>
+    }>,
+    value: { containers: Array<Container>, variables: Array<Variable> },
+    onChange: (param: { containers: Array<Container>, variables: Array<Variable> }) => void
 }
 
 const AppDesignerContext = createContext<{
@@ -77,63 +111,42 @@ const AppDesignerContext = createContext<{
     selectedDragContainerIdSignal: Signal.State<string>,
     hoveredDragContainerIdSignal: Signal.State<string>,
     allContainersSignal: Signal.State<Array<Container>>,
+    allVariablesSignal: Signal.State<Array<Variable>>,
     uiDisplayModeSignal: Signal.State<'design' | 'view'>
-} & LayoutBuilderProps>({
+} & Pick<LayoutBuilderProps, 'elements'>>({
     activeDropZoneIdSignal: new Signal.State<string>(''),
     selectedDragContainerIdSignal: new Signal.State<string>(''),
     hoveredDragContainerIdSignal: new Signal.State<string>(''),
     uiDisplayModeSignal: new Signal.State<"design" | "view">('design'),
     allContainersSignal: new Signal.State<Array<Container>>([]),
-    elements: {}
+    allVariablesSignal: new Signal.State<Array<Variable>>([]),
+    elements: {},
 })
 
-export default function AppDesigner(props: LayoutBuilderProps) {
-    const activeDropZoneIdSignal = useSignal('');
-    const selectedDragContainerIdSignal = useSignal('');
-    const hoveredDragContainerIdSignal = useSignal('');
-    const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
+function RightPanel() {
+    const {
+        selectedDragContainerIdSignal,
+        allContainersSignal,
+        hoveredDragContainerIdSignal,
+        uiDisplayModeSignal,
+        activeDropZoneIdSignal,
+        allVariablesSignal,
+        elements
+    } = useContext(AppDesignerContext);
     const showModal = useShowModal();
-    const allContainersSignal = useSignal<Array<Container>>([{
-        id: guid(),
-        type: 'vertical',
-        gap: 0,
-        children: [],
-        parent: '',
-        height: '',
-        width: '',
-        minWidth: '100px',
-        minHeight: '100px',
-
-        marginTop: '',
-        marginRight: '',
-        marginBottom: '',
-        marginLeft: '',
-
-        paddingTop: '',
-        paddingRight: '',
-        paddingBottom: '',
-        paddingLeft: '',
-        properties : {}
-
-    }]);
-    const renderedElements = useComputed(() => {
-        const container = allContainersSignal.get().find(item => item.parent === '');
-        if (container) {
-            return <DraggableContainer allContainersSignal={allContainersSignal} container={container}/>
-        }
-        return <></>
-    });
     const propertyEditors = useComputed(() => {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
         const elementName = selectedDragContainer?.type;
         const result: Array<JSX.Element> = [];
-        result.push(<div style={{display:'flex',flexDirection:'row',gap:10}} key={'height-width'}>
-            <NumericalPercentagePropertyEditor property={'height'} label={'Height'} key={'height-editor'} style={{width:'50%'}} styleLabel={{width:30}}/>
-            <NumericalPercentagePropertyEditor property={'width'} label={'Width'} key={'width-editor'} style={{width:'50%'}} styleLabel={{width:30}}/>
+        result.push(<div style={{display: 'flex', flexDirection: 'row', gap: 10}} key={'height-width'}>
+            <NumericalPercentagePropertyEditor property={'height'} label={'Height'} key={'height-editor'}
+                                               style={{width: '50%'}} styleLabel={{width: 30}}/>
+            <NumericalPercentagePropertyEditor property={'width'} label={'Width'} key={'width-editor'}
+                                               style={{width: '50%'}} styleLabel={{width: 30}}/>
         </div>);
         result.push(<LabelContainer label={'Padding'} style={{marginTop: 10}} styleLabel={{width: 54, flexShrink: 0}}
-                                     key={'padding-editor'}>
+                                    key={'padding-editor'}>
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{display: 'flex', justifyContent: 'center'}}>
                     <NumericalPercentagePropertyEditor property={'paddingTop'} label={'pT'} key={'padding-top'}
@@ -154,7 +167,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             </div>
         </LabelContainer>)
         result.push(<LabelContainer label={'Margin'} style={{marginTop: 10}} styleLabel={{width: 54, flexShrink: 0}}
-                                     key={'margin-editor'}>
+                                    key={'margin-editor'}>
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{display: 'flex', justifyContent: 'center'}}>
                     <NumericalPercentagePropertyEditor property={'marginTop'} label={'mT'} key={'margin-top'}
@@ -175,14 +188,24 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             </div>
         </LabelContainer>)
 
-        if (elementName && elementName in props.elements) {
-            const element = props.elements[elementName];
+        if (elementName && elementName in elements) {
+            const element = elements[elementName];
             const property = element.property;
-            result.push(<div key={'prop-editor'} style={{display:'flex',flexDirection:'column',gap:5,marginTop:5}}>
+            result.push(<div key={'prop-editor'}
+                             style={{display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5}}>
                 {Object.keys(property).map(propertyName => {
                     const type = property[propertyName];
-                    return <LabelContainer key={propertyName} label={propertyName} style={{flexDirection:'row',alignItems:'center'}} styleLabel={{width:65,fontSize:13}}>
-                        <button style={{width:'100%',border:BORDER,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}} onClick={async () => {
+                    return <LabelContainer key={propertyName} label={propertyName}
+                                           style={{flexDirection: 'row', alignItems: 'center'}}
+                                           styleLabel={{width: 65, fontSize: 13}}>
+                        <button style={{
+                            width: '100%',
+                            border: BORDER,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 22
+                        }} onClick={async () => {
                             const result = await showModal(closePanel => {
                                 return <AppDesignerContext.Provider
                                     value={{
@@ -190,14 +213,17 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                         selectedDragContainerIdSignal: selectedDragContainerIdSignal,
                                         activeDropZoneIdSignal: activeDropZoneIdSignal,
                                         uiDisplayModeSignal: uiDisplayModeSignal,
-                                        allContainersSignal: allContainersSignal, ...props
-                                    }}><ComponentPropertyEditor closePanel={closePanel} name={propertyName} type={property[propertyName]}/>
+                                        allContainersSignal: allContainersSignal,
+                                        allVariablesSignal: allVariablesSignal,
+                                        elements: elements
+                                    }}><ComponentPropertyEditor closePanel={closePanel} name={propertyName}
+                                                                type={property[propertyName]}/>
                                 </AppDesignerContext.Provider>
                             });
-                            console.log("We got result ",result);
+                            console.log('WE HAVE RESULT ',result);
                         }}>
-                            {type === 'callback' && <PiWebhooksLogo/>}
-                            {type === 'value' && <LuSigmaSquare/>}
+                            {type === 'callback' && <Icon.Effect/>}
+                            {type === 'value' && <Icon.Computed/>}
                         </button>
                     </LabelContainer>
                 })}
@@ -205,6 +231,412 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         }
         return result
     })
+    return <notifiable.div
+        style={{
+            width: 200,
+            padding: 5,
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderLeft: '1px solid rgba(0,0,0,0.1)',
+            display: 'flex',
+            flexDirection: 'column'
+        }}>
+        {propertyEditors}
+    </notifiable.div>;
+}
+
+function LeftPanel() {
+    const {elements} = useContext(AppDesignerContext);
+    return <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: 200,
+        backgroundColor: 'rgba(0,0,0,0.1)',
+        borderRight: '1px solid rgba(0,0,0,0.1)'
+    }}>
+        <div
+            style={{
+                padding: 20,
+                display: 'flex',
+                gap: 10,
+                alignItems: 'flex-start'
+            }}>
+            <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
+            <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
+            {
+                Object.keys(elements).map((key) => {
+                    const Icon = elements[key].icon;
+                    return <DraggableItem icon={Icon} draggableDataType={key} key={key}/>
+                })
+            }
+        </div>
+        <VariablesPanel/>
+    </div>
+}
+
+function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?: Variable) => void }) {
+    const {variable, closePanel} = props;
+    const [type, setType] = useState<'state' | 'computed' | 'effect'>(variable?.type ?? 'state');
+    const showModal = useShowModal();
+    const context = useContext(AppDesignerContext);
+    const {allVariablesSignal} = context;
+    function createNewVariable(): Variable {
+        return {
+            value: undefined,
+            name: '',
+            type: 'state',
+            id: guid(),
+            dependency: [],
+            functionCode: ''
+        }
+    }
+
+    const variableSignal = useSignal(variable ?? createNewVariable());
+    useSignalEffect(() => {
+        const type = variableSignal.get().type;
+        setType(type);
+    })
+
+    async function showDependencySelector() {
+        const result = await showModal<Array<string> | 'cancel'>(closePanel => {
+            return <AppDesignerContext.Provider value={context}>
+                <DependencySelector closePanel={closePanel} value={variableSignal.get().dependency ?? []}/>
+            </AppDesignerContext.Provider>
+        });
+        if(result !== 'cancel'){
+            const newVariable = {...variableSignal.get()};
+            newVariable.dependency = result;
+            variableSignal.set(newVariable)
+        }
+
+    }
+
+    return <div style={{
+        padding: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        width: 800,
+        height: 600,
+        gap: 10,
+        overflow: 'auto'
+    }}>
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+            <button style={{
+                border: BORDER,
+                backgroundColor: type === 'state' ? '#000' : '#CCC',
+                color: type === 'state' ? 'white' : 'black',
+                padding: 3
+            }} onClick={() => {
+                variableSignal.set({...variableSignal.get(), type: 'state'})
+            }}>State
+            </button>
+            <button style={{
+                border: BORDER,
+                borderLeft: 'none',
+                borderRight: 'none',
+                backgroundColor: type === 'computed' ? '#000' : '#CCC',
+                color: type === 'computed' ? 'white' : 'black',
+                padding: 3
+            }}
+                    onClick={() => {
+                        variableSignal.set({...variableSignal.get(), type: 'computed'})
+                    }}
+            >Computed
+            </button>
+            <button style={{
+                border: BORDER,
+                backgroundColor: type === 'effect' ? '#000' : '#CCC',
+                color: type === 'effect' ? 'white' : 'black',
+                padding: 3
+            }} onClick={() => {
+                variableSignal.set({...variableSignal.get(), type: 'effect'})
+            }}>Effect
+            </button>
+        </div>
+        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto',gap:5}}>
+            <LabelContainer label={'Name'} style={{flexDirection:'row',gap:10}} styleLabel={{width:80}}>
+                <notifiable.input name={'signalName'} autoComplete={'unset'}
+                                  style={{border: BORDER, flexGrow: 1, padding: '3px 5px'}} value={() => {
+                    return variableSignal.get().name
+                }}
+                                  onKeyDown={(e) => {
+                                      if (e.key === " ") {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                      }
+                                  }}
+                                  onChange={(event) => {
+                                      const dom = event.target;
+                                      const cursorPosition = dom.selectionStart;
+                                      const val = dom.value;
+                                      const newVariable = {...variableSignal.get()};
+                                      newVariable.name = val;
+                                      variableSignal.set(newVariable);
+                                      setTimeout(() => {
+                                          dom.setSelectionRange(cursorPosition, cursorPosition);
+                                      }, 0);
+                                  }}/>
+            </LabelContainer>
+            {type !== 'state' &&
+                <LabelContainer label={'Dependency'} style={{flexDirection:'row',gap:10}} styleLabel={{width:80}}>
+                    <notifiable.div style={{border: BORDER,display:'flex',gap:5,padding:5,flexGrow: 1,minHeight:22}} onClick={showDependencySelector}>{() => {
+                        const dependencies = variableSignal.get().dependency ?? []
+                        const allVariables = allVariablesSignal.get();
+                        return dependencies.map(dep => {
+                            const variable = allVariables.find(i => i.id === dep);
+                            return <div key={dep} style={{border:BORDER,borderRadius:3,padding:'3px 5px'}}>
+                                {variable?.name}
+                            </div>
+                        })
+                    }}</notifiable.div>
+                </LabelContainer>
+            }
+            <LabelContainer label={'Code'} style={{flexGrow: 1}}>
+                <Notifiable component={Editor}
+                            language="javascript"
+                            beforeMountHandler={editorBeforeMountHandler([])}
+                            value={() => {
+                                const variable = variableSignal.get();
+                                if (variable === undefined) {
+                                    return '';
+                                }
+                                return variable.functionCode;
+                            }}
+                            options={{selectOnLineNumbers: true}}
+                            onChangeHandler={(value?: string) => {
+                                const newVariable = {...variableSignal.get()};
+                                newVariable.functionCode = value ?? '';
+                                variableSignal.set(newVariable);
+                            }}
+                />
+            </LabelContainer>
+        </div>
+        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10}}>
+            <button onClick={() => {
+                closePanel(variableSignal.get());
+            }} style={{border: BORDER}}>Save
+            </button>
+            <button onClick={() => {
+                closePanel();
+            }} style={{border: BORDER}}>Cancel
+            </button>
+        </div>
+    </div>
+}
+
+function DependencySelector(props: { closePanel: (param: Array<string> | 'cancel') => void, value: Array<string> }) {
+    const {closePanel} = props;
+    const {allVariablesSignal} = useContext(AppDesignerContext);
+    const selectedSignal = useSignal<Array<string>>(props.value);
+    const elements = useComputed(() => {
+        const variables = allVariablesSignal.get();
+        const selected = selectedSignal.get();
+        return variables.map((i) => {
+            const isSelected = selected.indexOf(i.id) >= 0;
+            return <div key={i.id} style={{display: 'flex', alignItems: 'center', gap: 5}} onClick={() => {
+                const selected = selectedSignal.get();
+                const isSelected = selected.indexOf(i.id) >= 0;
+                if (isSelected) {
+                    selectedSignal.set(selectedSignal.get().filter(id => id !== i.id))
+                } else {
+                    selectedSignal.set([...selectedSignal.get(), i.id])
+                }
+            }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRight: BORDER,
+                    padding: '5px'
+                }}>
+                    {i.type === 'effect' && <Icon.Effect/>}
+                    {i.type === 'computed' && <Icon.Computed/>}
+                    {i.type === 'state' && <Icon.State/>}
+                </div>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 20
+                }}>{isSelected && <Icon.Checked/>}</div>
+                <div>{i.name}</div>
+            </div>
+        })
+    })
+    return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 10}}>
+        <div style={{fontSize: 18}}>State or Computed to Refer</div>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+            {elements}
+        </notifiable.div>
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 10}}>
+            <button style={{border: BORDER}} onClick={() => closePanel(selectedSignal.get())}>Save</button>
+            <button style={{border: BORDER}} onClick={() => closePanel('cancel')}>Cancel</button>
+        </div>
+    </div>
+}
+
+function VariablesPanel() {
+    const context = useContext(AppDesignerContext);
+    const {allVariablesSignal} = context;
+    const showModal = useShowModal();
+
+    async function editVariable(variable?: Variable) {
+        const result = await showModal<Variable>(closePanel => {
+            return <AppDesignerContext.Provider value={context}>
+                <VariableEditorPanel variable={variable} closePanel={closePanel}/>
+            </AppDesignerContext.Provider>
+        })
+        if (result) {
+            const variables = [...allVariablesSignal.get()];
+            const indexOfVariable = variables.findIndex(i => i.id === result.id);
+            if (indexOfVariable >= 0) {
+                variables.splice(indexOfVariable, 1, result);
+            } else {
+                variables.push(result);
+            }
+            allVariablesSignal.set(variables);
+        }
+    }
+
+    function deleteVariable(variable?: Variable) {
+        const variables = allVariablesSignal.get().filter(i => i.id !== variable?.id);
+        allVariablesSignal.set(variables);
+    }
+
+    const variableList = useComputed(() => {
+        return allVariablesSignal.get().sort(sortSignal).map((variable) => {
+            return <LabelContainer label={variable.name} key={variable.id} style={{
+                flexDirection: 'row',
+                backgroundColor: 'rgba(0,0,0,0.02)',
+                borderBottom: BORDER,
+                alignItems: 'center'
+            }} styleOnHovered={{backgroundColor: 'rgba(0,0,0,0.1)'}} styleContent={{justifyContent: 'flex-end'}}
+                                   styleLabel={{overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRight: BORDER,
+                    padding: '5px'
+                }}>
+                    {variable.type === 'effect' && <Icon.Effect/>}
+                    {variable.type === 'computed' && <Icon.Computed/>}
+                    {variable.type === 'state' && <Icon.State/>}
+                </div>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRight: BORDER,
+                    padding: '5px'
+                }} onClick={() => deleteVariable(variable)}>
+                    <Icon.Delete/>
+                </div>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '5px'
+                }} onClick={() => editVariable(variable)}>
+                    <Icon.Detail/>
+                </div>
+            </LabelContainer>
+        })
+    })
+    return <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        height: '100%'
+    }}>
+        <div style={{display: 'flex'}}>
+            <input type={'search'} style={{flexGrow: 1, border: BORDER, minWidth: 0, width: 100, flexShrink: 1}}/>
+            <div style={{display: 'flex', border: BORDER, borderLeft: 'none', alignItems: 'center', cursor: 'pointer'}}
+                 onClick={() => editVariable()}>
+                <div style={{marginLeft: 5}}>Add</div>
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <MdAdd style={{fontSize: 22}}/>
+                </div>
+            </div>
+        </div>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
+            {variableList}
+        </notifiable.div>
+    </div>
+}
+
+function sortSignal(a: Variable, b: Variable) {
+    const priority = {state: 'a', computed: 'b', effect: 'c'}
+    return `${priority[a.type]}-${a.name}`.localeCompare(`${priority[b.type]}-${b.name}`)
+}
+
+function ToggleViewToolbar() {
+    const {uiDisplayModeSignal} = useContext(AppDesignerContext);
+    return <div style={{display: 'flex', justifyContent: 'center', gap: 10, padding: 10}}>
+        <ButtonWithIcon icon={MdPreview} onClick={() => uiDisplayModeSignal.set('view')}/>
+        <ButtonWithIcon icon={MdDesignServices} onClick={() => uiDisplayModeSignal.set('design')}/>
+    </div>;
+}
+
+export default function AppDesigner(props: LayoutBuilderProps) {
+    const activeDropZoneIdSignal = useSignal('');
+    const selectedDragContainerIdSignal = useSignal('');
+    const hoveredDragContainerIdSignal = useSignal('');
+    const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
+    const allVariablesSignal = useSignal<Array<Variable>>([]);
+    const allContainersSignal = useSignal<Array<Container>>([{
+        id: guid(),
+        type: 'vertical',
+        gap: 0,
+        children: [],
+        parent: '',
+        height: '',
+        width: '',
+        minWidth: '100px',
+        minHeight: '100px',
+
+        marginTop: '',
+        marginRight: '',
+        marginBottom: '',
+        marginLeft: '',
+
+        paddingTop: '',
+        paddingRight: '',
+        paddingBottom: '',
+        paddingLeft: '',
+        properties: {}
+
+    }]);
+    const {value, onChange} = props;
+    useEffect(() => {
+        if (value && value.containers && value.containers.length > 0) {
+            allContainersSignal.set(value.containers);
+        }
+        if (value && value.variables && value.variables.length > 0) {
+            allVariablesSignal.set(value.variables);
+        }
+    }, [allContainersSignal, allVariablesSignal, value]);
+
+    useSignalEffect(() => {
+        onChange({
+            containers: allContainersSignal.get(),
+            variables: allVariablesSignal.get()
+        });
+    })
+
+    const renderedElements = useComputed(() => {
+        const container = allContainersSignal.get().find(item => item.parent === '');
+        if (container) {
+            return <DraggableContainer allContainersSignal={allContainersSignal} container={container}/>
+        }
+        return <></>
+    });
+
 
     return <AppDesignerContext.Provider
         value={{
@@ -212,49 +644,20 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             selectedDragContainerIdSignal: selectedDragContainerIdSignal,
             activeDropZoneIdSignal: activeDropZoneIdSignal,
             uiDisplayModeSignal: uiDisplayModeSignal,
-            allContainersSignal: allContainersSignal, ...props
+            allContainersSignal: allContainersSignal,
+            allVariablesSignal: allVariablesSignal,
+            elements: props.elements
         }}>
 
         <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
-            <div
-                style={{
-                    width: 200,
-                    padding: 20,
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    borderRight: '1px solid rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    gap: 10,
-                    alignItems: 'flex-start'
-                }}>
-                <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
-                <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
-                {
-                    Object.keys(props.elements).map((key) => {
-                        const Icon = props.elements[key].icon;
-                        return <DraggableItem icon={Icon} draggableDataType={key} key={key}/>
-                    })
-                }
-            </div>
+            <LeftPanel/>
             <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
-                <div style={{display: 'flex', justifyContent: 'center', gap: 10, padding: 10}}>
-                    <ButtonWithIcon icon={MdPreview} onClick={() => uiDisplayModeSignal.set('view')}/>
-                    <ButtonWithIcon icon={MdDesignServices} onClick={() => uiDisplayModeSignal.set('design')}/>
-                </div>
+                <ToggleViewToolbar/>
                 <notifiable.div style={{flexGrow: 1}}>
                     {renderedElements}
                 </notifiable.div>
             </div>
-            <notifiable.div
-                style={{
-                    width: 200,
-                    padding: 5,
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    borderLeft: '1px solid rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                {propertyEditors}
-            </notifiable.div>
+            <RightPanel/>
         </div>
 
     </AppDesignerContext.Provider>
@@ -362,7 +765,7 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
         marginRight: '',
         marginBottom: '',
         marginLeft: '',
-        properties : {}
+        properties: {}
     }
 
     const newAllContainers = [...allContainersSignal.get().map(n => {
@@ -784,70 +1187,126 @@ function NumericalPercentagePropertyEditor(props: {
 function LabelContainer(props: PropsWithChildren<{
     label: string,
     style?: CSSProperties,
-    styleLabel?: CSSProperties
+    styleLabel?: CSSProperties,
+    styleContent?: CSSProperties,
+    styleOnHovered?: CSSProperties
 }>) {
-    return <label style={{display: 'flex', flexDirection: 'column',gap: 0, ...props.style}}>
+    const [isHovered, setIsHovered] = useState<boolean>(false);
+    let style = {...props.style};
+    if (isHovered) {
+        style = {...style, ...props.styleOnHovered}
+    }
+    return <label style={{display: 'flex', flexDirection: 'column', gap: 0, ...style}}
+                  onMouseMove={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         <div style={props.styleLabel}>{props.label}</div>
-        <div style={{display:'flex',flexDirection:'row',flexGrow:1}}>
+        <div style={{display: 'flex', flexDirection: 'row', flexGrow: 1, ...props.styleContent}}>
             {props.children}
         </div>
     </label>
 }
 
 
-
 function ComponentPropertyEditor(props: { closePanel: () => void, name: string, type: 'value' | 'callback' }) {
     const selectedDragContainer = useSelectedDragContainer();
     const update = useUpdateSelectedDragContainer();
-    return <div style={{backgroundColor: '#FAFAFA',width:600,height:800,display:'flex',flexDirection:'column'}}>
-        <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+    return <div style={{backgroundColor: '#FAFAFA', width: 600, height: 800, display: 'flex', flexDirection: 'column'}}>
+        <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: 10, gap: 10}}>
             <Notifiable component={Editor}
                         language="javascript"
-                        beforeMountHandler={(monaco:Monaco) => {
-                            // validation settings
-                            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-                                noSemanticValidation: true,
-                                noSyntaxValidation: false,
-                            });
-
-                            // compiler options
-                            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-                                target: monaco.languages.typescript.ScriptTarget.ES2015,
-                                allowNonTsExtensions: true,
-                            });
-                            // extra libraries
-                            const libSource = [
-                                "declare class Facts {",
-                                "    /**",
-                                "     * Returns the next fact",
-                                "     */",
-                                "    static next():string",
-                                "	 hello(a:string):string",
-                                "}",
-                            ].join("\n");
-                            const libUri = "ts:filename/facts.d.ts";
-                            monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
-                        }}
+                        beforeMountHandler={editorBeforeMountHandler([])}
                         value={() => {
                             const container = selectedDragContainer.get();
-                            if(container === undefined) {
+                            if (container === undefined) {
                                 return '';
                             }
                             return container.properties[props.name]?.formula ?? ''
                         }}
-                        options={{
-                            selectOnLineNumbers: true
-                        }}
-                        onChangeHandler={(value?:string) => {
-                            update((item:Container) => {
+                        options={{selectOnLineNumbers: true}}
+                        onChangeHandler={(value?: string) => {
+                            update((item: Container) => {
                                 const name = props.name;
-                                const cloneProps = {...item.properties} as Record<string, {formula:string,type:ValueCallbackType}>;
-                                cloneProps[name] = {formula:value??'',type:props.type}
+                                const cloneProps = {...item.properties} as Record<string, {
+                                    formula: string,
+                                    type: ValueCallbackType
+                                }>;
+                                cloneProps[name] = {formula: value ?? '', type: props.type}
                                 item.properties = cloneProps;
                             })
                         }}
             />
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end'}}>
+                <button onClick={props.closePanel}>Close</button>
+            </div>
         </div>
-        <button onClick={props.closePanel}>Close</button>
+
+
     </div>
 }
+
+function editorBeforeMountHandler(params:Array<{name:string,type:'state'|'computed'}>) {
+    console.log('we have params',params);
+    const composedLibrary = `
+declare const shitState:Signal.State<unknown>
+declare const shitComputed:Signal.Computed<unknown>
+`;
+    return (monaco: Monaco) => {
+        // validation settings
+        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+            noSemanticValidation: true,
+            noSyntaxValidation: false,
+        });
+
+        // compiler options
+        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+            target: monaco.languages.typescript.ScriptTarget.ES2015,
+            allowNonTsExtensions: true,
+        });
+        // extra libraries
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
+
+    }
+}
+
+const signalSource = `
+declare namespace Signal {
+    export class State<T> {
+        #private;
+        readonly [NODE]: SignalNode<T>;
+        constructor(initialValue: T, options?: Signal.Options<T>);
+        get(): T;
+        set(newValue: T): void;
+    }
+    export class Computed<T> {
+        #private;
+        readonly [NODE]: ComputedNode<T>;
+        constructor(computation: () => T, options?: Signal.Options<T>);
+        get(): T;
+    }
+    type AnySignal<T = any> = State<T> | Computed<T>;
+    type AnySink = Computed<any> | subtle.Watcher;
+    export namespace subtle {
+        function untrack<T>(cb: () => T): T;
+        function introspectSources(sink: AnySink): AnySignal[];
+        function introspectSinks(signal: AnySignal): AnySink[];
+        function hasSinks(signal: AnySignal): boolean;
+        function hasSources(signal: AnySink): boolean;
+        class Watcher {
+            #private;
+            readonly [NODE]: ReactiveNode;
+            constructor(notify: (this: Watcher) => void);
+            watch(...signals: AnySignal[]): void;
+            unwatch(...signals: AnySignal[]): void;
+            getPending(): Computed<any>[];
+        }
+        function currentComputed(): Computed<any> | undefined;
+        const watched: unique symbol;
+        const unwatched: unique symbol;
+    }
+    export interface Options<T> {
+        equals?: (this: AnySignal<T>, t: T, t2: T) => boolean;
+        [Signal.subtle.watched]?: (this: AnySignal<T>) => void;
+        [Signal.subtle.unwatched]?: (this: AnySignal<T>) => void;
+    }
+    export {};
+}`
