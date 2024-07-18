@@ -1,16 +1,20 @@
 import {Monaco} from "@monaco-editor/react";
 import {Variable} from "./AppDesigner.tsx";
+import {ZodType} from "zod";
+import {printNode, zodToTs} from "zod-to-ts";
 
 /**
  * Executes the onBeforeMountHandler function.
  */
 export const onBeforeMountHandler = (props: {
     allVariables: Array<Variable>,
-    dependencies: Array<string>
+    dependencies: Array<string>,
+    returnType:ZodType
 }) => (monaco: Monaco) => {
-    const {allVariables, dependencies} = props;
+    const {allVariables, dependencies,returnType} = props;
+
     const composedLibrary = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
-        let type = 'Signal.State<any>';
+        let type = `Signal.State<any>`;
         if (i.type === 'computed') {
             type = 'Signal.Computed<any>'
         }
@@ -28,13 +32,13 @@ export const onBeforeMountHandler = (props: {
         allowNonTsExtensions: true,
     });
     // extra libraries
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource(printNode(zodToTs(returnType).node)), "ts:filename/signal.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
 }
 
 
-const signalSource = `
-declare const module:{exports:any};
+const signalSource = (returnType:string) => `
+declare const module:{exports:${returnType};
 declare namespace Signal {
     export class State<T> {
         #private;

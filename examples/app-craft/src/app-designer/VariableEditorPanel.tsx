@@ -12,6 +12,7 @@ import {Variable} from "./AppDesigner.tsx";
 import {DependencySelector} from "./DependencySelector.tsx";
 import {ConfirmationDialog} from "./ConfirmationDialog.tsx";
 import {onBeforeMountHandler} from "./onBeforeHandler.ts";
+import {z} from "zod";
 
 /**
  * Represents a panel for editing variables.
@@ -179,7 +180,7 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
                             language="javascript"
                             onMount={(_, monaco: Monaco) => monacoRef.current = monaco}
                             key={dependencies.join('-')}
-                            beforeMount={onBeforeMountHandler({dependencies, allVariables})}
+                            beforeMount={onBeforeMountHandler({dependencies, allVariables,returnType:z.any()})}
                             value={formula}
                             options={{selectOnLineNumbers: true}}
                             onChange={(value?: string) => {

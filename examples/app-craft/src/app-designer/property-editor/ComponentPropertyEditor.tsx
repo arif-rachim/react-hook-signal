@@ -10,7 +10,7 @@ import {LabelContainer} from "../LabelContainer.tsx";
 import {DependencySelector} from "../DependencySelector.tsx";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
-import {ValueCallbackType} from "../LayoutBuilderProps.ts";
+import {ZodType} from "zod";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -18,7 +18,7 @@ import {ValueCallbackType} from "../LayoutBuilderProps.ts";
 export function ComponentPropertyEditor(props: {
     closePanel: (param?: ContainerPropertyType) => void,
     name: string,
-    type: 'value' | 'callback'
+    type: ZodType
 }) {
     const selectedDragContainer = useSelectedDragContainer();
     const initialValue = (selectedDragContainer.get()?.properties[props.name]) ?? createNewProps(props.type);
@@ -26,7 +26,7 @@ export function ComponentPropertyEditor(props: {
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal} = context;
     const showModal = useShowModal();
-
+    const returnType = props.type;
     async function showDependencySelector() {
         const props = propsSignal.get();
         const result = await showModal<Array<string> | 'cancel'>(closePanel => {
@@ -84,7 +84,7 @@ export function ComponentPropertyEditor(props: {
                     return <Editor
                         language="javascript"
                         key={dependencies.join('-')}
-                        beforeMount={onBeforeMountHandler({dependencies, allVariables})}
+                        beforeMount={onBeforeMountHandler({dependencies, allVariables,returnType})}
                         value={formula}
                         options={{selectOnLineNumbers: true}}
                         onChange={(value?: string) => {
@@ -103,11 +103,10 @@ export function ComponentPropertyEditor(props: {
     </div>
 }
 
-function createNewProps(type: ValueCallbackType): ContainerPropertyType {
+function createNewProps(type: ZodType): ContainerPropertyType {
     return {
         type: type,
         formula: '',
         dependencies: []
     }
 }
-

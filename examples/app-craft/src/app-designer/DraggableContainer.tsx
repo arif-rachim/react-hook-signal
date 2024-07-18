@@ -177,8 +177,13 @@ export function DraggableContainer(props: {
                 }
             }
         } else if (elementsLib[container?.type]) {
-            const {component: Component} = elementsLib[container?.type];
-            result.push(<Component key={container?.id}/>)
+            const {component: Component,property} = elementsLib[container?.type];
+            /*@TODO We need to pass the value here ! now we have the signals,
+                i think what we can do now is to implement the signal craetion here, and pass it to the comppnent
+            */
+            console.log(container.properties);
+            debugger;
+            result.push(<Component key={container?.id}  />)
         }
         return result;
     });

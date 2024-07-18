@@ -7,17 +7,18 @@ import {guid} from "../utils/guid.ts";
 import {useShowModal} from "../modal/useShowModal.ts";
 import {IconType} from "react-icons";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
-import {LayoutBuilderProps, ValueCallbackType} from "./LayoutBuilderProps.ts";
+import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import {DraggableContainer} from "./DraggableContainer.tsx";
 import {LabelContainer} from "./LabelContainer.tsx";
 import {NumericalPercentagePropertyEditor} from "./property-editor/NumericalPercentagePropertyEditor.tsx";
 import {Button} from "./Button.tsx";
 import {VariablesPanel} from "./VariablesPanel.tsx";
-import {Icon} from "./Icon.ts";
 import {ComponentPropertyEditor} from "./property-editor/ComponentPropertyEditor.tsx";
 import {ButtonWithIcon} from "./ButtonWithIcon.tsx";
 import {sortSignal} from "./sortSignal.ts";
 import {useUpdateSelectedDragContainer} from "./useUpdateSelectedDragContainer.ts";
+import {ZodFunction, ZodType, ZodTypeAny} from "zod";
+import {Icon} from "./Icon.ts";
 
 
 export type Variable = {
@@ -32,7 +33,7 @@ export type VariableInstance = {
     id: string,
     instance: AnySignal<unknown>
 }
-export type ContainerPropertyType = { formula: string, type: ValueCallbackType, dependencies: Array<string> }
+export type ContainerPropertyType = { formula: string, type: ZodType, dependencies: Array<string> }
 
 export type Container = {
     id: string,
@@ -123,11 +124,16 @@ function RightPanel() {
 
         if (elementName && elementName in elements) {
             const element = elements[elementName];
-            const property = element.property;
+            const props = element.property;
+            let property:Record<string, unknown> = {};
+            if(isShapeable(props)) {
+                property = props.shape;
+            }
             result.push(<div key={'prop-editor'}
                              style={{display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5}}>
                 {Object.keys(property).map(propertyName => {
-                    const type = property[propertyName];
+                    const type = property[propertyName] as ZodTypeAny;
+                    const isFunction = type instanceof ZodFunction;
                     return <LabelContainer key={propertyName} label={propertyName}
                                            style={{flexDirection: 'row', alignItems: 'center'}}
                                            styleLabel={{width: 65, fontSize: 13}}>
@@ -141,7 +147,7 @@ function RightPanel() {
                             const result = await showModal<ContainerPropertyType>(closePanel => {
                                 return <AppDesignerContext.Provider value={context}>
                                     <ComponentPropertyEditor closePanel={closePanel} name={propertyName}
-                                                             type={property[propertyName]}/>
+                                                             type={type}/>
                                 </AppDesignerContext.Provider>
                             });
                             if(result) {
@@ -150,8 +156,8 @@ function RightPanel() {
                                 })
                             }
                         }}>
-                            {type === 'callback' && <Icon.Effect/>}
-                            {type === 'value' && <Icon.Computed/>}
+                            {isFunction && <Icon.Effect/>}
+                            {!isFunction && <Icon.Computed/>}
                         </Button>
                     </LabelContainer>
                 })}
@@ -344,4 +350,8 @@ function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
     return <ButtonWithIcon onDragStart={(e) => e.dataTransfer.setData('text/plain', props.draggableDataType)}
                            draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')} icon={Icon}/>
 
+}
+
+function isShapeable(value:unknown):value is {shape:Record<string,unknown>}{
+    return value !== null && value !== undefined && typeof value === 'object' && 'shape' in value
 }

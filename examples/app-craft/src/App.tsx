@@ -5,6 +5,8 @@ import {ModalContainer} from "./modal/ModalContainer.tsx";
 import {MdInput} from "react-icons/md";
 import AppDesigner, {Container, Variable} from "./app-designer/AppDesigner.tsx";
 import {useState} from "react";
+import {element} from "./app-designer/LayoutBuilderProps.ts";
+import {z} from "zod";
 
 export function App() {
     const {showModal, modalPanels} = useModal();
@@ -17,21 +19,24 @@ export function App() {
     });
     return <ModalContext.Provider value={showModal}>
         <AppDesigner elements={{
-            input: {
-                icon: MdInput,
-                component: () => {
+            input : element({
+                icon : MdInput,
+                property : z.object({
+                    value : z.string(),
+                    onChange : z.function().args(z.string()).returns(z.void())
+                }),
+                component : (props) => {
+                    const {value,onChange} = props;
                     return <notifiable.input
                         style={{border: '1px solid rgba(0,0,0,0.1)'}}
-                        onChange={() => {
-
+                        value={value}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            onChange(val);
                         }}
                     />
-                },
-                property: {
-                    value : 'value',
-                    onChange : 'callback'
                 }
-            }
+            })
         }} value={value} onChange={(val) => {
             localStorage.setItem('app-designer',JSON.stringify(val));
             setValue(val);
