@@ -1,14 +1,18 @@
 import {
+    ButtonHTMLAttributes,
     createContext,
     CSSProperties,
     HTMLAttributes,
     PropsWithChildren,
+    ReactNode,
     useContext,
     useEffect,
     useId,
+    useMemo,
+    useRef,
     useState
 } from "react";
-import {Notifiable, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {
     MdAdd,
@@ -23,19 +27,22 @@ import {
     MdPreview,
     MdVerticalDistribute
 } from "react-icons/md";
-
-import {guid} from "../utils/guid.ts";
-import {useRefresh} from "../utils/useRefresh.ts";
-import {BORDER, BORDER_NONE} from "../comp/Border.ts";
-import {LuSigmaSquare} from "react-icons/lu";
 import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
-import {useShowModal} from "../modal/useShowModal.ts";
-import {Editor, Monaco} from "@monaco-editor/react";
+import {LuSigmaSquare} from "react-icons/lu";
+
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbToggleLeftFilled} from "react-icons/tb";
 import {IoMenuOutline, IoTrashOutline} from "react-icons/io5";
+
+
+import {guid} from "../utils/guid.ts";
+import {useRefresh} from "../utils/useRefresh.ts";
+import {useShowModal} from "../modal/useShowModal.ts";
+import {Editor, Monaco} from "@monaco-editor/react";
 import {IconType} from "react-icons";
+import {BORDER, BORDER_NONE} from "./Border.ts";
+import {isEmpty} from "../utils/isEmpty.ts";
 
 const Icon = {
     State: PiTrafficSignal,
@@ -198,9 +205,8 @@ function RightPanel() {
                     return <LabelContainer key={propertyName} label={propertyName}
                                            style={{flexDirection: 'row', alignItems: 'center'}}
                                            styleLabel={{width: 65, fontSize: 13}}>
-                        <button style={{
+                        <Button style={{
                             width: '100%',
-                            border: BORDER,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -220,11 +226,11 @@ function RightPanel() {
                                                                 type={property[propertyName]}/>
                                 </AppDesignerContext.Provider>
                             });
-                            console.log('WE HAVE RESULT ',result);
+                            console.log('WE HAVE RESULT ', result);
                         }}>
                             {type === 'callback' && <Icon.Effect/>}
                             {type === 'value' && <Icon.Computed/>}
-                        </button>
+                        </Button>
                     </LabelContainer>
                 })}
             </div>);
@@ -279,6 +285,7 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
     const showModal = useShowModal();
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal} = context;
+
     function createNewVariable(): Variable {
         return {
             value: undefined,
@@ -302,14 +309,33 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
                 <DependencySelector closePanel={closePanel} value={variableSignal.get().dependency ?? []}/>
             </AppDesignerContext.Provider>
         });
-        if(result !== 'cancel'){
+        if (result !== 'cancel') {
             const newVariable = {...variableSignal.get()};
             newVariable.dependency = result;
             variableSignal.set(newVariable)
         }
 
     }
-
+    function validateForm():[boolean,Partial<Record<keyof Variable, Array<string>>>]{
+        const errors:Partial<Record<keyof Variable, Array<string>>> = {};
+        const variable =  variableSignal.get();
+        let valid = true;
+        if(isEmpty(variable.name)){
+            errors.name = ['Name must have value'];
+        }
+        if(isEmpty(variable.functionCode)){
+            errors.functionCode = ['Code cannot be empty'];
+        }
+        if(monacoRef.current){
+            const markers = monacoRef.current?.editor.getModelMarkers({});
+            if(markers && markers.length){
+                errors.functionCode = markers.map(m => m.message);
+            }
+        }
+        valid = Object.keys(errors).length === 0;
+        return [valid,errors];
+    }
+    const monacoRef = useRef<Monaco|undefined>();
     return <div style={{
         padding: 10,
         display: 'flex',
@@ -320,40 +346,42 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
         overflow: 'auto'
     }}>
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-            <button style={{
-                border: BORDER,
+            <Button style={{
                 backgroundColor: type === 'state' ? '#000' : '#CCC',
                 color: type === 'state' ? 'white' : 'black',
-                padding: 3
+                padding: 3,
+                borderTopRightRadius:0,
+                borderBottomRightRadius:0,
             }} onClick={() => {
                 variableSignal.set({...variableSignal.get(), type: 'state'})
             }}>State
-            </button>
-            <button style={{
-                border: BORDER,
+            </Button>
+            <Button style={{
                 borderLeft: 'none',
                 borderRight: 'none',
                 backgroundColor: type === 'computed' ? '#000' : '#CCC',
                 color: type === 'computed' ? 'white' : 'black',
-                padding: 3
+                padding: 3,
+                borderRadius:0,
             }}
                     onClick={() => {
                         variableSignal.set({...variableSignal.get(), type: 'computed'})
                     }}
             >Computed
-            </button>
-            <button style={{
-                border: BORDER,
+            </Button>
+            <Button style={{
                 backgroundColor: type === 'effect' ? '#000' : '#CCC',
                 color: type === 'effect' ? 'white' : 'black',
-                padding: 3
+                padding: 3,
+                borderTopLeftRadius:0,
+                borderBottomLeftRadius:0,
             }} onClick={() => {
                 variableSignal.set({...variableSignal.get(), type: 'effect'})
             }}>Effect
-            </button>
+            </Button>
         </div>
-        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto',gap:5}}>
-            <LabelContainer label={'Name'} style={{flexDirection:'row',gap:10}} styleLabel={{width:80}}>
+        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto', gap: 5}}>
+            <LabelContainer label={'Name'} style={{flexDirection: 'row', gap: 10}} styleLabel={{width: 80}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
                                   style={{border: BORDER, flexGrow: 1, padding: '3px 5px'}} value={() => {
                     return variableSignal.get().name
@@ -377,48 +405,104 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
                                   }}/>
             </LabelContainer>
             {type !== 'state' &&
-                <LabelContainer label={'Dependency'} style={{flexDirection:'row',gap:10}} styleLabel={{width:80}}>
-                    <notifiable.div style={{border: BORDER,display:'flex',gap:5,padding:5,flexGrow: 1,minHeight:22}} onClick={showDependencySelector}>{() => {
+                <LabelContainer label={'Dependency'} style={{flexDirection: 'row', gap: 10}} styleLabel={{width: 80}}>
+                    <notifiable.div
+                        style={{border: BORDER, display: 'flex', gap: 5, padding: 5, flexGrow: 1, minHeight: 22}}
+                        onClick={showDependencySelector}>{() => {
                         const dependencies = variableSignal.get().dependency ?? []
                         const allVariables = allVariablesSignal.get();
                         return dependencies.map(dep => {
                             const variable = allVariables.find(i => i.id === dep);
-                            return <div key={dep} style={{border:BORDER,borderRadius:3,padding:'3px 5px'}}>
+                            return <div key={dep} style={{border: BORDER, borderRadius: 3, padding: '3px 5px'}}>
                                 {variable?.name}
                             </div>
                         })
                     }}</notifiable.div>
                 </LabelContainer>
             }
-            <LabelContainer label={'Code'} style={{flexGrow: 1}}>
-                <Notifiable component={Editor}
-                            language="javascript"
-                            beforeMountHandler={editorBeforeMountHandler([])}
-                            value={() => {
-                                const variable = variableSignal.get();
-                                if (variable === undefined) {
-                                    return '';
+            <LabelContainer label={'Code'} style={{flexGrow: 1}} styleContent={{flexDirection: 'column'}}>
+
+                <notifiable.div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    overflow: 'auto',
+                    backgroundColor: 'blue'
+                }}>
+                    {() => {
+                        const variable = variableSignal.get();
+                        const dependencies = variable.dependency ?? []
+                        const allVariables = allVariablesSignal.get();
+
+                        let formula = '';
+                        if (variable !== undefined) {
+                            formula = variable.functionCode;
+                        }
+
+                        function onBeforeMountHandler(monaco: Monaco) {
+                            const composedLibrary = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
+                                let type = 'Signal.State<any>';
+                                if (i.type === 'computed') {
+                                    type = 'Signal.Computed<any>'
                                 }
-                                return variable.functionCode;
+                                return `declare const ${i.name}:${type}`
+                            }).join('\n');
+                            // validation settings
+                            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                                noSemanticValidation: false,
+                                noSyntaxValidation: false,
+                            });
+
+                            // compiler options
+                            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                                target: monaco.languages.typescript.ScriptTarget.ES2015,
+                                allowNonTsExtensions: true,
+                            });
+                            // extra libraries
+                            monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
+                            monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
+                        }
+
+                        return <Editor
+                            language="javascript"
+                            onMount={(_,monaco:Monaco) => {
+                                monacoRef.current = monaco;
                             }}
+                            key={dependencies.join('-')}
+                            beforeMount={onBeforeMountHandler}
+                            value={formula}
                             options={{selectOnLineNumbers: true}}
-                            onChangeHandler={(value?: string) => {
+                            onChange={(value?: string) => {
                                 const newVariable = {...variableSignal.get()};
                                 newVariable.functionCode = value ?? '';
                                 variableSignal.set(newVariable);
                             }}
-                />
+                        />
+                    }}
+                </notifiable.div>
             </LabelContainer>
         </div>
         <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10}}>
-            <button onClick={() => {
-                closePanel(variableSignal.get());
+            <Button onClick={async () => {
+                const [isValid,errors] = validateForm();
+                if(isValid) {
+                    closePanel(variableSignal.get());
+                }else {
+                    await showModal<string>(closePanel => {
+                        const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
+                            return errors[k]?.map(val => {
+                                return <div key={val}>{(val ?? '') as string}</div>
+                            })
+                        }).flat();
+                        return <ConfirmationDialog message={message} closePanel={closePanel} buttons={['Ok']}/>
+                    })
+                }
             }} style={{border: BORDER}}>Save
-            </button>
-            <button onClick={() => {
+            </Button>
+            <Button onClick={() => {
                 closePanel();
             }} style={{border: BORDER}}>Cancel
-            </button>
+            </Button>
         </div>
     </div>
 }
@@ -430,7 +514,7 @@ function DependencySelector(props: { closePanel: (param: Array<string> | 'cancel
     const elements = useComputed(() => {
         const variables = allVariablesSignal.get();
         const selected = selectedSignal.get();
-        return variables.map((i) => {
+        return variables.filter(i => i.type !== 'effect').map((i) => {
             const isSelected = selected.indexOf(i.id) >= 0;
             return <div key={i.id} style={{display: 'flex', alignItems: 'center', gap: 5}} onClick={() => {
                 const selected = selectedSignal.get();
@@ -470,8 +554,8 @@ function DependencySelector(props: { closePanel: (param: Array<string> | 'cancel
             {elements}
         </notifiable.div>
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 10}}>
-            <button style={{border: BORDER}} onClick={() => closePanel(selectedSignal.get())}>Save</button>
-            <button style={{border: BORDER}} onClick={() => closePanel('cancel')}>Cancel</button>
+            <Button style={{border: BORDER}} onClick={() => closePanel(selectedSignal.get())}>Save</Button>
+            <Button style={{border: BORDER}} onClick={() => closePanel('cancel')}>Cancel</Button>
         </div>
     </div>
 }
@@ -499,9 +583,14 @@ function VariablesPanel() {
         }
     }
 
-    function deleteVariable(variable?: Variable) {
-        const variables = allVariablesSignal.get().filter(i => i.id !== variable?.id);
-        allVariablesSignal.set(variables);
+    async function deleteVariable(variable?: Variable) {
+        const deleteVariableConfirm = await showModal<string>(closePanel => {
+            return <ConfirmationDialog message={'Are you sure you want to delete this variable ?'} closePanel={closePanel}/>
+        })
+        if (deleteVariableConfirm === 'Yes') {
+            const variables = allVariablesSignal.get().filter(i => i.id !== variable?.id);
+            allVariablesSignal.set(variables);
+        }
     }
 
     const variableList = useComputed(() => {
@@ -791,7 +880,7 @@ function DraggableContainer(props: {
     const containerSignal = useSignal(contanerProp);
     useEffect(() => {
         containerSignal.set(contanerProp);
-    }, [contanerProp]);
+    }, [containerSignal, contanerProp]);
     const {
         elements: elementsLib,
         activeDropZoneIdSignal,
@@ -1211,18 +1300,44 @@ function ComponentPropertyEditor(props: { closePanel: () => void, name: string, 
     const update = useUpdateSelectedDragContainer();
     return <div style={{backgroundColor: '#FAFAFA', width: 600, height: 800, display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: 10, gap: 10}}>
-            <Notifiable component={Editor}
+            <notifiable.div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                overflow: 'auto',
+                backgroundColor: 'red'
+            }}>
+                {() => {
+                    const container = selectedDragContainer.get();
+                    let formula = '';
+                    if (container !== undefined) {
+                        formula = container.properties[props.name]?.formula ?? ''
+                    }
+
+                    function onBeforeMountHandler(monaco: Monaco) {
+                        const composedLibrary = '';
+                        // validation settings
+                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                            noSemanticValidation: false,
+                            noSyntaxValidation: false,
+                        });
+
+                        // compiler options
+                        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                            target: monaco.languages.typescript.ScriptTarget.ES2015,
+                            allowNonTsExtensions: true,
+                        });
+                        // extra libraries
+                        monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
+                        monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
+                    }
+
+                    return <Editor
                         language="javascript"
-                        beforeMountHandler={editorBeforeMountHandler([])}
-                        value={() => {
-                            const container = selectedDragContainer.get();
-                            if (container === undefined) {
-                                return '';
-                            }
-                            return container.properties[props.name]?.formula ?? ''
-                        }}
+                        beforeMount={onBeforeMountHandler}
+                        value={formula}
                         options={{selectOnLineNumbers: true}}
-                        onChangeHandler={(value?: string) => {
+                        onChange={(value?: string) => {
                             update((item: Container) => {
                                 const name = props.name;
                                 const cloneProps = {...item.properties} as Record<string, {
@@ -1233,42 +1348,18 @@ function ComponentPropertyEditor(props: { closePanel: () => void, name: string, 
                                 item.properties = cloneProps;
                             })
                         }}
-            />
+                    />
+                }}
+            </notifiable.div>
             <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end'}}>
-                <button onClick={props.closePanel}>Close</button>
+                <Button onClick={props.closePanel}>Close</Button>
             </div>
         </div>
-
-
     </div>
 }
 
-function editorBeforeMountHandler(params:Array<{name:string,type:'state'|'computed'}>) {
-    console.log('we have params',params);
-    const composedLibrary = `
-declare const shitState:Signal.State<unknown>
-declare const shitComputed:Signal.Computed<unknown>
-`;
-    return (monaco: Monaco) => {
-        // validation settings
-        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-            noSemanticValidation: true,
-            noSyntaxValidation: false,
-        });
-
-        // compiler options
-        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-            target: monaco.languages.typescript.ScriptTarget.ES2015,
-            allowNonTsExtensions: true,
-        });
-        // extra libraries
-        monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
-        monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
-
-    }
-}
-
 const signalSource = `
+declare const module:{exports:any};
 declare namespace Signal {
     export class State<T> {
         #private;
@@ -1310,3 +1401,34 @@ declare namespace Signal {
     }
     export {};
 }`
+
+function ConfirmationDialog(props: {
+    message:ReactNode,
+    closePanel: (result: string) => void,
+    buttons?:Array<string>,
+}) {
+    const buttons = props.buttons ?? ['Yes','No']
+    return <div style={{display: 'flex',flexDirection:'column',gap:10,padding:10}}>
+        <div>{props.message}</div>
+        <div style={{display: 'flex', flexDirection: 'row',justifyContent:'flex-end',gap:5}}>
+            {buttons.map((key) => {
+                return <Button key={key} onClick={() => props.closePanel(key)}>{key}</Button>
+            })}
+        </div>
+    </div>
+}
+
+function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+    const {style, ...properties} = props;
+
+    const buttonStyle: CSSProperties = useMemo(() => {
+        const defaultStyle: CSSProperties = {
+            border: BORDER,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            color: 'rgba(255,255,255,0.9)',
+            borderRadius:3
+        };
+        return {...defaultStyle, ...style}
+    }, [style])
+    return <button style={buttonStyle} {...properties}>{props.children}</button>
+}
