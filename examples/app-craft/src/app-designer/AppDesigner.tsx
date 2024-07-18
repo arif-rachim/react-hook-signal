@@ -1,3 +1,4 @@
+import type {DragEvent as ReactDragEvent, FC as ReactFC, MouseEvent as ReactMouseEvent} from "react";
 import {
     ButtonHTMLAttributes,
     createContext,
@@ -106,7 +107,7 @@ type ValueCallbackType = 'value' | 'callback';
 type LayoutBuilderProps = {
     elements: Record<string, {
         icon: IconType,
-        component: React.FC,
+        component: ReactFC,
         property: Record<string, ValueCallbackType>
     }>,
     value: { containers: Array<Container>, variables: Array<Variable> },
@@ -145,7 +146,7 @@ function RightPanel() {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
         const elementName = selectedDragContainer?.type;
-        const result: Array<JSX.Element> = [];
+        const result: Array<ReactNode> = [];
         result.push(<div style={{display: 'flex', flexDirection: 'row', gap: 10}} key={'height-width'}>
             <NumericalPercentagePropertyEditor property={'height'} label={'Height'} key={'height-editor'}
                                                style={{width: '50%'}} styleLabel={{width: 30}}/>
@@ -306,7 +307,11 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
     async function showDependencySelector() {
         const result = await showModal<Array<string> | 'cancel'>(closePanel => {
             return <AppDesignerContext.Provider value={context}>
-                <DependencySelector closePanel={closePanel} value={variableSignal.get().dependency ?? []}/>
+                <DependencySelector
+                    closePanel={closePanel}
+                    value={variableSignal.get().dependency ?? []}
+                    signalsToFilterOut={[variableSignal.get().id]}
+                />
             </AppDesignerContext.Provider>
         });
         if (result !== 'cancel') {
@@ -319,7 +324,6 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
     function validateForm():[boolean,Partial<Record<keyof Variable, Array<string>>>]{
         const errors:Partial<Record<keyof Variable, Array<string>>> = {};
         const variable =  variableSignal.get();
-        let valid = true;
         if(isEmpty(variable.name)){
             errors.name = ['Name must have value'];
         }
@@ -332,7 +336,7 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
                 errors.functionCode = markers.map(m => m.message);
             }
         }
-        valid = Object.keys(errors).length === 0;
+        const valid = Object.keys(errors).length === 0;
         return [valid,errors];
     }
     const monacoRef = useRef<Monaco|undefined>();
@@ -433,43 +437,12 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
                         const variable = variableSignal.get();
                         const dependencies = variable.dependency ?? []
                         const allVariables = allVariablesSignal.get();
-
-                        let formula = '';
-                        if (variable !== undefined) {
-                            formula = variable.functionCode;
-                        }
-
-                        function onBeforeMountHandler(monaco: Monaco) {
-                            const composedLibrary = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
-                                let type = 'Signal.State<any>';
-                                if (i.type === 'computed') {
-                                    type = 'Signal.Computed<any>'
-                                }
-                                return `declare const ${i.name}:${type}`
-                            }).join('\n');
-                            // validation settings
-                            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-                                noSemanticValidation: false,
-                                noSyntaxValidation: false,
-                            });
-
-                            // compiler options
-                            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-                                target: monaco.languages.typescript.ScriptTarget.ES2015,
-                                allowNonTsExtensions: true,
-                            });
-                            // extra libraries
-                            monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
-                            monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
-                        }
-
+                        const formula = variable.functionCode;
                         return <Editor
                             language="javascript"
-                            onMount={(_,monaco:Monaco) => {
-                                monacoRef.current = monaco;
-                            }}
+                            onMount={(_,monaco:Monaco) => monacoRef.current = monaco}
                             key={dependencies.join('-')}
-                            beforeMount={onBeforeMountHandler}
+                            beforeMount={onBeforeMountHandler({dependencies,allVariables})}
                             value={formula}
                             options={{selectOnLineNumbers: true}}
                             onChange={(value?: string) => {
@@ -488,13 +461,13 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
                 if(isValid) {
                     closePanel(variableSignal.get());
                 }else {
-                    await showModal<string>(closePanel => {
+                    await showModal<string>(cp => {
                         const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
                             return errors[k]?.map(val => {
                                 return <div key={val}>{(val ?? '') as string}</div>
                             })
                         }).flat();
-                        return <ConfirmationDialog message={message} closePanel={closePanel} buttons={['Ok']}/>
+                        return <ConfirmationDialog message={message} closePanel={cp} buttons={['Ok']}/>
                     })
                 }
             }} style={{border: BORDER}}>Save
@@ -507,14 +480,44 @@ function VariableEditorPanel(props: { variable?: Variable, closePanel: (result?:
     </div>
 }
 
-function DependencySelector(props: { closePanel: (param: Array<string> | 'cancel') => void, value: Array<string> }) {
-    const {closePanel} = props;
+const onBeforeMountHandler = (props:{allVariables:Array<Variable>,dependencies:Array<string>}) => (monaco: Monaco) => {
+    const {allVariables,dependencies} = props;
+    const composedLibrary = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
+        let type = 'Signal.State<any>';
+        if (i.type === 'computed') {
+            type = 'Signal.Computed<any>'
+        }
+        return `declare const ${i.name}:${type}`
+    }).join('\n');
+    // validation settings
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: false,
+        noSyntaxValidation: false,
+    });
+
+    // compiler options
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2015,
+        allowNonTsExtensions: true,
+    });
+    // extra libraries
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
+}
+
+function DependencySelector(props: { closePanel: (param: Array<string> | 'cancel') => void, value: Array<string>,signalsToFilterOut:Array<string> }) {
+    const {closePanel,signalsToFilterOut} = props;
     const {allVariablesSignal} = useContext(AppDesignerContext);
     const selectedSignal = useSignal<Array<string>>(props.value);
     const elements = useComputed(() => {
         const variables = allVariablesSignal.get();
         const selected = selectedSignal.get();
-        return variables.filter(i => i.type !== 'effect').map((i) => {
+        return variables.filter(i => {
+            if(signalsToFilterOut.includes(i.id)){
+                return false;
+            }
+            return i.type !== 'effect';
+        }).map((i) => {
             const isSelected = selected.indexOf(i.id) >= 0;
             return <div key={i.id} style={{display: 'flex', alignItems: 'center', gap: 5}} onClick={() => {
                 const selected = selectedSignal.get();
@@ -898,19 +901,19 @@ function DraggableContainer(props: {
         clientY?: number
     }>({clientX: 0, clientY: 0})
 
-    function onDragStart(event: React.DragEvent) {
+    function onDragStart(event: ReactDragEvent) {
         event.stopPropagation();
         event.dataTransfer.setData('text/plain', containerSignal.get().id);
     }
 
-    function onDragOver(event: React.DragEvent) {
+    function onDragOver(event: ReactDragEvent) {
         event.preventDefault();
         event.stopPropagation();
 
         mousePosition.set(event);
     }
 
-    function onMouseOver(event: React.MouseEvent<HTMLDivElement>) {
+    function onMouseOver(event: ReactMouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
         hoveredDragContainerIdSignal.set(containerSignal.get().id);
@@ -958,7 +961,7 @@ function DraggableContainer(props: {
         activeDropZoneIdSignal.set(nearestDropZoneId);
     })
 
-    function onDrop(event: React.DragEvent) {
+    function onDrop(event: ReactDragEvent) {
         event.stopPropagation();
         event.preventDefault();
         const id = event.dataTransfer.getData('text');
@@ -974,7 +977,7 @@ function DraggableContainer(props: {
         activeDropZoneIdSignal.set('')
     }
 
-    function onSelected(event: React.MouseEvent<HTMLDivElement>) {
+    function onSelected(event: ReactMouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
         selectedDragContainerIdSignal.set(containerSignal.get().id);
@@ -1004,7 +1007,7 @@ function DraggableContainer(props: {
         const children = container?.children ?? [];
 
         const isContainer = container?.type === 'vertical' || container?.type === 'horizontal'
-        const result: Array<JSX.Element> = [];
+        const result: Array<ReactNode> = [];
         if (mode === 'design') {
             result.push(<ToolBar key={`toolbar-${container?.id}`} container={container} onFocusUp={onFocusUp}
                                  onDelete={onDelete}/>)
@@ -1142,7 +1145,7 @@ function ToolBar(props: { container: Container, onDelete: () => void, onFocusUp:
     const {container, onDelete, onFocusUp} = props;
     const {selectedDragContainerIdSignal} = useContext(AppDesignerContext);
 
-    function preventClick(event: React.MouseEvent<HTMLElement>) {
+    function preventClick(event: ReactMouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
     }
@@ -1298,6 +1301,7 @@ function LabelContainer(props: PropsWithChildren<{
 function ComponentPropertyEditor(props: { closePanel: () => void, name: string, type: 'value' | 'callback' }) {
     const selectedDragContainer = useSelectedDragContainer();
     const update = useUpdateSelectedDragContainer();
+    const {allVariablesSignal} = useContext(AppDesignerContext);
     return <div style={{backgroundColor: '#FAFAFA', width: 600, height: 800, display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: 10, gap: 10}}>
             <notifiable.div style={{
@@ -1309,32 +1313,14 @@ function ComponentPropertyEditor(props: { closePanel: () => void, name: string, 
             }}>
                 {() => {
                     const container = selectedDragContainer.get();
+                    const allVariables = allVariablesSignal.get();
                     let formula = '';
                     if (container !== undefined) {
                         formula = container.properties[props.name]?.formula ?? ''
                     }
-
-                    function onBeforeMountHandler(monaco: Monaco) {
-                        const composedLibrary = '';
-                        // validation settings
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-                            noSemanticValidation: false,
-                            noSyntaxValidation: false,
-                        });
-
-                        // compiler options
-                        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-                            target: monaco.languages.typescript.ScriptTarget.ES2015,
-                            allowNonTsExtensions: true,
-                        });
-                        // extra libraries
-                        monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource, "ts:filename/signal.d.ts");
-                        monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
-                    }
-
                     return <Editor
                         language="javascript"
-                        beforeMount={onBeforeMountHandler}
+                        beforeMount={onBeforeMountHandler({dependencies:[],allVariables})}
                         value={formula}
                         options={{selectOnLineNumbers: true}}
                         onChange={(value?: string) => {
@@ -1404,7 +1390,7 @@ declare namespace Signal {
 
 function ConfirmationDialog(props: {
     message:ReactNode,
-    closePanel: (result: string) => void,
+    closePanel: (result?: string) => void,
     buttons?:Array<string>,
 }) {
     const buttons = props.buttons ?? ['Yes','No']
