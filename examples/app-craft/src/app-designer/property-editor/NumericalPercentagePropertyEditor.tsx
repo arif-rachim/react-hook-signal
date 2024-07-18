@@ -1,10 +1,10 @@
 import {CSSProperties} from "react";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
-import {LabelContainer} from "./LabelContainer.tsx";
-import {BORDER, BORDER_NONE} from "./Border.ts";
-import {useSelectedDragContainer} from "./useSelectedDragContainer.ts";
-import {useUpdateSelectedDragContainer} from "./useUpdateSelectedDragContainer.ts";
-import {PropertyType} from "./PropertyType.ts";
+import {LabelContainer} from "../LabelContainer.tsx";
+import {BORDER, BORDER_NONE} from "../Border.ts";
+import {useSelectedDragContainer} from "../useSelectedDragContainer.ts";
+import {useUpdateSelectedDragContainer} from "../useUpdateSelectedDragContainer.ts";
+import {PropertyType} from "../PropertyType.ts";
 
 /**
  * A property editor component for handling numerical percentage values.

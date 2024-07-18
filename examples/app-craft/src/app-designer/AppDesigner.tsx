@@ -10,13 +10,14 @@ import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps, ValueCallbackType} from "./LayoutBuilderProps.ts";
 import {DraggableContainer} from "./DraggableContainer.tsx";
 import {LabelContainer} from "./LabelContainer.tsx";
-import {NumericalPercentagePropertyEditor} from "./NumericalPercentagePropertyEditor.tsx";
+import {NumericalPercentagePropertyEditor} from "./property-editor/NumericalPercentagePropertyEditor.tsx";
 import {Button} from "./Button.tsx";
 import {VariablesPanel} from "./VariablesPanel.tsx";
 import {Icon} from "./Icon.ts";
-import {ComponentPropertyEditor} from "./ComponentPropertyEditor.tsx";
+import {ComponentPropertyEditor} from "./property-editor/ComponentPropertyEditor.tsx";
 import {ButtonWithIcon} from "./ButtonWithIcon.tsx";
 import {sortSignal} from "./sortSignal.ts";
+import {useUpdateSelectedDragContainer} from "./useUpdateSelectedDragContainer.ts";
 
 
 export type Variable = {
@@ -31,6 +32,7 @@ export type VariableInstance = {
     id: string,
     instance: AnySignal<unknown>
 }
+export type ContainerPropertyType = { formula: string, type: ValueCallbackType, dependencies: Array<string> }
 
 export type Container = {
     id: string,
@@ -53,21 +55,18 @@ export type Container = {
     marginRight: CSSProperties['marginRight'],
     marginBottom: CSSProperties['marginBottom'],
     marginLeft: CSSProperties['marginLeft'],
-    properties: Record<string, { formula: string, type: ValueCallbackType }>
+    properties: Record<string, ContainerPropertyType>
 }
 
 function RightPanel() {
+    const context = useContext(AppDesignerContext)
     const {
         selectedDragContainerIdSignal,
         allContainersSignal,
-        hoveredDragContainerIdSignal,
-        uiDisplayModeSignal,
-        activeDropZoneIdSignal,
-        allVariablesSignal,
-        allVariablesSignalInstance,
         elements
-    } = useContext(AppDesignerContext);
+    } = context;
     const showModal = useShowModal();
+    const update = useUpdateSelectedDragContainer();
     const propertyEditors = useComputed(() => {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
@@ -139,22 +138,17 @@ function RightPanel() {
                             justifyContent: 'center',
                             fontSize: 22
                         }} onClick={async () => {
-                            const result = await showModal(closePanel => {
-                                return <AppDesignerContext.Provider
-                                    value={{
-                                        hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
-                                        selectedDragContainerIdSignal: selectedDragContainerIdSignal,
-                                        activeDropZoneIdSignal: activeDropZoneIdSignal,
-                                        uiDisplayModeSignal: uiDisplayModeSignal,
-                                        allContainersSignal: allContainersSignal,
-                                        allVariablesSignal: allVariablesSignal,
-                                        allVariablesSignalInstance:allVariablesSignalInstance,
-                                        elements: elements
-                                    }}><ComponentPropertyEditor closePanel={closePanel} name={propertyName}
-                                                                type={property[propertyName]}/>
+                            const result = await showModal<ContainerPropertyType>(closePanel => {
+                                return <AppDesignerContext.Provider value={context}>
+                                    <ComponentPropertyEditor closePanel={closePanel} name={propertyName}
+                                                             type={property[propertyName]}/>
                                 </AppDesignerContext.Provider>
                             });
-                            console.log('WE HAVE RESULT ', result);
+                            if(result) {
+                                update(selectedContainer => {
+                                    selectedContainer.properties[propertyName] = result
+                                })
+                            }
                         }}>
                             {type === 'callback' && <Icon.Effect/>}
                             {type === 'value' && <Icon.Computed/>}
@@ -325,7 +319,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             uiDisplayModeSignal: uiDisplayModeSignal,
             allContainersSignal: allContainersSignal,
             allVariablesSignal: allVariablesSignal,
-            allVariablesSignalInstance : allVariablesSignalInstance,
+            allVariablesSignalInstance: allVariablesSignalInstance,
             elements: props.elements
         }}>
 
