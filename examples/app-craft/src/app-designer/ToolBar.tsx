@@ -27,7 +27,7 @@ export function ToolBar(props: { container: Container, onDelete: () => void, onF
             right: -1,
             color: 'white',
         };
-        const isFocused = selectedDragContainerIdSignal.get() === container.id;
+        const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         if (isFocused) {
             style.display = 'flex';
         }

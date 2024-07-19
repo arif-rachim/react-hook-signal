@@ -66,7 +66,7 @@ export function DraggableContainer(props: {
     function onMouseOver(event: ReactMouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
-        hoveredDragContainerIdSignal.set(containerSignal.get().id);
+        hoveredDragContainerIdSignal.set(containerSignal.get()?.id);
     }
 
     useSignalEffect(() => {
@@ -233,7 +233,7 @@ export function DraggableContainer(props: {
                            onDrop={onDrop}
                            onDragEnd={onDragEnd}
                            onMouseOver={onMouseOver}
-                           onClick={onSelected} data-container-id={containerSignal.get().id}>
+                           onClick={onSelected} data-container-id={containerSignal.get()?.id}>
         {elements}
     </notifiable.div>
 

@@ -1,7 +1,7 @@
 import {CSSProperties} from "react";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {LabelContainer} from "../LabelContainer.tsx";
-import {BORDER, BORDER_NONE} from "../Border.ts";
+import {BORDER} from "../Border.ts";
 import {useSelectedDragContainer} from "../useSelectedDragContainer.ts";
 import {useUpdateSelectedDragContainer} from "../useUpdateSelectedDragContainer.ts";
 import {PropertyType} from "../PropertyType.ts";
@@ -57,7 +57,7 @@ export function NumericalPercentagePropertyEditor(props: {
 
     return <div style={{display: 'flex', flexDirection: 'row', ...props.style}}>
         <LabelContainer label={label} styleLabel={{width: 100, ...props.styleLabel}}>
-            <notifiable.input style={{width: '100%', border: BORDER, borderRight: BORDER_NONE}} value={extractValue}
+            <notifiable.input style={{width: '100%', border: BORDER, borderRight: 'unset'}} value={extractValue}
                               onChange={(e) => {
                                   const val = e.target.value;
 

@@ -61,25 +61,26 @@ export function VariablesPanel() {
 
     const variableList = useComputed(() => {
         return allVariablesSignal.get().map((variable) => {
-            return <LabelContainer label={variable.name} key={variable.id} style={{
-                flexDirection: 'row',
-                backgroundColor: 'rgba(0,0,0,0.02)',
-                borderBottom: BORDER,
-                alignItems: 'center'
-            }} styleOnHovered={{backgroundColor: 'rgba(0,0,0,0.1)'}} styleContent={{justifyContent: 'flex-end'}}
-                                   styleLabel={{overflow: 'hidden', textOverflow: 'ellipsis'}}>
+            return <LabelContainer label={<div style={{display:'flex',height:'100%'}}>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRight: BORDER,
-                    padding: '5px'
+                    paddingRight:5
                 }}>
                     {variable.type === 'effect' && <Icon.Effect/>}
                     {variable.type === 'computed' && <Icon.Computed/>}
                     {variable.type === 'state' && <Icon.State/>}
                 </div>
+                <div style={{display:'flex',alignItems:'center',paddingLeft:5}}>{variable.name}</div>
+            </div>} key={variable.id} style={{
+                flexDirection: 'row',
+                backgroundColor: 'rgba(0,0,0,0.02)',
+                borderBottom: BORDER,
+            }} styleOnHovered={{backgroundColor: 'rgba(0,0,0,0.1)'}} styleContent={{justifyContent: 'flex-end'}}
+                                   styleLabel={{paddingLeft: 5, overflow: 'hidden', textOverflow: 'ellipsis'}}>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -110,12 +111,12 @@ export function VariablesPanel() {
         height: '100%'
     }}>
         <div style={{display: 'flex'}}>
-            <input type={'search'} style={{flexGrow: 1, border: BORDER, minWidth: 0, width: 100, flexShrink: 1}}/>
-            <div style={{display: 'flex', border: BORDER, borderLeft: 'none', alignItems: 'center', cursor: 'pointer'}}
+            <input type={'search'} style={{flexGrow: 1,paddingLeft:5, border: 'unset',borderTop:BORDER,borderBottom:BORDER, minWidth: 0, width: 100, flexShrink: 1}}/>
+            <div style={{display: 'flex', border: BORDER,borderRight:'unset', alignItems: 'center', cursor: 'pointer'}}
                  onClick={() => editVariable()}>
                 <div style={{marginLeft: 5}}>Add</div>
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <MdAdd style={{fontSize: 22}}/>
+                    <MdAdd style={{fontSize: 20}}/>
                 </div>
             </div>
         </div>

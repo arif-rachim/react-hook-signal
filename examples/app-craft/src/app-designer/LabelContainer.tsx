@@ -4,7 +4,7 @@ import {CSSProperties, PropsWithChildren, ReactNode, useState} from "react";
  * Creates a container with a label and content.
  */
 export function LabelContainer(props: PropsWithChildren<{
-    label: string,
+    label: ReactNode,
     style?: CSSProperties,
     styleLabel?: CSSProperties,
     styleContent?: CSSProperties,

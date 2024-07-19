@@ -179,7 +179,6 @@ function RightPanel() {
 }
 
 function LeftPanel() {
-    const {elements} = useContext(AppDesignerContext);
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -187,23 +186,27 @@ function LeftPanel() {
         backgroundColor: 'rgba(0,0,0,0.1)',
         borderRight: '1px solid rgba(0,0,0,0.1)'
     }}>
-        <div
-            style={{
-                padding: 20,
-                display: 'flex',
-                gap: 10,
-                alignItems: 'flex-start'
-            }}>
-            <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
-            <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
-            {
-                Object.keys(elements).map((key) => {
-                    const Icon = elements[key].icon;
-                    return <DraggableItem icon={Icon} draggableDataType={key} key={key}/>
-                })
-            }
-        </div>
+        <ElementsPanel/>
         <VariablesPanel/>
+    </div>
+}
+function ElementsPanel() {
+    const {elements} = useContext(AppDesignerContext);
+    return <div
+        style={{
+            padding: 10,
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start'
+        }}>
+        <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
+        <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
+        {
+            Object.keys(elements).map((key) => {
+                const Icon = elements[key].icon;
+                return <DraggableItem icon={Icon} draggableDataType={key} key={key}/>
+            })
+        }
     </div>
 }
 
