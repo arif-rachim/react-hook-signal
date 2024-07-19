@@ -2,6 +2,7 @@ import {Monaco} from "@monaco-editor/react";
 import {Variable} from "./AppDesigner.tsx";
 import {ZodType} from "zod";
 import {printNode, zodToTs} from "zod-to-ts";
+import zodDefinition from "./zod-definition.txt?raw";
 
 /**
  * Executes the onBeforeMountHandler function.
@@ -32,13 +33,13 @@ export const onBeforeMountHandler = (props: {
         allowNonTsExtensions: true,
     });
     // extra libraries
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(zodDefinition, "ts:filename/zod-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(signalSource(printNode(zodToTs(returnType).node)), "ts:filename/signal.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composedLibrary, "ts:filename/local-source.d.ts");
 }
 
-
 const signalSource = (returnType:string) => `
-declare const module:{exports:${returnType};
+declare const module:{exports:${returnType}};
 declare namespace Signal {
     export class State<T> {
         #private;
