@@ -18,13 +18,11 @@ export function ModalContainer(props: { modalPanels: Array<ModalParameter> }) {
                 height: '100%',
                 alignItems: 'center',
                 justifyContent: justifyContent,
-                overflow: 'hidden'
             }} key={p.id} >
                 <div style={{
                     backgroundColor: '#FFF',
                     borderRadius: borderRadius,
                     boxShadow: '0 0px 10px -3px rgba(0,0,0,0.3),0 10px 10px 0px rgba(0,0,0,0.2)',
-                    overflow: 'hidden',
                     margin: '0 1rem',
                     ...animate(p.config)
                 }}>{p.element}</div>

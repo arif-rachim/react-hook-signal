@@ -12,7 +12,7 @@ import {Variable} from "../AppDesigner.tsx";
 import {DependencySelector} from "../DependencySelector.tsx";
 import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
 import {onBeforeMountHandler} from "../onBeforeHandler.ts";
-import {z} from "zod";
+import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 
 /**
  * Represents a panel for editing variables.
@@ -30,7 +30,8 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
             type: 'state',
             id: guid(),
             dependency: [],
-            functionCode: ''
+            functionCode: '',
+            schemaCode: 'z.any()'
         }
     }
 
@@ -82,10 +83,10 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
         padding: 10,
         display: 'flex',
         flexDirection: 'column',
-        width: 800,
-        height: 600,
+        width: '90vw',
+        height: '90vh',
+        overflow:'auto',
         gap: 10,
-        overflow: 'auto'
     }}>
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
             <Button style={{
@@ -122,7 +123,7 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
             }}>Effect
             </Button>
         </div>
-        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto', gap: 5}}>
+        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1,flexShrink:1, gap: 5,overflow:'auto'}}>
             <LabelContainer label={'Name'} style={{flexDirection: 'row', gap: 10}} styleLabel={{width: 80}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
                                   style={{border: BORDER, flexGrow: 1, padding: '3px 5px'}} value={() => {
@@ -162,13 +163,35 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
                     }}</notifiable.div>
                 </LabelContainer>
             }
-            <LabelContainer label={'Code'} style={{flexGrow: 1}} styleContent={{flexDirection: 'column'}}>
-
+            {type !== 'effect' &&
+                <LabelContainer label={'Schema'} style={{height:100,flexShrink:0}} styleContent={{flexDirection: 'column'}}>
+                    <notifiable.div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        backgroundColor: 'blue'
+                    }}>
+                        {() => {
+                            const variable = variableSignal.get();
+                            const formula = variable.schemaCode;
+                            return <Editor
+                                language="javascript"
+                                value={formula}
+                                onChange={(value?: string) => {
+                                    const newVariable = {...variableSignal.get()};
+                                    newVariable.schemaCode = value ?? '';
+                                    variableSignal.set(newVariable);
+                                }}
+                            />
+                        }}
+                    </notifiable.div>
+                </LabelContainer>
+            }
+            <LabelContainer label={'Code'} style={{flexGrow: 1,flexShrink:1}} styleContent={{flexDirection: 'column',overflow:'auto',flexShrink:1}}>
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
-                    overflow: 'auto',
                     backgroundColor: 'blue'
                 }}>
                     {() => {
@@ -178,11 +201,9 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
                         const formula = variable.functionCode;
                         return <Editor
                             language="javascript"
-                            onMount={(_, monaco: Monaco) => monacoRef.current = monaco}
-                            key={dependencies.join('-')}
-                            beforeMount={onBeforeMountHandler({dependencies, allVariables,returnType:z.any()})}
+                            key={variable.schemaCode+dependencies.join('-')}
+                            beforeMount={onBeforeMountHandler({dependencies, allVariables, returnType:zodSchemaToJson(variable.schemaCode)})}
                             value={formula}
-                            options={{selectOnLineNumbers: true}}
                             onChange={(value?: string) => {
                                 const newVariable = {...variableSignal.get()};
                                 newVariable.functionCode = value ?? '';

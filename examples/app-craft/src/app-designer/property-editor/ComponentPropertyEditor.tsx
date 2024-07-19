@@ -11,6 +11,7 @@ import {DependencySelector} from "../DependencySelector.tsx";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
 import {ZodType} from "zod";
+import {zodTypeToJson} from "../zodSchemaToJson.ts";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -27,6 +28,7 @@ export function ComponentPropertyEditor(props: {
     const {allVariablesSignal} = context;
     const showModal = useShowModal();
     const returnType = props.type;
+
     async function showDependencySelector() {
         const props = propsSignal.get();
         const result = await showModal<Array<string> | 'cancel'>(closePanel => {
@@ -46,12 +48,12 @@ export function ComponentPropertyEditor(props: {
     }
 
     return <div style={{
-        backgroundColor: '#FAFAFA',
-        width: 600,
-        height: 800,
+        padding: 10,
         display: 'flex',
         flexDirection: 'column',
-        padding: 10
+        width: '90vw',
+        height: '90vh',
+        gap: 10,
     }}>
         <LabelContainer label={'Dependency'} style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
                         styleLabel={{width: 80}}>
@@ -73,7 +75,6 @@ export function ComponentPropertyEditor(props: {
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100%',
-                overflow: 'auto',
                 backgroundColor: 'red'
             }}>
                 {() => {
@@ -84,7 +85,11 @@ export function ComponentPropertyEditor(props: {
                     return <Editor
                         language="javascript"
                         key={dependencies.join('-')}
-                        beforeMount={onBeforeMountHandler({dependencies, allVariables,returnType})}
+                        beforeMount={onBeforeMountHandler({
+                            dependencies,
+                            allVariables,
+                            returnType: zodTypeToJson(returnType)
+                        })}
                         value={formula}
                         options={{selectOnLineNumbers: true}}
                         onChange={(value?: string) => {

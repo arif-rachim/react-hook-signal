@@ -26,6 +26,7 @@ export type Variable = {
     id: string,
     name: string,
     functionCode: string,
+    schemaCode:string,
     dependency?: Array<string> // this is only for computed and effect
 }
 

@@ -23,16 +23,16 @@ export function App() {
                 icon : MdInput,
                 property : z.object({
                     value : z.string(),
-                    onChange : z.function().args(z.string()).returns(z.void())
+                    onChange : z.function().args(z.string()).returns(z.promise(z.void()))
                 }),
                 component : (props) => {
                     const {value,onChange} = props;
                     return <notifiable.input
                         style={{border: '1px solid rgba(0,0,0,0.1)'}}
                         value={value}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const val = e.target.value;
-                            onChange(val);
+                            await onChange(val);
                         }}
                     />
                 }

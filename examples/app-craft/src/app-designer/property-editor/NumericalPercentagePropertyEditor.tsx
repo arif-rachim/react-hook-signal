@@ -72,7 +72,6 @@ export function NumericalPercentagePropertyEditor(props: {
                                       } else if (typeVal === '%' && !isNanValue) {
                                           selectedContainer[property] = `${val}${typeOfValue.get()}`;
                                       } else {
-                                          console.log("Setting value ", val);
                                           selectedContainer[property] = val;
                                       }
                                   })
