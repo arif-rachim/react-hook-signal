@@ -1,4 +1,4 @@
-import {CSSProperties, PropsWithChildren, useState} from "react";
+import {CSSProperties, PropsWithChildren, ReactNode, useState} from "react";
 
 /**
  * Creates a container with a label and content.
@@ -9,7 +9,7 @@ export function LabelContainer(props: PropsWithChildren<{
     styleLabel?: CSSProperties,
     styleContent?: CSSProperties,
     styleOnHovered?: CSSProperties
-}>): JSX.Element {
+}>): ReactNode {
     const [isHovered, setIsHovered] = useState<boolean>(false);
     let style = {...props.style};
     if (isHovered) {

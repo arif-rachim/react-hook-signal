@@ -12,11 +12,6 @@ export type LayoutBuilderProps = {
     onChange: (param: { containers: Array<Container>, variables: Array<Variable> }) => void
 }
 
-const ValueType = ['string', 'number', 'bigint', 'boolean', 'date', 'array', 'any'] as const;
-
-export type ValueCallbackType = typeof ValueType[number];
-
-
 // InferType will use the TypeMap to infer the actual types
 type InferType<T extends ZodType> = {
     [k in keyof z.infer<T>]: z.infer<T>[k];
@@ -32,7 +27,7 @@ export function element<T extends ZodType>(props: {
     property: T,
     icon: IconType,
     component: ReactFC<InferType<T>>
-}) {
-    return props
+    // eslint-disable-next-line
+}):any {
+    return props;
 }
-

@@ -15,6 +15,7 @@ import {guid} from "../utils/guid.ts";
 import {dropZones} from "./dropZones.ts";
 import {ToolBar} from "./ToolBar.tsx";
 import {DropZone} from "./DropZone.tsx";
+import {RenderContainer} from "./RenderContainer.tsx";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
@@ -177,13 +178,7 @@ export function DraggableContainer(props: {
                 }
             }
         } else if (elementsLib[container?.type]) {
-            const {component: Component,property} = elementsLib[container?.type];
-            /*@TODO We need to pass the value here ! now we have the signals,
-                i think what we can do now is to implement the signal craetion here, and pass it to the comppnent
-            */
-            console.log(container.properties);
-            debugger;
-            result.push(<Component key={container?.id}  />)
+            result.push(<RenderContainer key={container?.id} container={container} />)
         }
         return result;
     });
@@ -243,6 +238,7 @@ export function DraggableContainer(props: {
     </notifiable.div>
 
 }
+
 
 /**
  * Adds a new container to the list of all containers.

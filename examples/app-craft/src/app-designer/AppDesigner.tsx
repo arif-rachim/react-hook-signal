@@ -1,5 +1,5 @@
 import {CSSProperties, ReactNode, useContext, useEffect} from "react";
-import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {AnySignal, effect, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {MdDesignServices, MdHorizontalDistribute, MdPreview, MdVerticalDistribute} from "react-icons/md";
 
@@ -133,7 +133,7 @@ function RightPanel() {
                              style={{display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5}}>
                 {Object.keys(property).map(propertyName => {
                     const type = property[propertyName] as ZodTypeAny;
-                    const isFunction = type instanceof ZodFunction;
+                    const isZodFunction = type instanceof ZodFunction;
                     return <LabelContainer key={propertyName} label={propertyName}
                                            style={{flexDirection: 'row', alignItems: 'center'}}
                                            styleLabel={{width: 65, fontSize: 13}}>
@@ -156,8 +156,8 @@ function RightPanel() {
                                 })
                             }
                         }}>
-                            {isFunction && <Icon.Effect/>}
-                            {!isFunction && <Icon.Computed/>}
+                            {isZodFunction && <Icon.Effect/>}
+                            {!isZodFunction && <Icon.Computed/>}
                         </Button>
                     </LabelContainer>
                 })}
@@ -273,6 +273,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     useSignalEffect(() => {
         const variables = allVariablesSignal.get();
         const variablesInstance: Array<VariableInstance> = [];
+        const destructorCallbacks:Array<() => void> = [];
         for (const v of variables) {
             if (v.type === 'state') {
                 try {
@@ -286,7 +287,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     console.error(err);
                 }
             }
-            if (v.type === 'computed' || v.type === 'effect') {
+            if (v.type === 'computed') {
                 try {
                     const dependencies = (v.dependency ?? []).map(d => {
                         const name = allVariablesSignal.get().find(i => i.id === d)?.name;
@@ -313,8 +314,33 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     console.error(err);
                 }
             }
+            if (v.type === 'effect') {
+                try {
+                    const dependencies = (v.dependency ?? []).map(d => {
+                        const name = allVariablesSignal.get().find(i => i.id === d)?.name;
+                        const instance = variablesInstance.find(i => i.id === d)?.instance;
+                        if (name === undefined || instance === undefined) {
+                            return false;
+                        }
+                        return {name, instance}
+                    }).filter(f => f !== false) as Array<{ name: string, instance: AnySignal<unknown> }>;
+                    const params = [...dependencies.map(d => d.name), v.functionCode];
+                    const init = new Function(...params);
+                    const destructor = effect(() => {
+                        dependencies.forEach(d => d.instance.get());
+                        const instances = [...dependencies.map(d => d.instance)]
+                        init.call(null, ...instances);
+                    });
+                    destructorCallbacks.push(destructor);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
         }
         allVariablesSignalInstance.set(variablesInstance);
+        return () => {
+            destructorCallbacks.forEach(d => d());
+        }
     });
 
     return <AppDesignerContext.Provider
