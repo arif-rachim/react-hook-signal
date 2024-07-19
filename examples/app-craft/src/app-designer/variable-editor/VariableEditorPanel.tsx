@@ -1,17 +1,17 @@
 import {useContext, useRef, useState} from "react";
-import {useShowModal} from "../modal/useShowModal.ts";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
-import {guid} from "../utils/guid.ts";
+import {useShowModal} from "../../modal/useShowModal.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {guid} from "../../utils/guid.ts";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
-import {isEmpty} from "../utils/isEmpty.ts";
+import {isEmpty} from "../../utils/isEmpty.ts";
 import {Editor, Monaco} from "@monaco-editor/react";
-import {Button} from "./Button.tsx";
-import {LabelContainer} from "./LabelContainer.tsx";
-import {BORDER} from "./Border.ts";
-import {Variable} from "./AppDesigner.tsx";
-import {DependencySelector} from "./DependencySelector.tsx";
-import {ConfirmationDialog} from "./ConfirmationDialog.tsx";
-import {onBeforeMountHandler} from "./onBeforeHandler.ts";
+import {Button} from "../Button.tsx";
+import {LabelContainer} from "../LabelContainer.tsx";
+import {BORDER} from "../Border.ts";
+import {Variable} from "../AppDesigner.tsx";
+import {DependencySelector} from "../DependencySelector.tsx";
+import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
+import {onBeforeMountHandler} from "../onBeforeHandler.ts";
 import {z} from "zod";
 
 /**

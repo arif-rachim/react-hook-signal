@@ -1,15 +1,15 @@
 import {useContext} from "react";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
-import {useShowModal} from "../modal/useShowModal.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {useShowModal} from "../../modal/useShowModal.ts";
 import {notifiable, useComputed} from "react-hook-signal";
-import {LabelContainer} from "./LabelContainer.tsx";
-import {BORDER} from "./Border.ts";
+import {LabelContainer} from "../LabelContainer.tsx";
+import {BORDER} from "../Border.ts";
 import {MdAdd} from "react-icons/md";
-import {Variable} from "./AppDesigner.tsx";
-import {Icon} from "./Icon.ts";
-import {ConfirmationDialog} from "./ConfirmationDialog.tsx";
+import {Variable} from "../AppDesigner.tsx";
+import {Icon} from "../Icon.ts";
+import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
 import {VariableEditorPanel} from "./VariableEditorPanel.tsx";
-import {sortSignal} from "./sortSignal.ts";
+import {sortSignal} from "../sortSignal.ts";
 
 /**
  * Represents a panel for managing variables.

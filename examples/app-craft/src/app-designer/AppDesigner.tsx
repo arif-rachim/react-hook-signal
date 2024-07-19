@@ -12,7 +12,7 @@ import {DraggableContainer} from "./DraggableContainer.tsx";
 import {LabelContainer} from "./LabelContainer.tsx";
 import {NumericalPercentagePropertyEditor} from "./property-editor/NumericalPercentagePropertyEditor.tsx";
 import {Button} from "./Button.tsx";
-import {VariablesPanel} from "./VariablesPanel.tsx";
+import {VariablesPanel} from "./variable-editor/VariablesPanel.tsx";
 import {ComponentPropertyEditor} from "./property-editor/ComponentPropertyEditor.tsx";
 import {ButtonWithIcon} from "./ButtonWithIcon.tsx";
 import {sortSignal} from "./sortSignal.ts";
