@@ -6,7 +6,19 @@ import {ZodFunction} from "zod";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
- * This is considered as the glue attaching external component and the platform
+ * This is considered as the glue attaching external component and the platform.
+ *
+ * In summary, RenderContainer performs the following tasks:
+ * - It makes use of the React Context, AppDesignerContext, to get various properties and signals (which presumably represent state values managed with some sort of a state management library).
+ * - It derives the component based on container type. After destructuring container and elementsLib from the passed props and context respectively, Component is derived from elementsLib[container.type].
+ * - It manages a propertiesSignal state, initialized from useSignal with container.properties and subsequently updated any time container.properties changes.
+ * - It initializes an empty object in a state variable componentProps.
+ * - It computes values for the component's props by creating a new object, componentPropertiesValue, and populates it based on propertiesSignal.get() and allVariablesSignalInstance.get(). If a property does not represent a Zod function, an effect is defined using the effect function.
+ * - Function fun gets compiled at runtime with the new Function statement, making use of the various dependencies present in some state variables. This function is then called with the newly created module object and the instances of the dependencies as parameters.
+ * - The module.exports value so obtained is set to be one of the properties of the componentPropertiesValue object. This componentPropertiesValue object is eventually assigned to the componentProps state variable.
+ * - The return function of the useSignalEffect call cleans up any effects that may have been created inside the function (notably, due to effect() calls), by running their respective destroyer callbacks.
+ * - Lastly, it renders the appropriate Component based on the container type, using componentProps.
+ *
  */
 export function RenderContainer(props:{container:Container}){
     const {container} = props;
