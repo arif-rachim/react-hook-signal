@@ -1,5 +1,5 @@
 import {IconType} from "react-icons";
-import type {FC as ReactFC} from "react";
+import {FC as ReactFC, HTMLAttributes} from "react";
 import {Container, Variable} from "./AppDesigner.tsx";
 import {z, ZodType} from "zod";
 
@@ -17,16 +17,18 @@ type InferType<T extends ZodType> = {
     [k in keyof z.infer<T>]: z.infer<T>[k];
 };
 
+export type ElementProps = Pick<HTMLAttributes<HTMLElement>, 'draggable'|'style'|'onDragStart'|'onDragOver'|'onDrop'|'onDragEnd'|'onMouseOver'|'onClick'> & {['data-element-id']:string}
+
 interface Element<T extends ZodType = ZodType> {
     icon: IconType,
-    component: ReactFC<InferType<T>>,
+    component: ReactFC<(InferType<T> & {properties:ElementProps})>,
     property: T
 }
 
 export function element<T extends ZodType>(props: {
     property: T,
     icon: IconType,
-    component: ReactFC<InferType<T>>
+    component: ReactFC<InferType<T> & {properties:ElementProps}>
     // eslint-disable-next-line
 }):any {
     return props;

@@ -3,7 +3,6 @@ import {useSignal, useSignalEffect} from "react-hook-signal";
 import {
     CSSProperties,
     type DragEvent as ReactDragEvent,
-    HTMLAttributes,
     type MouseEvent as ReactMouseEvent,
     ReactNode,
     useContext,
@@ -18,6 +17,7 @@ import {dropZones} from "./dropZones.ts";
 import {DropZone} from "./DropZone.tsx";
 import {RenderContainer} from "./RenderContainer.tsx";
 import {BORDER} from "./Border.ts";
+import {ElementProps} from "./LayoutBuilderProps.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
@@ -160,8 +160,6 @@ export function DraggableContainer(props: {
                                           parentContainerId={container?.id ?? ''}/>);
                 }
             }
-        } else if (elementsLib[container?.type]) {
-            result.push(<RenderContainer key={container?.id} container={container} />)
         }
         setElements(result);
     });
@@ -172,7 +170,7 @@ export function DraggableContainer(props: {
         const container: Container = containerSignal.get();
         const isRoot = container?.parent === '';
         const styleFromSignal = {
-            border: mode === 'design' ? BORDER : '1px solid rgba(0,0,0,0.5)',
+            border: mode === 'design' ? BORDER : 'unset',
             background: 'white',
             minWidth: container?.minWidth,
             minHeight: container?.minHeight,
@@ -211,7 +209,7 @@ export function DraggableContainer(props: {
         }
         setComputedStyle(styleFromSignal as CSSProperties)
     });
-    const elementProps:(HTMLAttributes<HTMLElement> & {['data-element-id']:string}) = {
+    const elementProps:ElementProps = {
         draggable:true,
         style:computedStyle,
         onDragStart,
@@ -222,6 +220,11 @@ export function DraggableContainer(props: {
         onClick:onSelected,
         ['data-element-id'] : props.container?.id
     };
+
+    if(elementsLib[containerProp?.type]){
+        return <RenderContainer key={containerProp?.id} container={containerProp} elementProps={elementProps} />
+    }
+
     return <div {...elementProps}>
         {elements}
     </div>

@@ -11,47 +11,40 @@ import {BORDER} from "./app-designer/Border.ts";
 
 export function App() {
     const {showModal, modalPanels} = useModal();
-    const [value,setValue] = useState<{containers:Array<Container>,variables:Array<Variable>}>(() => {
+    const [value, setValue] = useState<{ containers: Array<Container>, variables: Array<Variable> }>(() => {
         const val = localStorage.getItem('app-designer');
-        if(val && val.length > 0){
+        if (val && val.length > 0) {
             return JSON.parse(val);
         }
-        return {containers:[],variables:[]};
+        return {containers: [], variables: []};
     });
     return <ModalContext.Provider value={showModal}>
         <AppDesigner elements={{
-            input : element({
-                icon : MdInput,
-                property : z.object({
-                    value : z.string(),
-                    age : z.number(),
-                    dateOfBirth : z.date(),
-                    time : z.date(),
-                    address : z.string(),
-                    onChange : z.function().args(z.string()).returns(z.promise(z.void())),
-                    onBack : z.function().args(z.string()).returns(z.promise(z.void())),
-                    shit : z.function().args(z.string()).returns(z.promise(z.void())),
-                    matilah : z.function().args(z.string()).returns(z.promise(z.void())),
-                    kontolKuda : z.function().args(z.string()).returns(z.promise(z.void())),
-                    babynya : z.function().args(z.string()).returns(z.promise(z.void())),
-                    anjiang : z.function().args(z.string()).returns(z.promise(z.void()))
+            input: element({
+                icon: MdInput,
+                property: z.object({
+                    value: z.string(),
+                    onChange: z.function().args(z.string()).returns(z.promise(z.void())),
                 }),
-                component : (props) => {
-                    const {value,onChange} = props;
+                component: (props) => {
+                    const {value, onChange, properties} = props;
+                    if(properties.style?.border === 'unset'){
+                        properties.style.border = BORDER
+                    }
                     return <notifiable.input
-                        style={{border: BORDER}}
                         value={value}
                         onChange={async (e) => {
                             const val = e.target.value;
-                            if(onChange){
+                            if (onChange) {
                                 await onChange(val);
                             }
                         }}
+                        {...properties}
                     />
                 }
             })
         }} value={value} onChange={(val) => {
-            localStorage.setItem('app-designer',JSON.stringify(val));
+            localStorage.setItem('app-designer', JSON.stringify(val));
             setValue(val);
         }}/>
         <Notifiable component={ModalContainer} modalPanels={modalPanels}/>

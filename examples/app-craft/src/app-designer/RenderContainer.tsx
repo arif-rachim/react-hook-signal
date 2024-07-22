@@ -3,6 +3,7 @@ import {useContext, useEffect, useState} from "react";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {ZodFunction} from "zod";
+import {ElementProps} from "./LayoutBuilderProps.ts";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -20,8 +21,8 @@ import {ZodFunction} from "zod";
  * - Lastly, it renders the appropriate Component based on the container type, using componentProps.
  *
  */
-export function RenderContainer(props: { container: Container }) {
-    const {container} = props;
+export function RenderContainer(props: { container: Container,elementProps:ElementProps }) {
+    const {container,elementProps} = props;
     const {elements: elementsLib, allVariablesSignalInstance, allVariablesSignal} = useContext(AppDesignerContext);
     const {component: Component} = elementsLib[container.type];
     const propertiesSignal = useSignal(container.properties);
@@ -75,6 +76,6 @@ export function RenderContainer(props: { container: Container }) {
         return () => {
             destroyerCallbacks.forEach(d => d());
         }
-    })
-    return <Component key={container?.id} {...componentProps} />
+    });
+    return <Component key={container?.id} {...componentProps} properties={elementProps} />
 }

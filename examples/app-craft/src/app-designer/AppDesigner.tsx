@@ -54,6 +54,7 @@ export type Container = {
 }
 
 
+
 function ToggleViewToolbar() {
     const {uiDisplayModeSignal} = useContext(AppDesignerContext);
     return <div style={{display: 'flex', justifyContent: 'center', padding: 10,background:'rgba(0,0,0,0.2)'}}>
