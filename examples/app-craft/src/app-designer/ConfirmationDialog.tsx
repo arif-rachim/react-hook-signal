@@ -1,5 +1,5 @@
 import {ReactNode} from "react";
-import {Button} from "./Button.tsx";
+import {Button} from "./button/Button.tsx";
 
 /**
  * Creates a confirmation dialog with the given properties.

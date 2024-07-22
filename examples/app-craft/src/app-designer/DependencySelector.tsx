@@ -3,7 +3,7 @@ import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {BORDER} from "./Border.ts";
 import {Icon} from "./Icon.ts";
-import {Button} from "./Button.tsx";
+import {Button} from "./button/Button.tsx";
 
 /**
  * A component for selecting dependencies.

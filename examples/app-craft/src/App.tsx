@@ -32,7 +32,9 @@ export function App() {
                         value={value}
                         onChange={async (e) => {
                             const val = e.target.value;
-                            await onChange(val);
+                            if(onChange){
+                                await onChange(val);
+                            }
                         }}
                     />
                 }

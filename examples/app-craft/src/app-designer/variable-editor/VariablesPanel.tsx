@@ -2,7 +2,7 @@ import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {notifiable, useComputed} from "react-hook-signal";
-import {LabelContainer} from "../LabelContainer.tsx";
+import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {BORDER} from "../Border.ts";
 import {MdAdd} from "react-icons/md";
 import {Variable} from "../AppDesigner.tsx";

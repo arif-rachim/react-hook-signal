@@ -5,14 +5,15 @@ import {guid} from "../../utils/guid.ts";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {Editor, Monaco} from "@monaco-editor/react";
-import {Button} from "../Button.tsx";
-import {LabelContainer} from "../LabelContainer.tsx";
+import {Button} from "../button/Button.tsx";
+import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {BORDER} from "../Border.ts";
 import {Variable} from "../AppDesigner.tsx";
 import {DependencySelector} from "../DependencySelector.tsx";
 import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
 import {onBeforeMountHandler} from "../onBeforeHandler.ts";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
+import ButtonGroup from "../button/ButtonGroup.tsx";
 
 /**
  * Represents a panel for editing variables.
@@ -89,39 +90,17 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
         gap: 10,
     }}>
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-            <Button style={{
-                backgroundColor: type === 'state' ? '#000' : '#CCC',
-                color: type === 'state' ? 'white' : 'black',
-                padding: 3,
-                borderTopRightRadius: 0,
-                borderBottomRightRadius: 0,
-            }} onClick={() => {
-                variableSignal.set({...variableSignal.get(), type: 'state'})
-            }}>State
-            </Button>
-            <Button style={{
-                borderLeft: 'none',
-                borderRight: 'none',
-                backgroundColor: type === 'computed' ? '#000' : '#CCC',
-                color: type === 'computed' ? 'white' : 'black',
-                padding: 3,
-                borderRadius: 0,
-            }}
-                    onClick={() => {
-                        variableSignal.set({...variableSignal.get(), type: 'computed'})
-                    }}
-            >Computed
-            </Button>
-            <Button style={{
-                backgroundColor: type === 'effect' ? '#000' : '#CCC',
-                color: type === 'effect' ? 'white' : 'black',
-                padding: 3,
-                borderTopLeftRadius: 0,
-                borderBottomLeftRadius: 0,
-            }} onClick={() => {
-                variableSignal.set({...variableSignal.get(), type: 'effect'})
-            }}>Effect
-            </Button>
+            <ButtonGroup buttons={{
+                State : {
+                    onClick : () => variableSignal.set({...variableSignal.get(), type: 'state'})
+                },
+                Computed : {
+                    onClick : () => variableSignal.set({...variableSignal.get(), type: 'computed'})
+                },
+                Effect : {
+                    onClick : () => variableSignal.set({...variableSignal.get(), type: 'effect'})
+                }
+            }}/>
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1,flexShrink:1, gap: 5,overflow:'auto'}}>
             <LabelContainer label={'Name'} style={{flexDirection: 'row', gap: 10}} styleLabel={{width: 80}}>

@@ -5,6 +5,7 @@ import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbToggleLeftFilled} from "react-icons/tb";
 import {MdCheck, MdDataArray, MdDataObject} from "react-icons/md";
+import {IoIosArrowDown, IoIosArrowForward} from "react-icons/io";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -17,5 +18,7 @@ export const Icon = {
     Boolean: TbToggleLeftFilled,
     Record: MdDataObject,
     Array: MdDataArray,
-    Checked: MdCheck
+    Checked: MdCheck,
+    ArrowDown : IoIosArrowDown ,
+    ArrowRight : IoIosArrowForward,
 }

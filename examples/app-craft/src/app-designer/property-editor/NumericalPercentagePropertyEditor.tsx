@@ -1,6 +1,6 @@
-import {CSSProperties} from "react";
-import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
-import {LabelContainer} from "../LabelContainer.tsx";
+import {CSSProperties, useState} from "react";
+import {notifiable, useSignalEffect} from "react-hook-signal";
+import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {BORDER} from "../Border.ts";
 import {useSelectedDragContainer} from "../useSelectedDragContainer.ts";
 import {useUpdateSelectedDragContainer} from "../useUpdateSelectedDragContainer.ts";
@@ -23,7 +23,7 @@ export function NumericalPercentagePropertyEditor(props: {
 }) {
     const selectedDragContainer = useSelectedDragContainer();
     const updateSelectedDragContainer = useUpdateSelectedDragContainer();
-    const typeOfValue = useSignal('n/a');
+    const [typeOfValue,setTypeOfValue] = useState('n/a');
     const {property, label} = props;
     useSignalEffect(() => {
         const dragContainer = selectedDragContainer.get();
@@ -32,11 +32,11 @@ export function NumericalPercentagePropertyEditor(props: {
         }
         const val: string = (dragContainer[property] ?? '') as unknown as string;
         if (val.endsWith('%')) {
-            typeOfValue.set('%');
+            setTypeOfValue('%');
         } else if (val.endsWith('px')) {
-            typeOfValue.set('px');
+            setTypeOfValue('px');
         } else {
-            typeOfValue.set('n.a');
+            setTypeOfValue('n.a');
         }
     })
 
@@ -57,42 +57,58 @@ export function NumericalPercentagePropertyEditor(props: {
 
     return <div style={{display: 'flex', flexDirection: 'row', ...props.style}}>
         <LabelContainer label={label} styleLabel={{width: 100, ...props.styleLabel}}>
-            <notifiable.input style={{width: '100%', border: BORDER, borderRight: 'unset'}} value={extractValue}
+            <notifiable.input style={{
+                width: '100%',
+                border: BORDER,
+                padding: '5px 10px',
+                borderRight: 'unset',
+                borderTopLeftRadius: 20,
+                borderBottomLeftRadius: 20
+            }}
+                              value={extractValue}
                               onChange={(e) => {
                                   const val = e.target.value;
+                                  const isPercentage = val.endsWith('%');
+                                  if (isPercentage) {
+                                      setTypeOfValue('%')
+                                  }
+                                  const isPixel = val.endsWith('p');
+                                  if (isPixel) {
+                                      setTypeOfValue('px')
+                                  }
 
                                   updateSelectedDragContainer((selectedContainer) => {
-                                      const typeVal = typeOfValue.get();
                                       const isNanValue = isNaN(parseInt(val));
-
-                                      if (typeVal === 'n.a') {
+                                      if (typeOfValue === 'n.a') {
                                           selectedContainer[property] = val;
-                                      } else if (typeVal === 'px' && !isNanValue) {
-                                          selectedContainer[property] = `${val}${typeOfValue.get()}`;
-                                      } else if (typeVal === '%' && !isNanValue) {
-                                          selectedContainer[property] = `${val}${typeOfValue.get()}`;
+                                      } else if (typeOfValue === 'px' && !isNanValue) {
+                                          selectedContainer[property] = `${val}${typeOfValue}`;
+                                      } else if (typeOfValue === '%' && !isNanValue) {
+                                          selectedContainer[property] = `${val}${typeOfValue}`;
                                       } else {
                                           selectedContainer[property] = val;
                                       }
                                   })
 
                               }}/>
-            <notifiable.select style={{border: BORDER}} value={typeOfValue} onChange={(e) => {
-                const typeValue = e.target.value;
-                const value = extractValue();
-                updateSelectedDragContainer((selectedContainer) => {
-                    if (typeValue !== 'n.a') {
-                        selectedContainer[property] = `${value}${typeValue}`
-                    } else {
-                        selectedContainer[property] = `${value}`
-                    }
-
-                })
-            }}>
+            <select
+                style={{border: BORDER, borderTopRightRadius: 20, borderBottomRightRadius: 20}}
+                value={typeOfValue}
+                onChange={(e) => {
+                    const typeValue = e.target.value;
+                    const value = extractValue();
+                    updateSelectedDragContainer((selectedContainer) => {
+                        if (typeValue !== 'n.a') {
+                            selectedContainer[property] = `${value}${typeValue}`
+                        } else {
+                            selectedContainer[property] = `${value}`
+                        }
+                    })
+                }}>
                 <option value={'n.a'}></option>
                 <option value={'px'}>px</option>
                 <option value={'%'}>%</option>
-            </notifiable.select>
+            </select>
         </LabelContainer>
     </div>
 }
