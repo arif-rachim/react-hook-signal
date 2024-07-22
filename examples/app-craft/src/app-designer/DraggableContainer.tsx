@@ -16,6 +16,7 @@ import {dropZones} from "./dropZones.ts";
 import {ToolBar} from "./ToolBar.tsx";
 import {DropZone} from "./DropZone.tsx";
 import {RenderContainer} from "./RenderContainer.tsx";
+import {BORDER} from "./Border.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
@@ -189,7 +190,7 @@ export function DraggableContainer(props: {
         const container: Container = containerSignal.get();
         const isRoot = container?.parent === '';
         const styleFromSignal = {
-            border: mode === 'design' ? '1px dashed rgba(0,0,0,0.1)' : '1px solid rgba(0,0,0,0)',
+            border: mode === 'design' ? BORDER : '1px solid rgba(0,0,0,0)',
             background: 'white',
             minWidth: container?.minWidth,
             minHeight: container?.minHeight,

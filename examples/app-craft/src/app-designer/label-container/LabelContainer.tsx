@@ -19,7 +19,7 @@ export function LabelContainer(props: PropsWithChildren<{
     const Element = props.labelOnClick === undefined ? Label : Div;
     return <Element style={{display: 'flex', flexDirection: 'column', gap: 0, ...style}}
                     onMouseMove={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
-        <div style={props.styleLabel} onClick={() => {
+        <div style={{flexShrink:0,...props.styleLabel}} onClick={() => {
             if (props.labelOnClick) {
                 props.labelOnClick()
             }

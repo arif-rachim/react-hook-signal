@@ -1,5 +1,6 @@
 import {HTMLAttributes} from "react";
 import {IconType} from "react-icons";
+import {BORDER} from "./Border.ts";
 
 /**
  * Renders a button with an icon.
@@ -8,7 +9,7 @@ export function ButtonWithIcon(props: HTMLAttributes<HTMLDivElement> & { icon: I
     const {icon: Icon, ...properties} = props;
     return <div
         style={{
-            border: '1px solid rgba(0,0,0,0.3)',
+            border: BORDER,
             padding: 5,
             borderRadius: 5,
             backgroundColor: 'white',

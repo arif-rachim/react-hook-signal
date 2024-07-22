@@ -2,8 +2,8 @@ import {Button} from "./Button.tsx";
 import {useState} from "react";
 import {BORDER} from "../Border.ts";
 
-export default function ButtonGroup(props: { buttons: Record<string, { onClick: () => void }> }) {
-    const [selectedButton, setSelectedButton] = useState<string>();
+export default function ButtonGroup(props: { buttons: Record<string, { onClick: () => void }>,defaultButton:string }) {
+    const [selectedButton, setSelectedButton] = useState<string>(props.defaultButton);
     return <>
         {Object.keys(props.buttons).map((key, index, array) => {
             const isFirstElement = index === 0;

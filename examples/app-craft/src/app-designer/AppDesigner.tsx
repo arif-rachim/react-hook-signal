@@ -1,25 +1,17 @@
-import {CSSProperties, ReactNode, useContext, useEffect} from "react";
+import {CSSProperties, useContext, useEffect} from "react";
 import {AnySignal, effect, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
-import {MdDesignServices, MdHorizontalDistribute, MdPreview, MdVerticalDistribute} from "react-icons/md";
+import {MdDesignServices, MdPreview} from "react-icons/md";
 
 import {guid} from "../utils/guid.ts";
-import {useShowModal} from "../modal/useShowModal.ts";
-import {IconType} from "react-icons";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import {DraggableContainer} from "./DraggableContainer.tsx";
-import {LabelContainer} from "./label-container/LabelContainer.tsx";
-import {NumericalPercentagePropertyEditor} from "./property-editor/NumericalPercentagePropertyEditor.tsx";
-import {Button} from "./button/Button.tsx";
-import {VariablesPanel} from "./variable-editor/VariablesPanel.tsx";
-import {ComponentPropertyEditor} from "./property-editor/ComponentPropertyEditor.tsx";
 import {ButtonWithIcon} from "./ButtonWithIcon.tsx";
 import {sortSignal} from "./sortSignal.ts";
-import {useUpdateSelectedDragContainer} from "./useUpdateSelectedDragContainer.ts";
-import {ZodFunction, ZodType, ZodTypeAny} from "zod";
-import CollapsibleLabelContainer from "./collapsible-panel/CollapsibleLabelContainer.tsx";
-import {TbCodeDots} from "react-icons/tb";
+import {ZodType} from "zod";
+import {LeftPanel} from "./left-panel/LeftPanel.tsx";
+import {RightPanel} from "./right-panel/RightPanel.tsx";
 
 
 export type Variable = {
@@ -61,170 +53,6 @@ export type Container = {
     properties: Record<string, ContainerPropertyType>
 }
 
-function RightPanel() {
-    const context = useContext(AppDesignerContext)
-    const {
-        selectedDragContainerIdSignal,
-        allContainersSignal,
-        elements
-    } = context;
-
-    const propertyEditors = useComputed(() => {
-        const selectedDragContainerId = selectedDragContainerIdSignal.get();
-        const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
-        const elementName = selectedDragContainer?.type;
-        const result: Array<ReactNode> = [];
-        result.push(<CollapsibleLabelContainer label={'Size'} key={'height-width'}
-                                               styleContent={{flexDirection: 'row', gap: 10}}>
-            <NumericalPercentagePropertyEditor property={'height'} label={'Height'} key={'height-editor'}
-                                               style={{width: '50%'}} styleLabel={{width: 30}}/>
-            <NumericalPercentagePropertyEditor property={'width'} label={'Width'} key={'width-editor'}
-                                               style={{width: '50%'}} styleLabel={{width: 30}}/>
-        </CollapsibleLabelContainer>);
-        result.push(<CollapsibleLabelContainer label={'Padding'} key={'padding-editor'}>
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-                <NumericalPercentagePropertyEditor property={'paddingTop'} label={'pT'} key={'padding-top'}
-                                                   style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
-            </div>
-            <div style={{display: 'flex'}}>
-                <NumericalPercentagePropertyEditor property={'paddingLeft'} label={'pL'} key={'padding-left'}
-                                                   style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
-                <div style={{flexGrow: 1, width: '100%'}}></div>
-                <NumericalPercentagePropertyEditor property={'paddingRight'} label={'pR'} key={'padding-right'}
-                                                   style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
-            </div>
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-                <NumericalPercentagePropertyEditor property={'paddingBottom'} label={'pB'}
-                                                   key={'padding-bottom'} style={{width: 80, flexShrink: 0}}
-                                                   styleLabel={{display: 'none'}}/>
-            </div>
-        </CollapsibleLabelContainer>)
-        result.push(<CollapsibleLabelContainer label={'Margin'} key={'margin-editor'}>
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-                <NumericalPercentagePropertyEditor property={'marginTop'} label={'mT'} key={'margin-top'}
-                                                   style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
-            </div>
-            <div style={{display: 'flex'}}>
-                <NumericalPercentagePropertyEditor property={'marginLeft'} label={'mL'} key={'margin-left'}
-                                                   style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
-                <div style={{flexGrow: 1}}></div>
-                <NumericalPercentagePropertyEditor property={'marginRight'} label={'mR'} key={'margin-right'}
-                                                   style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
-            </div>
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-                <NumericalPercentagePropertyEditor property={'marginBottom'} label={'mB'}
-                                                   key={'margin-bottom'} style={{width: 80, flexShrink: 0}}
-                                                   styleLabel={{display: 'none'}}/>
-            </div>
-        </CollapsibleLabelContainer>)
-
-        if (elementName && elementName in elements) {
-            const element = elements[elementName];
-            const props = element.property;
-            let property: Record<string, unknown> = {};
-            if (isShapeable(props)) {
-                property = props.shape;
-            }
-            const callbacks: Array<string> = [];
-            const attributes: Array<string> = [];
-            for (const propKey of Object.keys(property)) {
-                const type = property[propKey] as ZodTypeAny;
-                const isZodFunction = type instanceof ZodFunction;
-                if (isZodFunction) {
-                    callbacks.push(propKey)
-                } else {
-                    attributes.push(propKey)
-                }
-            }
-            result.push(<CollapsibleLabelContainer label={'Properties'} key={'properties'}>
-                {attributes.map(propKey => {
-                    const type = property[propKey] as ZodType
-                    return <PropertyOrCallbackRenderer key={propKey} propertyName={propKey} type={type}/>
-                })}
-            </CollapsibleLabelContainer>);
-            result.push(<CollapsibleLabelContainer label={'Callbacks'} key={'callbacks'}>
-                {callbacks.map(propKey => {
-                    const type = property[propKey] as ZodType
-                    return <PropertyOrCallbackRenderer key={propKey} propertyName={propKey} type={type}/>
-                })}
-            </CollapsibleLabelContainer>);
-        }
-        return result
-    })
-    return <notifiable.div
-        style={{
-            width: 200,
-            backgroundColor: 'rgba(0,0,0,0.01)',
-            borderLeft: '1px solid rgba(0,0,0,0.1)',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
-        {propertyEditors}
-    </notifiable.div>;
-}
-
-function PropertyOrCallbackRenderer(props: { propertyName: string, type: ZodType }) {
-    const {propertyName, type} = props;
-    const showModal = useShowModal();
-    const update = useUpdateSelectedDragContainer();
-    const context = useContext(AppDesignerContext)
-    return <LabelContainer key={propertyName} label={propertyName}
-                           style={{flexDirection: 'row', alignItems: 'center'}}
-                           styleLabel={{width: 65, fontSize: 13}}>
-        <Button style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding:0,
-        }} onClick={async () => {
-            const result = await showModal<ContainerPropertyType>(closePanel => {
-                return <AppDesignerContext.Provider value={context}>
-                    <ComponentPropertyEditor closePanel={closePanel} name={propertyName}
-                                             type={type}/>
-                </AppDesignerContext.Provider>
-            });
-            if (result) {
-                update(selectedContainer => {
-                    selectedContainer.properties[propertyName] = result
-                })
-            }
-        }}><TbCodeDots style={{fontSize:22}} /></Button>
-    </LabelContainer>
-}
-
-function LeftPanel() {
-    return <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: 200,
-        backgroundColor: 'rgba(0,0,0,0.1)',
-        borderRight: '1px solid rgba(0,0,0,0.1)'
-    }}>
-        <ElementsPanel/>
-        <VariablesPanel/>
-    </div>
-}
-
-function ElementsPanel() {
-    const {elements} = useContext(AppDesignerContext);
-    return <div
-        style={{
-            padding: 10,
-            display: 'flex',
-            gap: 10,
-            alignItems: 'flex-start'
-        }}>
-        <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
-        <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
-        {
-            Object.keys(elements).map((key) => {
-                const Icon = elements[key].icon;
-                return <DraggableItem icon={Icon} draggableDataType={key} key={key}/>
-            })
-        }
-    </div>
-}
 
 function ToggleViewToolbar() {
     const {uiDisplayModeSignal} = useContext(AppDesignerContext);
@@ -389,14 +217,3 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 }
 
 
-function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
-    const Icon = props.icon;
-    const {activeDropZoneIdSignal} = useContext(AppDesignerContext);
-    return <ButtonWithIcon onDragStart={(e) => e.dataTransfer.setData('text/plain', props.draggableDataType)}
-                           draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')} icon={Icon}/>
-
-}
-
-function isShapeable(value: unknown): value is { shape: Record<string, unknown> } {
-    return value !== null && value !== undefined && typeof value === 'object' && 'shape' in value
-}

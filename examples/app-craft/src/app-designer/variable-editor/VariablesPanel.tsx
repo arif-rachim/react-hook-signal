@@ -2,14 +2,38 @@ import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {notifiable, useComputed} from "react-hook-signal";
-import {LabelContainer} from "../label-container/LabelContainer.tsx";
-import {BORDER} from "../Border.ts";
 import {MdAdd} from "react-icons/md";
 import {Variable} from "../AppDesigner.tsx";
 import {Icon} from "../Icon.ts";
 import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
 import {VariableEditorPanel} from "./VariableEditorPanel.tsx";
 import {sortSignal} from "../sortSignal.ts";
+import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {Button} from "../button/Button.tsx";
+
+function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (variable?: Variable) => Promise<void>) {
+    return (variable: Variable) => {
+        return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>
+            <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{variable.name}</div>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }} onClick={() => deleteVariable(variable)}>
+                <Icon.Delete style={{fontSize:18}}/>
+            </div>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }} onClick={() => editVariable(variable)}>
+                <Icon.Detail style={{fontSize:18}}/>
+            </div>
+        </div>
+    };
+}
 
 /**
  * Represents a panel for managing variables.
@@ -59,69 +83,49 @@ export function VariablesPanel() {
         }
     }
 
-    const variableList = useComputed(() => {
-        return allVariablesSignal.get().map((variable) => {
-            return <LabelContainer label={<div style={{display:'flex',height:'100%'}}>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRight: BORDER,
-                    paddingRight:5
-                }}>
-                    {variable.type === 'effect' && <Icon.Effect/>}
-                    {variable.type === 'computed' && <Icon.Computed/>}
-                    {variable.type === 'state' && <Icon.State/>}
-                </div>
-                <div style={{display:'flex',alignItems:'center',paddingLeft:5}}>{variable.name}</div>
-            </div>} key={variable.id} style={{
-                flexDirection: 'row',
-                backgroundColor: 'rgba(0,0,0,0.02)',
-                borderBottom: BORDER,
-            }} styleOnHovered={{backgroundColor: 'rgba(0,0,0,0.1)'}} styleContent={{justifyContent: 'flex-end'}}
-                                   styleLabel={{paddingLeft: 5, overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRight: BORDER,
-                    padding: '5px'
-                }} onClick={() => deleteVariable(variable)}>
-                    <Icon.Delete/>
-                </div>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '5px'
-                }} onClick={() => editVariable(variable)}>
-                    <Icon.Detail/>
-                </div>
-            </LabelContainer>
-        })
+    const stateVariableList = useComputed(() => {
+        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable));
     })
-    return <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'auto',
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        height: '100%'
-    }}>
-        <div style={{display: 'flex'}}>
-            <input type={'search'} style={{flexGrow: 1,paddingLeft:5, border: 'unset',borderTop:BORDER,borderBottom:BORDER, minWidth: 0, width: 100, flexShrink: 1}}/>
-            <div style={{display: 'flex', border: BORDER,borderRight:'unset', alignItems: 'center', cursor: 'pointer'}}
-                 onClick={() => editVariable()}>
-                <div style={{marginLeft: 5}}>Add</div>
+    const computedVariableList = useComputed(() => {
+        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable));
+    })
+    const effectVariableList = useComputed(() => {
+        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable));
+    })
+
+    return <>
+        <CollapsibleLabelContainer label={'State'}>
+            <Button onClick={() => editVariable()} style={{display: 'flex', alignItems: 'center', gap: 5,justifyContent:'center',marginBottom:5}}>
+                {'Add Signal State'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <MdAdd style={{fontSize: 20}}/>
                 </div>
-            </div>
-        </div>
-        <notifiable.div style={{display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
-            {variableList}
-        </notifiable.div>
-    </div>
+            </Button>
+            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+                {stateVariableList}
+            </notifiable.div>
+        </CollapsibleLabelContainer>
+        <CollapsibleLabelContainer label={'Computed'}>
+            <Button onClick={() => editVariable()} style={{display: 'flex', alignItems: 'center', gap: 5,justifyContent:'center',marginBottom:5}}>
+                {'Add Signal Computed'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <MdAdd style={{fontSize: 20}}/>
+                </div>
+            </Button>
+            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+                {computedVariableList}
+            </notifiable.div>
+        </CollapsibleLabelContainer>
+        <CollapsibleLabelContainer label={'Effect'}>
+            <Button onClick={() => editVariable()} style={{display: 'flex', alignItems: 'center', gap: 5 ,justifyContent:'center',marginBottom:5}}>
+                {'Add Signal Effect'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <MdAdd style={{fontSize: 20}}/>
+                </div>
+            </Button>
+            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+                {effectVariableList}
+            </notifiable.div>
+        </CollapsibleLabelContainer>
+    </>
 }

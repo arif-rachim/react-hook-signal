@@ -14,6 +14,7 @@ import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
 import {onBeforeMountHandler} from "../onBeforeHandler.ts";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import ButtonGroup from "../button/ButtonGroup.tsx";
+import {Icon} from "../Icon.ts";
 
 /**
  * Represents a panel for editing variables.
@@ -100,12 +101,12 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
                 Effect : {
                     onClick : () => variableSignal.set({...variableSignal.get(), type: 'effect'})
                 }
-            }}/>
+            }} defaultButton={type === 'state' ? 'State' : type === 'computed' ? 'Computed' : 'Effect'} />
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1,flexShrink:1, gap: 5,overflow:'auto'}}>
             <LabelContainer label={'Name'} style={{flexDirection: 'row', gap: 10}} styleLabel={{width: 80}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
-                                  style={{border: BORDER, flexGrow: 1, padding: '3px 5px'}} value={() => {
+                                  style={{border: BORDER, flexGrow: 1, padding: '5px 10px',borderRadius:5}} value={() => {
                     return variableSignal.get().name
                 }}
                                   onKeyDown={(e) => {
@@ -129,13 +130,13 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
             {type !== 'state' &&
                 <LabelContainer label={'Dependency'} style={{flexDirection: 'row', gap: 10}} styleLabel={{width: 80}}>
                     <notifiable.div
-                        style={{border: BORDER, display: 'flex', gap: 5, padding: 5, flexGrow: 1, minHeight: 22}}
+                        style={{border: BORDER, display: 'flex',borderRadius:5, flexGrow: 1, minHeight: 27,justifyContent:'space-evenly',flexWrap:'wrap',gap:5,padding:10}}
                         onClick={showDependencySelector}>{() => {
                         const dependencies = variableSignal.get().dependency ?? []
                         const allVariables = allVariablesSignal.get();
                         return dependencies.map(dep => {
                             const variable = allVariables.find(i => i.id === dep);
-                            return <div key={dep} style={{border: BORDER, borderRadius: 3, padding: '3px 5px'}}>
+                            return <div key={dep} style={{backgroundColor:'rgba(0,0,0,0.1)',borderRadius:5,borderBottom:'unset',flexGrow:1,padding:'5px 10px'}}>
                                 {variable?.name}
                             </div>
                         })
@@ -208,11 +209,29 @@ export function VariableEditorPanel(props: { variable?: Variable, closePanel: (r
                         return <ConfirmationDialog message={message} closePanel={cp} buttons={['Ok']}/>
                     })
                 }
-            }} style={{border: BORDER}}>Save
+            }} style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }}>
+
+                {'Save'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Save style={{fontSize: 18}}/>
+                </div>
+
             </Button>
-            <Button onClick={() => {
+            <Button style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }} onClick={() => {
                 closePanel();
-            }} style={{border: BORDER}}>Cancel
+            }} >
+                {'Cancel'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Exit style={{fontSize: 18}}/>
+                </div>
             </Button>
         </div>
     </div>

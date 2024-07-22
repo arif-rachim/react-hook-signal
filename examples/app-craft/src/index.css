@@ -28,10 +28,22 @@ input:focus {
     outline: none;
 }
 
-::-webkit-scrollbar {
-    width: 10px;
-}
-
 * {
     box-sizing: border-box
+}
+
+::-webkit-scrollbar {
+    width: 5px; /* For Chrome, Safari, and Opera */
+    height: 5px; /* For Chrome, Safari, and Opera */
+}
+
+/* Show scrollbar on hover */
+:hover::-webkit-scrollbar {
+    width: 5px; /* Adjust width as needed */
+    height: 5px; /* Adjust height as needed */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    border-radius: 4px;
 }

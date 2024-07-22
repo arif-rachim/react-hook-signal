@@ -12,6 +12,7 @@ import {useShowModal} from "../../modal/useShowModal.ts";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
 import {ZodType} from "zod";
 import {zodTypeToJson} from "../zodSchemaToJson.ts";
+import {Icon} from "../Icon.ts";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -101,8 +102,26 @@ export function ComponentPropertyEditor(props: {
                 }}
             </notifiable.div>
             <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 10}}>
-                <Button onClick={() => props.closePanel(propsSignal.get())}>Save</Button>
-                <Button onClick={() => props.closePanel(undefined)}>Cancel</Button>
+                <Button onClick={() => props.closePanel(propsSignal.get())} style={{
+                    display: 'flex',
+                    gap: 5,
+                    alignItems: 'center'
+                }}>
+                    {'Save'}
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <Icon.Save style={{fontSize: 18}}/>
+                    </div>
+                </Button>
+                <Button onClick={() => props.closePanel(undefined)} style={{
+                    display: 'flex',
+                    gap: 5,
+                    alignItems: 'center'
+                }}>
+                    {'Cancel'}
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <Icon.Exit style={{fontSize: 18}}/>
+                    </div>
+                </Button>
             </div>
         </div>
     </div>
