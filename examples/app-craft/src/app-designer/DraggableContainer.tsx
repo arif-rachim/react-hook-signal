@@ -1,19 +1,20 @@
 import {Signal} from "signal-polyfill";
-import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {useSignal, useSignalEffect} from "react-hook-signal";
 import {
     CSSProperties,
     type DragEvent as ReactDragEvent,
+    HTMLAttributes,
     type MouseEvent as ReactMouseEvent,
     ReactNode,
     useContext,
-    useEffect
+    useEffect,
+    useState
 } from "react";
 import {useRefresh} from "../utils/useRefresh.ts";
 import {Container} from "./AppDesigner.tsx";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {guid} from "../utils/guid.ts";
 import {dropZones} from "./dropZones.ts";
-import {ToolBar} from "./ToolBar.tsx";
 import {DropZone} from "./DropZone.tsx";
 import {RenderContainer} from "./RenderContainer.tsx";
 import {BORDER} from "./Border.ts";
@@ -32,6 +33,8 @@ export function DraggableContainer(props: {
 }) {
     const {container: containerProp, allContainersSignal} = props;
     const containerSignal = useSignal(containerProp);
+    const [elements,setElements] = useState<ReactNode[]>([]);
+    const [computedStyle,setComputedStyle] = useState<CSSProperties>({})
     useEffect(() => {
         containerSignal.set(containerProp);
     }, [containerSignal, containerProp]);
@@ -60,7 +63,6 @@ export function DraggableContainer(props: {
     function onDragOver(event: ReactDragEvent) {
         event.preventDefault();
         event.stopPropagation();
-
         mousePosition.set(event);
     }
 
@@ -125,44 +127,24 @@ export function DraggableContainer(props: {
     }
 
     function onDragEnd() {
-        activeDropZoneIdSignal.set('')
+        activeDropZoneIdSignal.set('');
+        selectedDragContainerIdSignal.set('');
     }
 
     function onSelected(event: ReactMouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
         selectedDragContainerIdSignal.set(containerSignal.get().id);
+        activeDropZoneIdSignal.set('');
     }
 
-    function onFocusUp() {
-        if (containerSignal.get().parent) {
-            selectedDragContainerIdSignal.set(containerSignal.get().parent);
-        }
-    }
-
-    function onDelete() {
-        let allContainers = allContainersSignal.get();
-        allContainers = allContainers.filter(s => s.id !== containerSignal.get().id);
-        const parent = allContainers.find(s => s.id === containerSignal.get().parent);
-        if (parent) {
-            const newParent = {...parent};
-            newParent.children = newParent.children.filter(s => s !== containerSignal.get().id);
-            allContainers.splice(allContainers.indexOf(parent), 1, newParent);
-        }
-        allContainersSignal.set(allContainers);
-    }
-
-    const elements = useComputed(() => {
+    useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
         const container: Container | undefined = containerSignal.get();
         const children = container?.children ?? [];
 
         const isContainer = container?.type === 'vertical' || container?.type === 'horizontal'
         const result: Array<ReactNode> = [];
-        if (mode === 'design') {
-            result.push(<ToolBar key={`toolbar-${container?.id}`} container={container} onFocusUp={onFocusUp}
-                                 onDelete={onDelete}/>)
-        }
         if (isContainer) {
             if (mode === 'design') {
                 result.push(<DropZone precedingSiblingId={''} key={`drop-zone-root-${container?.id}`}
@@ -181,16 +163,16 @@ export function DraggableContainer(props: {
         } else if (elementsLib[container?.type]) {
             result.push(<RenderContainer key={container?.id} container={container} />)
         }
-        return result;
+        setElements(result);
     });
 
 
-    const computedStyle = useComputed((): CSSProperties => {
+    useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
         const container: Container = containerSignal.get();
         const isRoot = container?.parent === '';
         const styleFromSignal = {
-            border: mode === 'design' ? BORDER : '1px solid rgba(0,0,0,0)',
+            border: mode === 'design' ? BORDER : '1px solid rgba(0,0,0,0.5)',
             background: 'white',
             minWidth: container?.minWidth,
             minHeight: container?.minHeight,
@@ -216,27 +198,33 @@ export function DraggableContainer(props: {
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         if (isRoot) {
-            return styleFromSignal as CSSProperties
+            setComputedStyle(styleFromSignal as CSSProperties)
+            return;
         }
         if (isFocused && mode === 'design') {
-            styleFromSignal.border = '1px solid black';
+            styleFromSignal.border = BORDER;
+            styleFromSignal.background = 'rgba(14,255,242,0.3)';
         }
 
-        if (isHovered && mode === 'design') {
-            styleFromSignal.background = 'yellow';
+        if (isHovered && mode === 'design' && !isFocused) {
+            styleFromSignal.background = 'rgba(14,255,242,0.1)';
         }
-        return styleFromSignal as CSSProperties;
+        setComputedStyle(styleFromSignal as CSSProperties)
     });
-
-    return <notifiable.div draggable={true} style={computedStyle}
-                           onDragStart={onDragStart}
-                           onDragOver={onDragOver}
-                           onDrop={onDrop}
-                           onDragEnd={onDragEnd}
-                           onMouseOver={onMouseOver}
-                           onClick={onSelected} data-container-id={containerSignal.get()?.id}>
+    const elementProps:(HTMLAttributes<HTMLElement> & {['data-element-id']:string}) = {
+        draggable:true,
+        style:computedStyle,
+        onDragStart,
+        onDragOver,
+        onDrop,
+        onDragEnd,
+        onMouseOver,
+        onClick:onSelected,
+        ['data-element-id'] : props.container?.id
+    };
+    return <div {...elementProps}>
         {elements}
-    </notifiable.div>
+    </div>
 
 }
 
@@ -320,7 +308,6 @@ function swapContainerLocation(allContainersSignal: Signal.State<Array<Container
     allContainers.splice(targetContainerIndex, 1, {...targetContainer});
     allContainers.splice(currentParentContainerIndex, 1, {...currentParentContainer});
     allContainers.splice(newParentContainerIndex, 1, {...newParentContainer});
-
     allContainersSignal.set(allContainers);
     activeDropZoneIdSignal.set('');
 }

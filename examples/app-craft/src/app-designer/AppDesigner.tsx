@@ -1,17 +1,17 @@
 import {CSSProperties, useContext, useEffect} from "react";
 import {AnySignal, effect, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
-import {MdDesignServices, MdPreview} from "react-icons/md";
 
 import {guid} from "../utils/guid.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import {DraggableContainer} from "./DraggableContainer.tsx";
-import {ButtonWithIcon} from "./ButtonWithIcon.tsx";
 import {sortSignal} from "./sortSignal.ts";
 import {ZodType} from "zod";
 import {LeftPanel} from "./left-panel/LeftPanel.tsx";
 import {RightPanel} from "./right-panel/RightPanel.tsx";
+import ButtonGroup from "./button/ButtonGroup.tsx";
+import {ToolBar} from "./ToolBar.tsx";
 
 
 export type Variable = {
@@ -56,10 +56,16 @@ export type Container = {
 
 function ToggleViewToolbar() {
     const {uiDisplayModeSignal} = useContext(AppDesignerContext);
-    return <div style={{display: 'flex', justifyContent: 'center', gap: 10, padding: 10}}>
-        <ButtonWithIcon icon={MdPreview} onClick={() => uiDisplayModeSignal.set('view')}/>
-        <ButtonWithIcon icon={MdDesignServices} onClick={() => uiDisplayModeSignal.set('design')}/>
-    </div>;
+    return <div style={{display: 'flex', justifyContent: 'center', padding: 10,background:'rgba(0,0,0,0.2)'}}>
+        <ButtonGroup buttons={{
+            'Preview' : {
+                onClick : () => uiDisplayModeSignal.set('view')
+            },
+            'Design' : {
+                onClick : () => uiDisplayModeSignal.set('design')
+            }
+        }} defaultButton={'Design'} />
+    </div>
 }
 
 export default function AppDesigner(props: LayoutBuilderProps) {
@@ -204,11 +210,19 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 
         <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
             <LeftPanel/>
-            <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
+            <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column',backgroundColor:'rgba(0,0,0,0.2)'}}>
                 <ToggleViewToolbar/>
-                <notifiable.div style={{flexGrow: 1}}>
-                    {renderedElements}
-                </notifiable.div>
+                <div style={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding:10
+                }}>
+                    <notifiable.div style={{flexGrow: 1,borderRadius:10,overflow:'auto'}} >
+                        {renderedElements}
+                    </notifiable.div>
+                </div>
+                <ToolBar />
             </div>
             <RightPanel/>
         </div>
