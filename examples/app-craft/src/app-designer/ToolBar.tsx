@@ -30,7 +30,7 @@ export function ToolBar() {
     const computedStyle = useComputed(() => {
         const container = containerSignal.get();
         const style: CSSProperties = {
-            display: 'flex',
+            display: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             background: 'rgba(0,0,0,0.5)',
@@ -43,11 +43,18 @@ export function ToolBar() {
         if (container === undefined) {
             return style as CSSProperties;
         }
+        const isRoot = container.parent === '';
+        if (isRoot) {
+            return style as CSSProperties;
+        }
         const element = document.querySelector(`[data-element-id="${container.id}"]`);
         if (element === null) {
             return style as CSSProperties;
         }
+
+
         const {top, left, width} = element.getBoundingClientRect();
+        style.display = 'flex';
         style.top = top - 20;
         style.left = left + width - 55;
         return style as CSSProperties;
