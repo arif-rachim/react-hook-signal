@@ -9,25 +9,88 @@ import {
     useEffect,
     useState
 } from "react";
-import {useRefresh} from "../utils/useRefresh.ts";
-import {Container} from "./AppDesigner.tsx";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
-import {guid} from "../utils/guid.ts";
-import {dropZones} from "./dropZones.ts";
-import {DropZone} from "./DropZone.tsx";
-import {RenderContainer} from "./RenderContainer.tsx";
-import {BORDER} from "./Border.ts";
-import {ElementProps} from "./LayoutBuilderProps.ts";
+import {useRefresh} from "../../utils/useRefresh.ts";
+import {Container} from "../AppDesigner.tsx";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {guid} from "../../utils/guid.ts";
+import {dropZones} from "../dropZones.ts";
+import {DropZone} from "../DropZone.tsx";
+import {ElementRenderer} from "./ElementRenderer.tsx";
+import {BORDER} from "../Border.ts";
+import {ElementProps} from "../LayoutBuilderProps.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
 
 const FEATHER = 5;
 
+function justifyContent(container: Container):CSSProperties["justifyContent"] {
+    if(container.type === 'vertical'){
+        if(container.verticalAlign === 'top'){
+            return 'flex-start';
+        }
+        if(container.verticalAlign === 'center'){
+            return 'center';
+        }
+        if(container.verticalAlign === 'bottom'){
+            return 'flex-end';
+        }
+        if(container.verticalAlign === ''){
+            return '';
+        }
+    }
+    if(container.type === 'horizontal'){
+        if(container.horizontalAlign === 'left'){
+            return 'flex-start';
+        }
+        if(container.horizontalAlign === 'center'){
+            return 'center';
+        }
+        if(container.horizontalAlign === 'right'){
+            return 'flex-end';
+        }
+        if(container.horizontalAlign === ''){
+            return '';
+        }
+    }
+    return ''
+}
+function alignItems(container:Container):CSSProperties["alignItems"] {
+    if(container.type === 'vertical'){
+        if(container.horizontalAlign === 'left'){
+            return 'flex-start';
+        }
+        if(container.horizontalAlign === 'center'){
+            return 'center';
+        }
+        if(container.horizontalAlign === 'right'){
+            return 'flex-end';
+        }
+        if(container.horizontalAlign === ''){
+            return '';
+        }
+    }
+    if(container.type === 'horizontal'){
+        if(container.verticalAlign === 'top'){
+            return 'flex-start';
+        }
+        if(container.verticalAlign === 'center'){
+            return 'center';
+        }
+        if(container.verticalAlign === 'bottom'){
+            return 'flex-end';
+        }
+        if(container.verticalAlign === ''){
+            return '';
+        }
+    }
+    return ''
+}
+
 /**
  * DraggableContainer is a component used to display containers that can be dragged and dropped within a design interface.
  */
-export function DraggableContainer(props: {
+export function DraggableContainerElement(props: {
     allContainersSignal: Signal.State<Array<Container>>,
     container: Container
 }) {
@@ -153,8 +216,8 @@ export function DraggableContainer(props: {
             for (let i = 0; i < children?.length; i++) {
                 const childId = children[i];
                 const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-                result.push(<DraggableContainer allContainersSignal={allContainersSignal} container={childContainer}
-                                                key={childId}/>)
+                result.push(<DraggableContainerElement allContainersSignal={allContainersSignal} container={childContainer}
+                                                       key={childId}/>)
                 if (mode === 'design') {
                     result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
                                           parentContainerId={container?.id ?? ''}/>);
@@ -192,6 +255,9 @@ export function DraggableContainer(props: {
             position: 'relative',
 
             gap: container?.gap,
+
+            justifyContent : justifyContent(container),
+            alignItems: alignItems(container),
         };
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
@@ -222,7 +288,7 @@ export function DraggableContainer(props: {
     };
 
     if(elementsLib[containerProp?.type]){
-        return <RenderContainer key={containerProp?.id} container={containerProp} elementProps={elementProps} />
+        return <ElementRenderer key={containerProp?.id} container={containerProp} elementProps={elementProps} />
     }
 
     return <div {...elementProps}>
@@ -242,11 +308,12 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
     const newContainer: Container = {
         id: guid(),
         type: config.type,
-        gap: 0,
+
         children: [],
         parent: parentContainerId,
         width: '',
         height: '',
+
         minWidth: '24px',
         minHeight: '24px',
 
@@ -259,6 +326,12 @@ function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, co
         marginRight: '',
         marginBottom: '',
         marginLeft: '',
+
+        // this is specific only for container
+        gap: '',
+        verticalAlign:'',
+        horizontalAlign:'',
+
         properties: {}
     }
 

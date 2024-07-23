@@ -5,13 +5,13 @@ import {Signal} from "signal-polyfill";
 import {guid} from "../utils/guid.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
-import {DraggableContainer} from "./DraggableContainer.tsx";
 import {sortSignal} from "./sortSignal.ts";
 import {ZodType} from "zod";
 import {LeftPanel} from "./left-panel/LeftPanel.tsx";
 import {RightPanel} from "./right-panel/RightPanel.tsx";
 import ButtonGroup from "./button/ButtonGroup.tsx";
 import {ToolBar} from "./ToolBar.tsx";
+import {DraggableContainerElement} from "./container-element-renderer/DraggableContainerElement.tsx";
 
 
 export type Variable = {
@@ -32,14 +32,14 @@ export type ContainerPropertyType = { formula: string, type: ZodType, dependenci
 export type Container = {
     id: string,
     children: string[],
-    parent: string
+    parent: string,
     type: 'horizontal' | 'vertical' | string,
     width: CSSProperties['width'],
     height: CSSProperties['height'],
+
     minWidth: CSSProperties['minWidth'],
     minHeight: CSSProperties['minHeight'],
 
-    gap: CSSProperties['gap'],
 
     paddingTop: CSSProperties['paddingTop'],
     paddingRight: CSSProperties['paddingRight'],
@@ -50,7 +50,13 @@ export type Container = {
     marginRight: CSSProperties['marginRight'],
     marginBottom: CSSProperties['marginBottom'],
     marginLeft: CSSProperties['marginLeft'],
-    properties: Record<string, ContainerPropertyType>
+
+    // only for container
+    gap: CSSProperties['gap'],
+    verticalAlign: 'top'|'center'|'bottom'|'',
+    horizontalAlign : 'left'|'center'|'right'|'',
+
+    properties: Record<string, ContainerPropertyType>,
 }
 
 
@@ -79,7 +85,6 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const allContainersSignal = useSignal<Array<Container>>([{
         id: guid(),
         type: 'vertical',
-        gap: 0,
         children: [],
         parent: '',
         height: '',
@@ -96,7 +101,11 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         paddingRight: '',
         paddingBottom: '',
         paddingLeft: '',
-        properties: {}
+        properties: {},
+
+        gap: '',
+        verticalAlign: '',
+        horizontalAlign: '',
 
     }]);
     const {value, onChange} = props;
@@ -119,7 +128,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const renderedElements = useComputed(() => {
         const container = allContainersSignal.get().find(item => item.parent === '');
         if (container) {
-            return <DraggableContainer allContainersSignal={allContainersSignal} container={container}/>
+            return <DraggableContainerElement allContainersSignal={allContainersSignal} container={container}/>
         }
         return <></>
     });

@@ -4,7 +4,7 @@ import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {BORDER} from "../Border.ts";
 import {useSelectedDragContainer} from "../useSelectedDragContainer.ts";
 import {useUpdateSelectedDragContainer} from "../useUpdateSelectedDragContainer.ts";
-import {PropertyType} from "../PropertyType.ts";
+import {ContainerPropertyType, PropertyType} from "../PropertyType.ts";
 
 /**
  * A property editor component for handling numerical percentage values.
@@ -16,7 +16,7 @@ import {PropertyType} from "../PropertyType.ts";
  *   - styleLabel: Optional CSS properties for styling the label.
  */
 export function NumericalPercentagePropertyEditor(props: {
-    property: PropertyType,
+    property: (PropertyType | ContainerPropertyType),
     label: string,
     style?: CSSProperties,
     styleLabel?: CSSProperties
@@ -30,7 +30,7 @@ export function NumericalPercentagePropertyEditor(props: {
         if (dragContainer === undefined) {
             return;
         }
-        const val: string = (dragContainer[property] ?? '') as unknown as string;
+        const val: string = (dragContainer[property] ?? '').toString() as unknown as string;
         if (val.endsWith('%')) {
             setTypeOfValue('%');
         } else if (val.endsWith('px')) {
@@ -45,7 +45,7 @@ export function NumericalPercentagePropertyEditor(props: {
         if (selectedDragContainerItem === undefined) {
             return '';
         }
-        const val: string = (selectedDragContainerItem[property] ?? '') as unknown as string;
+        const val: string = (selectedDragContainerItem[property] ?? '').toString();
         if (val.endsWith('%')) {
             return parseInt(val.replace('%', ''))
         }

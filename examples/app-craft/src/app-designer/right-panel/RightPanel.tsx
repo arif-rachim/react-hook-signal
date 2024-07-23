@@ -6,6 +6,9 @@ import {NumericalPercentagePropertyEditor} from "../property-editor/NumericalPer
 import {ZodFunction, ZodType, ZodTypeAny} from "zod";
 import {PropertyCallbackItemRenderer} from "../property-callback-item-renderer/PropertyCallbackItemRenderer.tsx";
 import {BORDER} from "../Border.ts";
+import {
+    VerticalHorizontalAlignmentPropertyEditor
+} from "../property-editor/VerticalHorizontalAlignmentPropertyEditor.tsx";
 
 export function RightPanel() {
     const context = useContext(AppDesignerContext)
@@ -19,6 +22,8 @@ export function RightPanel() {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
         const elementName = selectedDragContainer?.type;
+        const isContainer = ['vertical','horizontal'].includes(elementName ?? '');
+        const isCustomElement = elementName && elementName in elements
         const result: Array<ReactNode> = [];
         result.push(<CollapsibleLabelContainer label={'Size'} key={'height-width'}
                                                styleContent={{flexDirection: 'row', gap: 10}}>
@@ -29,42 +34,53 @@ export function RightPanel() {
         </CollapsibleLabelContainer>);
         result.push(<CollapsibleLabelContainer label={'Padding'} key={'padding-editor'}>
             <div style={{display: 'flex', justifyContent: 'center'}}>
-                <NumericalPercentagePropertyEditor property={'paddingTop'} label={'pT'} key={'padding-top'}
+                <NumericalPercentagePropertyEditor property={'paddingTop'} label={'pT'}
                                                    style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
             </div>
             <div style={{display: 'flex'}}>
-                <NumericalPercentagePropertyEditor property={'paddingLeft'} label={'pL'} key={'padding-left'}
+                <NumericalPercentagePropertyEditor property={'paddingLeft'} label={'pL'}
                                                    style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
                 <div style={{flexGrow: 1, width: '100%'}}></div>
-                <NumericalPercentagePropertyEditor property={'paddingRight'} label={'pR'} key={'padding-right'}
+                <NumericalPercentagePropertyEditor property={'paddingRight'} label={'pR'}
                                                    style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
             </div>
             <div style={{display: 'flex', justifyContent: 'center'}}>
                 <NumericalPercentagePropertyEditor property={'paddingBottom'} label={'pB'}
-                                                   key={'padding-bottom'} style={{width: 80, flexShrink: 0}}
+                                                   style={{width: 80, flexShrink: 0}}
                                                    styleLabel={{display: 'none'}}/>
             </div>
         </CollapsibleLabelContainer>)
         result.push(<CollapsibleLabelContainer label={'Margin'} key={'margin-editor'}>
             <div style={{display: 'flex', justifyContent: 'center'}}>
-                <NumericalPercentagePropertyEditor property={'marginTop'} label={'mT'} key={'margin-top'}
+                <NumericalPercentagePropertyEditor property={'marginTop'} label={'mT'}
                                                    style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
             </div>
             <div style={{display: 'flex'}}>
-                <NumericalPercentagePropertyEditor property={'marginLeft'} label={'mL'} key={'margin-left'}
+                <NumericalPercentagePropertyEditor property={'marginLeft'} label={'mL'}
                                                    style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
                 <div style={{flexGrow: 1}}></div>
-                <NumericalPercentagePropertyEditor property={'marginRight'} label={'mR'} key={'margin-right'}
+                <NumericalPercentagePropertyEditor property={'marginRight'} label={'mR'}
                                                    style={{width: 80, flexShrink: 0}} styleLabel={{display: 'none'}}/>
             </div>
             <div style={{display: 'flex', justifyContent: 'center'}}>
                 <NumericalPercentagePropertyEditor property={'marginBottom'} label={'mB'}
-                                                   key={'margin-bottom'} style={{width: 80, flexShrink: 0}}
+                                                   style={{width: 80, flexShrink: 0}}
                                                    styleLabel={{display: 'none'}}/>
             </div>
         </CollapsibleLabelContainer>)
 
-        if (elementName && elementName in elements) {
+        if(isContainer){
+            result.push(<CollapsibleLabelContainer label={'Gap'} key={'gap-editor'}>
+                <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} />
+            </CollapsibleLabelContainer>)
+            result.push(<CollapsibleLabelContainer label={'Alignment'} key={'alignment-editor'} styleContent={{flexDirection: 'row', gap: 10}}>
+                <VerticalHorizontalAlignmentPropertyEditor property={'verticalAlign'} label={'Vertical'} dataSource={['','top','center','bottom']} />
+                <VerticalHorizontalAlignmentPropertyEditor property={'horizontalAlign'} label={'Horizontal'} dataSource={['','left','center','right']} />
+            </CollapsibleLabelContainer>)
+        }
+
+
+        if (isCustomElement) {
             const element = elements[elementName];
             const props = element.property;
             let property: Record<string, unknown> = {};

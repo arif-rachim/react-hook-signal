@@ -40,6 +40,7 @@ export function App() {
                             }
                         }}
                         {...properties}
+                        style={{...properties.style,borderRadius:20}}
                     />
                 }
             })

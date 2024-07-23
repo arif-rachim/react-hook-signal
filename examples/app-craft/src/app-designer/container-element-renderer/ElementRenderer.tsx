@@ -1,9 +1,9 @@
-import {Container} from "./AppDesigner.tsx";
+import {Container} from "../AppDesigner.tsx";
 import {useContext, useEffect, useState} from "react";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {ZodFunction} from "zod";
-import {ElementProps} from "./LayoutBuilderProps.ts";
+import {ElementProps} from "../LayoutBuilderProps.ts";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -21,7 +21,7 @@ import {ElementProps} from "./LayoutBuilderProps.ts";
  * - Lastly, it renders the appropriate Component based on the container type, using componentProps.
  *
  */
-export function RenderContainer(props: { container: Container,elementProps:ElementProps }) {
+export function ElementRenderer(props: { container: Container,elementProps:ElementProps }) {
     const {container,elementProps} = props;
     const {elements: elementsLib, allVariablesSignalInstance, allVariablesSignal} = useContext(AppDesignerContext);
     const {component: Component} = elementsLib[container.type];
