@@ -1,7 +1,7 @@
 import {IconType} from "react-icons";
-import {FC as ReactFC, HTMLAttributes} from "react";
+import {CSSProperties, ForwardRefRenderFunction} from "react";
 import {Container, Variable} from "./AppDesigner.tsx";
-import {z, ZodType} from "zod";
+import {z, ZodRawShape} from "zod";
 
 /**
  * Represents the props for the LayoutBuilder component.
@@ -13,23 +13,36 @@ export type LayoutBuilderProps = {
 }
 
 // InferType will use the TypeMap to infer the actual types
-type InferType<T extends ZodType> = {
-    [k in keyof z.infer<T>]: z.infer<T>[k];
+type InferType<T extends ZodRawShape> = {
+    [k in keyof T]: z.infer<T[k]>;
 };
+export type CancellableEvent = { stopPropagation: () => void, preventDefault: () => void };
+export type BasicDragEvent = CancellableEvent & { dataTransfer: DataTransfer|null, clientX: number, clientY: number };
+export type ElementProps = {
+    draggable: boolean,
+    style: CSSProperties,
+    onDragStart: (event: BasicDragEvent) => void,
+    onDragOver: (event: BasicDragEvent) => void,
+    onDrop: (event: BasicDragEvent) => void,
+    onDragEnd: (event: BasicDragEvent) => void,
+    onMouseOver: (event: CancellableEvent) => void,
+    onClick: (event: CancellableEvent) => void,
+    ['data-element-id']: string
+}
 
-export type ElementProps = Pick<HTMLAttributes<HTMLElement>, 'draggable'|'style'|'onDragStart'|'onDragOver'|'onDrop'|'onDragEnd'|'onMouseOver'|'onClick'> & {['data-element-id']:string}
-
-interface Element<T extends ZodType = ZodType> {
+interface Element<T extends ZodRawShape = ZodRawShape> {
     icon: IconType,
-    component: ReactFC<(InferType<T> & {properties:ElementProps})>,
+    // eslint-disable-next-line
+    component: ForwardRefRenderFunction<any, (InferType<T> & { style: CSSProperties })>,
     property: T
 }
 
-export function element<T extends ZodType>(props: {
+export function element<T extends ZodRawShape>(props: {
     property: T,
     icon: IconType,
-    component: ReactFC<InferType<T> & {properties:ElementProps}>
     // eslint-disable-next-line
-}):any {
+    component: ForwardRefRenderFunction<any, (InferType<T> & { style: CSSProperties })>,
+    // eslint-disable-next-line
+}): any {
     return props;
 }

@@ -38,7 +38,18 @@ export function ContainerRenderer(props: { elementProps: ElementProps, container
         }
         setElements(result);
     });
-    return <div {...elementProps}>
+    const {onDrop,onClick,onDragEnd,onDragOver,onDragStart,onMouseOver,style,draggable} = elementProps;
+    return <div
+        draggable={draggable}
+        style={style}
+        onMouseOver={onMouseOver}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onClick={onClick}
+        onDrop={onDrop}
+        data-element-id={elementProps["data-element-id"]}
+    >
         {elements}
     </div>
 }

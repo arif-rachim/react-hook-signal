@@ -1,19 +1,12 @@
 import {useSignal, useSignalEffect} from "react-hook-signal";
-import {
-    CSSProperties,
-    type DragEvent as ReactDragEvent,
-    type MouseEvent as ReactMouseEvent,
-    useContext,
-    useEffect,
-    useState
-} from "react";
+import {CSSProperties, useContext, useEffect, useState} from "react";
 import {useRefresh} from "../../utils/useRefresh.ts";
 import {Container} from "../AppDesigner.tsx";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {dropZones} from "../dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
 import {BORDER} from "../Border.ts";
-import {ElementProps} from "../LayoutBuilderProps.ts";
+import {BasicDragEvent, CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
 import {ContainerRenderer} from "./ContainerRenderer.tsx";
 import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
 import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
@@ -115,18 +108,48 @@ export function DraggableContainerElement(props: { container: Container }) {
         clientY?: number
     }>({clientX: 0, clientY: 0})
 
-    function onDragStart(event: ReactDragEvent) {
+    function onDragStart(event: BasicDragEvent) {
         event.stopPropagation();
+        if(event.dataTransfer === undefined || event.dataTransfer === null) {
+            return;
+        }
         event.dataTransfer.setData('text/plain', containerSignal.get().id);
     }
 
-    function onDragOver(event: ReactDragEvent) {
+    function onDragOver(event: BasicDragEvent) {
+        event.stopPropagation()
         event.preventDefault();
-        event.stopPropagation();
         mousePosition.set(event);
     }
 
-    function onMouseOver(event: ReactMouseEvent<HTMLDivElement>) {
+    function onDrop(event: BasicDragEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        if(event.dataTransfer === null || event.dataTransfer === undefined){
+            return;
+        }
+        const id = event.dataTransfer.getData('text');
+        const keys = Object.keys(elementsLib);
+        if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
+            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal);
+        } else if (id) {
+            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal);
+        }
+    }
+
+    function onDragEnd() {
+        activeDropZoneIdSignal.set('');
+        selectedDragContainerIdSignal.set('');
+    }
+
+    function onSelected(event: CancellableEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        selectedDragContainerIdSignal.set(containerSignal.get().id);
+        activeDropZoneIdSignal.set('');
+    }
+
+    function onMouseOver(event: CancellableEvent) {
         event.preventDefault();
         event.stopPropagation();
         hoveredDragContainerIdSignal.set(containerSignal.get()?.id);
@@ -174,29 +197,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         activeDropZoneIdSignal.set(nearestDropZoneId);
     })
 
-    function onDrop(event: ReactDragEvent) {
-        event.stopPropagation();
-        event.preventDefault();
-        const id = event.dataTransfer.getData('text');
-        const keys = Object.keys(elementsLib);
-        if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
-            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal);
-        } else if (id) {
-            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal);
-        }
-    }
 
-    function onDragEnd() {
-        activeDropZoneIdSignal.set('');
-        selectedDragContainerIdSignal.set('');
-    }
-
-    function onSelected(event: ReactMouseEvent<HTMLDivElement>) {
-        event.preventDefault();
-        event.stopPropagation();
-        selectedDragContainerIdSignal.set(containerSignal.get().id);
-        activeDropZoneIdSignal.set('');
-    }
 
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
@@ -264,6 +265,4 @@ export function DraggableContainerElement(props: { container: Container }) {
     }
 
     return <ContainerRenderer container={containerProp} elementProps={elementProps}/>
-
 }
-

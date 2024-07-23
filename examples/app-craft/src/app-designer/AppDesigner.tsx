@@ -149,56 +149,50 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                 } catch (err) {
                     console.error(err);
                 }
-            }
-            if (v.type === 'computed') {
-                try {
-                    const dependencies = (v.dependency ?? []).map(d => {
-                        const name = allVariablesSignal.get().find(i => i.id === d)?.name;
-                        const instance = variablesInstance.find(i => i.id === d)?.instance;
-                        if (name === undefined || instance === undefined) {
-                            return false;
-                        }
-                        return {name, instance}
-                    }).filter(f => f !== false) as Array<{ name: string, instance: AnySignal<unknown> }>;
-                    const params = ['module', ...dependencies.map(d => d.name), v.functionCode];
-                    const init = new Function(...params);
+            }else{
 
-                    const computed = new Signal.Computed(() => {
-                        for (const dep of dependencies) {
-                            dep.instance.get();
-                        }
-                        const module: { exports: unknown } = {exports: undefined};
-                        const instances = [module, ...dependencies.map(d => d.instance)]
-                        init.call(null, ...instances);
-                        return module.exports;
-                    });
-                    variablesInstance.push({id: v.id, instance: computed});
-                } catch (err) {
-                    console.error(err);
+                const dependencies = (v.dependency ?? []).map(d => {
+                    const name = allVariablesSignal.get().find(i => i.id === d)?.name;
+                    const instance = variablesInstance.find(i => i.id === d)?.instance;
+                    if (name === undefined || instance === undefined) {
+                        return false;
+                    }
+                    return {name, instance}
+                }).filter(f => f !== false) as Array<{ name: string, instance: AnySignal<unknown> }>;
+                if (v.type === 'computed') {
+                    try {
+                        const params = ['module', ...dependencies.map(d => d.name), v.functionCode];
+                        const init = new Function(...params);
+                        const computed = new Signal.Computed(() => {
+                            for (const dep of dependencies) {
+                                dep.instance.get();
+                            }
+                            const module: { exports: unknown } = {exports: undefined};
+                            const instances = [module, ...dependencies.map(d => d.instance)]
+                            init.call(null, ...instances);
+                            return module.exports;
+                        });
+                        variablesInstance.push({id: v.id, instance: computed});
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+                if (v.type === 'effect') {
+                    try {
+                        const params = [...dependencies.map(d => d.name), v.functionCode];
+                        const init = new Function(...params);
+                        const destructor = effect(() => {
+                            dependencies.forEach(d => d.instance.get());
+                            const instances = [...dependencies.map(d => d.instance)]
+                            init.call(null, ...instances);
+                        });
+                        destructorCallbacks.push(destructor);
+                    } catch (err) {
+                        console.error(err);
+                    }
                 }
             }
-            if (v.type === 'effect') {
-                try {
-                    const dependencies = (v.dependency ?? []).map(d => {
-                        const name = allVariablesSignal.get().find(i => i.id === d)?.name;
-                        const instance = variablesInstance.find(i => i.id === d)?.instance;
-                        if (name === undefined || instance === undefined) {
-                            return false;
-                        }
-                        return {name, instance}
-                    }).filter(f => f !== false) as Array<{ name: string, instance: AnySignal<unknown> }>;
-                    const params = [...dependencies.map(d => d.name), v.functionCode];
-                    const init = new Function(...params);
-                    const destructor = effect(() => {
-                        dependencies.forEach(d => d.instance.get());
-                        const instances = [...dependencies.map(d => d.instance)]
-                        init.call(null, ...instances);
-                    });
-                    destructorCallbacks.push(destructor);
-                } catch (err) {
-                    console.error(err);
-                }
-            }
+
         }
         allVariablesSignalInstance.set(variablesInstance);
         return () => {

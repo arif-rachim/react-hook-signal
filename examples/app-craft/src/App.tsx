@@ -22,16 +22,17 @@ export function App() {
         <AppDesigner elements={{
             input: element({
                 icon: MdInput,
-                property: z.object({
+                property: {
                     value: z.string(),
                     onChange: z.function().args(z.string()).returns(z.promise(z.void())),
-                }),
-                component: (props) => {
-                    const {value, onChange, properties} = props;
-                    if(properties.style?.border === 'unset'){
-                        properties.style.border = BORDER
+                },
+                component: (props,ref) => {
+                    const {value, onChange, style} = props;
+                    if(style?.border === 'unset'){
+                        style.border = BORDER
                     }
                     return <notifiable.input
+                        ref={ref}
                         value={value}
                         onChange={async (e) => {
                             const val = e.target.value;
@@ -39,8 +40,7 @@ export function App() {
                                 await onChange(val);
                             }
                         }}
-                        {...properties}
-                        style={{...properties.style,borderRadius:20}}
+                        style={{...style,borderRadius:20}}
                     />
                 }
             })

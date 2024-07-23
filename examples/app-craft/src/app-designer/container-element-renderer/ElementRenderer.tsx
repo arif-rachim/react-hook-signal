@@ -1,9 +1,9 @@
 import {Container} from "../AppDesigner.tsx";
-import {useContext, useEffect, useState} from "react";
+import {forwardRef, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {ZodFunction} from "zod";
-import {ElementProps} from "../LayoutBuilderProps.ts";
+import {CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -21,11 +21,18 @@ import {ElementProps} from "../LayoutBuilderProps.ts";
  * - Lastly, it renders the appropriate Component based on the container type, using componentProps.
  *
  */
-export function ElementRenderer(props: { container: Container,elementProps:ElementProps }) {
-    const {container,elementProps} = props;
+export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
+    const {container, elementProps} = props;
     const {elements: elementsLib, allVariablesSignalInstance, allVariablesSignal} = useContext(AppDesignerContext);
-    const {component: Component} = elementsLib[container.type];
+    const {component} = elementsLib[container.type];
+    const ref = useRef<HTMLElement>(null);
     const propertiesSignal = useSignal(container.properties);
+    const propsRef = useRef(elementProps);
+    propsRef.current = elementProps;
+    const Component = useMemo(() => {
+        return forwardRef(component)
+    }, [component])
+
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);
@@ -77,5 +84,36 @@ export function ElementRenderer(props: { container: Container,elementProps:Eleme
             destroyerCallbacks.forEach(d => d());
         }
     });
-    return <Component key={container?.id} {...componentProps} properties={elementProps} />
+    useEffect(() => {
+
+        const onDragStart = (event: Event) => propsRef.current.onDragStart(event as DragEvent);
+        const onDragOver = (event: Event) => propsRef.current.onDragOver(event as DragEvent);
+        const onDrop = (event: Event) => propsRef.current.onDrop(event as DragEvent);
+        const onDragEnd = (event: Event) => propsRef.current.onDragEnd(event as DragEvent);
+        const onMouseOver = (event: Event) => propsRef.current.onMouseOver(event as CancellableEvent);
+        const onClick = (event: Event) => propsRef.current.onClick(event as CancellableEvent);
+
+        const element = ref.current;
+        if (element) {
+            element.addEventListener('dragstart', onDragStart);
+            element.addEventListener('dragover', onDragOver);
+            element.addEventListener('drop', onDrop);
+            element.addEventListener('dragend', onDragEnd);
+            element.addEventListener('mouseover', onMouseOver);
+            element.addEventListener('click', onClick);
+            element.setAttribute('data-element-id', propsRef.current["data-element-id"]);
+            element.setAttribute('draggable', propsRef.current.draggable.toString());
+        }
+        return () => {
+            if (element) {
+                element.removeEventListener('dragstart', onDragStart);
+                element.removeEventListener('dragover', onDragOver);
+                element.removeEventListener('drop', onDrop);
+                element.removeEventListener('dragend', onDragEnd);
+                element.removeEventListener('mouseover', onMouseOver);
+                element.removeEventListener('click', onClick);
+            }
+        }
+    }, [Component]);
+    return <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
 }

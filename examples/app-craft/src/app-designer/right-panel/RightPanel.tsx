@@ -3,7 +3,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {NumericalPercentagePropertyEditor} from "../property-editor/NumericalPercentagePropertyEditor.tsx";
-import {ZodFunction, ZodType, ZodTypeAny} from "zod";
+import {ZodFunction, ZodType} from "zod";
 import {PropertyCallbackItemRenderer} from "../property-callback-item-renderer/PropertyCallbackItemRenderer.tsx";
 import {BORDER} from "../Border.ts";
 import {
@@ -84,15 +84,11 @@ export function RightPanel() {
 
         if (isCustomElement) {
             const element = elements[elementName];
-            const props = element.property;
-            let property: Record<string, unknown> = {};
-            if (isShapeable(props)) {
-                property = props.shape;
-            }
+            const property = element.property;
             const callbacks: Array<string> = [];
             const attributes: Array<string> = [];
             for (const propKey of Object.keys(property)) {
-                const type = property[propKey] as ZodTypeAny;
+                const type = property[propKey];
                 const isZodFunction = type instanceof ZodFunction;
                 if (isZodFunction) {
                     callbacks.push(propKey)
@@ -126,9 +122,4 @@ export function RightPanel() {
         }}>
         {propertyEditors}
     </notifiable.div>;
-}
-
-
-function isShapeable(value: unknown): value is { shape: Record<string, unknown> } {
-    return value !== null && value !== undefined && typeof value === 'object' && 'shape' in value
 }
