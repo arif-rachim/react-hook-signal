@@ -42,7 +42,7 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<C
                     })
                 }}>
                 {dataSource.map(key => {
-                    return <option value={key}>{key}</option>
+                    return <option value={key} key={key}>{key}</option>
                 })}
             </select>
         </LabelContainer>
