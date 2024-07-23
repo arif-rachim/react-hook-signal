@@ -9,6 +9,9 @@ import {BORDER} from "../Border.ts";
 import {
     VerticalHorizontalAlignmentPropertyEditor
 } from "../property-editor/VerticalHorizontalAlignmentPropertyEditor.tsx";
+import {
+    isVerticalOrHorizontal
+} from "../container-element-renderer/draggable-container-element-tools/isVerticalOrHorizontal.ts";
 
 export function RightPanel() {
     const context = useContext(AppDesignerContext)
@@ -22,7 +25,7 @@ export function RightPanel() {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         const selectedDragContainer = allContainersSignal.get().find(i => i.id === selectedDragContainerId);
         const elementName = selectedDragContainer?.type;
-        const isContainer = ['vertical','horizontal'].includes(elementName ?? '');
+        const isContainer = isVerticalOrHorizontal(selectedDragContainer);
         const isCustomElement = elementName && elementName in elements
         const result: Array<ReactNode> = [];
         result.push(<CollapsibleLabelContainer label={'Size'} key={'height-width'}
@@ -78,7 +81,6 @@ export function RightPanel() {
                 <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} style={{width: '100%', flexShrink: 0}}/>
             </CollapsibleLabelContainer>)
         }
-
 
         if (isCustomElement) {
             const element = elements[elementName];

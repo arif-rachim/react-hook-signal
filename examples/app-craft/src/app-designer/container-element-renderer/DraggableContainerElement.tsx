@@ -1,10 +1,8 @@
-import {Signal} from "signal-polyfill";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {
     CSSProperties,
     type DragEvent as ReactDragEvent,
     type MouseEvent as ReactMouseEvent,
-    ReactNode,
     useContext,
     useEffect,
     useState
@@ -12,75 +10,77 @@ import {
 import {useRefresh} from "../../utils/useRefresh.ts";
 import {Container} from "../AppDesigner.tsx";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {guid} from "../../utils/guid.ts";
 import {dropZones} from "../dropZones.ts";
-import {DropZone} from "../DropZone.tsx";
 import {ElementRenderer} from "./ElementRenderer.tsx";
 import {BORDER} from "../Border.ts";
 import {ElementProps} from "../LayoutBuilderProps.ts";
+import {ContainerRenderer} from "./ContainerRenderer.tsx";
+import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
+import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
 
 const FEATHER = 5;
 
-function justifyContent(container: Container):CSSProperties["justifyContent"] {
-    if(container.type === 'vertical'){
-        if(container.verticalAlign === 'top'){
+function justifyContent(container: Container): CSSProperties["justifyContent"] {
+    if (container.type === 'vertical') {
+        if (container.verticalAlign === 'top') {
             return 'flex-start';
         }
-        if(container.verticalAlign === 'center'){
+        if (container.verticalAlign === 'center') {
             return 'center';
         }
-        if(container.verticalAlign === 'bottom'){
+        if (container.verticalAlign === 'bottom') {
             return 'flex-end';
         }
-        if(container.verticalAlign === ''){
+        if (container.verticalAlign === '') {
             return '';
         }
     }
-    if(container.type === 'horizontal'){
-        if(container.horizontalAlign === 'left'){
+    if (container.type === 'horizontal') {
+        if (container.horizontalAlign === 'left') {
             return 'flex-start';
         }
-        if(container.horizontalAlign === 'center'){
+        if (container.horizontalAlign === 'center') {
             return 'center';
         }
-        if(container.horizontalAlign === 'right'){
+        if (container.horizontalAlign === 'right') {
             return 'flex-end';
         }
-        if(container.horizontalAlign === ''){
+        if (container.horizontalAlign === '') {
             return '';
         }
     }
     return ''
 }
-function alignItems(container:Container):CSSProperties["alignItems"] {
-    if(container.type === 'vertical'){
-        if(container.horizontalAlign === 'left'){
+
+function alignItems(container: Container): CSSProperties["alignItems"] {
+    if (container.type === 'vertical') {
+        if (container.horizontalAlign === 'left') {
             return 'flex-start';
         }
-        if(container.horizontalAlign === 'center'){
+        if (container.horizontalAlign === 'center') {
             return 'center';
         }
-        if(container.horizontalAlign === 'right'){
+        if (container.horizontalAlign === 'right') {
             return 'flex-end';
         }
-        if(container.horizontalAlign === ''){
+        if (container.horizontalAlign === '') {
             return '';
         }
     }
-    if(container.type === 'horizontal'){
-        if(container.verticalAlign === 'top'){
+    if (container.type === 'horizontal') {
+        if (container.verticalAlign === 'top') {
             return 'flex-start';
         }
-        if(container.verticalAlign === 'center'){
+        if (container.verticalAlign === 'center') {
             return 'center';
         }
-        if(container.verticalAlign === 'bottom'){
+        if (container.verticalAlign === 'bottom') {
             return 'flex-end';
         }
-        if(container.verticalAlign === ''){
+        if (container.verticalAlign === '') {
             return '';
         }
     }
@@ -90,14 +90,10 @@ function alignItems(container:Container):CSSProperties["alignItems"] {
 /**
  * DraggableContainer is a component used to display containers that can be dragged and dropped within a design interface.
  */
-export function DraggableContainerElement(props: {
-    allContainersSignal: Signal.State<Array<Container>>,
-    container: Container
-}) {
-    const {container: containerProp, allContainersSignal} = props;
+export function DraggableContainerElement(props: { container: Container }) {
+    const {container: containerProp} = props;
     const containerSignal = useSignal(containerProp);
-    const [elements,setElements] = useState<ReactNode[]>([]);
-    const [computedStyle,setComputedStyle] = useState<CSSProperties>({})
+    const [computedStyle, setComputedStyle] = useState<CSSProperties>({})
     useEffect(() => {
         containerSignal.set(containerProp);
     }, [containerSignal, containerProp]);
@@ -106,7 +102,8 @@ export function DraggableContainerElement(props: {
         activeDropZoneIdSignal,
         hoveredDragContainerIdSignal,
         selectedDragContainerIdSignal,
-        uiDisplayModeSignal
+        uiDisplayModeSignal,
+        allContainersSignal
     } = useContext(AppDesignerContext);
     const {refresh} = useRefresh('DraggableContainer');
     useSignalEffect(() => {
@@ -203,34 +200,9 @@ export function DraggableContainerElement(props: {
 
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
-        const container: Container | undefined = containerSignal.get();
-        const children = container?.children ?? [];
-
-        const isContainer = container?.type === 'vertical' || container?.type === 'horizontal'
-        const result: Array<ReactNode> = [];
-        if (isContainer) {
-            if (mode === 'design') {
-                result.push(<DropZone precedingSiblingId={''} key={`drop-zone-root-${container?.id}`}
-                                      parentContainerId={container?.id ?? ''}/>)
-            }
-            for (let i = 0; i < children?.length; i++) {
-                const childId = children[i];
-                const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-                result.push(<DraggableContainerElement allContainersSignal={allContainersSignal} container={childContainer}
-                                                       key={childId}/>)
-                if (mode === 'design') {
-                    result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
-                                          parentContainerId={container?.id ?? ''}/>);
-                }
-            }
-        }
-        setElements(result);
-    });
-
-
-    useSignalEffect(() => {
-        const mode = uiDisplayModeSignal.get();
         const container: Container = containerSignal.get();
+        const isFocused = selectedDragContainerIdSignal.get() === container?.id;
+        const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = container?.parent === '';
         const styleFromSignal = {
             border: mode === 'design' ? BORDER : 'unset',
@@ -256,11 +228,10 @@ export function DraggableContainerElement(props: {
 
             gap: container?.gap,
 
-            justifyContent : justifyContent(container),
+            justifyContent: justifyContent(container),
             alignItems: alignItems(container),
         };
-        const isFocused = selectedDragContainerIdSignal.get() === container?.id;
-        const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
+
         if (isRoot) {
             setComputedStyle(styleFromSignal as CSSProperties)
             return;
@@ -275,135 +246,24 @@ export function DraggableContainerElement(props: {
         }
         setComputedStyle(styleFromSignal as CSSProperties)
     });
-    const elementProps:ElementProps = {
-        draggable:true,
-        style:computedStyle,
+
+    const elementProps: ElementProps = {
+        draggable: true,
+        style: computedStyle,
         onDragStart,
         onDragOver,
         onDrop,
         onDragEnd,
         onMouseOver,
-        onClick:onSelected,
-        ['data-element-id'] : props.container?.id
+        onClick: onSelected,
+        ['data-element-id']: props.container?.id
     };
 
-    if(elementsLib[containerProp?.type]){
-        return <ElementRenderer key={containerProp?.id} container={containerProp} elementProps={elementProps} />
+    if (elementsLib[containerProp?.type]) {
+        return <ElementRenderer container={containerProp} elementProps={elementProps}/>
     }
 
-    return <div {...elementProps}>
-        {elements}
-    </div>
+    return <ContainerRenderer container={containerProp} elementProps={elementProps}/>
 
 }
 
-
-/**
- * Adds a new container to the list of all containers.
- */
-function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, config: {
-    type: 'vertical' | 'horizontal' | string
-}, dropZoneId: Signal.State<string>) {
-    const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
-    const newContainer: Container = {
-        id: guid(),
-        type: config.type,
-
-        children: [],
-        parent: parentContainerId,
-        width: '',
-        height: '',
-
-        minWidth: '24px',
-        minHeight: '24px',
-
-        paddingTop: '',
-        paddingRight: '',
-        paddingBottom: '',
-        paddingLeft: '',
-
-        marginTop: '',
-        marginRight: '',
-        marginBottom: '',
-        marginLeft: '',
-
-        // this is specific only for container
-        gap: '',
-        verticalAlign:'',
-        horizontalAlign:'',
-
-        properties: {}
-    }
-
-    const newAllContainers = [...allContainersSignal.get().map(n => {
-        if (n.id === parentContainerId) {
-            if (insertionIndex >= 0) {
-                const newChildren = [...n.children]
-                newChildren.splice(insertionIndex + 1, 0, newContainer.id);
-                return {...n, children: newChildren}
-            } else {
-                return {...n, children: [newContainer.id, ...n.children]}
-            }
-        }
-        return n;
-    }), newContainer];
-    allContainersSignal.set(newAllContainers);
-}
-
-/**
- * Swaps the location of a container within a list of containers based on the provided parameters.
- */
-function swapContainerLocation(allContainersSignal: Signal.State<Array<Container>>, containerToBeSwapped: string, activeDropZoneIdSignal: Signal.State<string>) {
-    const activeDropZoneId = activeDropZoneIdSignal.get();
-    const dropZoneElement = document.getElementById(activeDropZoneId);
-    if (dropZoneElement === null) {
-        return;
-    }
-    const {precedingSiblingId, parentContainerId} = dropZones.find(s => s.id === activeDropZoneId)!;
-    const allContainers = [...allContainersSignal.get()];
-    const targetContainerIndex = allContainers.findIndex(i => i.id === containerToBeSwapped)!;
-    const targetContainer = allContainers[targetContainerIndex];
-    const currentParentContainerIndex = allContainers.findIndex(i => i.id === targetContainer.parent)!;
-    const currentParentContainer = allContainers[currentParentContainerIndex];
-    const newParentContainerIndex = allContainers.findIndex(i => i.id === parentContainerId)!;
-    const newParentContainer = allContainers[newParentContainerIndex];
-
-    // here we remove the parent children position
-    currentParentContainer.children = currentParentContainer.children.filter(s => s !== targetContainer.id);
-    // now we have new parent
-    targetContainer.parent = parentContainerId;
-    const placeAfterIndex = newParentContainer.children.indexOf(precedingSiblingId);
-
-    if (placeAfterIndex >= 0) {
-        newParentContainer.children.splice(placeAfterIndex + 1, 0, containerToBeSwapped);
-        newParentContainer.children = [...newParentContainer.children];
-    } else {
-        newParentContainer.children.unshift(containerToBeSwapped);
-    }
-
-    allContainers.splice(targetContainerIndex, 1, {...targetContainer});
-    allContainers.splice(currentParentContainerIndex, 1, {...currentParentContainer});
-    allContainers.splice(newParentContainerIndex, 1, {...newParentContainer});
-    allContainersSignal.set(allContainers);
-    activeDropZoneIdSignal.set('');
-}
-
-/**
- * Returns the container ID and insertion index for placing a container in a drop zone.
- *
- * @returns {object} - An object containing the parent container ID and the insertion index.
- * - parentContainerId: The ID of the parent container.
- * - insertionIndex: The index where the container should be inserted.
- * If the drop zone element is not found, an empty string for parentContainerId and 0 for insertionIndex are returned.
- */
-function getContainerIdAndIndexToPlaced(allContainersSignal: Signal.State<Array<Container>>, dropZoneId: Signal.State<string>) {
-    const dropZoneElementId = dropZoneId.get();
-    const dropZoneElement = document.getElementById(dropZoneElementId);
-    if (dropZoneElement === null) {
-        return {parentContainerId: '', insertionIndex: 0};
-    }
-    const {parentContainerId, precedingSiblingId} = dropZones.find(s => s.id === dropZoneElementId)!;
-    const container = allContainersSignal.get().find(i => i.id === parentContainerId);
-    const insertionIndex = container?.children.indexOf(precedingSiblingId ?? '') ?? 0;
-    return {parentContainerId, insertionIndex};
-}
