@@ -128,7 +128,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const renderedElements = useComputed(() => {
         const container = allContainersSignal.get().find(item => item.parent === '');
         if (container) {
-            return <DraggableContainerElement allContainersSignal={allContainersSignal} container={container}/>
+            return <DraggableContainerElement container={container}/>
         }
         return <></>
     });
