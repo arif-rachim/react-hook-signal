@@ -55,8 +55,7 @@ export function NumericalPercentagePropertyEditor(props: {
         return selectedDragContainerItem[property] ?? ''
     }
 
-    return <div style={{display: 'flex', flexDirection: 'row', ...props.style}}>
-        <LabelContainer label={label} styleLabel={{width: 100, ...props.styleLabel}}>
+    return  <LabelContainer label={label} style={props.style} styleLabel={{width: 100, ...props.styleLabel}}>
             <notifiable.input style={{
                 width: '100%',
                 border: BORDER,
@@ -110,5 +109,4 @@ export function NumericalPercentagePropertyEditor(props: {
                 <option value={'%'}>%</option>
             </select>
         </LabelContainer>
-    </div>
 }

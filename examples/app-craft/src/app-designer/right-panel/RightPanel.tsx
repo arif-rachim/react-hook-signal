@@ -70,12 +70,12 @@ export function RightPanel() {
         </CollapsibleLabelContainer>)
 
         if(isContainer){
-            result.push(<CollapsibleLabelContainer label={'Gap'} key={'gap-editor'}>
-                <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} />
-            </CollapsibleLabelContainer>)
-            result.push(<CollapsibleLabelContainer label={'Alignment'} key={'alignment-editor'} styleContent={{flexDirection: 'row', gap: 10}}>
-                <VerticalHorizontalAlignmentPropertyEditor property={'verticalAlign'} label={'Vertical'} dataSource={['','top','center','bottom']} />
-                <VerticalHorizontalAlignmentPropertyEditor property={'horizontalAlign'} label={'Horizontal'} dataSource={['','left','center','right']} />
+            result.push(<CollapsibleLabelContainer label={'Alignment'} key={'alignment-editor'} styleContent={{gap:10}} >
+                <div style={{display:'flex',gap:10}}>
+                    <VerticalHorizontalAlignmentPropertyEditor property={'verticalAlign'} style={{width: '50%'}} label={'Vertical'} dataSource={['','top','center','bottom']} />
+                    <VerticalHorizontalAlignmentPropertyEditor property={'horizontalAlign'} style={{width: '50%'}} label={'Horizontal'} dataSource={['','left','center','right']} />
+                </div>
+                <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} style={{width: '100%', flexShrink: 0}}/>
             </CollapsibleLabelContainer>)
         }
 

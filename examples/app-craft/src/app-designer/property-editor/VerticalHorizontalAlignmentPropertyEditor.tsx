@@ -26,8 +26,7 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<C
         setValue(container[property])
     })
 
-    return <div style={{display: 'flex', flexDirection: 'row', ...props.style}}>
-        <LabelContainer label={label} styleLabel={{width: 100, ...props.styleLabel}}>
+    return <LabelContainer label={label} style={props.style} styleLabel={{width: 100, ...props.styleLabel}}>
             <select
                 style={{
                     width: '100%',
@@ -47,5 +46,4 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<C
                 })}
             </select>
         </LabelContainer>
-    </div>
 }
