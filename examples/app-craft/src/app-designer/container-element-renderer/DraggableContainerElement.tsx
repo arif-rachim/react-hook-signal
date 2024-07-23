@@ -16,8 +16,8 @@ const HORIZONTAL = 'horizontal';
 
 const FEATHER = 5;
 
-function justifyContent(container: Container): CSSProperties["justifyContent"] {
-    if (container.type === 'vertical') {
+function justifyContent(container?: Container): CSSProperties["justifyContent"] {
+    if (container && container.type === 'vertical') {
         if (container.verticalAlign === 'top') {
             return 'flex-start';
         }
@@ -31,7 +31,7 @@ function justifyContent(container: Container): CSSProperties["justifyContent"] {
             return '';
         }
     }
-    if (container.type === 'horizontal') {
+    if (container && container.type === 'horizontal') {
         if (container.horizontalAlign === 'left') {
             return 'flex-start';
         }
@@ -48,8 +48,8 @@ function justifyContent(container: Container): CSSProperties["justifyContent"] {
     return ''
 }
 
-function alignItems(container: Container): CSSProperties["alignItems"] {
-    if (container.type === 'vertical') {
+function alignItems(container?: Container): CSSProperties["alignItems"] {
+    if (container && container.type === 'vertical') {
         if (container.horizontalAlign === 'left') {
             return 'flex-start';
         }
@@ -63,7 +63,7 @@ function alignItems(container: Container): CSSProperties["alignItems"] {
             return '';
         }
     }
-    if (container.type === 'horizontal') {
+    if (container && container.type === 'horizontal') {
         if (container.verticalAlign === 'top') {
             return 'flex-start';
         }

@@ -36,9 +36,9 @@ export function ToolBar() {
             background: 'rgba(0,0,0,0.5)',
             position: 'absolute',
             padding: '3px 5px',
-            borderTopRightRadius: 5,
-            borderTopLeftRadius: 5,
+            borderRadius: 5,
             color: 'white',
+            fontSize:18
         };
         if (container === undefined) {
             return style as CSSProperties;
@@ -55,8 +55,8 @@ export function ToolBar() {
 
         const {top, left, width} = element.getBoundingClientRect();
         style.display = 'flex';
-        style.top = top - 20;
-        style.left = left + width - 55;
+        style.top = top - 15;
+        style.left = left + width - 70;
         return style as CSSProperties;
     })
 

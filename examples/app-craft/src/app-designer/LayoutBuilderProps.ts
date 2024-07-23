@@ -33,7 +33,7 @@ export type ElementProps = {
 interface Element<T extends ZodRawShape = ZodRawShape> {
     icon: IconType,
     // eslint-disable-next-line
-    component: ForwardRefRenderFunction<any, (InferType<T> & { style: CSSProperties })>,
+    component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
     property: T
 }
 
@@ -41,7 +41,7 @@ export function element<T extends ZodRawShape>(props: {
     property: T,
     icon: IconType,
     // eslint-disable-next-line
-    component: ForwardRefRenderFunction<any, (InferType<T> & { style: CSSProperties })>,
+    component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
     // eslint-disable-next-line
 }): any {
     return props;

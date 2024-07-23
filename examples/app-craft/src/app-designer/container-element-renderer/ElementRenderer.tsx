@@ -95,23 +95,33 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
 
         const element = ref.current;
         if (element) {
-            element.addEventListener('dragstart', onDragStart);
-            element.addEventListener('dragover', onDragOver);
-            element.addEventListener('drop', onDrop);
-            element.addEventListener('dragend', onDragEnd);
-            element.addEventListener('mouseover', onMouseOver);
-            element.addEventListener('click', onClick);
-            element.setAttribute('data-element-id', propsRef.current["data-element-id"]);
-            element.setAttribute('draggable', propsRef.current.draggable.toString());
+            try{
+                element.addEventListener('dragstart', onDragStart);
+                element.addEventListener('dragover', onDragOver);
+                element.addEventListener('drop', onDrop);
+                element.addEventListener('dragend', onDragEnd);
+                element.addEventListener('mouseover', onMouseOver);
+                element.addEventListener('click', onClick);
+                element.setAttribute('data-element-id', propsRef.current["data-element-id"]);
+                element.setAttribute('draggable', propsRef.current.draggable.toString());
+            }catch (err){
+                console.error(err)
+            }
+
         }
         return () => {
             if (element) {
-                element.removeEventListener('dragstart', onDragStart);
-                element.removeEventListener('dragover', onDragOver);
-                element.removeEventListener('drop', onDrop);
-                element.removeEventListener('dragend', onDragEnd);
-                element.removeEventListener('mouseover', onMouseOver);
-                element.removeEventListener('click', onClick);
+                try{
+                    element.removeEventListener('dragstart', onDragStart);
+                    element.removeEventListener('dragover', onDragOver);
+                    element.removeEventListener('drop', onDrop);
+                    element.removeEventListener('dragend', onDragEnd);
+                    element.removeEventListener('mouseover', onMouseOver);
+                    element.removeEventListener('click', onClick);
+                }catch (err){
+                    console.error(err);
+                }
+
             }
         }
     }, [Component]);

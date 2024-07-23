@@ -1,0 +1,54 @@
+@font-face {
+    font-family: 'Adobe Clean';
+    src: url('AdobeClean-BoldIt.woff2') format('woff2'),
+        url('AdobeClean-BoldIt.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Adobe Clean';
+    src: url('AdobeClean-Bold.woff2') format('woff2'),
+        url('AdobeClean-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Adobe Clean';
+    src: url('AdobeClean-It.woff2') format('woff2'),
+        url('AdobeClean-It.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Adobe Clean';
+    src: url('AdobeClean-Regular.woff2') format('woff2'),
+        url('AdobeClean-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Adobe Clean';
+    src: url('AdobeClean-Light.woff2') format('woff2'),
+        url('AdobeClean-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Adobe Clean';
+    src: url('AdobeClean-LightIt.woff2') format('woff2'),
+        url('AdobeClean-LightIt.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
