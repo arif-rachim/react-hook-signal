@@ -47,8 +47,8 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];
 
-            const propDependencies = containerProp.dependencies.map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
-            const propDependenciesName = containerProp.dependencies.map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
+            const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
+            const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
             const funcParams = ['module', ...propDependenciesName, containerProp.formula] as Array<string>;
             const module: { exports: unknown } = {exports: {}};
             try {

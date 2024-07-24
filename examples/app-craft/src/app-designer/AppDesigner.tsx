@@ -12,22 +12,24 @@ import {RightPanel} from "./right-panel/RightPanel.tsx";
 import ButtonGroup from "./button/ButtonGroup.tsx";
 import {ToolBar} from "./ToolBar.tsx";
 import {DraggableContainerElement} from "./container-element-renderer/DraggableContainerElement.tsx";
+import ErrorBoundary from "./ErrorBoundary.tsx";
 
+export type VariableType = 'state'|'computed'|'effect';
 
 export type Variable = {
-    type: 'state' | 'computed' | 'effect',
+    type: VariableType,
     id: string,
     name: string,
     functionCode: string,
     schemaCode: string,
-    dependency?: Array<string> // this is only for computed and effect
+    dependencies?: Array<string> // this is only for computed and effect
 }
 
 export type VariableInstance = {
     id: string,
     instance: AnySignal<unknown>
 }
-export type ContainerPropertyType = { formula: string, type: ZodType, dependencies: Array<string> }
+export type ContainerPropertyType = { formula: string, type: ZodType, dependencies?: Array<string> }
 
 export type Container = {
     id: string,
@@ -53,25 +55,24 @@ export type Container = {
 
     // only for container
     gap: CSSProperties['gap'],
-    verticalAlign: 'top'|'center'|'bottom'|'',
-    horizontalAlign : 'left'|'center'|'right'|'',
+    verticalAlign: 'top' | 'center' | 'bottom' | '',
+    horizontalAlign: 'left' | 'center' | 'right' | '',
 
     properties: Record<string, ContainerPropertyType>,
 }
 
 
-
 function ToggleViewToolbar() {
     const {uiDisplayModeSignal} = useContext(AppDesignerContext);
-    return <div style={{display: 'flex', justifyContent: 'center', padding: 10,background:'rgba(0,0,0,0.2)'}}>
+    return <div style={{display: 'flex', justifyContent: 'center', padding: 10, background: 'rgba(0,0,0,0.2)'}}>
         <ButtonGroup buttons={{
-            'Preview' : {
-                onClick : () => uiDisplayModeSignal.set('view')
+            'Preview': {
+                onClick: () => uiDisplayModeSignal.set('view')
             },
-            'Design' : {
-                onClick : () => uiDisplayModeSignal.set('design')
+            'Design': {
+                onClick: () => uiDisplayModeSignal.set('design')
             }
-        }} defaultButton={'Design'} />
+        }} defaultButton={'Design'}/>
     </div>
 }
 
@@ -149,9 +150,9 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                 } catch (err) {
                     console.error(err);
                 }
-            }else{
+            } else {
 
-                const dependencies = (v.dependency ?? []).map(d => {
+                const dependencies = (v.dependencies ?? []).map(d => {
                     const name = allVariablesSignal.get().find(i => i.id === d)?.name;
                     const instance = variablesInstance.find(i => i.id === d)?.instance;
                     if (name === undefined || instance === undefined) {
@@ -200,38 +201,45 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         }
     });
 
-    return <AppDesignerContext.Provider
-        value={{
-            hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
-            selectedDragContainerIdSignal: selectedDragContainerIdSignal,
-            activeDropZoneIdSignal: activeDropZoneIdSignal,
-            uiDisplayModeSignal: uiDisplayModeSignal,
-            allContainersSignal: allContainersSignal,
-            allVariablesSignal: allVariablesSignal,
-            allVariablesSignalInstance: allVariablesSignalInstance,
-            elements: props.elements
-        }}>
+    return <ErrorBoundary>
+        <AppDesignerContext.Provider
+            value={{
+                hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
+                selectedDragContainerIdSignal: selectedDragContainerIdSignal,
+                activeDropZoneIdSignal: activeDropZoneIdSignal,
+                uiDisplayModeSignal: uiDisplayModeSignal,
+                allContainersSignal: allContainersSignal,
+                allVariablesSignal: allVariablesSignal,
+                allVariablesSignalInstance: allVariablesSignalInstance,
+                elements: props.elements
+            }}>
 
-        <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
-            <LeftPanel/>
-            <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column',backgroundColor:'rgba(0,0,0,0.2)'}}>
-                <ToggleViewToolbar/>
+            <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
+                <LeftPanel/>
                 <div style={{
                     flexGrow: 1,
+                    overflow: 'auto',
                     display: 'flex',
                     flexDirection: 'column',
-                    padding:10
+                    backgroundColor: 'rgba(0,0,0,0.2)'
                 }}>
-                    <notifiable.div style={{flexGrow: 1,borderRadius:10,overflow:'auto'}} >
-                        {renderedElements}
-                    </notifiable.div>
+                    <ToggleViewToolbar/>
+                    <div style={{
+                        flexGrow: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: 10
+                    }}>
+                        <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
+                            {renderedElements}
+                        </notifiable.div>
+                    </div>
+                    <ToolBar/>
                 </div>
-                <ToolBar />
+                <RightPanel/>
             </div>
-            <RightPanel/>
-        </div>
-
-    </AppDesignerContext.Provider>
+        </AppDesignerContext.Provider>
+    </ErrorBoundary>
 }
 
 

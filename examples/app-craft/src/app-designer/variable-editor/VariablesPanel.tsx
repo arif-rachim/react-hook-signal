@@ -3,7 +3,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import {MdAdd} from "react-icons/md";
-import {Variable} from "../AppDesigner.tsx";
+import {Variable, VariableType} from "../AppDesigner.tsx";
 import {Icon} from "../Icon.ts";
 import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
 import {VariableEditorPanel} from "./VariableEditorPanel.tsx";
@@ -11,7 +11,7 @@ import {sortSignal} from "../sortSignal.ts";
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {Button} from "../button/Button.tsx";
 
-function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (variable?: Variable) => Promise<void>) {
+function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType) {
     return (variable: Variable) => {
         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>
             <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{variable.name}</div>
@@ -21,15 +21,15 @@ function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<voi
                 alignItems: 'center',
                 justifyContent: 'center',
             }} onClick={() => deleteVariable(variable)}>
-                <Icon.Delete style={{fontSize:18}}/>
+                <Icon.Delete style={{fontSize: 18}}/>
             </div>
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-            }} onClick={() => editVariable(variable)}>
-                <Icon.Detail style={{fontSize:18}}/>
+            }} onClick={() => editVariable(forType, variable)}>
+                <Icon.Detail style={{fontSize: 18}}/>
             </div>
         </div>
     };
@@ -43,10 +43,10 @@ export function VariablesPanel() {
     const {allVariablesSignal} = context;
     const showModal = useShowModal();
 
-    async function editVariable(variable?: Variable) {
+    async function editVariable(forType: VariableType, variable?: Variable) {
         const result = await showModal<Variable>(closePanel => {
             return <AppDesignerContext.Provider value={context}>
-                <VariableEditorPanel variable={variable} closePanel={closePanel}/>
+                <VariableEditorPanel variable={variable} closePanel={closePanel} defaultType={forType}/>
             </AppDesignerContext.Provider>
         })
         if (result) {
@@ -62,7 +62,7 @@ export function VariablesPanel() {
     }
 
     async function deleteVariable(variable?: Variable) {
-        const signalsDependentOnThisVariable = allVariablesSignal.get().filter(i => (i.dependency ?? []).includes(variable?.id ?? ''));
+        const signalsDependentOnThisVariable = allVariablesSignal.get().filter(i => (i.dependencies ?? []).includes(variable?.id ?? ''));
         if (signalsDependentOnThisVariable.length) {
             await showModal(closePanel => {
                 const message = <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -84,18 +84,19 @@ export function VariablesPanel() {
     }
 
     const stateVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable));
+        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable, 'state'));
     })
     const computedVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable));
+        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable, 'computed'));
     })
     const effectVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable));
+        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable, 'effect'));
     })
 
     return <>
         <CollapsibleLabelContainer label={'State'}>
-            <Button onClick={() => editVariable()} style={{display: 'flex', alignItems: 'center', gap: 5,justifyContent:'center',marginBottom:5}}>
+            <Button onClick={() => editVariable('state')}
+                    style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
                 {'Add Signal State'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <MdAdd style={{fontSize: 20}}/>
@@ -106,7 +107,8 @@ export function VariablesPanel() {
             </notifiable.div>
         </CollapsibleLabelContainer>
         <CollapsibleLabelContainer label={'Computed'}>
-            <Button onClick={() => editVariable()} style={{display: 'flex', alignItems: 'center', gap: 5,justifyContent:'center',marginBottom:5}}>
+            <Button onClick={() => editVariable('computed')}
+                    style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
                 {'Add Signal Computed'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <MdAdd style={{fontSize: 20}}/>
@@ -117,7 +119,8 @@ export function VariablesPanel() {
             </notifiable.div>
         </CollapsibleLabelContainer>
         <CollapsibleLabelContainer label={'Effect'}>
-            <Button onClick={() => editVariable()} style={{display: 'flex', alignItems: 'center', gap: 5 ,justifyContent:'center',marginBottom:5}}>
+            <Button onClick={() => editVariable('effect')}
+                    style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
                 {'Add Signal Effect'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <MdAdd style={{fontSize: 20}}/>

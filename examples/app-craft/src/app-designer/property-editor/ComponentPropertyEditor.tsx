@@ -5,14 +5,12 @@ import {notifiable, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../onBeforeHandler.ts";
 import {Button} from "../button/Button.tsx";
-import {BORDER} from "../Border.ts";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
-import {DependencySelector} from "../DependencySelector.tsx";
-import {useShowModal} from "../../modal/useShowModal.ts";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
 import {ZodType} from "zod";
 import {zodTypeToJson} from "../zodSchemaToJson.ts";
 import {Icon} from "../Icon.ts";
+import {DependencyInputSelector} from "../dependency-selector/DependencyInputSelector.tsx";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -27,26 +25,8 @@ export function ComponentPropertyEditor(props: {
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal} = context;
-    const showModal = useShowModal();
     const returnType = props.type;
 
-    async function showDependencySelector() {
-        const props = propsSignal.get();
-        const result = await showModal<Array<string> | 'cancel'>(closePanel => {
-            return <AppDesignerContext.Provider value={context}>
-                <DependencySelector
-                    closePanel={closePanel}
-                    value={props.dependencies ?? []}
-                    signalsToFilterOut={[]}
-                />
-            </AppDesignerContext.Provider>
-        });
-        if (result !== 'cancel') {
-            props.dependencies = result;
-            propsSignal.set({...props});
-        }
-
-    }
 
     return <div style={{
         padding: 10,
@@ -58,17 +38,13 @@ export function ComponentPropertyEditor(props: {
     }}>
         <LabelContainer label={'Dependency'} style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
                         styleLabel={{width: 80}}>
-            <notifiable.div
-                style={{border: BORDER, display: 'flex', gap: 5, padding: 5, flexGrow: 1, minHeight: 22}}
-                onClick={showDependencySelector}>{() => {
+            <notifiable.div>{() => {
                 const props = propsSignal.get();
-                const allVariables = allVariablesSignal.get();
-                return props.dependencies.map(dep => {
-                    const variable = allVariables.find(i => i.id === dep);
-                    return <div key={dep} style={{border: BORDER, borderRadius: 3, padding: '3px 5px'}}>
-                        {variable?.name}
-                    </div>
-                })
+                return <DependencyInputSelector value={props.dependencies ?? []} valueToIgnore={[]} onChange={(result) => {
+                    const item = {...props};
+                    item.dependencies = result ?? [];
+                    propsSignal.set({...item});
+                }} />;
             }}</notifiable.div>
         </LabelContainer>
         <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: 10, gap: 10}}>

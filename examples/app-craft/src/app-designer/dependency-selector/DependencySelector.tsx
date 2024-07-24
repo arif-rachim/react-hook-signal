@@ -1,9 +1,9 @@
 import {useContext} from "react";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
-import {BORDER} from "./Border.ts";
-import {Icon} from "./Icon.ts";
-import {Button} from "./button/Button.tsx";
+import {BORDER} from "../Border.ts";
+import {Icon} from "../Icon.ts";
+import {Button} from "../button/Button.tsx";
 
 /**
  * A component for selecting dependencies.
@@ -64,8 +64,26 @@ export function DependencySelector(props: {
             {elements}
         </notifiable.div>
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 10}}>
-            <Button style={{border: BORDER}} onClick={() => closePanel(selectedSignal.get())}>Save</Button>
-            <Button style={{border: BORDER}} onClick={() => closePanel('cancel')}>Cancel</Button>
+            <Button onClick={() => closePanel(selectedSignal.get())} style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }}>
+                {'Save'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Save style={{fontSize: 18}}/>
+                </div>
+            </Button>
+            <Button onClick={() => closePanel('cancel')} style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }}>
+                {'Save'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Exit style={{fontSize: 18}}/>
+                </div>
+            </Button>
         </div>
     </div>
 }
