@@ -15,16 +15,23 @@ import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import ButtonGroup from "../button/ButtonGroup.tsx";
 import {Icon} from "../Icon.ts";
 import {DependencyInputSelector} from "../dependency-selector/DependencyInputSelector.tsx";
+import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 
+const title = {
+    computed : 'Computed',
+    state : 'State',
+    effect: 'Effect'
+}
 /**
  * Represents a panel for editing variables.
  */
 export function VariableEditorPanel(props: {
     variable?: Variable,
     closePanel: (result?: Variable) => void,
-    defaultType: VariableType
+    defaultType: VariableType,
+    enableToSwitchBetweenType?:boolean
 }) {
-    const {variable, closePanel, defaultType} = props;
+    const {variable, closePanel, defaultType,enableToSwitchBetweenType} = props;
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
     const context = useContext(AppDesignerContext);
@@ -68,7 +75,7 @@ export function VariableEditorPanel(props: {
 
     const monacoRef = useRef<Monaco | undefined>();
     return <div style={{
-        padding: 10,
+        padding: 20,
         display: 'flex',
         flexDirection: 'column',
         width: '90vw',
@@ -76,76 +83,81 @@ export function VariableEditorPanel(props: {
         overflow: 'auto',
         gap: 10,
     }}>
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-            <ButtonGroup buttons={{
-                State: {
-                    onClick: () => variableSignal.set({...variableSignal.get(), type: 'state'})
-                },
-                Computed: {
-                    onClick: () => variableSignal.set({...variableSignal.get(), type: 'computed'})
-                },
-                Effect: {
-                    onClick: () => variableSignal.set({...variableSignal.get(), type: 'effect'})
-                }
-            }} defaultButton={type === 'state' ? 'State' : type === 'computed' ? 'Computed' : 'Effect'}/>
+        <div style={{fontSize: 20}}>
+            {`Manage Signal.${title[type]}`}
         </div>
-        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, gap: 5, overflow: 'auto'}}>
-            <div style={{display: 'flex', gap: 10}}>
-                <LabelContainer label={'Name'} style={{width: 250}} styleLabel={{width: 80}}>
-                    <notifiable.input name={'signalName'} autoComplete={'unset'}
-                                      style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
-                                      value={() => {
-                                          return variableSignal.get().name
-                                      }}
-                                      onKeyDown={(e) => {
-                                          if (e.key === " ") {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                          }
-                                      }}
-                                      onChange={(event) => {
-                                          const dom = event.target;
-                                          const cursorPosition = dom.selectionStart;
-                                          const val = dom.value;
-                                          const newVariable = {...variableSignal.get()};
-                                          newVariable.name = val;
-                                          variableSignal.set(newVariable);
-                                          setTimeout(() => {
-                                              dom.setSelectionRange(cursorPosition, cursorPosition);
-                                          }, 0);
-                                      }}/>
-                </LabelContainer>
-                {type !== 'state' &&
-                    <LabelContainer label={'Dependency'}>
-                        <notifiable.div>
-                            {() => {
-                                const variable = variableSignal.get();
-                                return <DependencyInputSelector onChange={(result) => {
-                                    variableSignal.set({...variable, dependencies: result});
-                                }} value={variable.dependencies ?? []} valueToIgnore={[variable.id]}/>;
-                            }}
-                        </notifiable.div>
-                    </LabelContainer>
-                }
-
+        {enableToSwitchBetweenType === true &&
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                <ButtonGroup buttons={{
+                    State: {
+                        onClick: () => variableSignal.set({...variableSignal.get(), type: 'state'})
+                    },
+                    Computed: {
+                        onClick: () => variableSignal.set({...variableSignal.get(), type: 'computed'})
+                    },
+                    Effect: {
+                        onClick: () => variableSignal.set({...variableSignal.get(), type: 'effect'})
+                    }
+                }} defaultButton={type === 'state' ? 'State' : type === 'computed' ? 'Computed' : 'Effect'}/>
             </div>
-
-
+        }
+        <div style={{display: 'flex', gap: 10}}>
+            <LabelContainer label={'Name'} style={{width: 250}} styleLabel={{width: 80}}>
+                <notifiable.input name={'signalName'} autoComplete={'unset'}
+                                  style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
+                                  value={() => {
+                                      return variableSignal.get().name
+                                  }}
+                                  onKeyDown={(e) => {
+                                      if (e.key === " ") {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                      }
+                                  }}
+                                  onChange={(event) => {
+                                      const dom = event.target;
+                                      const cursorPosition = dom.selectionStart;
+                                      const val = dom.value;
+                                      const newVariable = {...variableSignal.get()};
+                                      newVariable.name = val;
+                                      variableSignal.set(newVariable);
+                                      setTimeout(() => {
+                                          dom.setSelectionRange(cursorPosition, cursorPosition);
+                                      }, 0);
+                                  }}/>
+            </LabelContainer>
+            {type !== 'state' &&
+                <LabelContainer label={'Dependency'}>
+                    <notifiable.div>
+                        {() => {
+                            const variable = variableSignal.get();
+                            return <DependencyInputSelector onChange={(result) => {
+                                variableSignal.set({...variable, dependencies: result});
+                            }} value={variable.dependencies ?? []} valueToIgnore={[variable.id]}/>;
+                        }}
+                    </notifiable.div>
+                </LabelContainer>
+            }
+        </div>
+        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, overflow: 'auto'}}>
             {type !== 'effect' &&
-                <LabelContainer label={'Schema'} style={{height: 100, flexShrink: 0}}
-                                styleContent={{flexDirection: 'column'}}>
+                <CollapsibleLabelContainer label={'Schema'} styleContent={{padding: '5px 10px'}}>
                     <notifiable.div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        height: '100%',
-                        backgroundColor: 'blue'
+                        height: 50,
                     }}>
                         {() => {
                             const variable = variableSignal.get();
                             const formula = variable.schemaCode;
                             return <Editor
-                                language="javascript"
+                                language="JavaScript"
                                 value={formula}
+                                options={{
+                                    selectOnLineNumbers: false,
+                                    lineNumbers: 'off',
+                                }}
+
                                 onChange={(value?: string) => {
                                     const newVariable = {...variableSignal.get()};
                                     newVariable.schemaCode = value ?? '';
@@ -154,15 +166,13 @@ export function VariableEditorPanel(props: {
                             />
                         }}
                     </notifiable.div>
-                </LabelContainer>
+                </CollapsibleLabelContainer>
             }
-            <LabelContainer label={'Code'} style={{flexGrow: 1, flexShrink: 1}}
-                            styleContent={{flexDirection: 'column', overflow: 'auto', flexShrink: 1}}>
+            <CollapsibleLabelContainer label={'Code'} style={{flexGrow: 1}} styleContent={{padding: '5px 10px'}}>
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
-                    backgroundColor: 'blue'
                 }}>
                     {() => {
                         const variable = variableSignal.get();
@@ -186,9 +196,10 @@ export function VariableEditorPanel(props: {
                         />
                     }}
                 </notifiable.div>
-            </LabelContainer>
+            </CollapsibleLabelContainer>
+
         </div>
-        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10}}>
+        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10,borderTop:BORDER,paddingTop:10}}>
             <Button onClick={async () => {
                 const [isValid, errors] = validateForm();
                 if (isValid) {

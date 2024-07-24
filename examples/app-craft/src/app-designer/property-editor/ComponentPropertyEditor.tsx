@@ -7,10 +7,12 @@ import {onBeforeMountHandler} from "../onBeforeHandler.ts";
 import {Button} from "../button/Button.tsx";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
-import {ZodType} from "zod";
+import {ZodFunction, ZodType} from "zod";
 import {zodTypeToJson} from "../zodSchemaToJson.ts";
 import {Icon} from "../Icon.ts";
 import {DependencyInputSelector} from "../dependency-selector/DependencyInputSelector.tsx";
+import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {BORDER} from "../Border.ts";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -26,33 +28,40 @@ export function ComponentPropertyEditor(props: {
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal} = context;
     const returnType = props.type;
-
-
+    const isFunction = returnType instanceof ZodFunction;
+    const propertyDescription = "This property can dependent on certain variables, either state or computed. Whenever these state or computed variables are accessed, which occurs through the invocation of the get() method, the block of code will automatically execute. As a result, the updated value of the variable will be automatically bound to the corresponding component property, ensuring that the component always reflects the most current data.";
+    const callbackDescription = 'This callback can dependent on certain variables, either state or computed. However, the callback function will not automatically monitor changes in the values of state or computed variables. Instead, the callback is invoked directly by the application based on specific events or triggers.'
+    const description = isFunction ? callbackDescription : propertyDescription;
     return <div style={{
-        padding: 10,
+        padding: 20,
         display: 'flex',
         flexDirection: 'column',
         width: '90vw',
         height: '90vh',
+        overflow: 'auto',
         gap: 10,
     }}>
-        <LabelContainer label={'Dependency'} style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
-                        styleLabel={{width: 80}}>
+        <div style={{fontSize: 20}}>
+            {`Manage ${isFunction? 'Callback' : 'Property'} : ${props.name} `}
+        </div>
+        <div>{description}</div>
+
+        <LabelContainer label={'Variable to depend'}>
             <notifiable.div>{() => {
                 const props = propsSignal.get();
-                return <DependencyInputSelector value={props.dependencies ?? []} valueToIgnore={[]} onChange={(result) => {
-                    const item = {...props};
-                    item.dependencies = result ?? [];
-                    propsSignal.set({...item});
-                }} />;
+                return <DependencyInputSelector value={props.dependencies ?? []} valueToIgnore={[]}
+                                                onChange={(result) => {
+                                                    const item = {...props};
+                                                    item.dependencies = result ?? [];
+                                                    propsSignal.set({...item});
+                                                }}/>;
             }}</notifiable.div>
         </LabelContainer>
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: 10, gap: 10}}>
+        <CollapsibleLabelContainer label={'Code'} style={{flexGrow: 1}} styleContent={{padding: '5px 10px'}}>
             <notifiable.div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100%',
-                backgroundColor: 'red'
             }}>
                 {() => {
                     const props = propsSignal.get();
@@ -77,28 +86,35 @@ export function ComponentPropertyEditor(props: {
                     />
                 }}
             </notifiable.div>
-            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 10}}>
-                <Button onClick={() => props.closePanel(propsSignal.get())} style={{
-                    display: 'flex',
-                    gap: 5,
-                    alignItems: 'center'
-                }}>
-                    {'Save'}
-                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        <Icon.Save style={{fontSize: 18}}/>
-                    </div>
-                </Button>
-                <Button onClick={() => props.closePanel(undefined)} style={{
-                    display: 'flex',
-                    gap: 5,
-                    alignItems: 'center'
-                }}>
-                    {'Cancel'}
-                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        <Icon.Exit style={{fontSize: 18}}/>
-                    </div>
-                </Button>
-            </div>
+        </CollapsibleLabelContainer>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            gap: 10,
+            borderTop: BORDER,
+            paddingTop: 10
+        }}>
+            <Button onClick={() => props.closePanel(propsSignal.get())} style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }}>
+                {'Save'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Save style={{fontSize: 18}}/>
+                </div>
+            </Button>
+            <Button onClick={() => props.closePanel(undefined)} style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }}>
+                {'Cancel'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Exit style={{fontSize: 18}}/>
+                </div>
+            </Button>
         </div>
     </div>
 }

@@ -58,8 +58,8 @@ export function DependencySelector(props: {
             </div>
         })
     })
-    return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 10}}>
-        <div style={{fontSize: 18}}>State or Computed to Refer</div>
+    return <div style={{display: 'flex', flexDirection: 'column', padding: 20, gap: 10}}>
+        <div style={{fontSize: 16}}>Variables (whether state or computed) that will be referenced by</div>
         <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
             {elements}
         </notifiable.div>
@@ -79,7 +79,7 @@ export function DependencySelector(props: {
                 gap: 5,
                 alignItems: 'center'
             }}>
-                {'Save'}
+                {'Cancel'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <Icon.Exit style={{fontSize: 18}}/>
                 </div>
