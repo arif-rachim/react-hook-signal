@@ -3,7 +3,7 @@ import {CSSProperties, useContext, useEffect, useState} from "react";
 import {useRefresh} from "../../utils/useRefresh.ts";
 import {Container} from "../AppDesigner.tsx";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {dropZones} from "../dropZones.ts";
+import {dropZones} from "../drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
 import {BORDER} from "../Border.ts";
 import {BasicDragEvent, CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";

@@ -1,7 +1,4 @@
-import {useModal} from "./modal/useModal.ts";
-import {ModalContext} from "./modal/ModalContext.ts";
-import {notifiable, Notifiable} from "react-hook-signal";
-import {ModalContainer} from "./modal/ModalContainer.tsx";
+import {notifiable} from "react-hook-signal";
 import {MdInput, MdSmartButton} from "react-icons/md";
 import AppDesigner, {Container, Variable} from "./app-designer/AppDesigner.tsx";
 import {MutableRefObject, useState} from "react";
@@ -11,7 +8,6 @@ import {BORDER} from "./app-designer/Border.ts";
 import {Button, defaultTheme, Provider} from "@adobe/react-spectrum";
 
 export function App() {
-    const {showModal, modalPanels} = useModal();
     const [value, setValue] = useState<{ containers: Array<Container>, variables: Array<Variable> }>(() => {
         const val = localStorage.getItem('app-designer');
         if (val && val.length > 0) {
@@ -19,8 +15,7 @@ export function App() {
         }
         return {containers: [], variables: []};
     });
-    return <ModalContext.Provider value={showModal}>
-            <AppDesigner elements={{
+    return <AppDesigner elements={{
                 input: element({
                     icon: MdInput,
                     property: {
@@ -69,6 +64,4 @@ export function App() {
                 localStorage.setItem('app-designer', JSON.stringify(val));
                 setValue(val);
             }}/>
-            <Notifiable component={ModalContainer} modalPanels={modalPanels}/>
-        </ModalContext.Provider>
 }

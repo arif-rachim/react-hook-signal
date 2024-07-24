@@ -1,7 +1,7 @@
 import {Signal} from "signal-polyfill";
 import {Container} from "../../AppDesigner.tsx";
 import {guid} from "../../../utils/guid.ts";
-import {dropZones} from "../../dropZones.ts";
+import {dropZones} from "../../drop-zone/dropZones.ts";
 
 /**
  * Adds a new container to the list of all containers.

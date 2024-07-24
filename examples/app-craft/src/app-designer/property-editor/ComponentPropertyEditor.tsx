@@ -1,4 +1,4 @@
-import {useSelectedDragContainer} from "../useSelectedDragContainer.ts";
+import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
 import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {notifiable, useSignal} from "react-hook-signal";
@@ -42,7 +42,7 @@ export function ComponentPropertyEditor(props: {
         gap: 10,
     }}>
         <div style={{fontSize: 20}}>
-            {`Manage ${isFunction? 'Callback' : 'Property'} : ${props.name} `}
+            {`Manage ${isFunction ? 'Callback' : 'Property'} : ${props.name} `}
         </div>
         <div>{description}</div>
 

@@ -2,8 +2,8 @@ import {CSSProperties, useState} from "react";
 import {notifiable, useSignalEffect} from "react-hook-signal";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {BORDER} from "../Border.ts";
-import {useSelectedDragContainer} from "../useSelectedDragContainer.ts";
-import {useUpdateSelectedDragContainer} from "../useUpdateSelectedDragContainer.ts";
+import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
+import {useUpdateSelectedDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
 import {ContainerPropertyType, PropertyType} from "../PropertyType.ts";
 
 /**

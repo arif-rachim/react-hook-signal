@@ -4,6 +4,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {ZodFunction} from "zod";
 import {CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
+import {useUpdateErrorMessage} from "../hooks/useUpdateErrorMessage.ts";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -29,39 +30,27 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const propertiesSignal = useSignal(container.properties);
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
+    const updateError = useUpdateErrorMessage();
     const Component = useMemo(() => {
         return forwardRef(component)
     }, [component])
-
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);
     const [componentProps, setComponentProps] = useState<Record<string, unknown>>({})
-
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const allVariablesInstance = allVariablesSignalInstance.get();
-        const allVariables = allVariablesSignal.get();
-        const componentPropertiesValue: Record<string, unknown> = {};
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];
-
-            const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
-            const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
-            const funcParams = ['module', ...propDependenciesName, containerProp.formula] as Array<string>;
-            const module: { exports: unknown } = {exports: {}};
-            try {
-                const fun = new Function(...funcParams);
-                const funcParamsInstance = [module, ...propDependencies];
-                fun.call(null, ...funcParamsInstance);
-            } catch (err) {
-                console.error(err);
-            }
-            componentPropertiesValue[containerPropKey] = module.exports;
             const isZodFunction = containerProp.type instanceof ZodFunction;
             if (!isZodFunction) {
                 const destroyer = effect(() => {
+                    const allVariablesInstance = allVariablesSignalInstance.get();
+                    const allVariables = allVariablesSignal.get();
+                    const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
+                    const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
+                    const funcParams = ['module', ...propDependenciesName, containerProp.formula] as Array<string>;
                     // just listen for changes
                     propDependencies.forEach(p => p.get());
                     const module: { exports: unknown } = {exports: {}};
@@ -73,13 +62,12 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                             return {...props, [containerPropKey]: module.exports}
                         })
                     } catch (err) {
-                        console.error(err);
+                        updateError('container',container.id,JSON.stringify(err),containerPropKey);
                     }
                 })
                 destroyerCallbacks.push(destroyer);
             }
         }
-        setComponentProps(componentPropertiesValue);
         return () => {
             destroyerCallbacks.forEach(d => d());
         }

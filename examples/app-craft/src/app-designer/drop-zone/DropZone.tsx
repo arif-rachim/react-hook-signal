@@ -1,6 +1,6 @@
 import {CSSProperties, useContext, useEffect, useId} from "react";
 import {notifiable, useComputed} from "react-hook-signal";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {dropZones} from "./dropZones.ts";
 
 /**

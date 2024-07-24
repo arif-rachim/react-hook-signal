@@ -1,5 +1,5 @@
 import {useContext} from "react";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useComputed} from "react-hook-signal";
 
 /**

@@ -8,7 +8,7 @@ import {
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import {MdArrowUpward, MdCancel, MdDragIndicator} from "react-icons/md";
-import {useSelectedDragContainer} from "./useSelectedDragContainer.ts";
+import {useSelectedDragContainer} from "./hooks/useSelectedDragContainer.ts";
 
 /**
  * Represents a toolbar component that provides actions for a container.
@@ -18,7 +18,8 @@ export function ToolBar() {
         selectedDragContainerIdSignal,
         allContainersSignal,
         activeDropZoneIdSignal,
-        hoveredDragContainerIdSignal
+        hoveredDragContainerIdSignal,
+        uiDisplayModeSignal
     } = useContext(AppDesignerContext);
     const containerSignal = useSelectedDragContainer();
 
@@ -29,6 +30,7 @@ export function ToolBar() {
 
     const computedStyle = useComputed(() => {
         const container = containerSignal.get();
+        const displayMode = uiDisplayModeSignal.get();
         const style: CSSProperties = {
             display: 'none',
             alignItems: 'center',
@@ -40,6 +42,9 @@ export function ToolBar() {
             color: 'white',
             fontSize:18
         };
+        if(displayMode === "view"){
+            return style as CSSProperties;
+        }
         if (container === undefined) {
             return style as CSSProperties;
         }

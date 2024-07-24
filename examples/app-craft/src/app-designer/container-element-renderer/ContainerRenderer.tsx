@@ -3,7 +3,7 @@ import {Container} from "../AppDesigner.tsx";
 import {ReactNode, useContext, useEffect, useState} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
-import {DropZone} from "../DropZone.tsx";
+import {DropZone} from "../drop-zone/DropZone.tsx";
 import {DraggableContainerElement} from "./DraggableContainerElement.tsx";
 
 export function ContainerRenderer(props: { elementProps: ElementProps, container: Container }) {

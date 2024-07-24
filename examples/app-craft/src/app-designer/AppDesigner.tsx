@@ -13,9 +13,15 @@ import ButtonGroup from "./button/ButtonGroup.tsx";
 import {ToolBar} from "./ToolBar.tsx";
 import {DraggableContainerElement} from "./container-element-renderer/DraggableContainerElement.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
+import {ModalProvider} from "../modal/ModalProvider.tsx";
 
-export type VariableType = 'state'|'computed'|'effect';
-
+export type VariableType = 'state' | 'computed' | 'effect';
+export type Error = {
+    type: VariableType | 'container',
+    propertyName? : string, // this is for container property
+    referenceId: string,
+    message: string
+}
 export type Variable = {
     type: VariableType,
     id: string,
@@ -29,7 +35,11 @@ export type VariableInstance = {
     id: string,
     instance: AnySignal<unknown>
 }
-export type ContainerPropertyType = { formula: string, type: ZodType, dependencies?: Array<string> }
+export type ContainerPropertyType = {
+    formula: string,
+    type: ZodType,
+    dependencies?: Array<string>
+}
 
 export type Container = {
     id: string,
@@ -82,7 +92,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
     const allVariablesSignal = useSignal<Array<Variable>>([]);
-    const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([])
+    const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allErrorsSignal = useSignal<Array<Error>>([]);
     const allContainersSignal = useSignal<Array<Container>>([{
         id: guid(),
         type: 'vertical',
@@ -202,43 +213,46 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     });
 
     return <ErrorBoundary>
-        <AppDesignerContext.Provider
-            value={{
-                hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
-                selectedDragContainerIdSignal: selectedDragContainerIdSignal,
-                activeDropZoneIdSignal: activeDropZoneIdSignal,
-                uiDisplayModeSignal: uiDisplayModeSignal,
-                allContainersSignal: allContainersSignal,
-                allVariablesSignal: allVariablesSignal,
-                allVariablesSignalInstance: allVariablesSignalInstance,
-                elements: props.elements
-            }}>
-
-            <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
-                <LeftPanel/>
-                <div style={{
-                    flexGrow: 1,
-                    overflow: 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: 'rgba(0,0,0,0.2)'
+        <ModalProvider>
+            <AppDesignerContext.Provider
+                value={{
+                    hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
+                    selectedDragContainerIdSignal: selectedDragContainerIdSignal,
+                    activeDropZoneIdSignal: activeDropZoneIdSignal,
+                    uiDisplayModeSignal: uiDisplayModeSignal,
+                    allContainersSignal: allContainersSignal,
+                    allVariablesSignal: allVariablesSignal,
+                    allVariablesSignalInstance: allVariablesSignalInstance,
+                    allErrorsSignal : allErrorsSignal,
+                    elements: props.elements
                 }}>
-                    <ToggleViewToolbar/>
+
+                <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
+                    <LeftPanel/>
                     <div style={{
                         flexGrow: 1,
+                        overflow: 'auto',
                         display: 'flex',
                         flexDirection: 'column',
-                        padding: 10
+                        backgroundColor: 'rgba(0,0,0,0.2)'
                     }}>
-                        <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
-                            {renderedElements}
-                        </notifiable.div>
+                        <ToggleViewToolbar/>
+                        <div style={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            padding: 10
+                        }}>
+                            <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
+                                {renderedElements}
+                            </notifiable.div>
+                        </div>
+                        <ToolBar/>
                     </div>
-                    <ToolBar/>
+                    <RightPanel/>
                 </div>
-                <RightPanel/>
-            </div>
-        </AppDesignerContext.Provider>
+            </AppDesignerContext.Provider>
+        </ModalProvider>
     </ErrorBoundary>
 }
 
