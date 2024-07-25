@@ -10,10 +10,12 @@ import {VariableEditorPanel} from "./VariableEditorPanel.tsx";
 import {sortSignal} from "../sortSignal.ts";
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {Button} from "../button/Button.tsx";
+import {colors} from "stock-watch/src/utils/colors.ts";
 
 function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType) {
     return (variable: Variable) => {
         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',color:colors.red}}><Icon.Error/></div>
             <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{variable.name}</div>
             <div style={{
                 display: 'flex',

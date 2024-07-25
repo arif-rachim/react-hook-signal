@@ -14,13 +14,15 @@ import {ToolBar} from "./ToolBar.tsx";
 import {DraggableContainerElement} from "./container-element-renderer/DraggableContainerElement.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
+import {BottomPanel} from "./bottom-panel/BottomPanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
+
 export type Error = {
-    type: VariableType | 'container',
-    propertyName? : string, // this is for container property
+    type: 'variable' | 'property',
+    propertyName?: string, // this is for container property
     referenceId: string,
-    message: string
+    message?: string
 }
 export type Variable = {
     type: VariableType,
@@ -223,33 +225,35 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     allContainersSignal: allContainersSignal,
                     allVariablesSignal: allVariablesSignal,
                     allVariablesSignalInstance: allVariablesSignalInstance,
-                    allErrorsSignal : allErrorsSignal,
+                    allErrorsSignal: allErrorsSignal,
                     elements: props.elements
                 }}>
-
-                <div style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
-                    <LeftPanel/>
-                    <div style={{
-                        flexGrow: 1,
-                        overflow: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        backgroundColor: 'rgba(0,0,0,0.2)'
-                    }}>
-                        <ToggleViewToolbar/>
+                <div style={{display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden'}}>
+                    <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'hidden'}}>
+                        <LeftPanel/>
                         <div style={{
                             flexGrow: 1,
+                            overflow: 'auto',
                             display: 'flex',
                             flexDirection: 'column',
-                            padding: 10
+                            backgroundColor: 'rgba(0,0,0,0.2)'
                         }}>
-                            <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
-                                {renderedElements}
-                            </notifiable.div>
+                            <ToggleViewToolbar/>
+                            <div style={{
+                                flexGrow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                padding: 10
+                            }}>
+                                <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
+                                    {renderedElements}
+                                </notifiable.div>
+                            </div>
+                            <ToolBar/>
                         </div>
-                        <ToolBar/>
+                        <RightPanel/>
                     </div>
-                    <RightPanel/>
+                    <BottomPanel />
                 </div>
             </AppDesignerContext.Provider>
         </ModalProvider>

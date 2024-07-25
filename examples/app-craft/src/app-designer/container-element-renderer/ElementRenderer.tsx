@@ -4,7 +4,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {ZodFunction} from "zod";
 import {CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
-import {useUpdateErrorMessage} from "../hooks/useUpdateErrorMessage.ts";
+import {useRecordErrorMessage} from "../hooks/useRecordErrorMessage.ts";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -30,7 +30,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const propertiesSignal = useSignal(container.properties);
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
-    const updateError = useUpdateErrorMessage();
+    const {recordPropertyError} = useRecordErrorMessage();
     const Component = useMemo(() => {
         return forwardRef(component)
     }, [component])
@@ -58,11 +58,24 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                         const fun = new Function(...funcParams);
                         const funcParamsInstance = [module, ...propDependencies];
                         fun.call(null, ...funcParamsInstance);
-                        setComponentProps(props => {
-                            return {...props, [containerPropKey]: module.exports}
-                        })
+                        if(typeof module.exports === 'function') {
+                            const originalFunction = module.exports as (...args:unknown[]) => unknown
+                            const wrapper = (...args:unknown[]) => {
+                                try{
+                                    const result = originalFunction.call(null,...args);
+                                    recordPropertyError({propertyName: containerPropKey, referenceId: container.id});
+                                    return result;
+                                }catch(err){
+                                    recordPropertyError({propertyName: containerPropKey, referenceId: container.id, error: err})
+                                }
+                            }
+                            setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
+                        }else{
+                            setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
+                            recordPropertyError({propertyName: containerPropKey, referenceId: container.id})
+                        }
                     } catch (err) {
-                        updateError('container',container.id,JSON.stringify(err),containerPropKey);
+                        recordPropertyError({propertyName: containerPropKey, referenceId: container.id, error: err})
                     }
                 })
                 destroyerCallbacks.push(destroyer);
@@ -83,7 +96,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
 
         const element = ref.current;
         if (element) {
-            try{
+            try {
                 element.addEventListener('dragstart', onDragStart);
                 element.addEventListener('dragover', onDragOver);
                 element.addEventListener('drop', onDrop);
@@ -92,21 +105,21 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                 element.addEventListener('click', onClick);
                 element.setAttribute('data-element-id', propsRef.current["data-element-id"]);
                 element.setAttribute('draggable', propsRef.current.draggable.toString());
-            }catch (err){
+            } catch (err) {
                 console.error(err)
             }
 
         }
         return () => {
             if (element) {
-                try{
+                try {
                     element.removeEventListener('dragstart', onDragStart);
                     element.removeEventListener('dragover', onDragOver);
                     element.removeEventListener('drop', onDrop);
                     element.removeEventListener('dragend', onDragEnd);
                     element.removeEventListener('mouseover', onMouseOver);
                     element.removeEventListener('click', onClick);
-                }catch (err){
+                } catch (err) {
                     console.error(err);
                 }
 

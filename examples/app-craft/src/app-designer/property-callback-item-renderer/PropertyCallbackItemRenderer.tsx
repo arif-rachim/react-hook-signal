@@ -6,14 +6,13 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {Button} from "../button/Button.tsx";
 import {ComponentPropertyEditor} from "../property-editor/ComponentPropertyEditor.tsx";
-import {TbCodeDots} from "react-icons/tb";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
 import {notifiable} from "react-hook-signal"
 import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {BORDER} from "../Border.ts";
-import {MdCheck, MdError} from "react-icons/md";
+import {Icon} from "../Icon.ts";
 
 export function PropertyCallbackItemRenderer(props: { propertyName: string, type: ZodType }) {
     const {propertyName, type} = props;
@@ -28,7 +27,7 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string, type
         <notifiable.div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
             {() => {
                 const container = containerSignal.get();
-                const hasError = context.allErrorsSignal.get().find(i => i.type === 'container' && i.propertyName === propertyName && i.referenceId === container?.id) !== undefined;
+                const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.referenceId === container?.id) !== undefined;
                 let isFormulaEmpty = true;
                 if (container && container.properties[propertyName]) {
                     const formula = container.properties[propertyName].formula;
@@ -55,7 +54,7 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string, type
                                 selectedContainer.properties = {...selectedContainer.properties, [propertyName]: result}
                             })
                         }
-                    }}><TbCodeDots style={{fontSize: 22}}/>
+                    }}><Icon.Formula style={{fontSize: 22}}/>
                     </Button>
                     <div style={{
                         display: 'flex',
@@ -71,8 +70,8 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string, type
                         e.stopPropagation();
                         //@TODO WE NEED TO OPEN THE FAULT DETAIL HERE !
                     }}>
-                        {hasError && <MdError style={{fontSize: 18,color:colors.red}}/>}
-                        {!hasError && <MdCheck style={{fontSize: 18,color:colors.green}}/>}
+                        {hasError && <Icon.Error style={{fontSize: 18,color:colors.red}}/>}
+                        {!hasError && <Icon.Checked style={{fontSize: 18,color:colors.green}}/>}
                     </div>
                 </div>
             }}

@@ -1,10 +1,10 @@
 import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuSigmaSquare} from "react-icons/lu";
-import {IoOpenOutline, IoTrashOutline} from "react-icons/io5";
+import {IoCodeSlashOutline, IoOpenOutline, IoTrashOutline} from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbToggleLeftFilled} from "react-icons/tb";
-import {MdCheck, MdDataArray, MdDataObject} from "react-icons/md";
+import {MdCheck, MdDataArray, MdDataObject, MdError} from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
 
 export const Icon = {
@@ -19,8 +19,10 @@ export const Icon = {
     Record: MdDataObject,
     Array: MdDataArray,
     Checked: MdCheck,
-    ArrowDown : IoIosArrowDown ,
-    ArrowRight : IoIosArrowForward,
-    Save : IoIosSave,
-    Exit : IoIosExit
+    ArrowDown: IoIosArrowDown,
+    ArrowRight: IoIosArrowForward,
+    Save: IoIosSave,
+    Exit: IoIosExit,
+    Error: MdError,
+    Formula: IoCodeSlashOutline
 }
