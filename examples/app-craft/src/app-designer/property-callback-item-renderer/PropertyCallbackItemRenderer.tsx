@@ -1,6 +1,5 @@
-import {ZodType} from "zod";
 import {useShowModal} from "../../modal/useShowModal.ts";
-import {useUpdateSelectedDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
+import {useUpdateDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
 import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
@@ -14,10 +13,10 @@ import {isEmpty} from "../../utils/isEmpty.ts";
 import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
 
-export function PropertyCallbackItemRenderer(props: { propertyName: string, type: ZodType }) {
-    const {propertyName, type} = props;
+export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
+    const {propertyName} = props;
     const showModal = useShowModal();
-    const update = useUpdateSelectedDragContainer();
+    const update = useUpdateDragContainer();
     const context = useContext(AppDesignerContext);
     const containerSignal = useSelectedDragContainer();
     return <LabelContainer key={propertyName} label={propertyName}
@@ -46,11 +45,11 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string, type
                     }} onClick={async () => {
                         const result = await showModal<ContainerPropertyType>(closePanel => {
                             return <AppDesignerContext.Provider value={context}>
-                                <ComponentPropertyEditor closePanel={closePanel} name={propertyName} type={type}/>
+                                <ComponentPropertyEditor closePanel={closePanel} name={propertyName} containerId={container?.id ?? ''}/>
                             </AppDesignerContext.Provider>
                         });
                         if (result) {
-                            update(selectedContainer => {
+                            update(container?.id ?? '',selectedContainer => {
                                 selectedContainer.properties = {...selectedContainer.properties, [propertyName]: result}
                             })
                         }

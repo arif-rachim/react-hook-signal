@@ -1,4 +1,3 @@
-import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
 import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {notifiable, useSignal} from "react-hook-signal";
@@ -20,14 +19,15 @@ import {BORDER} from "../Border.ts";
 export function ComponentPropertyEditor(props: {
     closePanel: (param?: ContainerPropertyType) => void,
     name: string,
-    type: ZodType
+    containerId:string,
 }) {
-    const selectedDragContainer = useSelectedDragContainer();
-    const initialValue = (selectedDragContainer.get()?.properties[props.name]) ?? createNewProps(props.type);
-    const propsSignal = useSignal<ContainerPropertyType>(initialValue);
     const context = useContext(AppDesignerContext);
-    const {allVariablesSignal} = context;
-    const returnType = props.type;
+    const {allVariablesSignal,elements} = context;
+    const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
+    const returnType = elements[selectedDragContainer.type].property[props.name];
+    const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps(returnType);
+    const propsSignal = useSignal<ContainerPropertyType>(initialValue);
+
     const isFunction = returnType instanceof ZodFunction;
     const propertyDescription = "This property can dependent on certain variables, either state or computed. Whenever these state or computed variables are accessed, which occurs through the invocation of the get() method, the block of code will automatically execute. As a result, the updated value of the variable will be automatically bound to the corresponding component property, ensuring that the component always reflects the most current data.";
     const callbackDescription = 'This callback can dependent on certain variables, either state or computed. However, the callback function will not automatically monitor changes in the values of state or computed variables. Instead, the callback is invoked directly by the application based on specific events or triggers.'

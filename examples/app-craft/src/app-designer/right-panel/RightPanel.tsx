@@ -3,7 +3,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {NumericalPercentagePropertyEditor} from "../property-editor/NumericalPercentagePropertyEditor.tsx";
-import {ZodFunction, ZodType} from "zod";
+import {ZodFunction} from "zod";
 import {PropertyCallbackItemRenderer} from "../property-callback-item-renderer/PropertyCallbackItemRenderer.tsx";
 import {BORDER} from "../Border.ts";
 import {
@@ -98,14 +98,12 @@ export function RightPanel() {
             }
             result.push(<CollapsibleLabelContainer label={'Properties'} key={'properties'} styleContent={{gap: 10}}>
                 {attributes.map(propKey => {
-                    const type = property[propKey] as ZodType
-                    return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey} type={type}/>
+                    return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey} />
                 })}
             </CollapsibleLabelContainer>);
             result.push(<CollapsibleLabelContainer label={'Callbacks'} key={'callbacks'} styleContent={{gap: 10}}>
                 {callbacks.map(propKey => {
-                    const type = property[propKey] as ZodType
-                    return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey} type={type}/>
+                    return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey}/>
                 })}
             </CollapsibleLabelContainer>);
         }

@@ -163,42 +163,40 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     allErrorsSignal: allErrorsSignal,
                     elements: props.elements
                 }}>
-                <SetupVariablesInstance />
-                <div style={{display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden'}}>
-                    <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'hidden'}}>
-                        <LeftPanel/>
+                <SetupVariablesInstance/>
+                <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'hidden'}}>
+                    <LeftPanel/>
+                    <div style={{
+                        flexGrow: 1,
+                        overflow: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: 'rgba(0,0,0,0.2)'
+                    }}>
+                        <ToggleViewToolbar/>
                         <div style={{
                             flexGrow: 1,
-                            overflow: 'auto',
                             display: 'flex',
                             flexDirection: 'column',
-                            backgroundColor: 'rgba(0,0,0,0.2)'
+                            padding: 10
                         }}>
-                            <ToggleViewToolbar/>
-                            <div style={{
-                                flexGrow: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                padding: 10
-                            }}>
-                                <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
-                                    {renderedElements}
-                                </notifiable.div>
-                            </div>
-                            <ToolBar/>
+                            <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
+                                {renderedElements}
+                            </notifiable.div>
                         </div>
-                        <RightPanel/>
+                        <BottomPanel />
+                        <ToolBar/>
                     </div>
-                    <BottomPanel />
+                    <RightPanel/>
                 </div>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>
 }
 
-function SetupVariablesInstance(){
+function SetupVariablesInstance() {
     const {recordVariableError} = useRecordErrorMessage();
-    const {allVariablesSignal,allVariablesSignalInstance} = useContext(AppDesignerContext);
+    const {allVariablesSignal, allVariablesSignalInstance} = useContext(AppDesignerContext);
     useSignalEffect(() => {
         const variables = allVariablesSignal.get();
         const variablesInstance: Array<VariableInstance> = [];
@@ -212,9 +210,9 @@ function SetupVariablesInstance(){
                     init.call(null, module);
                     const state = new Signal.State(module.exports);
                     variablesInstance.push({id: v.id, instance: state});
-                    recordVariableError({referenceId:v.id});
+                    recordVariableError({referenceId: v.id});
                 } catch (err) {
-                    recordVariableError({error:err,referenceId:v.id});
+                    recordVariableError({error: err, referenceId: v.id});
                 }
             } else {
 
@@ -240,9 +238,9 @@ function SetupVariablesInstance(){
                             return module.exports;
                         });
                         variablesInstance.push({id: v.id, instance: computed});
-                        recordVariableError({referenceId:v.id});
+                        recordVariableError({referenceId: v.id});
                     } catch (err) {
-                        recordVariableError({error:err,referenceId:v.id});
+                        recordVariableError({error: err, referenceId: v.id});
                     }
                 }
                 if (v.type === 'effect') {
@@ -252,16 +250,16 @@ function SetupVariablesInstance(){
                         const destructor = effect(() => {
                             dependencies.forEach(d => d.instance.get());
                             const instances = [...dependencies.map(d => d.instance)]
-                            try{
+                            try {
                                 init.call(null, ...instances);
-                                recordVariableError({referenceId:v.id});
-                            }catch(err){
-                                recordVariableError({error:err,referenceId:v.id});
+                                recordVariableError({referenceId: v.id});
+                            } catch (err) {
+                                recordVariableError({error: err, referenceId: v.id});
                             }
                         });
                         destructorCallbacks.push(destructor);
                     } catch (err) {
-                        recordVariableError({error:err,referenceId:v.id});
+                        recordVariableError({error: err, referenceId: v.id});
                     }
                 }
             }
