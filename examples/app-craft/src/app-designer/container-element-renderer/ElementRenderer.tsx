@@ -37,6 +37,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);
+
     const [componentProps, setComponentProps] = useState<Record<string, unknown>>({})
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
@@ -51,26 +52,29 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                     const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
                     const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
                     const funcParams = ['module', ...propDependenciesName, containerProp.formula] as Array<string>;
-                    // just listen for changes
                     propDependencies.forEach(p => p.get());
                     const module: { exports: unknown } = {exports: {}};
                     try {
                         const fun = new Function(...funcParams);
                         const funcParamsInstance = [module, ...propDependencies];
                         fun.call(null, ...funcParamsInstance);
-                        if(typeof module.exports === 'function') {
-                            const originalFunction = module.exports as (...args:unknown[]) => unknown
-                            const wrapper = (...args:unknown[]) => {
-                                try{
-                                    const result = originalFunction.call(null,...args);
+                        if (typeof module.exports === 'function') {
+                            const originalFunction = module.exports as (...args: unknown[]) => unknown
+                            const wrapper = (...args: unknown[]) => {
+                                try {
+                                    const result = originalFunction.call(null, ...args);
                                     recordPropertyError({propertyName: containerPropKey, referenceId: container.id});
                                     return result;
-                                }catch(err){
-                                    recordPropertyError({propertyName: containerPropKey, referenceId: container.id, error: err})
+                                } catch (err) {
+                                    recordPropertyError({
+                                        propertyName: containerPropKey,
+                                        referenceId: container.id,
+                                        error: err
+                                    })
                                 }
                             }
                             setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
-                        }else{
+                        } else {
                             setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
                             recordPropertyError({propertyName: containerPropKey, referenceId: container.id})
                         }

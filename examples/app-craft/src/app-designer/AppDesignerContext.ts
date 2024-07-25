@@ -6,7 +6,7 @@ import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 /**
  * Represents the context for the App Designer.
  */
-interface AppDesignerContext {
+export interface AppDesignerContext {
     activeDropZoneIdSignal: Signal.State<string>;
     selectedDragContainerIdSignal: Signal.State<string>;
     hoveredDragContainerIdSignal: Signal.State<string>;

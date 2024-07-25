@@ -3,6 +3,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {Error} from "../AppDesigner.tsx";
 import {isEmpty} from "../../utils/isEmpty.ts";
 
+
 export function useRecordErrorMessage() {
     const {allErrorsSignal} = useContext(AppDesignerContext);
 
@@ -10,7 +11,11 @@ export function useRecordErrorMessage() {
         const allErrors = allErrorsSignal.get();
         const existingError = allErrors.findIndex(i => i.referenceId === e.referenceId && i.type === e.type && (e.type === 'property' ? i.propertyName === e.propertyName : true));
         const copyError = [...allErrors];
+
         if (existingError >= 0) {
+            if(copyError[existingError].message === e.message){
+                return;
+            }
             if (isEmpty(e.message)) {
                 copyError.splice(existingError, 1);
                 allErrorsSignal.set(copyError);

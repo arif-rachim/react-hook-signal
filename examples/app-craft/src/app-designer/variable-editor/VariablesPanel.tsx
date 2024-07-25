@@ -12,10 +12,25 @@ import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelCont
 import {Button} from "../button/Button.tsx";
 import {colors} from "stock-watch/src/utils/colors.ts";
 
-function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType) {
+function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType,context:AppDesignerContext) {
+
     return (variable: Variable) => {
         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'center',color:colors.red}}><Icon.Error/></div>
+            <notifiable.div>
+                {() => {
+                    const allErrors = context.allErrorsSignal.get();
+                    const error = allErrors.find(e => e.type === 'variable' && e.referenceId === variable.id);
+                    if(error) {
+                        return <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: colors.red
+                        }}><Icon.Error/></div>
+                    }
+                    return <></>
+                }}
+            </notifiable.div>
             <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{variable.name}</div>
             <div style={{
                 display: 'flex',
@@ -86,13 +101,13 @@ export function VariablesPanel() {
     }
 
     const stateVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable, 'state'));
+        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable, 'state',context));
     })
     const computedVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable, 'computed'));
+        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable, 'computed',context));
     })
     const effectVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable, 'effect'));
+        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable, 'effect',context));
     })
 
     return <>
