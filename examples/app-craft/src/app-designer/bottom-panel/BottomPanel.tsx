@@ -4,15 +4,18 @@ import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
-import {ContainerPropertyType} from "../AppDesigner.tsx";
+import {ContainerPropertyType, Variable} from "../AppDesigner.tsx";
 import {ComponentPropertyEditor} from "../property-editor/ComponentPropertyEditor.tsx";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {useUpdateDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
+import {VariableEditorPanel} from "../variable-editor/VariableEditorPanel.tsx";
+import {useUpdateVariable} from "../hooks/useUpdateVariable.ts";
 
 export function BottomPanel() {
     const showModal = useShowModal();
     const context = useContext(AppDesignerContext);
     const update = useUpdateDragContainer();
+    const updateVariable = useUpdateVariable();
     const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
     return <div style={{display:'flex',flexDirection:'column',backgroundColor:'rgba(255,255,255,1'}}>
 
@@ -60,21 +63,14 @@ export function BottomPanel() {
                                     }
 
                                     if(e.type === 'variable'){
-                                        // const result = await showModal<Variable>(closePanel => {
-                                        //     return <AppDesignerContext.Provider value={context}>
-                                        //         <VariableEditorPanel variable={variable} closePanel={closePanel} defaultType={forType}/>
-                                        //     </AppDesignerContext.Provider>
-                                        // })
-                                        // if (result) {
-                                        //     const variables = [...allVariablesSignal.get()];
-                                        //     const indexOfVariable = variables.findIndex(i => i.id === result.id);
-                                        //     if (indexOfVariable >= 0) {
-                                        //         variables.splice(indexOfVariable, 1, result);
-                                        //     } else {
-                                        //         variables.push(result);
-                                        //     }
-                                        //     allVariablesSignal.set(variables.sort(sortSignal));
-                                        // }
+                                        const result = await showModal<Variable>(closePanel => {
+                                            return <AppDesignerContext.Provider value={context}>
+                                                <VariableEditorPanel variableId={e.referenceId} closePanel={closePanel} defaultType={'state'}/>
+                                            </AppDesignerContext.Provider>
+                                        })
+                                        if (result) {
+                                            updateVariable(result);
+                                        }
                                     }
 
                                 }}><Icon.Detail style={{fontSize:18}}/></div>

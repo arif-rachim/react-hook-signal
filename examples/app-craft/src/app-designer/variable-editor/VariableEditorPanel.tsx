@@ -18,23 +18,26 @@ import {DependencyInputSelector} from "../dependency-selector/DependencyInputSel
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 
 const title = {
-    computed : 'Computed',
-    state : 'State',
+    computed: 'Computed',
+    state: 'State',
     effect: 'Effect'
 }
+
 /**
  * Represents a panel for editing variables.
  */
 export function VariableEditorPanel(props: {
-    variable?: Variable,
+    variableId?: string,
     closePanel: (result?: Variable) => void,
     defaultType: VariableType,
-    enableToSwitchBetweenType?:boolean
+    enableToSwitchBetweenType?: boolean
 }) {
-    const {variable, closePanel, defaultType,enableToSwitchBetweenType} = props;
+    const context = useContext(AppDesignerContext);
+    const {variableId, closePanel, defaultType, enableToSwitchBetweenType} = props;
+    const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
-    const context = useContext(AppDesignerContext);
+
     const {allVariablesSignal} = context;
 
     function createNewVariable(): Variable {
@@ -199,7 +202,7 @@ export function VariableEditorPanel(props: {
             </CollapsibleLabelContainer>
 
         </div>
-        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10,borderTop:BORDER,paddingTop:10}}>
+        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, paddingTop: 10}}>
             <Button onClick={async () => {
                 const [isValid, errors] = validateForm();
                 if (isValid) {

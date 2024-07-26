@@ -11,8 +11,9 @@ import {sortSignal} from "../sortSignal.ts";
 import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {Button} from "../button/Button.tsx";
 import {colors} from "stock-watch/src/utils/colors.ts";
+import {useUpdateVariable} from "../hooks/useUpdateVariable.ts";
 
-function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType,context:AppDesignerContext) {
+function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType, context: AppDesignerContext) {
 
     return (variable: Variable) => {
         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>
@@ -20,7 +21,7 @@ function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<voi
                 {() => {
                     const allErrors = context.allErrorsSignal.get();
                     const error = allErrors.find(e => e.type === 'variable' && e.referenceId === variable.id);
-                    if(error) {
+                    if (error) {
                         return <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -59,22 +60,15 @@ export function VariablesPanel() {
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal} = context;
     const showModal = useShowModal();
-
+    const updateVariable = useUpdateVariable();
     async function editVariable(forType: VariableType, variable?: Variable) {
         const result = await showModal<Variable>(closePanel => {
             return <AppDesignerContext.Provider value={context}>
-                <VariableEditorPanel variable={variable} closePanel={closePanel} defaultType={forType}/>
+                <VariableEditorPanel variableId={variable?.id} closePanel={closePanel} defaultType={forType}/>
             </AppDesignerContext.Provider>
         })
         if (result) {
-            const variables = [...allVariablesSignal.get()];
-            const indexOfVariable = variables.findIndex(i => i.id === result.id);
-            if (indexOfVariable >= 0) {
-                variables.splice(indexOfVariable, 1, result);
-            } else {
-                variables.push(result);
-            }
-            allVariablesSignal.set(variables.sort(sortSignal));
+            updateVariable(result);
         }
     }
 
@@ -101,13 +95,13 @@ export function VariablesPanel() {
     }
 
     const stateVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable, 'state',context));
+        return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable, 'state', context));
     })
     const computedVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable, 'computed',context));
+        return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable, 'computed', context));
     })
     const effectVariableList = useComputed(() => {
-        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable, 'effect',context));
+        return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable, 'effect', context));
     })
 
     return <>
