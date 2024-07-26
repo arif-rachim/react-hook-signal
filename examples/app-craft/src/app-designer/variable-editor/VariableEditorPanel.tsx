@@ -148,13 +148,13 @@ export function VariableEditorPanel(props: {
                     <notifiable.div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        height: 50,
+                        height: 250,
                     }}>
                         {() => {
                             const variable = variableSignal.get();
                             const formula = variable.schemaCode;
                             return <Editor
-                                language="JavaScript"
+                                language="javascript"
                                 value={formula}
                                 options={{
                                     selectOnLineNumbers: false,

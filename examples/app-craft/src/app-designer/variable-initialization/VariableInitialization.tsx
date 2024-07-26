@@ -6,7 +6,7 @@ import {Signal} from "signal-polyfill";
 import {VariableInstance} from "../AppDesigner.tsx";
 
 export function VariableInitialization() {
-    const {recordVariableError} = useRecordErrorMessage();
+    const {recordVariableError,clearVariableError} = useRecordErrorMessage();
     const {allVariablesSignal, allVariablesSignalInstance} = useContext(AppDesignerContext);
     useSignalEffect(() => {
         const variables = allVariablesSignal.get();
@@ -21,7 +21,7 @@ export function VariableInitialization() {
                     init.call(null, module);
                     const state = new Signal.State(module.exports);
                     variablesInstance.push({id: v.id, instance: state});
-                    recordVariableError({referenceId: v.id});
+                    clearVariableError(v.id);
                 } catch (err) {
                     recordVariableError({error: err, referenceId: v.id});
                 }
@@ -53,7 +53,7 @@ export function VariableInitialization() {
                             return module.exports;
                         });
                         variablesInstance.push({id: v.id, instance: computed});
-                        recordVariableError({referenceId: v.id});
+                        clearVariableError(v.id);
                     } catch (err) {
                         recordVariableError({error: err, referenceId: v.id});
                     }
@@ -69,7 +69,7 @@ export function VariableInitialization() {
                             const instances = [...dependencies.map(d => d.instance)]
                             try {
                                 init.call(null, ...instances);
-                                recordVariableError({referenceId: v.id});
+                                clearVariableError(v.id);
                             } catch (err) {
                                 recordVariableError({error: err, referenceId: v.id});
                             }

@@ -13,7 +13,7 @@ export function useRecordErrorMessage() {
         const copyError = [...allErrors];
 
         if (existingError >= 0) {
-            if(copyError[existingError].message === e.message){
+            if (copyError[existingError].message === e.message) {
                 return;
             }
             if (isEmpty(e.message)) {
@@ -30,7 +30,8 @@ export function useRecordErrorMessage() {
             }
         }
 
-    }, [allErrorsSignal])
+    }, [allErrorsSignal]);
+
 
     const recordPropertyError = useCallback(function recordPropertyError(props: {
         referenceId: string,
@@ -60,7 +61,15 @@ export function useRecordErrorMessage() {
         recordError({type: 'variable', referenceId: props.referenceId, propertyName: undefined, message: message});
     }, [recordError])
 
+    function clearVariableError(variableId: string) {
+        recordVariableError({referenceId: variableId});
+    }
+
+    function clearPropertyError(containerId: string, propertyName: string) {
+        recordPropertyError({referenceId: containerId, propertyName})
+    }
+
     return {
-        recordPropertyError, recordVariableError
+        recordPropertyError, recordVariableError, clearVariableError, clearPropertyError
     }
 }

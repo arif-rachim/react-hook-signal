@@ -30,7 +30,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const propertiesSignal = useSignal(container.properties);
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
-    const {recordPropertyError} = useRecordErrorMessage();
+    const {recordPropertyError,clearPropertyError} = useRecordErrorMessage();
     const Component = useMemo(() => {
         return forwardRef(component)
     }, [component])
@@ -63,7 +63,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                             const wrapper = (...args: unknown[]) => {
                                 try {
                                     const result = originalFunction.call(null, ...args);
-                                    recordPropertyError({propertyName: containerPropKey, referenceId: container.id});
+                                    clearPropertyError(container.id,containerPropKey);
                                     return result;
                                 } catch (err) {
                                     recordPropertyError({
@@ -76,7 +76,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                             setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
                         } else {
                             setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
-                            recordPropertyError({propertyName: containerPropKey, referenceId: container.id})
+                            clearPropertyError(container.id,containerPropKey);
                         }
                     } catch (err) {
                         recordPropertyError({propertyName: containerPropKey, referenceId: container.id, error: err})
