@@ -6,7 +6,7 @@ import {onBeforeMountHandler} from "../onBeforeHandler.ts";
 import {Button} from "../button/Button.tsx";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
 import {ContainerPropertyType} from "../AppDesigner.tsx";
-import {ZodFunction, ZodType} from "zod";
+import {ZodFunction} from "zod";
 import {zodTypeToJson} from "../zodSchemaToJson.ts";
 import {Icon} from "../Icon.ts";
 import {DependencyInputSelector} from "../dependency-selector/DependencyInputSelector.tsx";
@@ -19,13 +19,13 @@ import {BORDER} from "../Border.ts";
 export function ComponentPropertyEditor(props: {
     closePanel: (param?: ContainerPropertyType) => void,
     name: string,
-    containerId:string,
+    containerId: string,
 }) {
     const context = useContext(AppDesignerContext);
-    const {allVariablesSignal,elements} = context;
+    const {allVariablesSignal, elements} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements[selectedDragContainer.type].property[props.name];
-    const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps(returnType);
+    const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
 
     const isFunction = returnType instanceof ZodFunction;
@@ -119,9 +119,8 @@ export function ComponentPropertyEditor(props: {
     </div>
 }
 
-function createNewProps(type: ZodType): ContainerPropertyType {
+function createNewProps(): ContainerPropertyType {
     return {
-        type: type,
         formula: '',
         dependencies: []
     }

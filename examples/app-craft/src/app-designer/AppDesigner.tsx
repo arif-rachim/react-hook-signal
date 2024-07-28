@@ -6,7 +6,6 @@ import {guid} from "../utils/guid.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import {sortSignal} from "./sortSignal.ts";
-import {ZodType} from "zod";
 import {LeftPanel} from "./left-panel/LeftPanel.tsx";
 import {RightPanel} from "./right-panel/RightPanel.tsx";
 import ButtonGroup from "./button/ButtonGroup.tsx";
@@ -35,7 +34,6 @@ export type VariableInstance = {
 }
 export type ContainerPropertyType = {
     formula: string,
-    type: ZodType,
     dependencies?: Array<string>
 }
 
