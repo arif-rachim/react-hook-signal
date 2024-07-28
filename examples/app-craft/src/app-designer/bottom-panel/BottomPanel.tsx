@@ -32,17 +32,21 @@ export function BottomPanel() {
                         {errors.map(e => {
                             let type: string | undefined = undefined;
                             let name: string | undefined = undefined;
+                            let referenceId : string | undefined = undefined;
                             if (e.type === 'property') {
-                                const container = containers.find(c => c.id === e.referenceId)
+                                const container = containers.find(c => c.id === e.containerId)
                                 type = container?.type;
                                 name = e.propertyName;
+                                referenceId = e.containerId;
                             }
                             if (e.type === 'variable') {
-                                const v = variables.find(c => c.id === e.referenceId)
+                                const v = variables.find(c => c.id === e.variableId)
                                 type = v?.type;
                                 name = v?.name;
+                                referenceId = e.variableId
                             }
-                            return <div key={`${e.referenceId}-${e.propertyName}`}
+
+                            return <div key={`${referenceId}-${name}`}
                                         style={{display: 'flex', flexDirection: 'row'}}>
                                 <div style={{width: 100, flexShrink: 0, padding: '2px 10px'}}>{type}</div>
                                 <div style={{width: 100, flexShrink: 0, padding: '2px 10px'}}>{name}</div>
@@ -52,11 +56,11 @@ export function BottomPanel() {
                                     if(e.type === 'property'){
                                         const result = await showModal<ContainerPropertyType>(closePanel => {
                                             return <AppDesignerContext.Provider value={context}>
-                                                <ComponentPropertyEditor closePanel={closePanel} name={e.propertyName??''} containerId={e?.referenceId ?? ''}/>
+                                                <ComponentPropertyEditor closePanel={closePanel} name={e.propertyName??''} containerId={e?.containerId ?? ''}/>
                                             </AppDesignerContext.Provider>
                                         });
                                         if (result) {
-                                            update(e.referenceId ?? '',selectedContainer => {
+                                            update(e.containerId ?? '',selectedContainer => {
                                                 selectedContainer.properties = {...selectedContainer.properties, [e.propertyName ?? '']: result}
                                             })
                                         }
@@ -65,7 +69,7 @@ export function BottomPanel() {
                                     if(e.type === 'variable'){
                                         const result = await showModal<Variable>(closePanel => {
                                             return <AppDesignerContext.Provider value={context}>
-                                                <VariableEditorPanel variableId={e.referenceId} closePanel={closePanel} defaultType={'state'}/>
+                                                <VariableEditorPanel variableId={e.variableId} closePanel={closePanel} defaultType={'state'}/>
                                             </AppDesignerContext.Provider>
                                         })
                                         if (result) {

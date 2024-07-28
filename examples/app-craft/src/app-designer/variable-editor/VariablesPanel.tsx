@@ -20,7 +20,7 @@ function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<voi
             <notifiable.div>
                 {() => {
                     const allErrors = context.allErrorsSignal.get();
-                    const error = allErrors.find(e => e.type === 'variable' && e.referenceId === variable.id);
+                    const error = allErrors.find(e => e.type === 'variable' && e.variableId === variable.id);
                     if (error) {
                         return <div style={{
                             display: 'flex',

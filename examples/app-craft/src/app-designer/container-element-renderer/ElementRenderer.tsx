@@ -2,9 +2,9 @@ import {Container} from "../AppDesigner.tsx";
 import {forwardRef, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
-import {ZodFunction} from "zod";
 import {CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
 import {useRecordErrorMessage} from "../hooks/useRecordErrorMessage.ts";
+import {ZodFunction} from "zod";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -30,7 +30,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const propertiesSignal = useSignal(container.properties);
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
-    const {recordPropertyError,clearPropertyError} = useRecordErrorMessage();
+    const errorMessage = useRecordErrorMessage();
     const Component = useMemo(() => {
         return forwardRef(component)
     }, [component])
@@ -58,28 +58,32 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                         const fun = new Function(...funcParams);
                         const funcParamsInstance = [module, ...propDependencies];
                         fun.call(null, ...funcParamsInstance);
-                        if (typeof module.exports === 'function') {
-                            const originalFunction = module.exports as (...args: unknown[]) => unknown
-                            const wrapper = (...args: unknown[]) => {
-                                try {
-                                    const result = originalFunction.call(null, ...args);
-                                    clearPropertyError(container.id,containerPropKey);
-                                    return result;
-                                } catch (err) {
-                                    recordPropertyError({
-                                        propertyName: containerPropKey,
-                                        referenceId: container.id,
-                                        error: err
-                                    })
-                                }
-                            }
-                            setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
-                        } else {
-                            setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
-                            clearPropertyError(container.id,containerPropKey);
-                        }
+                        errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                     } catch (err) {
-                        recordPropertyError({propertyName: containerPropKey, referenceId: container.id, error: err})
+                        errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id, err});
+                    }
+
+                    if (typeof module.exports === 'function') {
+                        const originalFunction = module.exports as (...args: unknown[]) => unknown
+                        const wrapper = (...args: unknown[]) => {
+                            try {
+                                const result = originalFunction.call(null, ...args);
+                                errorMessage.propertyInvocation({
+                                    containerId: container.id,
+                                    propertyName: containerPropKey
+                                });
+                                return result;
+                            } catch (err) {
+                                errorMessage.propertyInvocation({
+                                    propertyName: containerPropKey,
+                                    containerId: container.id,
+                                    err
+                                })
+                            }
+                        }
+                        setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
+                    } else {
+                        setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
                     }
                 })
                 destroyerCallbacks.push(destroyer);

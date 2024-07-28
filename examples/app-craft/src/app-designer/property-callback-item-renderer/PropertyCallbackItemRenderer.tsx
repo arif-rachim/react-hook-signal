@@ -26,7 +26,7 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
         <notifiable.div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
             {() => {
                 const container = containerSignal.get();
-                const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.referenceId === container?.id) !== undefined;
+                const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.containerId === container?.id) !== undefined;
                 let isFormulaEmpty = true;
                 if (container && container.properties[propertyName]) {
                     const formula = container.properties[propertyName].formula;

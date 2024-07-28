@@ -16,15 +16,10 @@ import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {BottomPanel} from "./bottom-panel/BottomPanel.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
+import {ErrorType} from "./errors/ErrorType.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
-export type Error = {
-    type: 'variable' | 'property',
-    propertyName?: string, // this is for container property
-    referenceId: string,
-    message?: string
-}
 export type Variable = {
     type: VariableType,
     id: string,
@@ -96,7 +91,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
     const allVariablesSignal = useSignal<Array<Variable>>([]);
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
-    const allErrorsSignal = useSignal<Array<Error>>([]);
+    const allErrorsSignal = useSignal<Array<ErrorType>>([]);
     const allContainersSignal = useSignal<Array<Container>>([{
         id: guid(),
         type: 'vertical',
@@ -147,8 +142,6 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         }
         return <></>
     });
-
-
     return <ErrorBoundary>
         <ModalProvider>
             <AppDesignerContext.Provider

@@ -1,15 +1,28 @@
 import {useCallback, useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {Error} from "../AppDesigner.tsx";
 import {isEmpty} from "../../utils/isEmpty.ts";
+import {ErrorType} from "../errors/ErrorType.ts";
+import {ZodError} from "zod";
 
+// eslint-disable-next-line
+type Error = unknown;
 
 export function useRecordErrorMessage() {
     const {allErrorsSignal} = useContext(AppDesignerContext);
 
-    const recordError = useCallback(function recordError(e: Error) {
+    const recordError = useCallback(function recordError(e: ErrorType) {
         const allErrors = allErrorsSignal.get();
-        const existingError = allErrors.findIndex(i => i.referenceId === e.referenceId && i.type === e.type && (e.type === 'property' ? i.propertyName === e.propertyName : true));
+        const existingError = allErrors.findIndex(i => {
+            if (i.type === e.type && i.category === e.category) {
+                if (i.type === 'property' && e.type === 'property') {
+                    return i.propertyName === e.propertyName && e.containerId === e.containerId;
+                }
+                if (i.type === 'variable' && e.type === 'variable') {
+                    return i.variableId === e.variableId;
+                }
+            }
+            return false
+        });
         const copyError = [...allErrors];
 
         if (existingError >= 0) {
@@ -32,44 +45,95 @@ export function useRecordErrorMessage() {
 
     }, [allErrorsSignal]);
 
-
-    const recordPropertyError = useCallback(function recordPropertyError(props: {
-        referenceId: string,
-        propertyName: string,
-        error?: unknown
-    }) {
-        let message = undefined;
-        if (props.error !== undefined && props.error !== null && typeof props.error === 'object' && 'message' in props.error && typeof props.error.message === 'string') {
-            message = props.error.message;
-        }
+    function variableSchema(props: { variableId: string, err?: Error }) {
         recordError({
-            type: 'property',
-            referenceId: props.referenceId,
-            propertyName: props.propertyName,
-            message: message
-        });
-    }, [recordError])
-
-    const recordVariableError = useCallback(function recordVariableError(props: {
-        referenceId: string,
-        error?: unknown
-    }) {
-        let message = undefined;
-        if (props.error !== undefined && props.error !== null && typeof props.error === 'object' && 'message' in props.error && typeof props.error.message === 'string') {
-            message = props.error.message;
-        }
-        recordError({type: 'variable', referenceId: props.referenceId, propertyName: undefined, message: message});
-    }, [recordError])
-
-    function clearVariableError(variableId: string) {
-        recordVariableError({referenceId: variableId});
+            type: 'variable',
+            category: 'schema',
+            variableId: props.variableId,
+            message: extractErrorMessage(props.err)
+        })
     }
 
-    function clearPropertyError(containerId: string, propertyName: string) {
-        recordPropertyError({referenceId: containerId, propertyName})
+    function variableValue(props: { variableId: string, err?: Error }) {
+        recordError({
+            type: 'variable',
+            category: 'value',
+            variableId: props.variableId,
+            message: extractErrorMessage(props.err)
+        })
+    }
+
+    function variableValidation(props: { variableId: string, err?: Error }) {
+
+        recordError({
+            type: 'variable',
+            category: 'validation',
+            variableId: props.variableId,
+            message: extractErrorMessage(props.err)
+        })
+    }
+
+
+    function propertySchema(props: { containerId: string, propertyName: string, err?: Error }) {
+        recordError({
+            type: 'property',
+            category: 'schema',
+            containerId: props.containerId,
+            propertyName: props.propertyName,
+            message: extractErrorMessage(props.err)
+        })
+    }
+
+    function propertyValue(props: { containerId: string, propertyName: string, err?: Error }) {
+        recordError({
+            type: 'property',
+            category: 'value',
+            containerId: props.containerId,
+            propertyName: props.propertyName,
+            message: extractErrorMessage(props.err)
+        })
+    }
+
+    function propertyValidation(props: { containerId: string, propertyName: string, err?: Error }) {
+        recordError({
+            type: 'property',
+            category: 'validation',
+            containerId: props.containerId,
+            propertyName: props.propertyName,
+            message: extractErrorMessage(props.err)
+        })
+    }
+
+    function propertyInvocation(props: { containerId: string, propertyName: string, err?: Error }) {
+        recordError({
+            type: 'property',
+            category: 'invocation',
+            containerId: props.containerId,
+            propertyName: props.propertyName,
+            message: extractErrorMessage(props.err)
+        })
     }
 
     return {
-        recordPropertyError, recordVariableError, clearVariableError, clearPropertyError
+        variableSchema,
+        variableValue,
+        variableValidation,
+        propertyValue,
+        propertySchema,
+        propertyValidation,
+        propertyInvocation
     }
+}
+
+function extractErrorMessage(err:unknown){
+    if(err instanceof ZodError){
+        return (err?.errors ?? []).map(z => `${z.code} ${z.path} is ${z.message}`).join('\n')
+    }
+    if(err instanceof TypeError){
+        return err.message
+    }
+    if(err instanceof Error){
+        return err.message
+    }
+    return '';
 }
