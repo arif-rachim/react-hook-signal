@@ -5,7 +5,6 @@ import {Signal} from "signal-polyfill";
 import {guid} from "../utils/guid.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
-import {sortSignal} from "./sortSignal.ts";
 import {LeftPanel} from "./left-panel/LeftPanel.tsx";
 import {RightPanel} from "./right-panel/RightPanel.tsx";
 import ButtonGroup from "./button/ButtonGroup.tsx";
@@ -35,6 +34,13 @@ export type VariableInstance = {
 export type ContainerPropertyType = {
     formula: string,
     dependencies?: Array<string>
+}
+
+export type Page = {
+    id : string,
+    name : string,
+    containers: Array<Container>,
+    variables: Array<Variable>
 }
 
 export type Container = {
@@ -81,56 +87,76 @@ function ToggleViewToolbar() {
         }} defaultButton={'Design'}/>
     </div>
 }
+export function createNewBlankPage():Page{
+    return {
+        id : guid(),
+        variables : [],
+        containers : [{
+            id: guid(),
+            type: 'vertical',
+            children: [],
+            parent: '',
+            height: '',
+            width: '',
+            minWidth: '100px',
+            minHeight: '100px',
 
+            marginTop: '',
+            marginRight: '',
+            marginBottom: '',
+            marginLeft: '',
+
+            paddingTop: '',
+            paddingRight: '',
+            paddingBottom: '',
+            paddingLeft: '',
+            properties: {},
+
+            gap: '',
+            verticalAlign: '',
+            horizontalAlign: '',
+
+        }],
+        name : 'home'
+    }
+}
 export default function AppDesigner(props: LayoutBuilderProps) {
+    const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
+    const activePageIdSignal = useSignal<string>('');
     const activeDropZoneIdSignal = useSignal('');
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-    const allVariablesSignal = useSignal<Array<Variable>>([]);
+
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-    const allContainersSignal = useSignal<Array<Container>>([{
-        id: guid(),
-        type: 'vertical',
-        children: [],
-        parent: '',
-        height: '',
-        width: '',
-        minWidth: '100px',
-        minHeight: '100px',
 
-        marginTop: '',
-        marginRight: '',
-        marginBottom: '',
-        marginLeft: '',
+    const allVariablesSignal = useComputed<Array<Variable>>(() => {
+        const activePageId = activePageIdSignal.get();
+        const allPages = allPagesSignal.get();
+        return allPages.find(i => i.id === activePageId)?.variables ?? []
+    });
 
-        paddingTop: '',
-        paddingRight: '',
-        paddingBottom: '',
-        paddingLeft: '',
-        properties: {},
+    const allContainersSignal = useComputed<Array<Container>>(() => {
+        const activePageId = activePageIdSignal.get();
+        const allPages = allPagesSignal.get();
+        return allPages.find(i => i.id === activePageId)?.containers ?? []
+    });
 
-        gap: '',
-        verticalAlign: '',
-        horizontalAlign: '',
-
-    }]);
     const {value, onChange} = props;
     useEffect(() => {
-        if (value && value.containers && value.containers.length > 0) {
-            allContainersSignal.set(value.containers);
+        if(value && value.length > 0){
+            allPagesSignal.set(value);
+            const currentActivePageId = activePageIdSignal.get();
+            const hasSelection = value.findIndex(i => i.id === currentActivePageId) >= 0;
+            if(!hasSelection){
+                activePageIdSignal.set(value[0].id)
+            }
         }
-        if (value && value.variables && value.variables.length > 0) {
-            allVariablesSignal.set(value.variables.sort(sortSignal));
-        }
-    }, [allContainersSignal, allVariablesSignal, value]);
+    }, [activePageIdSignal, allPagesSignal, value]);
 
     useSignalEffect(() => {
-        onChange({
-            containers: allContainersSignal.get(),
-            variables: allVariablesSignal.get()
-        });
+        onChange(allPagesSignal.get());
     })
 
     const renderedElements = useComputed(() => {
@@ -144,6 +170,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         <ModalProvider>
             <AppDesignerContext.Provider
                 value={{
+                    allPagesSignal:allPagesSignal,
+                    activePageIdSignal:activePageIdSignal,
                     hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
                     selectedDragContainerIdSignal: selectedDragContainerIdSignal,
                     activeDropZoneIdSignal: activeDropZoneIdSignal,

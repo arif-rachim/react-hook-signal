@@ -2,13 +2,14 @@ import {Signal} from "signal-polyfill";
 import {Container} from "../../AppDesigner.tsx";
 import {guid} from "../../../utils/guid.ts";
 import {dropZones} from "../../drop-zone/dropZones.ts";
+import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 
 /**
  * Adds a new container to the list of all containers.
  */
-export function addNewContainer(allContainersSignal: Signal.State<Array<Container>>, config: {
+export function addNewContainer(allContainersSignal: Signal.Computed<Array<Container>>, config: {
     type: 'vertical' | 'horizontal' | string
-}, dropZoneId: Signal.State<string>) {
+}, dropZoneId: Signal.State<string>, updatePage: ReturnType<typeof useUpdatePageSignal>) {
     const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
     const newContainer: Container = {
         id: guid(),
@@ -52,7 +53,7 @@ export function addNewContainer(allContainersSignal: Signal.State<Array<Containe
         }
         return n;
     }), newContainer];
-    allContainersSignal.set(newAllContainers);
+    updatePage({type: 'container', containers: newAllContainers});
 }
 
 
@@ -64,7 +65,7 @@ export function addNewContainer(allContainersSignal: Signal.State<Array<Containe
  * - insertionIndex: The index where the container should be inserted.
  * If the drop zone element is not found, an empty string for parentContainerId and 0 for insertionIndex are returned.
  */
-function getContainerIdAndIndexToPlaced(allContainersSignal: Signal.State<Array<Container>>, dropZoneId: Signal.State<string>) {
+function getContainerIdAndIndexToPlaced(allContainersSignal: Signal.Computed<Array<Container>>, dropZoneId: Signal.State<string>) {
     const dropZoneElementId = dropZoneId.get();
     const dropZoneElement = document.getElementById(dropZoneElementId);
     if (dropZoneElement === null) {

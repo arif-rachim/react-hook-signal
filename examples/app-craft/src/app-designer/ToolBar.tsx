@@ -9,6 +9,7 @@ import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import {MdArrowUpward, MdCancel, MdDragIndicator} from "react-icons/md";
 import {useSelectedDragContainer} from "./hooks/useSelectedDragContainer.ts";
+import {useUpdatePageSignal} from "./hooks/useUpdatePageSignal.ts";
 
 /**
  * Represents a toolbar component that provides actions for a container.
@@ -22,7 +23,7 @@ export function ToolBar() {
         uiDisplayModeSignal
     } = useContext(AppDesignerContext);
     const containerSignal = useSelectedDragContainer();
-
+    const updatePage = useUpdatePageSignal();
     function preventClick(event: ReactMouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
@@ -88,7 +89,7 @@ export function ToolBar() {
             newParent.children = newParent.children.filter(s => s !== container.id);
             allContainers.splice(allContainers.indexOf(parent), 1, newParent);
         }
-        allContainersSignal.set(allContainers);
+        updatePage({type:'container',containers:allContainers});
     }
 
     function onDragStart(event: ReactDragEvent) {

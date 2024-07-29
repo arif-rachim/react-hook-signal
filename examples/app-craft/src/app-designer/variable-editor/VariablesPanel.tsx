@@ -12,6 +12,7 @@ import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelCont
 import {Button} from "../button/Button.tsx";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {useUpdateVariable} from "../hooks/useUpdateVariable.ts";
+import {useUpdatePageSignal} from "../hooks/useUpdatePageSignal.ts";
 
 function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType, context: AppDesignerContext) {
 
@@ -59,8 +60,10 @@ function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<voi
 export function VariablesPanel() {
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal} = context;
+    const updatePage = useUpdatePageSignal();
     const showModal = useShowModal();
     const updateVariable = useUpdateVariable();
+
     async function editVariable(forType: VariableType, variable?: Variable) {
         const result = await showModal<Variable>(closePanel => {
             return <AppDesignerContext.Provider value={context}>
@@ -89,7 +92,7 @@ export function VariablesPanel() {
             })
             if (deleteVariableConfirm === 'Yes') {
                 const variables = allVariablesSignal.get().filter(i => i.id !== variable?.id);
-                allVariablesSignal.set(variables.sort(sortSignal));
+                updatePage({type: 'variable', variables: variables.sort(sortSignal)})
             }
         }
     }

@@ -1,6 +1,6 @@
 import {notifiable} from "react-hook-signal";
 import {MdInput, MdSmartButton} from "react-icons/md";
-import AppDesigner, {Container, Variable} from "./app-designer/AppDesigner.tsx";
+import AppDesigner, {Page} from "./app-designer/AppDesigner.tsx";
 import {MutableRefObject, useState} from "react";
 import {element} from "./app-designer/LayoutBuilderProps.ts";
 import {z} from "zod";
@@ -8,12 +8,12 @@ import {BORDER} from "./app-designer/Border.ts";
 import {Button, defaultTheme, Provider} from "@adobe/react-spectrum";
 
 export function App() {
-    const [value, setValue] = useState<{ containers: Array<Container>, variables: Array<Variable> }>(() => {
+    const [value, setValue] = useState<Array<Page>>(() => {
         const val = localStorage.getItem('app-designer');
         if (val && val.length > 0) {
             return JSON.parse(val);
         }
-        return {containers: [], variables: []};
+        return [];
     });
     return <AppDesigner elements={{
                 input: element({

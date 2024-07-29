@@ -10,6 +10,7 @@ import {BasicDragEvent, CancellableEvent, ElementProps} from "../LayoutBuilderPr
 import {ContainerRenderer} from "./ContainerRenderer.tsx";
 import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
 import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
+import {useUpdatePageSignal} from "../hooks/useUpdatePageSignal.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
@@ -86,6 +87,7 @@ function alignItems(container?: Container): CSSProperties["alignItems"] {
 export function DraggableContainerElement(props: { container: Container }) {
     const {container: containerProp} = props;
     const containerSignal = useSignal(containerProp);
+    const updatePage = useUpdatePageSignal();
     const [computedStyle, setComputedStyle] = useState<CSSProperties>({})
     useEffect(() => {
         containerSignal.set(containerProp);
@@ -131,9 +133,9 @@ export function DraggableContainerElement(props: { container: Container }) {
         const id = event.dataTransfer.getData('text');
         const keys = Object.keys(elementsLib);
         if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
-            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal);
+            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal,updatePage);
         } else if (id) {
-            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal);
+            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal,updatePage);
         }
     }
 
