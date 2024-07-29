@@ -19,9 +19,9 @@ export function BottomPanel() {
     const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
     return <div style={{display:'flex',flexDirection:'column',backgroundColor:'rgba(255,255,255,1'}}>
 
-        <CollapsibleLabelContainer label={'Errors'}>
+        <CollapsibleLabelContainer label={'Errors'} styleContent={{padding:0}}>
             <notifiable.div
-                style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto', maxHeight: 100}}>
+                style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto',padding:'5px 25px', maxHeight: 100}}>
                 {() => {
                     const errors = allErrorsSignal.get();
                     const containers = allContainersSignal.get();
