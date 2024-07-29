@@ -19,9 +19,9 @@ export function BottomPanel() {
     const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
     return <div style={{display:'flex',flexDirection:'column',backgroundColor:'rgba(255,255,255,1'}}>
 
-        <CollapsibleLabelContainer label={'Errors'} styleContent={{padding:0}}>
+        <CollapsibleLabelContainer label={'Errors'} styleContent={{padding:0}} style={{minHeight:0}}>
             <notifiable.div
-                style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto',padding:'5px 25px', maxHeight: 100}}>
+                style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto', maxHeight: 100}}>
                 {() => {
                     const errors = allErrorsSignal.get();
                     const containers = allContainersSignal.get();
@@ -47,9 +47,9 @@ export function BottomPanel() {
                             }
 
                             return <div key={`${referenceId}-${name}`}
-                                        style={{display: 'flex', flexDirection: 'row'}}>
-                                <div style={{width: 100, flexShrink: 0, padding: '2px 10px'}}>{type}</div>
-                                <div style={{width: 100, flexShrink: 0, padding: '2px 10px'}}>{name}</div>
+                                        style={{display: 'flex', flexDirection: 'row',padding:'0px 25px'}}>
+                                <div style={{width: 100, flexShrink: 0, padding: '2px 10px',overflow:'hidden',textOverflow:'ellipsis'}}>{type}</div>
+                                <div style={{width: 100, flexShrink: 0, padding: '2px 10px',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
                                 <div style={{flexGrow: 1, padding: '2px 10px'}}>{e.message}</div>
                                 <div style={{width: 50, flexShrink: 0, padding: '2px 10px',display:'flex',alignItems:'center',justifyContent:'center'}} onClick={async () => {
 

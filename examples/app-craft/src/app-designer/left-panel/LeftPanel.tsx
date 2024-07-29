@@ -8,11 +8,12 @@ import {BORDER} from "../Border.ts";
 import {Button} from "../button/Button.tsx";
 import {notifiable, useSignal} from "react-hook-signal";
 import {Icon} from "../Icon.ts";
-import {createNewBlankPage, Page} from "../AppDesigner.tsx";
+import {Page} from "../AppDesigner.tsx";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {useUpdatePageSignal} from "../hooks/useUpdatePageSignal.ts";
+import {createNewBlankPage} from "../createNewBlankPage.ts";
 
 export function LeftPanel() {
     return <div style={{
@@ -20,6 +21,7 @@ export function LeftPanel() {
         backgroundColor: 'rgba(0,0,0,0.01)',
         flexDirection: 'column',
         width: 250,
+        flexShrink:0,
         borderRight: BORDER,
         overflow: 'auto'
     }}>
@@ -99,7 +101,7 @@ function PagesPanel() {
     return <CollapsibleLabelContainer label={'Pages'}>
         <Button onClick={() => addPage()}
                 style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
-            {'Add Signal State'}
+            {'Add New Page'}
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <MdAdd style={{fontSize: 20}}/>
             </div>

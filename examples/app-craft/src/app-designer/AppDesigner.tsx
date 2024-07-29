@@ -1,8 +1,6 @@
 import {CSSProperties, useContext, useEffect} from "react";
 import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
-
-import {guid} from "../utils/guid.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import {LeftPanel} from "./left-panel/LeftPanel.tsx";
@@ -15,6 +13,7 @@ import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {BottomPanel} from "./bottom-panel/BottomPanel.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
 import {ErrorType} from "./errors/ErrorType.ts";
+import {createNewBlankPage} from "./createNewBlankPage.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -87,39 +86,7 @@ function ToggleViewToolbar() {
         }} defaultButton={'Design'}/>
     </div>
 }
-export function createNewBlankPage():Page{
-    return {
-        id : guid(),
-        variables : [],
-        containers : [{
-            id: guid(),
-            type: 'vertical',
-            children: [],
-            parent: '',
-            height: '',
-            width: '',
-            minWidth: '100px',
-            minHeight: '100px',
 
-            marginTop: '',
-            marginRight: '',
-            marginBottom: '',
-            marginLeft: '',
-
-            paddingTop: '',
-            paddingRight: '',
-            paddingBottom: '',
-            paddingLeft: '',
-            properties: {},
-
-            gap: '',
-            verticalAlign: '',
-            horizontalAlign: '',
-
-        }],
-        name : 'home'
-    }
-}
 export default function AppDesigner(props: LayoutBuilderProps) {
     const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
     const activePageIdSignal = useSignal<string>('');
@@ -130,6 +97,11 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
+
+    useSignalEffect(() => {
+        activePageIdSignal.get();
+        allErrorsSignal.set([]);
+    })
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
@@ -190,7 +162,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         overflow: 'auto',
                         display: 'flex',
                         flexDirection: 'column',
-                        backgroundColor: 'rgba(0,0,0,0.2)'
+                        backgroundColor: 'rgba(0,0,0,0.02)'
                     }}>
                         <ToggleViewToolbar/>
                         <div style={{
@@ -199,9 +171,16 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             flexDirection: 'column',
                             padding: 10
                         }}>
-                            <notifiable.div style={{flexGrow: 1, borderRadius: 10, overflow: 'auto'}}>
-                                {renderedElements}
+                            <notifiable.div style={{flexGrow: 1, boxShadow:'0px 0px 5px 5px rgba(0,0,0,0.1)', overflow: 'auto'}}>
+                                {() => {
+                                    const element = renderedElements.get()
+                                    const activePage = activePageIdSignal.get();
+                                    return <ErrorBoundary key={activePage}>
+                                        {element}
+                                    </ErrorBoundary>
+                                }}
                             </notifiable.div>
+
                         </div>
                         <BottomPanel />
                         <ToolBar/>

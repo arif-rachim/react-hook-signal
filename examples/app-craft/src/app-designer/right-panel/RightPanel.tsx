@@ -115,6 +115,7 @@ export function RightPanel() {
             backgroundColor: 'rgba(0,0,0,0.01)',
             borderLeft: BORDER,
             display: 'flex',
+            flexShrink:0,
             flexDirection: 'column',
             overflow: 'auto'
         }}>
