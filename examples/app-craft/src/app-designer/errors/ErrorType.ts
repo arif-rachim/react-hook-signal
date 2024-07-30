@@ -22,14 +22,14 @@ type VariableValueError = {
 }
 
 type VariableValidationError = {
-    type : 'variable',
+    type: 'variable',
     category: 'validation',
     variableId: string,
     message: string
 }
 
 type PropertySchemaError = {
-    type : 'property',
+    type: 'property',
     category: 'schema',
     containerId: string,
     propertyName: string,
@@ -37,7 +37,7 @@ type PropertySchemaError = {
 }
 
 type PropertyValueError = {
-    type : 'property',
+    type: 'property',
     category: 'value',
     containerId: string,
     propertyName: string,
@@ -45,7 +45,7 @@ type PropertyValueError = {
 }
 
 type PropertyValidationError = {
-    type : 'property',
+    type: 'property',
     category: 'validation',
     containerId: string,
     propertyName: string,
@@ -53,7 +53,7 @@ type PropertyValidationError = {
 }
 
 type CallbackInvocationError = {
-    type : 'property',
+    type: 'property',
     category: 'invocation',
     containerId: string,
     propertyName: string,

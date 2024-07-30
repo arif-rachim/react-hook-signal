@@ -112,7 +112,7 @@ export function DraggableContainerElement(props: { container: Container }) {
 
     function onDragStart(event: BasicDragEvent) {
         event.stopPropagation();
-        if(event.dataTransfer === undefined || event.dataTransfer === null) {
+        if (event.dataTransfer === undefined || event.dataTransfer === null) {
             return;
         }
         event.dataTransfer.setData('text/plain', containerSignal.get().id);
@@ -127,15 +127,15 @@ export function DraggableContainerElement(props: { container: Container }) {
     function onDrop(event: BasicDragEvent) {
         event.stopPropagation();
         event.preventDefault();
-        if(event.dataTransfer === null || event.dataTransfer === undefined){
+        if (event.dataTransfer === null || event.dataTransfer === undefined) {
             return;
         }
         const id = event.dataTransfer.getData('text');
         const keys = Object.keys(elementsLib);
         if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
-            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal,updatePage);
+            addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal, updatePage);
         } else if (id) {
-            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal,updatePage);
+            swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal, updatePage);
         }
     }
 
@@ -198,7 +198,6 @@ export function DraggableContainerElement(props: { container: Container }) {
         }
         activeDropZoneIdSignal.set(nearestDropZoneId);
     })
-
 
 
     useSignalEffect(() => {

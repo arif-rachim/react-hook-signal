@@ -7,16 +7,16 @@ export function zodSchemaToJson(schemaCode: string) {
         const fun = new Function('z', `return (${schemaCode})`);
         returnType = fun.call(null, z);
     } catch (err) {
-        console.error('zodSchemaToJson',err)
+        console.error('zodSchemaToJson', err)
     }
     return zodTypeToJson(returnType)
 }
 
 export function zodTypeToJson(type: ZodType) {
-    try{
+    try {
         return printNode(zodToTs(type).node)
-    }catch (err){
-        console.error('zodTypeToJson',err)
+    } catch (err) {
+        console.error('zodTypeToJson', err)
     }
     return printNode(zodToTs(z.any()).node)
 }

@@ -9,7 +9,7 @@ import {useNavigateSignal} from "../hooks/useNavigateSignal.tsx";
 
 export function VariableInitialization() {
     const errorMessage = useRecordErrorMessage();
-    const {allVariablesSignal, allVariablesSignalInstance,variableInitialValueSignal} = useContext(AppDesignerContext);
+    const {allVariablesSignal, allVariablesSignalInstance, variableInitialValueSignal} = useContext(AppDesignerContext);
     const navigateSignal = useNavigateSignal();
 
     const validatorsComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
@@ -59,12 +59,12 @@ export function VariableInitialization() {
         for (const v of variables) {
             if (v.type === 'state') {
                 const module = {exports: {}};
-                if(v.name in variableInitialValue && variableInitialValue[v.name] !== undefined && variableInitialValue[v.name] !== null) {
+                if (v.name in variableInitialValue && variableInitialValue[v.name] !== undefined && variableInitialValue[v.name] !== null) {
                     module.exports = variableInitialValue[v.name] as unknown as typeof module.exports;
                     const state = new Signal.State(module.exports);
                     variablesInstance.push({id: v.id, instance: state});
                     errorMessage.variableValue({variableId: v.id});
-                }else{
+                } else {
                     const params = ['module', v.functionCode];
                     try {
                         const init = new Function(...params);
@@ -85,12 +85,14 @@ export function VariableInitialization() {
 
                 if (v.type === 'computed') {
                     const params = ['module', ...dependencies.map(d => d.name), v.functionCode];
-                    try{
+                    try {
                         const init = new Function(...params);
 
                         const computed = new Signal.Computed(() => {
                             for (const dep of dependencies) {
-                                dep.instance.get();
+                                if (dep && dep.instance) {
+                                    dep.instance.get();
+                                }
                             }
                             const module: { exports: unknown } = {exports: undefined};
                             const instances = [module, ...dependencies.map(d => d.instance)]
@@ -104,21 +106,23 @@ export function VariableInitialization() {
                         });
                         variablesInstance.push({id: v.id, instance: computed});
                         errorMessage.variableValue({variableId: v.id});
-                    }catch(err){
+                    } catch (err) {
                         errorMessage.variableValue({variableId: v.id, err})
                     }
 
                 }
                 if (v.type === 'effect') {
-                    const params = ['navigate',...dependencies.map(d => d.name), v.functionCode];
-                    try{
+                    const params = ['navigate', ...dependencies.map(d => d.name), v.functionCode];
+                    try {
                         const init = new Function(...params);
                         const destructor = effect(() => {
                             const navigate = navigateSignal.get();
                             for (const dep of dependencies) {
-                                dep.instance.get();
+                                if (dep && dep.instance) {
+                                    dep.instance.get();
+                                }
                             }
-                            const instances = [navigate,...dependencies.map(d => d.instance)]
+                            const instances = [navigate, ...dependencies.map(d => d.instance)]
                             try {
                                 init.call(null, ...instances);
                                 errorMessage.variableValue({variableId: v.id})
@@ -128,7 +132,7 @@ export function VariableInitialization() {
                         });
                         destructorCallbacks.push(destructor);
                         errorMessage.variableValue({variableId: v.id})
-                    }catch(err){
+                    } catch (err) {
                         errorMessage.variableValue({variableId: v.id, err})
                     }
                 }

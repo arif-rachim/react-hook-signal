@@ -1,11 +1,11 @@
 import {guid} from "../utils/guid.ts";
 import {Page} from "./AppDesigner.tsx";
 
-export function createNewBlankPage():Page{
+export function createNewBlankPage(): Page {
     return {
-        id : guid(),
-        variables : [],
-        containers : [{
+        id: guid(),
+        variables: [],
+        containers: [{
             id: guid(),
             type: 'vertical',
             children: [],
@@ -31,6 +31,6 @@ export function createNewBlankPage():Page{
             horizontalAlign: '',
 
         }],
-        name : 'home'
+        name: 'home'
     }
 }

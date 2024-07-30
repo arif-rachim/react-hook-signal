@@ -15,22 +15,22 @@ export function useUpdateSelectedDragContainer() {
     const {selectedDragContainerIdSignal} = useContext(AppDesignerContext);
     const updateDragContainer = useUpdateDragContainer();
     return function update(callback: (selectedContainer: Container) => void) {
-        return updateDragContainer(selectedDragContainerIdSignal.get(),callback);
+        return updateDragContainer(selectedDragContainerIdSignal.get(), callback);
     }
 }
 
 /**
  * Allows updating a drag container in the AppDesignerContext.
  */
-export function useUpdateDragContainer(){
-    const { allContainersSignal} = useContext(AppDesignerContext);
+export function useUpdateDragContainer() {
+    const {allContainersSignal} = useContext(AppDesignerContext);
     const updatePage = useUpdatePageSignal();
-    return function update(containerId:string,callback: (selectedContainer: Container) => void) {
+    return function update(containerId: string, callback: (selectedContainer: Container) => void) {
         const allContainers = [...allContainersSignal.get()];
         const currentSignalIndex = allContainers.findIndex(i => i.id === containerId);
         const container = {...allContainers[currentSignalIndex]};
         callback(container);
         allContainers.splice(currentSignalIndex, 1, container);
-        updatePage({type:'container',containers:allContainers});
+        updatePage({type: 'container', containers: allContainers});
     }
 }

@@ -3,17 +3,22 @@ import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "re
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
-import {LeftPanel} from "./left-panel/LeftPanel.tsx";
-import {RightPanel} from "./right-panel/RightPanel.tsx";
 import ButtonGroup from "./button/ButtonGroup.tsx";
 import {ToolBar} from "./ToolBar.tsx";
 import {DraggableContainerElement} from "./container-element-renderer/DraggableContainerElement.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
-import {BottomPanel} from "./bottom-panel/BottomPanel.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
 import {ErrorType} from "./errors/ErrorType.ts";
 import {createNewBlankPage} from "./createNewBlankPage.ts";
+import {Dashboard} from "../dashboard/Dashboard.tsx";
+import {Icon} from "./Icon.ts";
+import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
+import {ElementsPanel} from "./panels/elements/ElementsPanel.tsx";
+import {VariablesPanel} from "./panels/variables/VariablesPanel.tsx";
+import {StylePanel} from "./panels/style/StylePanel.tsx";
+import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
+import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -36,8 +41,8 @@ export type ContainerPropertyType = {
 }
 
 export type Page = {
-    id : string,
-    name : string,
+    id: string,
+    name: string,
     containers: Array<Container>,
     variables: Array<Variable>
 }
@@ -87,6 +92,26 @@ function ToggleViewToolbar() {
     </div>
 }
 
+function DesignPreviewPanel() {
+    const {allContainersSignal, activePageIdSignal} = useContext(AppDesignerContext);
+    const renderedElements = useComputed(() => {
+        const container = allContainersSignal.get().find(item => item.parent === '');
+        if (container) {
+            return <DraggableContainerElement container={container}/>
+        }
+        return <></>
+    });
+    return <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
+        {() => {
+            const element = renderedElements.get()
+            const activePage = activePageIdSignal.get();
+            return <ErrorBoundary key={activePage}>
+                {element}
+            </ErrorBoundary>
+        }}
+    </notifiable.div>;
+}
+
 export default function AppDesigner(props: LayoutBuilderProps) {
     const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
     const activePageIdSignal = useSignal<string>('');
@@ -94,10 +119,15 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-    const variableInitialValueSignal = useSignal<Record<string,unknown>>({})
+    const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-
+    useSignalEffect(() => {
+        const errors = allErrorsSignal.get();
+        if (errors.length > 0) {
+            console.error('errors', errors)
+        }
+    })
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
@@ -113,11 +143,11 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 
     const {value, onChange} = props;
     useEffect(() => {
-        if(value && value.length > 0){
+        if (value && value.length > 0) {
             allPagesSignal.set(value);
             const currentActivePageId = activePageIdSignal.get();
             const hasSelection = value.findIndex(i => i.id === currentActivePageId) >= 0;
-            if(!hasSelection){
+            if (!hasSelection) {
                 allErrorsSignal.set([]);
                 variableInitialValueSignal.set({});
                 activePageIdSignal.set(value[0].id)
@@ -129,63 +159,60 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         onChange(allPagesSignal.get());
     })
 
-    const renderedElements = useComputed(() => {
-        const container = allContainersSignal.get().find(item => item.parent === '');
-        if (container) {
-            return <DraggableContainerElement container={container}/>
-        }
-        return <></>
-    });
     return <ErrorBoundary>
         <ModalProvider>
             <AppDesignerContext.Provider
                 value={{
-                    allPagesSignal:allPagesSignal,
-                    activePageIdSignal:activePageIdSignal,
+                    allPagesSignal: allPagesSignal,
+                    activePageIdSignal: activePageIdSignal,
                     hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
                     selectedDragContainerIdSignal: selectedDragContainerIdSignal,
                     activeDropZoneIdSignal: activeDropZoneIdSignal,
                     uiDisplayModeSignal: uiDisplayModeSignal,
                     allContainersSignal: allContainersSignal,
                     allVariablesSignal: allVariablesSignal,
-                    variableInitialValueSignal:variableInitialValueSignal,
+                    variableInitialValueSignal: variableInitialValueSignal,
                     allVariablesSignalInstance: allVariablesSignalInstance,
                     allErrorsSignal: allErrorsSignal,
                     elements: props.elements
                 }}>
                 <VariableInitialization/>
-                <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'hidden'}}>
-                    <LeftPanel/>
-                    <div style={{
-                        flexGrow: 1,
-                        overflow: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        backgroundColor: 'rgba(0,0,0,0.02)'
-                    }}>
-                        <ToggleViewToolbar/>
-                        <div style={{
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            padding: 10
-                        }}>
-                            <notifiable.div style={{flexGrow: 1, boxShadow:'0px 0px 5px 5px rgba(0,0,0,0.1)', overflow: 'auto'}}>
-                                {() => {
-                                    const element = renderedElements.get()
-                                    const activePage = activePageIdSignal.get();
-                                    return <ErrorBoundary key={activePage}>
-                                        {element}
-                                    </ErrorBoundary>
-                                }}
-                            </notifiable.div>
-
-                        </div>
-                        <BottomPanel />
-                        <ToolBar/>
-                    </div>
-                    <RightPanel/>
-                </div>
+                <Dashboard panels={{
+                    pages: {
+                        Icon: Icon.Page,
+                        position: 'left',
+                        component: PagesPanel
+                    },
+                    components: {
+                        Icon: Icon.Component,
+                        position: 'leftBottom',
+                        component: ElementsPanel
+                    },
+                    variables: {
+                        Icon: Icon.Variable,
+                        position: 'leftBottom',
+                        component: VariablesPanel
+                    },
+                    errors: {
+                        Icon: Icon.Error,
+                        position: 'bottom',
+                        component: ErrorsPanel
+                    },
+                    styles: {
+                        Icon: Icon.Style,
+                        position: 'right',
+                        component: StylePanel
+                    },
+                    properties: {
+                        Icon: Icon.Property,
+                        position: 'right',
+                        component: PropertiesPanel
+                    }
+                }}>
+                    <ToggleViewToolbar/>
+                    <DesignPreviewPanel/>
+                    <ToolBar/>
+                </Dashboard>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>

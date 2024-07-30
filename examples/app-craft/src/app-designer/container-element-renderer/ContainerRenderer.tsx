@@ -38,7 +38,7 @@ export function ContainerRenderer(props: { elementProps: ElementProps, container
         }
         setElements(result);
     });
-    const {onDrop,onClick,onDragEnd,onDragOver,onDragStart,onMouseOver,style,draggable} = elementProps;
+    const {onDrop, onClick, onDragEnd, onDragOver, onDragStart, onMouseOver, style, draggable} = elementProps;
     return <div
         draggable={draggable}
         style={style}

@@ -38,9 +38,9 @@ export function DependencyInputSelector(props: {
             minHeight: 34,
             minWidth: 80,
             justifyContent: 'space-evenly',
-            alignItems:'center',
+            alignItems: 'center',
             flexWrap: 'wrap',
-            padding : '0px 5px',
+            padding: '0px 5px',
             gap: 5,
         }}
         onClick={showDependencySelector}>{value.map(dep => {

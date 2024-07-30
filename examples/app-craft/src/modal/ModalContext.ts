@@ -2,4 +2,4 @@ import {createContext, ReactElement} from "react";
 
 export type Config = { animation: 'pop' | 'slide', position: 'top' | 'bottom' | 'center' };
 type FactoryFunction<T> = (closePanel: (param?: T) => void) => ReactElement;
-export const ModalContext = createContext<(<T>(factoryFunction: FactoryFunction<T>, config?: Config) => Promise<T>)|undefined>(undefined);
+export const ModalContext = createContext<(<T>(factoryFunction: FactoryFunction<T>, config?: Config) => Promise<T>) | undefined>(undefined);

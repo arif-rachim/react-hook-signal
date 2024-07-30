@@ -4,7 +4,7 @@ import {ModalContext} from "./ModalContext.ts";
 import {ModalContainer} from "./ModalContainer.tsx";
 import {Notifiable} from "react-hook-signal";
 
-export function ModalProvider(props:PropsWithChildren) {
+export function ModalProvider(props: PropsWithChildren) {
     const {showModal, modalPanels} = useModal();
 
     return <ModalContext.Provider value={showModal}>

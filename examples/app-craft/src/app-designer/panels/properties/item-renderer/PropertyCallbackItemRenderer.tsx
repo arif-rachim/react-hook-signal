@@ -1,17 +1,17 @@
-import {useShowModal} from "../../modal/useShowModal.ts";
-import {useUpdateDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
+import {useShowModal} from "../../../../modal/useShowModal.ts";
+import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {LabelContainer} from "../label-container/LabelContainer.tsx";
-import {Button} from "../button/Button.tsx";
-import {ComponentPropertyEditor} from "../property-editor/ComponentPropertyEditor.tsx";
-import {ContainerPropertyType} from "../AppDesigner.tsx";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
+import {Button} from "../../../button/Button.tsx";
+import {ComponentPropertyEditor} from "../editor/ComponentPropertyEditor.tsx";
+import {ContainerPropertyType} from "../../../AppDesigner.tsx";
 import {notifiable} from "react-hook-signal"
-import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
+import {useSelectedDragContainer} from "../../../hooks/useSelectedDragContainer.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
-import {isEmpty} from "../../utils/isEmpty.ts";
-import {BORDER} from "../Border.ts";
-import {Icon} from "../Icon.ts";
+import {isEmpty} from "../../../../utils/isEmpty.ts";
+import {BORDER} from "../../../Border.ts";
+import {Icon} from "../../../Icon.ts";
 
 export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
     const {propertyName} = props;
@@ -34,7 +34,7 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                 }
                 return <div style={{display: 'flex'}}>
                     <Button style={{
-                        width: '100%',
+                        width: 80,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -45,11 +45,12 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                     }} onClick={async () => {
                         const result = await showModal<ContainerPropertyType>(closePanel => {
                             return <AppDesignerContext.Provider value={context}>
-                                <ComponentPropertyEditor closePanel={closePanel} name={propertyName} containerId={container?.id ?? ''}/>
+                                <ComponentPropertyEditor closePanel={closePanel} name={propertyName}
+                                                         containerId={container?.id ?? ''}/>
                             </AppDesignerContext.Provider>
                         });
                         if (result) {
-                            update(container?.id ?? '',selectedContainer => {
+                            update(container?.id ?? '', selectedContainer => {
                                 selectedContainer.properties = {...selectedContainer.properties, [propertyName]: result}
                             })
                         }
@@ -60,7 +61,7 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                         padding: '0px 5px',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor:'rgba(0,0,0,0.05)',
+                        backgroundColor: 'rgba(0,0,0,0.05)',
                         border: BORDER,
                         borderTopRightRadius: 20,
                         borderBottomRightRadius: 20
@@ -69,8 +70,8 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                         e.stopPropagation();
                         //@TODO WE NEED TO OPEN THE FAULT DETAIL HERE !
                     }}>
-                        {hasError && <Icon.Error style={{fontSize: 18,color:colors.red}}/>}
-                        {!hasError && <Icon.Checked style={{fontSize: 18,color:colors.green}}/>}
+                        {hasError && <Icon.Error style={{fontSize: 18, color: colors.red}}/>}
+                        {!hasError && <Icon.Checked style={{fontSize: 18, color: colors.green}}/>}
                     </div>
                 </div>
             }}

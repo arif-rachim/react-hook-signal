@@ -12,7 +12,7 @@ export function Button(props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonE
             backgroundColor: 'rgba(0,0,0,0.5)',
             color: 'rgba(255,255,255,0.9)',
             borderRadius: 20,
-            padding:'5px 10px'
+            padding: '5px 10px'
         };
         return {...defaultStyle, ...style}
     }, [style]);

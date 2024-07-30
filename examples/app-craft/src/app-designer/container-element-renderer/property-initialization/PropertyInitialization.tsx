@@ -4,8 +4,12 @@ import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {Container} from "../../AppDesigner.tsx";
 import {useRecordErrorMessage} from "../../hooks/useRecordErrorMessage.ts";
 import {useNavigateSignal} from "../../hooks/useNavigateSignal.tsx";
-export function PropertyInitialization(props: { container: Container,setComponentProps:Dispatch<SetStateAction<Record<string,unknown>>> }) {
-    const {container,setComponentProps} = props;
+
+export function PropertyInitialization(props: {
+    container: Container,
+    setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>
+}) {
+    const {container, setComponentProps} = props;
     const {elements: elementsLib} = useContext(AppDesignerContext);
     const {property} = elementsLib[container.type];
     const errorMessage = useRecordErrorMessage();
@@ -29,12 +33,12 @@ export function PropertyInitialization(props: { container: Container,setComponen
                 const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
                 // here we need to create navigation object !
 
-                const funcParams = ['module','navigate', ...propDependenciesName, containerProp.formula] as Array<string>;
+                const funcParams = ['module', 'navigate', ...propDependenciesName, containerProp.formula] as Array<string>;
                 propDependencies.forEach(p => p.get());
                 const module: { exports: unknown } = {exports: {}};
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module,navigate, ...propDependencies];
+                    const funcParamsInstance = [module, navigate, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {

@@ -6,7 +6,7 @@ import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 /**
  * Swaps the location of a container within a list of containers based on the provided parameters.
  */
-export function swapContainerLocation(allContainersSignal: Signal.Computed<Array<Container>>, containerToBeSwapped: string, activeDropZoneIdSignal: Signal.State<string>,updatePage:ReturnType<typeof useUpdatePageSignal>) {
+export function swapContainerLocation(allContainersSignal: Signal.Computed<Array<Container>>, containerToBeSwapped: string, activeDropZoneIdSignal: Signal.State<string>, updatePage: ReturnType<typeof useUpdatePageSignal>) {
     const activeDropZoneId = activeDropZoneIdSignal.get();
     const dropZoneElement = document.getElementById(activeDropZoneId);
     if (dropZoneElement === null) {
@@ -37,6 +37,6 @@ export function swapContainerLocation(allContainersSignal: Signal.Computed<Array
     allContainers.splice(targetContainerIndex, 1, {...targetContainer});
     allContainers.splice(currentParentContainerIndex, 1, {...currentParentContainer});
     allContainers.splice(newParentContainerIndex, 1, {...newParentContainer});
-    updatePage({type:'container',containers:allContainers});
+    updatePage({type: 'container', containers: allContainers});
     activeDropZoneIdSignal.set('');
 }

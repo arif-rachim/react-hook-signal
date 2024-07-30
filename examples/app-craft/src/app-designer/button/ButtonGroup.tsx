@@ -2,7 +2,10 @@ import {Button} from "./Button.tsx";
 import {useState} from "react";
 import {BORDER} from "../Border.ts";
 
-export default function ButtonGroup(props: { buttons: Record<string, { onClick: () => void }>,defaultButton:string }) {
+export default function ButtonGroup(props: {
+    buttons: Record<string, { onClick: () => void }>,
+    defaultButton: string
+}) {
     const [selectedButton, setSelectedButton] = useState<string>(props.defaultButton);
     return <>
         {Object.keys(props.buttons).map((key, index, array) => {
@@ -12,7 +15,7 @@ export default function ButtonGroup(props: { buttons: Record<string, { onClick: 
             return <Button key={key}
                            style={{
                                borderRadius: 0,
-                               borderLeft: isFirstElement ? BORDER:  "unset",
+                               borderLeft: isFirstElement ? BORDER : "unset",
                                borderTopLeftRadius: isFirstElement ? 20 : 0,
                                borderBottomLeftRadius: isFirstElement ? 20 : 0,
                                borderTopRightRadius: isLastElement ? 20 : 0,

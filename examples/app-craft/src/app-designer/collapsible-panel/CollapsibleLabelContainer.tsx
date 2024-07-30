@@ -17,7 +17,7 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
         </div>
         {props.label}
     </>}
-                           style={{overflow:'auto',minHeight:30, ...props.style}}
+                           style={{overflow: 'auto', minHeight: 30, ...props.style}}
                            styleLabel={{
                                flexShrink: 0,
                                borderTop: BORDER,
@@ -30,14 +30,14 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
                                gap: 10, ...props.styleLabel
                            }}
                            styleContent={{
-                               boxShadow:'0px 5px 5px -3px rgba(0,0,0,0.1) inset',
-                               overflow:'auto',
+                               boxShadow: '0px 5px 5px -3px rgba(0,0,0,0.1) inset',
+                               overflow: 'auto',
                                display: isOpen ? 'flex' : 'none',
                                flexDirection: 'column',
                                padding: '15px 10px',
                                ...props.styleContent
                            }}
                            labelOnClick={() => setIsOpen(!isOpen)}>
-            {props.children}
+        {props.children}
     </LabelContainer>
 }

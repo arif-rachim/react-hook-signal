@@ -1,21 +1,21 @@
 import {useContext, useRef, useState} from "react";
-import {useShowModal} from "../../modal/useShowModal.ts";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {guid} from "../../utils/guid.ts";
+import {useShowModal} from "../../../../modal/useShowModal.ts";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {guid} from "../../../../utils/guid.ts";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
-import {isEmpty} from "../../utils/isEmpty.ts";
+import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {Editor, Monaco} from "@monaco-editor/react";
-import {Button} from "../button/Button.tsx";
-import {LabelContainer} from "../label-container/LabelContainer.tsx";
-import {BORDER} from "../Border.ts";
-import {Variable, VariableType} from "../AppDesigner.tsx";
-import {ConfirmationDialog} from "../ConfirmationDialog.tsx";
-import {onBeforeMountHandler} from "../onBeforeHandler.ts";
-import {zodSchemaToJson} from "../zodSchemaToJson.ts";
-import ButtonGroup from "../button/ButtonGroup.tsx";
-import {Icon} from "../Icon.ts";
-import {DependencyInputSelector} from "../dependency-selector/DependencyInputSelector.tsx";
-import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {Button} from "../../../button/Button.tsx";
+import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
+import {BORDER} from "../../../Border.ts";
+import {Variable, VariableType} from "../../../AppDesigner.tsx";
+import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
+import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
+import ButtonGroup from "../../../button/ButtonGroup.tsx";
+import {Icon} from "../../../Icon.ts";
+import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
+import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 
 const title = {
     computed: 'Computed',
@@ -38,7 +38,7 @@ export function VariableEditorPanel(props: {
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
 
-    const {allVariablesSignal,allPagesSignal} = context;
+    const {allVariablesSignal, allPagesSignal} = context;
 
     function createNewVariable(): Variable {
         return {

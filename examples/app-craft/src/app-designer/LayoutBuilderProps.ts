@@ -17,7 +17,7 @@ type InferType<T extends ZodRawShape> = {
     [k in keyof T]: z.infer<T[k]>;
 };
 export type CancellableEvent = { stopPropagation: () => void, preventDefault: () => void };
-export type BasicDragEvent = CancellableEvent & { dataTransfer: DataTransfer|null, clientX: number, clientY: number };
+export type BasicDragEvent = CancellableEvent & { dataTransfer: DataTransfer | null, clientX: number, clientY: number };
 export type ElementProps = {
     draggable: boolean,
     style: CSSProperties,

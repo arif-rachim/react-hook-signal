@@ -8,6 +8,7 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import signalDefinition from "./signal-definition.txt?raw";
 import zodDefinition from "./zod-definition.txt?raw";
+
 self.MonacoEnvironment = {
     getWorker(_, label) {
         if (label === 'json') {
@@ -41,5 +42,5 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
 monaco.languages.typescript.javascriptDefaults.addExtraLib(signalDefinition, "ts:filename/signal-source.d.ts");
 monaco.languages.typescript.javascriptDefaults.addExtraLib(zodDefinition, "ts:filename/zod-source.d.ts");
 
-loader.config({ monaco });
+loader.config({monaco});
 loader.init();

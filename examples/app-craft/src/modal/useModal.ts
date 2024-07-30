@@ -10,22 +10,23 @@ export type ModalParameter = {
     config: Config
 };
 type ShowModal = <P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config) => Promise<P>;
+
 export function useModal() {
     const modalPanels = useSignal<Array<ModalParameter>>([]);
 
-    const showModal:ShowModal = useCallback(function showModal<P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config): Promise<P> {
+    const showModal: ShowModal = useCallback(function showModal<P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config): Promise<P> {
         config = config || {animation: 'pop', position: 'center'};
         return new Promise(resolve => {
             const id = guid();
             const element = factory((params?: P) => {
                 modalPanels.set(modalPanels.get().filter(p => p.id !== id));
-                if(params){
+                if (params) {
                     resolve(params);
                 }
             });
             modalPanels.set([...modalPanels.get(), {id, element, config}]);
         })
-    },[modalPanels]);
+    }, [modalPanels]);
 
     return {showModal, modalPanels};
 }

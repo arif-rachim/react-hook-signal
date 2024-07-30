@@ -18,7 +18,7 @@ export function ModalContainer(props: { modalPanels: Array<ModalParameter> }) {
                 height: '100%',
                 alignItems: 'center',
                 justifyContent: justifyContent,
-            }} key={p.id} >
+            }} key={p.id}>
                 <div style={{
                     backgroundColor: '#FFF',
                     borderRadius: borderRadius,

@@ -5,6 +5,9 @@ import {ErrorType} from "../errors/ErrorType.ts";
 import {ZodError} from "zod";
 
 type Error = unknown;
+let lastInvokedTime = performance.now();
+const maxAllowedBurstInvoked = 10;
+let currentBurstInvoked = 0;
 
 export function useRecordErrorMessage() {
     const {allErrorsSignal} = useContext(AppDesignerContext);
@@ -42,7 +45,17 @@ export function useRecordErrorMessage() {
                 isChanged = true;
             }
         }
-        if(isChanged){
+        if (isChanged) {
+            const nowTime = performance.now();
+            if (nowTime - lastInvokedTime < 100) {
+                currentBurstInvoked++;
+            } else {
+                currentBurstInvoked = 0;
+            }
+            if (currentBurstInvoked > maxAllowedBurstInvoked) {
+                return;
+            }
+            lastInvokedTime = nowTime;
             allErrorsSignal.set(copyError);
         }
     }, [allErrorsSignal]);
@@ -127,14 +140,14 @@ export function useRecordErrorMessage() {
     }
 }
 
-function extractErrorMessage(err:unknown){
-    if(err instanceof ZodError){
+function extractErrorMessage(err: unknown) {
+    if (err instanceof ZodError) {
         return (err?.errors ?? []).map(z => `${z.code} ${z.path} is ${z.message}`).join('\n')
     }
-    if(err instanceof TypeError){
+    if (err instanceof TypeError) {
         return err.message
     }
-    if(err instanceof Error){
+    if (err instanceof Error) {
         return err.message
     }
     return '';

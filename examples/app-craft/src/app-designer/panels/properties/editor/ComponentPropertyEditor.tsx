@@ -1,17 +1,17 @@
 import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {notifiable, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
-import {onBeforeMountHandler} from "../onBeforeHandler.ts";
-import {Button} from "../button/Button.tsx";
-import {LabelContainer} from "../label-container/LabelContainer.tsx";
-import {ContainerPropertyType} from "../AppDesigner.tsx";
+import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import {Button} from "../../../button/Button.tsx";
+import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
+import {ContainerPropertyType} from "../../../AppDesigner.tsx";
 import {ZodFunction} from "zod";
-import {zodTypeToJson} from "../zodSchemaToJson.ts";
-import {Icon} from "../Icon.ts";
-import {DependencyInputSelector} from "../dependency-selector/DependencyInputSelector.tsx";
-import CollapsibleLabelContainer from "../collapsible-panel/CollapsibleLabelContainer.tsx";
-import {BORDER} from "../Border.ts";
+import {zodTypeToJson} from "../../../zodSchemaToJson.ts";
+import {Icon} from "../../../Icon.ts";
+import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
+import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {BORDER} from "../../../Border.ts";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -22,7 +22,7 @@ export function ComponentPropertyEditor(props: {
     containerId: string,
 }) {
     const context = useContext(AppDesignerContext);
-    const {allVariablesSignal, elements,allPagesSignal} = context;
+    const {allVariablesSignal, elements, allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements[selectedDragContainer.type].property[props.name];
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();

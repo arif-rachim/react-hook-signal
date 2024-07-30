@@ -24,6 +24,7 @@ export function ToolBar() {
     } = useContext(AppDesignerContext);
     const containerSignal = useSelectedDragContainer();
     const updatePage = useUpdatePageSignal();
+
     function preventClick(event: ReactMouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
@@ -41,9 +42,9 @@ export function ToolBar() {
             padding: '3px 5px',
             borderRadius: 5,
             color: 'white',
-            fontSize:18
+            fontSize: 18
         };
-        if(displayMode === "view"){
+        if (displayMode === "view") {
             return style as CSSProperties;
         }
         if (container === undefined) {
@@ -89,7 +90,7 @@ export function ToolBar() {
             newParent.children = newParent.children.filter(s => s !== container.id);
             allContainers.splice(allContainers.indexOf(parent), 1, newParent);
         }
-        updatePage({type:'container',containers:allContainers});
+        updatePage({type: 'container', containers: allContainers});
     }
 
     function onDragStart(event: ReactDragEvent) {

@@ -1,11 +1,12 @@
 import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuSigmaSquare} from "react-icons/lu";
-import {IoCodeSlashOutline, IoOpenOutline, IoTrashOutline} from "react-icons/io5";
+import {IoCodeSlashOutline, IoLogoWebComponent, IoOpenOutline, IoTrashOutline} from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
-import {TbToggleLeftFilled} from "react-icons/tb";
-import {MdCheck, MdDataArray, MdDataObject, MdError} from "react-icons/md";
+import {TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
+import {MdCheck, MdDataArray, MdDataObject, MdError, MdMinimize, MdOutlineStyle} from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
+import {RiPagesLine} from "react-icons/ri";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -24,5 +25,11 @@ export const Icon = {
     Save: IoIosSave,
     Exit: IoIosExit,
     Error: MdError,
-    Formula: IoCodeSlashOutline
+    Formula: IoCodeSlashOutline,
+    Minimize: MdMinimize,
+    Page: RiPagesLine,
+    Component: IoLogoWebComponent,
+    Variable: PiTrafficSignal,
+    Style: MdOutlineStyle,
+    Property: TbJumpRope
 }
