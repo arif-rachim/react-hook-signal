@@ -167,12 +167,25 @@ function PageNameDialog(props: { closePanel: (param?: string) => void, allPages:
         <div style={{display: 'flex', flexDirection: 'column', padding: '0px 20px'}}>
             <label style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{marginLeft: 10}}>Page Name :</div>
-                <notifiable.input style={{border: BORDER, borderRadius: 10, padding: '5px 10px'}}
+                <notifiable.input style={{border: BORDER, borderRadius: 5, padding: '5px 10px'}}
                                   value={valueSignal}
-                                  onChange={(e) => {
-                                      const value = e.target.value
-                                      valueSignal.set(value);
-                                  }}/>
+                                  onKeyDown={(e) => {
+                                      if (e.key === " ") {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                      }
+                                  }}
+                                  onChange={(event) => {
+                                      const dom = event.target;
+                                      const cursorPosition = dom.selectionStart;
+                                      const val = dom.value;
+                                      valueSignal.set(val);
+                                      setTimeout(() => {
+                                          dom.setSelectionRange(cursorPosition, cursorPosition);
+                                      }, 0);
+                                  }}
+
+                />
                 <notifiable.div style={{color: colors.red}}>
                     {() => {
                         return errorSignal.get()
