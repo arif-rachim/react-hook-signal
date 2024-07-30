@@ -1,11 +1,10 @@
 import {CSSProperties, useContext, useEffect} from "react";
-import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {AnySignal, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import ButtonGroup from "./button/ButtonGroup.tsx";
 import {ToolBar} from "./ToolBar.tsx";
-import {DraggableContainerElement} from "./container-element-renderer/DraggableContainerElement.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
@@ -19,6 +18,7 @@ import {VariablesPanel} from "./panels/variables/VariablesPanel.tsx";
 import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
+import {DesignPanel} from "./panels/design/DesignPanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -92,25 +92,6 @@ function ToggleViewToolbar() {
     </div>
 }
 
-function DesignPreviewPanel() {
-    const {allContainersSignal, activePageIdSignal} = useContext(AppDesignerContext);
-    const renderedElements = useComputed(() => {
-        const container = allContainersSignal.get().find(item => item.parent === '');
-        if (container) {
-            return <DraggableContainerElement container={container}/>
-        }
-        return <></>
-    });
-    return <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
-        {() => {
-            const element = renderedElements.get()
-            const activePage = activePageIdSignal.get();
-            return <ErrorBoundary key={activePage}>
-                {element}
-            </ErrorBoundary>
-        }}
-    </notifiable.div>;
-}
 
 export default function AppDesigner(props: LayoutBuilderProps) {
     const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
@@ -210,7 +191,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     }
                 }}>
                     <ToggleViewToolbar/>
-                    <DesignPreviewPanel/>
+                    <DesignPanel/>
                     <ToolBar/>
                 </Dashboard>
             </AppDesignerContext.Provider>

@@ -1,4 +1,4 @@
-import {Container} from "./AppDesigner.tsx";
+import {Container} from "../../../AppDesigner.tsx";
 
 /**
  * Represents a property type of a container element.

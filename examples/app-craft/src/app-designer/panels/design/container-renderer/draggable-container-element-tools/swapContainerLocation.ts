@@ -1,7 +1,7 @@
 import {Signal} from "signal-polyfill";
-import {Container} from "../../AppDesigner.tsx";
-import {dropZones} from "../../drop-zone/dropZones.ts";
-import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
+import {Container} from "../../../../AppDesigner.tsx";
+import {dropZones} from "../drop-zone/dropZones.ts";
+import {useUpdatePageSignal} from "../../../../hooks/useUpdatePageSignal.ts";
 
 /**
  * Swaps the location of a container within a list of containers based on the provided parameters.

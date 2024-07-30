@@ -4,7 +4,7 @@ import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {BORDER} from "../../../Border.ts";
 import {useSelectedDragContainer} from "../../../hooks/useSelectedDragContainer.ts";
 import {useUpdateSelectedDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
-import {ContainerPropertyType, PropertyType} from "../../../PropertyType.ts";
+import {ContainerPropertyType, PropertyType} from "./PropertyType.ts";
 
 /**
  * A property editor component for handling numerical percentage values.

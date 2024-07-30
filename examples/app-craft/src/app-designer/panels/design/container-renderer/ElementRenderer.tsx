@@ -1,7 +1,7 @@
-import {Container} from "../AppDesigner.tsx";
+import {Container} from "../../../AppDesigner.tsx";
 import {forwardRef, useContext, useEffect, useMemo, useRef, useState} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {PropertyInitialization} from "./property-initialization/PropertyInitialization.tsx";
 
 /**

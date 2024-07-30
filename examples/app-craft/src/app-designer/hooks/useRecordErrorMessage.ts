@@ -89,16 +89,6 @@ export function useRecordErrorMessage() {
     }
 
 
-    function propertySchema(props: { containerId: string, propertyName: string, err?: Error }) {
-        recordError({
-            type: 'property',
-            category: 'schema',
-            containerId: props.containerId,
-            propertyName: props.propertyName,
-            message: extractErrorMessage(props.err)
-        })
-    }
-
     function propertyValue(props: { containerId: string, propertyName: string, err?: Error }) {
         recordError({
             type: 'property',
@@ -134,7 +124,6 @@ export function useRecordErrorMessage() {
         variableValue,
         variableValidation,
         propertyValue,
-        propertySchema,
         propertyValidation,
         propertyInvocation
     }

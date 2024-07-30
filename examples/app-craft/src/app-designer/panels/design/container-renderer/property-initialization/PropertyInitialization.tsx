@@ -1,9 +1,9 @@
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {Dispatch, SetStateAction, useContext, useEffect} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
-import {Container} from "../../AppDesigner.tsx";
-import {useRecordErrorMessage} from "../../hooks/useRecordErrorMessage.ts";
-import {useNavigateSignal} from "../../hooks/useNavigateSignal.tsx";
+import {AppDesignerContext} from "../../../../AppDesignerContext.ts";
+import {Container} from "../../../../AppDesigner.tsx";
+import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts";
+import {useNavigateSignal} from "../../../../hooks/useNavigateSignal.tsx";
 
 export function PropertyInitialization(props: {
     container: Container,

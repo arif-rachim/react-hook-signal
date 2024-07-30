@@ -1,16 +1,16 @@
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {CSSProperties, useContext, useEffect, useState} from "react";
-import {useRefresh} from "../../utils/useRefresh.ts";
-import {Container} from "../AppDesigner.tsx";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {dropZones} from "../drop-zone/dropZones.ts";
+import {useRefresh} from "../../../../utils/useRefresh.ts";
+import {Container} from "../../../AppDesigner.tsx";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {dropZones} from "./drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
-import {BORDER} from "../Border.ts";
-import {BasicDragEvent, CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
+import {BORDER} from "../../../Border.ts";
+import {BasicDragEvent, CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {ContainerRenderer} from "./ContainerRenderer.tsx";
 import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
 import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
-import {useUpdatePageSignal} from "../hooks/useUpdatePageSignal.ts";
+import {useUpdatePageSignal} from "../../../hooks/useUpdatePageSignal.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
