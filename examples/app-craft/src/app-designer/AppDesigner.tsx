@@ -94,14 +94,10 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-
+    const variableInitialValueSignal = useSignal<Record<string,unknown>>({})
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
 
-    useSignalEffect(() => {
-        activePageIdSignal.get();
-        allErrorsSignal.set([]);
-    })
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
@@ -122,10 +118,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             const currentActivePageId = activePageIdSignal.get();
             const hasSelection = value.findIndex(i => i.id === currentActivePageId) >= 0;
             if(!hasSelection){
+                allErrorsSignal.set([]);
+                variableInitialValueSignal.set({});
                 activePageIdSignal.set(value[0].id)
             }
         }
-    }, [activePageIdSignal, allPagesSignal, value]);
+    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, value, variableInitialValueSignal]);
 
     useSignalEffect(() => {
         onChange(allPagesSignal.get());
@@ -150,6 +148,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     uiDisplayModeSignal: uiDisplayModeSignal,
                     allContainersSignal: allContainersSignal,
                     allVariablesSignal: allVariablesSignal,
+                    variableInitialValueSignal:variableInitialValueSignal,
                     allVariablesSignalInstance: allVariablesSignalInstance,
                     allErrorsSignal: allErrorsSignal,
                     elements: props.elements

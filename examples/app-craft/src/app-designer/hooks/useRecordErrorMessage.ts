@@ -4,7 +4,6 @@ import {isEmpty} from "../../utils/isEmpty.ts";
 import {ErrorType} from "../errors/ErrorType.ts";
 import {ZodError} from "zod";
 
-// eslint-disable-next-line
 type Error = unknown;
 
 export function useRecordErrorMessage() {
@@ -15,7 +14,7 @@ export function useRecordErrorMessage() {
         const existingError = allErrors.findIndex(i => {
             if (i.type === e.type && i.category === e.category) {
                 if (i.type === 'property' && e.type === 'property') {
-                    return i.propertyName === e.propertyName && e.containerId === e.containerId;
+                    return i.propertyName === e.propertyName && i.containerId === e.containerId;
                 }
                 if (i.type === 'variable' && e.type === 'variable') {
                     return i.variableId === e.variableId;
@@ -24,25 +23,28 @@ export function useRecordErrorMessage() {
             return false
         });
         const copyError = [...allErrors];
-
+        let isChanged = false;
         if (existingError >= 0) {
             if (copyError[existingError].message === e.message) {
                 return;
             }
             if (isEmpty(e.message)) {
                 copyError.splice(existingError, 1);
-                allErrorsSignal.set(copyError);
+                isChanged = true;
+
             } else {
                 copyError.splice(existingError, 1, e);
-                allErrorsSignal.set(copyError);
+                isChanged = true;
             }
         } else {
             if (!isEmpty(e.message)) {
                 copyError.push(e)
-                allErrorsSignal.set(copyError);
+                isChanged = true;
             }
         }
-
+        if(isChanged){
+            allErrorsSignal.set(copyError);
+        }
     }, [allErrorsSignal]);
 
     function variableSchema(props: { variableId: string, err?: Error }) {

@@ -71,7 +71,7 @@ function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
 
 
 function PagesPanel() {
-    const {allPagesSignal, activePageIdSignal} = useContext(AppDesignerContext);
+    const {allPagesSignal, activePageIdSignal,allErrorsSignal} = useContext(AppDesignerContext);
     const showModal = useShowModal();
 
     async function addPage() {
@@ -119,6 +119,7 @@ function PagesPanel() {
                         background: isFocused ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.9)',
                         borderRadius: 20
                     }} key={page.id} onClick={() => {
+                        allErrorsSignal.set([]);
                         activePageIdSignal.set(page.id);
                     }}>
                         <div></div>

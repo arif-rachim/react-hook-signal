@@ -15,6 +15,7 @@ export interface AppDesignerContext {
     hoveredDragContainerIdSignal: Signal.State<string>;
     allContainersSignal: Signal.Computed<Array<Container>>;
     allVariablesSignal: Signal.Computed<Array<Variable>>;
+    variableInitialValueSignal:Signal.State<Record<string, unknown>>;
     allVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
     uiDisplayModeSignal: Signal.State<'design' | 'view'>;
     allErrorsSignal: Signal.State<Array<ErrorType>>;
@@ -29,6 +30,7 @@ export const AppDesignerContext = createContext<AppDesignerContext>({
     hoveredDragContainerIdSignal: new Signal.State<string>(''),
     uiDisplayModeSignal: new Signal.State<"design" | "view">('design'),
     allContainersSignal: new Signal.Computed<Array<Container>>(() => []),
+    variableInitialValueSignal : new Signal.State<Record<string, unknown>>({}),
     allVariablesSignal: new Signal.Computed<Array<Variable>>(() => []),
     allVariablesSignalInstance: new Signal.State<Array<VariableInstance>>([]),
     allErrorsSignal: new Signal.State<Array<ErrorType>>([]),
