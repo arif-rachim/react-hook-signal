@@ -22,7 +22,7 @@ export function ComponentPropertyEditor(props: {
     containerId: string,
 }) {
     const context = useContext(AppDesignerContext);
-    const {allVariablesSignal, elements} = context;
+    const {allVariablesSignal, elements,allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements[selectedDragContainer.type].property[props.name];
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
@@ -68,13 +68,15 @@ export function ComponentPropertyEditor(props: {
                     const allVariables = allVariablesSignal.get();
                     const formula = props.formula ?? '';
                     const dependencies = props.dependencies ?? [];
+                    const allPages = allPagesSignal.get();
                     return <Editor
                         language="javascript"
                         key={dependencies.join('-')}
                         beforeMount={onBeforeMountHandler({
                             dependencies,
                             allVariables,
-                            returnType: zodTypeToJson(returnType)
+                            returnType: zodTypeToJson(returnType),
+                            allPages
                         })}
                         value={formula}
                         options={{selectOnLineNumbers: true}}

@@ -1,9 +1,8 @@
 import {Container} from "../AppDesigner.tsx";
 import {forwardRef, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
-import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {CancellableEvent, ElementProps} from "../LayoutBuilderProps.ts";
-import {useRecordErrorMessage} from "../hooks/useRecordErrorMessage.ts";
+import {PropertyInitialization} from "./property-initialization/PropertyInitialization.tsx";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -23,97 +22,24 @@ import {useRecordErrorMessage} from "../hooks/useRecordErrorMessage.ts";
  */
 export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
     const {container, elementProps} = props;
-    const {elements: elementsLib, allVariablesSignalInstance, allVariablesSignal} = useContext(AppDesignerContext);
-    const {component, property} = elementsLib[container.type];
+    const {elements} = useContext(AppDesignerContext);
+    const {component} = elements[container.type];
     const ref = useRef<HTMLElement>(null);
-    const propertiesSignal = useSignal(container.properties);
+
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
-    const errorMessage = useRecordErrorMessage();
+
     const Component = useMemo(() => {
         return forwardRef(component)
     }, [component])
-    useEffect(() => {
-        propertiesSignal.set(container.properties)
-    }, [container.properties, propertiesSignal]);
-
     const [componentProps, setComponentProps] = useState<Record<string, unknown>>({})
-    useSignalEffect(() => {
-        const containerProperties = propertiesSignal.get();
-        const destroyerCallbacks: Array<() => void> = [];
-        for (const containerPropKey of Object.keys(containerProperties)) {
-            const containerProp = containerProperties[containerPropKey];
-            const returnType = property[containerPropKey];
-            const destroyer = effect(() => {
-                const allVariablesInstance = allVariablesSignalInstance.get();
-                const allVariables = allVariablesSignal.get();
-                const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
-                const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
-                const funcParams = ['module', ...propDependenciesName, containerProp.formula] as Array<string>;
-                propDependencies.forEach(p => p.get());
-                const module: { exports: unknown } = {exports: {}};
-                try {
-                    const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, ...propDependencies];
-                    fun.call(null, ...funcParamsInstance);
-                    errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
-                } catch (err) {
-                    errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id, err});
-                }
-                if (returnType) {
-                    try {
-                        returnType.parse(module.exports)
-                        errorMessage.propertyValidation({
-                            propertyName: containerPropKey,
-                            containerId: container.id,
-                        })
-                    } catch (err) {
-                        errorMessage.propertyValidation({
-                            propertyName: containerPropKey,
-                            containerId: container.id,
-                            err
-                        })
-                    }
-                }
-                if (typeof module.exports === 'function') {
-                    const originalFunction = module.exports as (...args: unknown[]) => unknown
-                    const wrapper = (...args: unknown[]) => {
-                        try {
-                            const result = originalFunction.call(null, ...args);
-                            errorMessage.propertyInvocation({
-                                containerId: container.id,
-                                propertyName: containerPropKey
-                            });
-                            return result;
-                        } catch (err) {
-                            errorMessage.propertyInvocation({
-                                propertyName: containerPropKey,
-                                containerId: container.id,
-                                err
-                            })
-                        }
-                    }
-                    setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
-                } else {
-
-                    setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
-                }
-            })
-            destroyerCallbacks.push(destroyer);
-        }
-        return () => {
-            destroyerCallbacks.forEach(d => d());
-        }
-    });
     useEffect(() => {
-
         const onDragStart = (event: Event) => propsRef.current.onDragStart(event as DragEvent);
         const onDragOver = (event: Event) => propsRef.current.onDragOver(event as DragEvent);
         const onDrop = (event: Event) => propsRef.current.onDrop(event as DragEvent);
         const onDragEnd = (event: Event) => propsRef.current.onDragEnd(event as DragEvent);
         const onMouseOver = (event: Event) => propsRef.current.onMouseOver(event as CancellableEvent);
         const onClick = (event: Event) => propsRef.current.onClick(event as CancellableEvent);
-
         const element = ref.current;
         if (element) {
             try {
@@ -128,7 +54,6 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
             } catch (err) {
                 console.error(err)
             }
-
         }
         return () => {
             if (element) {
@@ -142,9 +67,11 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
                 } catch (err) {
                     console.error(err);
                 }
-
             }
         }
     }, [Component]);
-    return <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
+    return <>
+        <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
+        <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
+    </>
 }

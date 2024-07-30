@@ -38,7 +38,7 @@ export function VariableEditorPanel(props: {
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
 
-    const {allVariablesSignal} = context;
+    const {allVariablesSignal,allPagesSignal} = context;
 
     function createNewVariable(): Variable {
         return {
@@ -181,6 +181,7 @@ export function VariableEditorPanel(props: {
                         const variable = variableSignal.get();
                         const dependencies = variable.dependencies ?? []
                         const allVariables = allVariablesSignal.get();
+                        const allPages = allPagesSignal.get();
                         const formula = variable.functionCode;
                         return <Editor
                             language="javascript"
@@ -188,7 +189,8 @@ export function VariableEditorPanel(props: {
                             beforeMount={onBeforeMountHandler({
                                 dependencies,
                                 allVariables,
-                                returnType: zodSchemaToJson(variable.schemaCode)
+                                returnType: zodSchemaToJson(variable.schemaCode),
+                                allPages
                             })}
                             value={formula}
                             onChange={(value?: string) => {
