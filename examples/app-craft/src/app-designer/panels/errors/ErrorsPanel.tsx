@@ -1,19 +1,13 @@
 import {notifiable} from "react-hook-signal";
 import {colors} from "stock-watch/src/utils/colors.ts";
-import {ContainerPropertyType} from "../../AppDesigner.tsx";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {ComponentPropertyEditor} from "../properties/editor/ComponentPropertyEditor.tsx";
 import {VariableEditorPanel} from "../variables/editor/VariableEditorPanel.tsx";
 import {Icon} from "../../Icon.ts";
-import {useShowModal} from "../../../modal/useShowModal.ts";
 import {useContext} from "react";
-import {useUpdateDragContainer} from "../../hooks/useUpdateSelectedDragContainer.ts";
 import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
 
 export function ErrorsPanel() {
-    const showModal = useShowModal();
-    const context = useContext(AppDesignerContext);
-    const update = useUpdateDragContainer();
     const addPanel = useAddDashboardPanel();
     const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
     return <notifiable.div
@@ -77,29 +71,24 @@ export function ErrorsPanel() {
                             }} onClick={async () => {
 
                                 if (e.type === 'property') {
-                                    const result = await showModal<ContainerPropertyType>(closePanel => {
-                                        return <AppDesignerContext.Provider value={context}>
-                                            <ComponentPropertyEditor closePanel={closePanel} name={e.propertyName ?? ''}
-                                                                     containerId={e?.containerId ?? ''}/>
-                                        </AppDesignerContext.Provider>
-                                    });
-                                    if (result) {
-                                        update(e.containerId ?? '', selectedContainer => {
-                                            selectedContainer.properties = {
-                                                ...selectedContainer.properties,
-                                                [e.propertyName ?? '']: result
-                                            }
-                                        })
-                                    }
+                                    addPanel({
+                                        position : 'center',
+                                        component : () => {
+                                            return <ComponentPropertyEditor name={e.propertyName} containerId={e?.containerId ?? ''}/>
+                                        },
+                                        title : `${type} : ${name}`,
+                                        Icon : Icon.Property,
+                                        id : `${e?.containerId}-${name}`,
+                                    })
                                 }
 
                                 if (e.type === 'variable') {
                                     addPanel({
                                         position:'center',
                                         component : () => {
-                                            return <VariableEditorPanel variableId={e.variableId} closePanel={() => {}} defaultType={'state'}/>
+                                            return <VariableEditorPanel variableId={e.variableId} defaultType={'state'}/>
                                         },
-                                        title : 'Edit Variable',
+                                        title : `${type} : ${name}`,
                                         Icon : Icon.Component,
                                         id : e.variableId
                                     })

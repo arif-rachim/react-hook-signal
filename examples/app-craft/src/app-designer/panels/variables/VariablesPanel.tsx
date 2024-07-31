@@ -27,7 +27,7 @@ export function VariablesPanel() {
         addPanel({
             position:'center',
             component : () => {
-                return <VariableEditorPanel variableId={variable?.id} closePanel={() => {}} defaultType={forType}/>
+                return <VariableEditorPanel variableId={variable?.id} defaultType={forType}/>
             },
             title : `${variable?.name?variable?.name:`Add ${forType}`}`,
             Icon : Icon.Component,

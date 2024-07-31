@@ -12,7 +12,6 @@ import {Variable, VariableType} from "../../../AppDesigner.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
-import ButtonGroup from "../../../button/ButtonGroup.tsx";
 import {Icon} from "../../../Icon.ts";
 import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
@@ -24,12 +23,10 @@ import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
  */
 export function VariableEditorPanel(props: {
     variableId?: string,
-    closePanel: () => void,
     defaultType: VariableType,
-    enableToSwitchBetweenType?: boolean
 }) {
     const context = useContext(AppDesignerContext);
-    const {variableId, closePanel, defaultType, enableToSwitchBetweenType} = props;
+    const {variableId, defaultType} = props;
     const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
@@ -79,21 +76,6 @@ export function VariableEditorPanel(props: {
         overflow: 'auto',
         flexGrow:1,
     }}>
-        {enableToSwitchBetweenType === true &&
-            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-                <ButtonGroup buttons={{
-                    State: {
-                        onClick: () => variableSignal.set({...variableSignal.get(), type: 'state'})
-                    },
-                    Computed: {
-                        onClick: () => variableSignal.set({...variableSignal.get(), type: 'computed'})
-                    },
-                    Effect: {
-                        onClick: () => variableSignal.set({...variableSignal.get(), type: 'effect'})
-                    }
-                }} defaultButton={type === 'state' ? 'State' : type === 'computed' ? 'Computed' : 'Effect'}/>
-            </div>
-        }
         <div style={{display: 'flex', gap: 10,padding:10}}>
             <LabelContainer label={'Name : '} style={{width: 250,flexDirection:'row',alignItems:'center',gap:10}} styleLabel={{fontStyle:'italic'}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
@@ -194,12 +176,11 @@ export function VariableEditorPanel(props: {
             </CollapsibleLabelContainer>
 
         </div>
-        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, paddingTop: 10}}>
+        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, padding: 10}}>
             <Button onClick={async () => {
                 const [isValid, errors] = validateForm();
                 if (isValid) {
                     updateVariable(variableSignal.get());
-                    closePanel();
                 } else {
                     await showModal<string>(cp => {
                         const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
@@ -215,25 +196,12 @@ export function VariableEditorPanel(props: {
                 gap: 5,
                 alignItems: 'center'
             }}>
-
                 {'Save'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <Icon.Save style={{fontSize: 18}}/>
                 </div>
+            </Button>
 
-            </Button>
-            <Button style={{
-                display: 'flex',
-                gap: 5,
-                alignItems: 'center'
-            }} onClick={() => {
-                closePanel();
-            }}>
-                {'Cancel'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Exit style={{fontSize: 18}}/>
-                </div>
-            </Button>
         </div>
     </div>
 }
