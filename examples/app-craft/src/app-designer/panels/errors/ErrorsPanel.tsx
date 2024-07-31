@@ -5,7 +5,6 @@ import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {ComponentPropertyEditor} from "../properties/editor/ComponentPropertyEditor.tsx";
 import {VariableEditorPanel} from "../variables/editor/VariableEditorPanel.tsx";
 import {Icon} from "../../Icon.ts";
-import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useShowModal} from "../../../modal/useShowModal.ts";
 import {useContext} from "react";
 import {useUpdateDragContainer} from "../../hooks/useUpdateSelectedDragContainer.ts";
@@ -18,9 +17,8 @@ export function ErrorsPanel() {
     const updateVariable = useUpdateVariable();
 
     const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
-    return <CollapsibleLabelContainer label={'Errors'} styleContent={{padding: 0}} style={{minHeight: 0}}>
-        <notifiable.div
-            style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto', maxHeight: 100}}>
+    return <notifiable.div
+            style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto', maxHeight: 100,padding:'10px 0px'}}>
             {() => {
                 let errors = allErrorsSignal.get();
                 const containers = allContainersSignal.get();
@@ -42,25 +40,19 @@ export function ErrorsPanel() {
                         let referenceId: string | undefined = undefined;
                         if (e.type === 'property') {
                             const container = containers.find(c => c.id === e.containerId);
-                            if (container === undefined) {
-                                console.warn('Dang it container is not defined');
-                            }
                             type = container?.type;
                             name = e.propertyName;
                             referenceId = e.containerId;
                         }
                         if (e.type === 'variable') {
                             const v = variables.find(c => c.id === e.variableId)
-                            if (v === undefined) {
-                                console.warn('Dang it variable is not defined');
-                            }
                             type = v?.type;
                             name = v?.name;
                             referenceId = e.variableId
                         }
 
                         return <div key={`${e.message}-${referenceId}-${name}`}
-                                    style={{display: 'flex', flexDirection: 'row', padding: '0px 25px'}}>
+                                    style={{display: 'flex', flexDirection: 'row', padding: '0px 20px'}}>
                             <div style={{
                                 width: 100,
                                 flexShrink: 0,
@@ -120,5 +112,4 @@ export function ErrorsPanel() {
                 </>
             }}
         </notifiable.div>
-    </CollapsibleLabelContainer>
 }

@@ -105,9 +105,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
     useSignalEffect(() => {
         const errors = allErrorsSignal.get();
-        if (errors.length > 0) {
-            console.error('errors', errors)
-        }
+        console.log('errors', errors)
     })
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
@@ -160,42 +158,65 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                 <VariableInitialization/>
                 <Dashboard panels={{
                     pages: {
+                        title: 'Pages',
                         Icon: Icon.Page,
                         position: 'left',
                         component: PagesPanel
                     },
                     components: {
+                        title: 'Components',
                         Icon: Icon.Component,
-                        position: 'leftBottom',
+                        position: 'left',
                         component: ElementsPanel
                     },
                     variables: {
+                        title: 'Variables',
                         Icon: Icon.Variable,
                         position: 'leftBottom',
                         component: VariablesPanel
                     },
                     errors: {
+                        title: 'Errors',
                         Icon: Icon.Error,
                         position: 'bottom',
                         component: ErrorsPanel
                     },
                     styles: {
+                        title: 'Styles',
                         Icon: Icon.Style,
                         position: 'right',
                         component: StylePanel
                     },
                     properties: {
+                        title: 'Properties',
                         Icon: Icon.Property,
                         position: 'right',
                         component: PropertiesPanel
+                    },
+                    design : {
+                        title : 'Design',
+                        Icon : Icon.Detail,
+                        position : 'center',
+                        component : DesignViewPanel
                     }
+                }} defaultSelectedPanel={{
+                    left: 'components',
+                    leftBottom : 'variables',
+                    bottom : 'errors',
+                    right : 'styles',
                 }}>
-                    <ToggleViewToolbar/>
-                    <DesignPanel/>
-                    <ToolBar/>
+
                 </Dashboard>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>
+}
+
+function DesignViewPanel(){
+    return <>
+        <ToggleViewToolbar/>
+        <DesignPanel/>
+        <ToolBar/>
+    </>
 }
 

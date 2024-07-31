@@ -1,4 +1,4 @@
-import React, {CSSProperties, PropsWithChildren, useEffect} from "react";
+import React, {CSSProperties, HTMLProps, PropsWithChildren, ReactNode, useEffect} from "react";
 import {IconType} from "react-icons";
 import {notifiable, useSignal} from "react-hook-signal";
 import {useHoveredOnPress} from "./useHoveredOnPress.ts";
@@ -9,13 +9,21 @@ import {BORDER} from "../app-designer/Border.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 
 type Panel = {
+    title: ReactNode,
     Icon: IconType,
     component: React.FC,
     position: 'left' | 'bottom' | 'right' | 'center' | 'leftBottom' | 'rightBottom'
 }
 
-export function Dashboard(props: PropsWithChildren<{
-    panels: Record<string, Panel>
+export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChildren<{
+    panels: T,
+    defaultSelectedPanel: {
+        left?: keyof T,
+        right?: keyof T,
+        bottom?: keyof T,
+        leftBottom?: keyof T,
+        rightBottom?: keyof T,
+    }
 }>) {
     const {panels} = props;
     const leftPanelsSignal = useSignal<Record<string, Panel>>({});
@@ -25,13 +33,13 @@ export function Dashboard(props: PropsWithChildren<{
     const rightBottomPanelsSignal = useSignal<Record<string, Panel>>({});
     const centerPanelsSignal = useSignal<Record<string, Panel>>({});
     const selectedPanelSignal = useSignal<{
-        left?: string,
-        bottom?: string,
-        right?: string,
-        center?: string,
-        leftBottom?: string,
-        rightBottom?: string
-    }>({});
+        left?: keyof T,
+        bottom?: keyof T,
+        right?: keyof T,
+        center?: keyof T,
+        leftBottom?: keyof T,
+        rightBottom?: keyof T
+    }>(props.defaultSelectedPanel);
     useEffect(() => {
         const leftPanels: Record<string, Panel> = {};
         const rightPanels: Record<string, Panel> = {};
@@ -68,6 +76,7 @@ export function Dashboard(props: PropsWithChildren<{
         rightBottomPanelsSignal.set(rightBottomPanels);
         centerPanelsSignal.set(centerPanels);
     }, [bottomPanelsSignal, centerPanelsSignal, leftBottomPanelsSignal, leftPanelsSignal, panels, rightBottomPanelsSignal, rightPanelsSignal])
+
     return (
         <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'auto'}}>
             <notifiable.div style={{
@@ -80,17 +89,18 @@ export function Dashboard(props: PropsWithChildren<{
                     const selectedPanel = selectedPanelSignal.get();
                     return <>
                         <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
-                            <RenderIcons panels={leftPanelsSignal.get()} value={selectedPanel.left ?? ''}
+                            <RenderIcons panels={leftPanelsSignal.get()} value={(selectedPanel.left ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), left: value})
                                          }}/>
                             <div style={{borderTop: BORDER, height: 1}}/>
-                            <RenderIcons panels={leftBottomPanelsSignal.get()} value={selectedPanel.leftBottom ?? ''}
+                            <RenderIcons panels={leftBottomPanelsSignal.get()}
+                                         value={(selectedPanel.leftBottom ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), leftBottom: value})
                                          }}/>
                         </div>
-                        <RenderIcons panels={bottomPanelsSignal.get()} value={selectedPanel.bottom ?? ''}
+                        <RenderIcons panels={bottomPanelsSignal.get()} value={(selectedPanel.bottom ?? '') as string}
                                      onChange={value => {
                                          selectedPanelSignal.set({...selectedPanelSignal.get(), bottom: value})
                                      }}/>
@@ -111,17 +121,17 @@ export function Dashboard(props: PropsWithChildren<{
                             display: noPanel ? 'none' : 'flex',
                             flexDirection: 'column',
                             width: 200,
-                            overflow: 'auto'
+                            overflow: 'auto',
+                            borderRight:BORDER
                         }
                     }}>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={selectedPanelSignal} position={'left'}/>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={selectedPanelSignal}
+                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                                     position={'left'}/>
+                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'leftBottom'}/>
                     </notifiable.div>
+                    <RenderTabPanel panelsSignal={centerPanelsSignal} />
 
-                    <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
-                        {props.children}
-                    </div>
                     <notifiable.div style={() => {
                         const selectedPanel = selectedPanelSignal.get();
                         const noPanel = isEmpty(selectedPanel.right) && isEmpty(selectedPanel.rightBottom);
@@ -129,17 +139,19 @@ export function Dashboard(props: PropsWithChildren<{
                             display: noPanel ? 'none' : 'flex',
                             flexDirection: 'column',
                             width: 200,
-                            overflow: 'auto'
+                            overflow: 'auto',
+                            borderLeft:BORDER
                         }
                     }}>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={selectedPanelSignal}
+                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'right'}/>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={selectedPanelSignal}
+                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'rightBottom'}/>
                     </notifiable.div>
 
                 </div>
-                <RenderPanel panelsSignal={panels} selectedPanelSignal={selectedPanelSignal} position={'bottom'}/>
+                <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                             position={'bottom'}/>
             </div>
             <notifiable.div
                 style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: BORDER}}>
@@ -147,12 +159,13 @@ export function Dashboard(props: PropsWithChildren<{
                     const selectedPanel = selectedPanelSignal.get();
                     return <>
                         <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
-                            <RenderIcons panels={rightPanelsSignal.get()} value={selectedPanel.right ?? ''}
+                            <RenderIcons panels={rightPanelsSignal.get()} value={(selectedPanel.right ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), right: value})
                                          }}/>
                             <div style={{borderTop: BORDER, height: 1}}/>
-                            <RenderIcons panels={rightBottomPanelsSignal.get()} value={selectedPanel.rightBottom ?? ''}
+                            <RenderIcons panels={rightBottomPanelsSignal.get()}
+                                         value={(selectedPanel.rightBottom ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), rightBottom: value})
                                          }}/>
@@ -205,7 +218,8 @@ function RenderPanel<T extends {
     right?: string,
     bottom?: string,
     leftBottom?: string,
-    rightBottom?: string
+    rightBottom?: string,
+    center?: string
 }>(props: {
     selectedPanelSignal: Signal.State<T>,
     position: keyof T,
@@ -214,30 +228,31 @@ function RenderPanel<T extends {
     const {selectedPanelSignal, position, panelsSignal} = props;
     return <notifiable.div style={{
         display: 'flex',
-        flexDirection: 'column',
-        borderRight: position === 'left' || position === 'leftBottom' ? BORDER : 'unset',
-        borderLeft: position === 'right' || position === 'rightBottom' ? BORDER : 'unset',
-        borderTop: position === 'bottom' ? BORDER : 'unset'
+        flexDirection: 'column'
     }}>
         {() => {
             const selectedLeftPanelId = selectedPanelSignal.get()[position] as string;
             if (selectedLeftPanelId && selectedLeftPanelId in panelsSignal) {
-                const Component = panelsSignal[selectedLeftPanelId].component;
+                const panel = panelsSignal[selectedLeftPanelId];
+                const Component = panel.component;
                 return <div style={{display: 'flex', flexDirection: 'column'}}>
                     <div style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.05)',
-                        justifyContent: 'flex-end',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                         borderBottom: BORDER
                     }}>
+                        <div style={{padding: '5px 10px'}}>
+                            {panel.title}
+                        </div>
+
                         <RenderIcon onClick={() => {
                             selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: ''});
-                        }} isFocused={false} style={{margin: '5px 0px'}}>
+                        }} isFocused={false} style={{margin: '5px 5px'}}>
                             <Icon.Minimize/>
                         </RenderIcon>
-                        <div style={{display: 'flex', padding: 5, alignItems: 'center', justifyContent: 'center'}}>
 
-                        </div>
                     </div>
                     <Component/>
                 </div>
@@ -245,4 +260,63 @@ function RenderPanel<T extends {
             return <></>
         }}
     </notifiable.div>
+}
+
+function castSignal(value: unknown) {
+    return value as unknown as Signal.State<{
+        left?: string,
+        right?: string,
+        bottom?: string,
+        leftBottom?: string,
+        rightBottom?: string
+    }>
+}
+
+function RenderTabPanel(props:{panelsSignal:Signal.State<Record<string,Panel>>}) {
+    const {panelsSignal} = props;
+    const selectedPanelSignal = useSignal('');
+    return <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
+        <notifiable.div style={{display:'flex',flexDirection:'row',borderBottom:BORDER}}>
+            {() => {
+                const panels = panelsSignal.get();
+                return Object.keys(panels).map(p => {
+                    const panel = panels[p];
+                    return <TabButton onClick={() => {
+                        selectedPanelSignal.set(p);
+                    }}>
+                        <div>{panel.title}</div>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Icon.Close/></div>
+                    </TabButton>
+                })
+            }}
+        </notifiable.div>
+        <notifiable.div>
+            {() => {
+                const panels = panelsSignal.get();
+                const selectedPanel = selectedPanelSignal.get();
+                const Component = panels[selectedPanel]?.component;
+                if(Component) {
+                    return <Component />
+                }
+                return <></>
+            }}
+        </notifiable.div>
+    </div>
+}
+
+function TabButton(props:HTMLProps<HTMLDivElement>) {
+    const {ref,isHovered,isOnPress} = useHoveredOnPress();
+    const style:CSSProperties = {
+        background : isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)',
+        boxShadow : isOnPress ?'0px 5px 5px 5px rgba(0,0,0,0.1) inset' : '0px 5px 5px 5px rgba(0,0,0,0) inset',
+        padding:'6px 5px 7px 10px',
+        display:'flex',
+        gap:5,
+        alignItems:'center',
+        ...props.style
+    }
+
+    return <div ref={ref}  {...props} style={style}>
+        {props.children}
+    </div>
 }

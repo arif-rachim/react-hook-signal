@@ -4,7 +4,7 @@ import {IoCodeSlashOutline, IoLogoWebComponent, IoOpenOutline, IoTrashOutline} f
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
-import {MdCheck, MdDataArray, MdDataObject, MdError, MdMinimize, MdOutlineStyle} from "react-icons/md";
+import {MdCheck, MdClose, MdDataArray, MdDataObject, MdError, MdMinimize, MdOutlineStyle} from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
 import {RiPagesLine} from "react-icons/ri";
 
@@ -31,5 +31,6 @@ export const Icon = {
     Component: IoLogoWebComponent,
     Variable: PiTrafficSignal,
     Style: MdOutlineStyle,
-    Property: TbJumpRope
+    Property: TbJumpRope,
+    Close : MdClose
 }

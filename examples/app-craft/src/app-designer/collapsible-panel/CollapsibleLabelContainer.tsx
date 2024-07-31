@@ -20,7 +20,6 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
                            style={{overflow: 'auto', minHeight: 30, ...props.style}}
                            styleLabel={{
                                flexShrink: 0,
-                               borderTop: BORDER,
                                borderBottom: BORDER,
                                padding: '5px 10px',
                                backgroundColor: 'rgba(0,0,0,0.02)',
@@ -32,6 +31,7 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
                            styleContent={{
                                boxShadow: '0px 5px 5px -3px rgba(0,0,0,0.1) inset',
                                overflow: 'auto',
+                               borderBottom:BORDER,
                                display: isOpen ? 'flex' : 'none',
                                flexDirection: 'column',
                                padding: '15px 10px',

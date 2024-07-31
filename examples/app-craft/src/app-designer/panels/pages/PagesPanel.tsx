@@ -5,7 +5,6 @@ import {createNewBlankPage} from "../../createNewBlankPage.ts";
 import {isEmpty} from "../../../utils/isEmpty.ts";
 import {Page} from "../../AppDesigner.tsx";
 import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
-import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
 import {notifiable} from "react-hook-signal";
@@ -40,7 +39,7 @@ export function PagesPanel() {
         updatePage({type: 'page-name', name: title, pageId: page.id})
     }
 
-    return <CollapsibleLabelContainer label={'Pages'}>
+    return <div style={{display:'flex',flexDirection:'column',padding:10}}>
         <Button onClick={() => addPage()}
                 style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
             {'Add New Page'}
@@ -86,5 +85,5 @@ export function PagesPanel() {
                 })
             }}
         </notifiable.div>
-    </CollapsibleLabelContainer>
+    </div>
 }
