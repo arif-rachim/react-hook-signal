@@ -16,6 +16,7 @@ import ButtonGroup from "../../../button/ButtonGroup.tsx";
 import {Icon} from "../../../Icon.ts";
 import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 
 const title = {
     computed: 'Computed',
@@ -28,7 +29,7 @@ const title = {
  */
 export function VariableEditorPanel(props: {
     variableId?: string,
-    closePanel: (result?: Variable) => void,
+    closePanel: () => void,
     defaultType: VariableType,
     enableToSwitchBetweenType?: boolean
 }) {
@@ -37,7 +38,7 @@ export function VariableEditorPanel(props: {
     const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
-
+    const updateVariable = useUpdateVariable();
     const {allVariablesSignal, allPagesSignal} = context;
 
     function createNewVariable(): Variable {
@@ -208,7 +209,8 @@ export function VariableEditorPanel(props: {
             <Button onClick={async () => {
                 const [isValid, errors] = validateForm();
                 if (isValid) {
-                    closePanel(variableSignal.get());
+                    updateVariable(variableSignal.get());
+                    closePanel();
                 } else {
                     await showModal<string>(cp => {
                         const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {

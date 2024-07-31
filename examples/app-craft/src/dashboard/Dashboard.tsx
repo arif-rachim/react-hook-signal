@@ -15,6 +15,10 @@ type Panel = {
     position: 'left' | 'bottom' | 'right' | 'center' | 'leftBottom' | 'rightBottom'
 }
 
+type PanelInstance = Panel & {
+    id: string
+}
+
 export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChildren<{
     panels: T,
     defaultSelectedPanel: {
@@ -25,13 +29,15 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
         rightBottom?: keyof T,
     }
 }>) {
-    const {panels} = props;
-    const leftPanelsSignal = useSignal<Record<string, Panel>>({});
-    const leftBottomPanelsSignal = useSignal<Record<string, Panel>>({});
-    const bottomPanelsSignal = useSignal<Record<string, Panel>>({});
-    const rightPanelsSignal = useSignal<Record<string, Panel>>({});
-    const rightBottomPanelsSignal = useSignal<Record<string, Panel>>({});
-    const centerPanelsSignal = useSignal<Record<string, Panel>>({});
+    const panelsSignal = useSignal<Array<PanelInstance>>([]);
+    useEffect(() => {
+        const result: Array<PanelInstance> = [];
+        Object.keys(props.panels).forEach(p => {
+            result.push({...props.panels[p], id: p})
+        })
+        panelsSignal.set(result);
+    }, [props.panels]);
+
     const selectedPanelSignal = useSignal<{
         left?: keyof T,
         bottom?: keyof T,
@@ -40,42 +46,6 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
         leftBottom?: keyof T,
         rightBottom?: keyof T
     }>(props.defaultSelectedPanel);
-    useEffect(() => {
-        const leftPanels: Record<string, Panel> = {};
-        const rightPanels: Record<string, Panel> = {};
-        const bottomPanels: Record<string, Panel> = {};
-        const leftBottomPanels: Record<string, Panel> = {};
-        const rightBottomPanels: Record<string, Panel> = {};
-        const centerPanels: Record<string, Panel> = {};
-
-        Object.keys(panels).forEach(p => {
-            const panel = panels[p];
-            if (panel.position === 'right') {
-                rightPanels[p] = panel;
-            }
-            if (panel.position === 'bottom') {
-                bottomPanels[p] = panel;
-            }
-            if (panel.position === 'left') {
-                leftPanels[p] = panel;
-            }
-            if (panel.position === 'leftBottom') {
-                leftBottomPanels[p] = panel;
-            }
-            if (panel.position === 'rightBottom') {
-                rightBottomPanels[p] = panel;
-            }
-            if (panel.position === 'center') {
-                centerPanels[p] = panel;
-            }
-        })
-        leftPanelsSignal.set(leftPanels);
-        rightPanelsSignal.set(rightPanels);
-        bottomPanelsSignal.set(bottomPanels);
-        leftBottomPanelsSignal.set(leftBottomPanels);
-        rightBottomPanelsSignal.set(rightBottomPanels);
-        centerPanelsSignal.set(centerPanels);
-    }, [bottomPanelsSignal, centerPanelsSignal, leftBottomPanelsSignal, leftPanelsSignal, panels, rightBottomPanelsSignal, rightPanelsSignal])
 
     return (
         <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'auto'}}>
@@ -87,20 +57,23 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
             }}>
                 {() => {
                     const selectedPanel = selectedPanelSignal.get();
+                    const allPanels = panelsSignal.get();
                     return <>
                         <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
-                            <RenderIcons panels={leftPanelsSignal.get()} value={(selectedPanel.left ?? '') as string}
+                            <RenderIcons panels={allPanels.filter(p => p.position === 'left')}
+                                         value={(selectedPanel.left ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), left: value})
                                          }}/>
                             <div style={{borderTop: BORDER, height: 1}}/>
-                            <RenderIcons panels={leftBottomPanelsSignal.get()}
+                            <RenderIcons panels={allPanels.filter(p => p.position === 'bottom')}
                                          value={(selectedPanel.leftBottom ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), leftBottom: value})
                                          }}/>
                         </div>
-                        <RenderIcons panels={bottomPanelsSignal.get()} value={(selectedPanel.bottom ?? '') as string}
+                        <RenderIcons panels={allPanels.filter(p => p.position === 'bottom')}
+                                     value={(selectedPanel.bottom ?? '') as string}
                                      onChange={value => {
                                          selectedPanelSignal.set({...selectedPanelSignal.get(), bottom: value})
                                      }}/>
@@ -122,15 +95,15 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                             flexDirection: 'column',
                             width: 200,
                             overflow: 'auto',
-                            borderRight:BORDER
+                            borderRight: BORDER
                         }
                     }}>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                        <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'left'}/>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                        <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'leftBottom'}/>
                     </notifiable.div>
-                    <RenderTabPanel panelsSignal={centerPanelsSignal} />
+                    <RenderTabPanel panelsSignal={panelsSignal}/>
 
                     <notifiable.div style={() => {
                         const selectedPanel = selectedPanelSignal.get();
@@ -140,31 +113,33 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                             flexDirection: 'column',
                             width: 200,
                             overflow: 'auto',
-                            borderLeft:BORDER
+                            borderLeft: BORDER
                         }
                     }}>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                        <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'right'}/>
-                        <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                        <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={castSignal(selectedPanelSignal)}
                                      position={'rightBottom'}/>
                     </notifiable.div>
 
                 </div>
-                <RenderPanel panelsSignal={panels} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={castSignal(selectedPanelSignal)}
                              position={'bottom'}/>
             </div>
             <notifiable.div
                 style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: BORDER}}>
                 {() => {
+                    const allPanels = panelsSignal.get();
                     const selectedPanel = selectedPanelSignal.get();
                     return <>
                         <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
-                            <RenderIcons panels={rightPanelsSignal.get()} value={(selectedPanel.right ?? '') as string}
+                            <RenderIcons panels={allPanels.filter(p => p.position === 'right')}
+                                         value={(selectedPanel.right ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), right: value})
                                          }}/>
                             <div style={{borderTop: BORDER, height: 1}}/>
-                            <RenderIcons panels={rightBottomPanelsSignal.get()}
+                            <RenderIcons panels={allPanels.filter(p => p.position === 'rightBottom')}
                                          value={(selectedPanel.rightBottom ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), rightBottom: value})
@@ -177,15 +152,15 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
     );
 }
 
-function RenderIcons(props: { panels: Record<string, Panel>, value: string, onChange: (key?: string) => void }) {
+function RenderIcons(props: { panels: Array<PanelInstance>, value: string, onChange: (key?: string) => void }) {
     const {panels, onChange, value} = props;
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: '10px 5px', gap: 5}}>
-        {Object.keys(panels).map(p => {
-            const {Icon} = panels[p]
-            const isFocused = p === value;
-            return <RenderIcon key={p} isFocused={isFocused} onClick={() => {
-                onChange(isFocused ? '' : p);
+        {panels.map(p => {
+            const {Icon} = p
+            const isFocused = p.id === value;
+            return <RenderIcon key={p.id} isFocused={isFocused} onClick={() => {
+                onChange(isFocused ? '' : p.id);
             }}>
                 <Icon style={{fontSize: 22}}/>
             </RenderIcon>
@@ -223,7 +198,7 @@ function RenderPanel<T extends {
 }>(props: {
     selectedPanelSignal: Signal.State<T>,
     position: keyof T,
-    panelsSignal: Record<string, Panel>
+    panelsSignal: Signal.State<Array<PanelInstance>>
 }) {
     const {selectedPanelSignal, position, panelsSignal} = props;
     return <notifiable.div style={{
@@ -231,10 +206,11 @@ function RenderPanel<T extends {
         flexDirection: 'column'
     }}>
         {() => {
+            const panels = panelsSignal.get();
             const selectedLeftPanelId = selectedPanelSignal.get()[position] as string;
-            if (selectedLeftPanelId && selectedLeftPanelId in panelsSignal) {
-                const panel = panelsSignal[selectedLeftPanelId];
-                const Component = panel.component;
+            if (selectedLeftPanelId) {
+                const panel = panels.find(p => p.id === selectedLeftPanelId);
+                const Component = panel?.component ?? EmptyComponent;
                 return <div style={{display: 'flex', flexDirection: 'column'}}>
                     <div style={{
                         display: 'flex',
@@ -244,7 +220,7 @@ function RenderPanel<T extends {
                         borderBottom: BORDER
                     }}>
                         <div style={{padding: '5px 10px'}}>
-                            {panel.title}
+                            {panel?.title}
                         </div>
 
                         <RenderIcon onClick={() => {
@@ -272,20 +248,20 @@ function castSignal(value: unknown) {
     }>
 }
 
-function RenderTabPanel(props:{panelsSignal:Signal.State<Record<string,Panel>>}) {
+function RenderTabPanel(props: { panelsSignal: Signal.State<Array<PanelInstance>> }) {
     const {panelsSignal} = props;
     const selectedPanelSignal = useSignal('');
     return <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
-        <notifiable.div style={{display:'flex',flexDirection:'row',borderBottom:BORDER}}>
+        <notifiable.div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER}}>
             {() => {
-                const panels = panelsSignal.get();
-                return Object.keys(panels).map(p => {
-                    const panel = panels[p];
+                const panels = panelsSignal.get().filter(p => p.position === 'center');
+                return panels.map(panel => {
                     return <TabButton onClick={() => {
-                        selectedPanelSignal.set(p);
-                    }}>
+                        selectedPanelSignal.set(panel.id);
+                    }} key={panel.id}>
                         <div>{panel.title}</div>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Icon.Close/></div>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Icon.Close/>
+                        </div>
                     </TabButton>
                 })
             }}
@@ -294,9 +270,9 @@ function RenderTabPanel(props:{panelsSignal:Signal.State<Record<string,Panel>>})
             {() => {
                 const panels = panelsSignal.get();
                 const selectedPanel = selectedPanelSignal.get();
-                const Component = panels[selectedPanel]?.component;
-                if(Component) {
-                    return <Component />
+                const Component = panels.find(p => p.id === selectedPanel)?.component ?? EmptyComponent;
+                if (Component) {
+                    return <Component/>
                 }
                 return <></>
             }}
@@ -304,19 +280,28 @@ function RenderTabPanel(props:{panelsSignal:Signal.State<Record<string,Panel>>})
     </div>
 }
 
-function TabButton(props:HTMLProps<HTMLDivElement>) {
-    const {ref,isHovered,isOnPress} = useHoveredOnPress();
-    const style:CSSProperties = {
-        background : isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)',
-        boxShadow : isOnPress ?'0px 5px 5px 5px rgba(0,0,0,0.1) inset' : '0px 5px 5px 5px rgba(0,0,0,0) inset',
-        padding:'6px 5px 7px 10px',
-        display:'flex',
-        gap:5,
-        alignItems:'center',
+function TabButton(props: HTMLProps<HTMLDivElement>) {
+    const {ref, isHovered, isOnPress} = useHoveredOnPress();
+    const style: CSSProperties = {
+        background: isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)',
+        boxShadow: isOnPress ? '0px 5px 5px 5px rgba(0,0,0,0.1) inset' : '0px 5px 5px 5px rgba(0,0,0,0) inset',
+        padding: '6px 5px 7px 10px',
+        display: 'flex',
+        gap: 5,
+        alignItems: 'center',
         ...props.style
     }
 
     return <div ref={ref}  {...props} style={style}>
         {props.children}
+    </div>
+}
+
+function EmptyComponent() {
+    return <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+        <Icon.Question/>
+        <div>
+            Oops we cant find the component to render
+        </div>
     </div>
 }

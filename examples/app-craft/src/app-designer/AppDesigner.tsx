@@ -193,18 +193,19 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         position: 'right',
                         component: PropertiesPanel
                     },
-                    design : {
-                        title : 'Design',
-                        Icon : Icon.Detail,
-                        position : 'center',
-                        component : DesignViewPanel
+                    design: {
+                        title: 'Design',
+                        Icon: Icon.Detail,
+                        position: 'center',
+                        component: DesignViewPanel
                     }
-                }} defaultSelectedPanel={{
-                    left: 'components',
-                    leftBottom : 'variables',
-                    bottom : 'errors',
-                    right : 'styles',
-                }}>
+                }}
+                           defaultSelectedPanel={{
+                               left: 'components',
+                               leftBottom: 'variables',
+                               bottom: 'errors',
+                               right: 'styles',
+                           }}>
 
                 </Dashboard>
             </AppDesignerContext.Provider>
@@ -212,7 +213,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     </ErrorBoundary>
 }
 
-function DesignViewPanel(){
+function DesignViewPanel() {
     return <>
         <ToggleViewToolbar/>
         <DesignPanel/>

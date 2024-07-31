@@ -2,7 +2,6 @@ import {useContext} from "react";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 import {useShowModal} from "../../../modal/useShowModal.ts";
-import {useUpdateVariable} from "../../hooks/useUpdateVariable.ts";
 import {Variable, VariableType} from "../../AppDesigner.tsx";
 import {VariableEditorPanel} from "./editor/VariableEditorPanel.tsx";
 import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
@@ -22,17 +21,13 @@ export function VariablesPanel() {
     const {allVariablesSignal} = context;
     const updatePage = useUpdatePageSignal();
     const showModal = useShowModal();
-    const updateVariable = useUpdateVariable();
 
     async function editVariable(forType: VariableType, variable?: Variable) {
-        const result = await showModal<Variable>(closePanel => {
+        await showModal<Variable>(closePanel => {
             return <AppDesignerContext.Provider value={context}>
                 <VariableEditorPanel variableId={variable?.id} closePanel={closePanel} defaultType={forType}/>
             </AppDesignerContext.Provider>
         })
-        if (result) {
-            updateVariable(result);
-        }
     }
 
     async function deleteVariable(variable?: Variable) {
