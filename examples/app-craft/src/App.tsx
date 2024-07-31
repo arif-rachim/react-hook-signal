@@ -48,7 +48,6 @@ export function App() {
             },
             component: ({label, onPress}, ref) => {
                 const mutableRef = ref as MutableRefObject<HTMLElement | undefined>
-                ;
                 return <Provider theme={defaultTheme}>
                     <Button
                         ref={(instance) => {

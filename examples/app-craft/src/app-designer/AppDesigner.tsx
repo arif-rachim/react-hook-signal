@@ -80,7 +80,7 @@ export type Container = {
 
 function ToggleViewToolbar() {
     const {uiDisplayModeSignal} = useContext(AppDesignerContext);
-    return <div style={{display: 'flex', justifyContent: 'center', padding: 10, background: 'rgba(0,0,0,0.2)'}}>
+    return <div style={{display: 'flex', justifyContent: 'center', padding: 5, background: 'rgba(0,0,0,0.05)'}}>
         <ButtonGroup buttons={{
             'Preview': {
                 onClick: () => uiDisplayModeSignal.set('view')
@@ -196,7 +196,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                     design: {
                         title: 'Design',
                         Icon: Icon.Detail,
-                        position: 'center',
+                        position: 'mainCenter',
                         component: DesignViewPanel
                     }
                 }}
@@ -205,7 +205,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                leftBottom: 'variables',
                                bottom: 'errors',
                                right: 'styles',
-                               center: 'design'
+                               mainCenter: 'design'
                            }}>
 
                 </Dashboard>

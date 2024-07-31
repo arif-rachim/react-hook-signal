@@ -1,29 +1,35 @@
-import React, {createContext, CSSProperties, HTMLProps, PropsWithChildren, ReactNode, useEffect} from "react";
+import React, {
+    createContext,
+    CSSProperties,
+    HTMLProps,
+    PropsWithChildren,
+    ReactNode,
+    useContext,
+    useEffect
+} from "react";
 import {IconType} from "react-icons";
-import {notifiable, useSignal} from "react-hook-signal";
+import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {useHoveredOnPress} from "./useHoveredOnPress.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Signal} from "signal-polyfill";
 import {Icon} from "../app-designer/Icon.ts";
 import {BORDER} from "../app-designer/Border.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {AppDesignerContext} from "../app-designer/AppDesignerContext.ts";
 
+type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom' | 'sideCenter'
 export type Panel = {
     title: ReactNode,
     Icon: IconType,
     component: React.FC,
-    position: 'left' | 'bottom' | 'right' | 'center' | 'leftBottom' | 'rightBottom'
+    position: PanelPosition
 }
 type SelectedPanelType = {
-    left?: string,
-    right?: string,
-    bottom?: string,
-    leftBottom?: string,
-    rightBottom?: string,
-    center?: string
+    [k in PanelPosition]?: string
 }
 type PanelInstance = Panel & {
-    id: string
+    id: string,
+    pageId: string | 'global'
 }
 export const DashboardContext = createContext<{
     panelsSignal: Signal.State<Array<PanelInstance>>,
@@ -35,26 +41,19 @@ export const DashboardContext = createContext<{
 
 export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChildren<{
     panels: T,
-    defaultSelectedPanel: {
-        left?: keyof T,
-        right?: keyof T,
-        bottom?: keyof T,
-        leftBottom?: keyof T,
-        rightBottom?: keyof T,
-        center?: keyof T
-    }
+    defaultSelectedPanel: { [k in PanelPosition]?: keyof T }
 }>) {
     const panelsSignal = useSignal<Array<PanelInstance>>([]);
     useEffect(() => {
         const result: Array<PanelInstance> = [...panelsSignal.get()];
         Object.keys(props.panels).forEach(p => {
             const isNotExist = result.find(i => i.id === p) === undefined;
-            if(isNotExist){
-                result.push({...props.panels[p], id: p})
+            if (isNotExist) {
+                result.push({...props.panels[p], id: p, pageId: 'global'})
             }
         })
         panelsSignal.set(result);
-    }, [props.panels]);
+    }, [panelsSignal, props.panels]);
 
     const selectedPanelSignal = useSignal<SelectedPanelType>(props.defaultSelectedPanel as SelectedPanelType);
 
@@ -78,7 +77,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                                  selectedPanelSignal.set({...selectedPanelSignal.get(), left: value})
                                              }}/>
                                 <div style={{borderTop: BORDER, height: 1}}/>
-                                <RenderIcons panels={allPanels.filter(p => p.position === 'bottom')}
+                                <RenderIcons panels={allPanels.filter(p => p.position === 'leftBottom')}
                                              value={(selectedPanel.leftBottom ?? '') as string}
                                              onChange={value => {
                                                  selectedPanelSignal.set({
@@ -120,9 +119,12 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                          selectedPanelSignal={castSignal(selectedPanelSignal)}
                                          position={'leftBottom'}/>
                         </notifiable.div>
-
-                        <RenderTabPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}/>
-
+                        <div style={{display: 'flex', flexDirection: 'row', flexGrow: 1}}>
+                            <RenderTabPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
+                                            position={'mainCenter'}/>
+                            <RenderTabPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
+                                            position={'sideCenter'}/>
+                        </div>
                         <notifiable.div style={() => {
                             const selectedPanel = selectedPanelSignal.get();
                             const noPanel = isEmpty(selectedPanel.right) && isEmpty(selectedPanel.rightBottom);
@@ -265,32 +267,43 @@ function castSignal(value: unknown) {
 }
 
 function RenderTabPanel(props: {
-    panelsSignal: Signal.State<Array<PanelInstance>>, selectedPanelSignal: Signal.State<SelectedPanelType>
+    panelsSignal: Signal.State<Array<PanelInstance>>,
+    selectedPanelSignal: Signal.State<SelectedPanelType>,
+    position: PanelPosition
 }) {
-    const {panelsSignal, selectedPanelSignal} = props;
-    return <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto'}}>
+    const {panelsSignal, selectedPanelSignal, position} = props;
+    const {activePageIdSignal} = useContext(AppDesignerContext);
+    const panelsComputed = useComputed(() => {
+        const pageId = activePageIdSignal.get();
+        let panels = panelsSignal.get().filter(p => p.position === position);
+        if (position === 'sideCenter') {
+            panels = panels.filter(p => p.pageId === pageId)
+        }
+        return panels;
+    })
+    return <div style={{display: 'flex', flexDirection: 'column', flexBasis: '50%', overflow: 'auto'}}>
         <notifiable.div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER}}>
             {() => {
                 const selectedPanel = selectedPanelSignal.get();
-                const panels = panelsSignal.get().filter(p => p.position === 'center');
-                return panels.map(panel => {
-                    const isSelected = panel.id === selectedPanel.center;
+
+                return panelsComputed.get().map(panel => {
+                    const isSelected = panel.id === selectedPanel[position];
                     return <TabButton onClick={() => {
-                        selectedPanelSignal.set({...selectedPanelSignal.get(), center: panel.id});
+                        selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: panel.id});
                     }} key={panel.id} isSelected={isSelected}>
                         <div>{panel.title}</div>
                         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             const panels = panelsSignal.get();
-                            const centerPanels = panels.filter(p => p.position === 'center');
+                            const centerPanels = panels.filter(p => p.position === position);
                             const panelIndex = centerPanels.findIndex(p => p.id === panel.id);
-                            if(panelIndex < centerPanels.length-1) {
-                                const nextPanel = centerPanels[panelIndex+1];
-                                selectedPanelSignal.set({...selectedPanelSignal.get(), center: nextPanel.id});
-                            }else if(panelIndex > 0) {
-                                const nextPanel = centerPanels[panelIndex-1];
-                                selectedPanelSignal.set({...selectedPanelSignal.get(), center: nextPanel.id});
+                            if (panelIndex < centerPanels.length - 1) {
+                                const nextPanel = centerPanels[panelIndex + 1];
+                                selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: nextPanel.id});
+                            } else if (panelIndex > 0) {
+                                const nextPanel = centerPanels[panelIndex - 1];
+                                selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: nextPanel.id});
                             }
                             panelsSignal.set(panels.filter(i => i.id !== panel.id));
                         }}><Icon.Close/>
@@ -301,8 +314,8 @@ function RenderTabPanel(props: {
         </notifiable.div>
         <notifiable.div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
             {() => {
-                const panels = panelsSignal.get();
-                const selectedPanel = selectedPanelSignal.get().center;
+                const panels = panelsComputed.get()
+                const selectedPanel = selectedPanelSignal.get()[position];
                 const Component = panels.find(p => p.id === selectedPanel)?.component ?? EmptyComponent;
                 if (Component) {
                     return <Component/>

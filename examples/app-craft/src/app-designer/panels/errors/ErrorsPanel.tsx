@@ -72,7 +72,7 @@ export function ErrorsPanel() {
 
                                 if (e.type === 'property') {
                                     addPanel({
-                                        position : 'center',
+                                        position : 'sideCenter',
                                         component : () => {
                                             return <ComponentPropertyEditor name={e.propertyName} containerId={e?.containerId ?? ''}/>
                                         },
@@ -84,7 +84,7 @@ export function ErrorsPanel() {
 
                                 if (e.type === 'variable') {
                                     addPanel({
-                                        position:'center',
+                                        position:'sideCenter',
                                         component : () => {
                                             return <VariableEditorPanel variableId={e.variableId} defaultType={'state'}/>
                                         },
