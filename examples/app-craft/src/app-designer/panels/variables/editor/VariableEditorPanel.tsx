@@ -18,11 +18,6 @@ import {DependencyInputSelector} from "../../../dependency-selector/DependencyIn
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 
-const title = {
-    computed: 'Computed',
-    state: 'State',
-    effect: 'Effect'
-}
 
 /**
  * Represents a panel for editing variables.
@@ -79,17 +74,11 @@ export function VariableEditorPanel(props: {
 
     const monacoRef = useRef<Monaco | undefined>();
     return <div style={{
-        padding: 20,
         display: 'flex',
         flexDirection: 'column',
-        width: '90vw',
-        height: '90vh',
         overflow: 'auto',
-        gap: 10,
+        flexGrow:1,
     }}>
-        <div style={{fontSize: 20}}>
-            {`Manage Signal.${title[type]}`}
-        </div>
         {enableToSwitchBetweenType === true &&
             <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
                 <ButtonGroup buttons={{
@@ -105,8 +94,8 @@ export function VariableEditorPanel(props: {
                 }} defaultButton={type === 'state' ? 'State' : type === 'computed' ? 'Computed' : 'Effect'}/>
             </div>
         }
-        <div style={{display: 'flex', gap: 10}}>
-            <LabelContainer label={'Name'} style={{width: 250}} styleLabel={{width: 80}}>
+        <div style={{display: 'flex', gap: 10,padding:10}}>
+            <LabelContainer label={'Name : '} style={{width: 250,flexDirection:'row',alignItems:'center',gap:10}} styleLabel={{fontStyle:'italic'}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                   value={() => {
@@ -131,7 +120,7 @@ export function VariableEditorPanel(props: {
                                   }}/>
             </LabelContainer>
             {type !== 'state' &&
-                <LabelContainer label={'Dependency'}>
+                <LabelContainer label={'Dependency :'} style={{flexDirection:'row',alignItems:'center',gap:10}} styleLabel={{fontStyle:'italic'}}>
                     <notifiable.div>
                         {() => {
                             const variable = variableSignal.get();

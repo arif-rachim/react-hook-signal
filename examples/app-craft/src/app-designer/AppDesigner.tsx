@@ -205,6 +205,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                leftBottom: 'variables',
                                bottom: 'errors',
                                right: 'styles',
+                               center: 'design'
                            }}>
 
                 </Dashboard>

@@ -12,6 +12,7 @@ import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
+import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
 
 /**
  * Represents a panel for managing variables.
@@ -21,12 +22,16 @@ export function VariablesPanel() {
     const {allVariablesSignal} = context;
     const updatePage = useUpdatePageSignal();
     const showModal = useShowModal();
-
+    const addPanel = useAddDashboardPanel();
     async function editVariable(forType: VariableType, variable?: Variable) {
-        await showModal<Variable>(closePanel => {
-            return <AppDesignerContext.Provider value={context}>
-                <VariableEditorPanel variableId={variable?.id} closePanel={closePanel} defaultType={forType}/>
-            </AppDesignerContext.Provider>
+        addPanel({
+            position:'center',
+            component : () => {
+                return <VariableEditorPanel variableId={variable?.id} closePanel={() => {}} defaultType={forType}/>
+            },
+            title : `${variable?.name?variable?.name:`Add ${forType}`}`,
+            Icon : Icon.Component,
+            id : variable?.id
         })
     }
 

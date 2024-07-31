@@ -8,12 +8,13 @@ import {Icon} from "../../Icon.ts";
 import {useShowModal} from "../../../modal/useShowModal.ts";
 import {useContext} from "react";
 import {useUpdateDragContainer} from "../../hooks/useUpdateSelectedDragContainer.ts";
+import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
 
 export function ErrorsPanel() {
     const showModal = useShowModal();
     const context = useContext(AppDesignerContext);
     const update = useUpdateDragContainer();
-
+    const addPanel = useAddDashboardPanel();
     const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
     return <notifiable.div
             style={{display: 'flex', flexDirection: 'column', color: colors.red, overflow: 'auto', maxHeight: 100,padding:'10px 0px'}}>
@@ -93,12 +94,16 @@ export function ErrorsPanel() {
                                 }
 
                                 if (e.type === 'variable') {
-                                    await showModal(closePanel => {
-                                        return <AppDesignerContext.Provider value={context}>
-                                            <VariableEditorPanel variableId={e.variableId} closePanel={closePanel}
-                                                                 defaultType={'state'}/>
-                                        </AppDesignerContext.Provider>
+                                    addPanel({
+                                        position:'center',
+                                        component : () => {
+                                            return <VariableEditorPanel variableId={e.variableId} closePanel={() => {}} defaultType={'state'}/>
+                                        },
+                                        title : 'Edit Variable',
+                                        Icon : Icon.Component,
+                                        id : e.variableId
                                     })
+
                                 }
 
                             }}><Icon.Detail style={{fontSize: 18}}/></div>
