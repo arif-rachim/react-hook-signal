@@ -56,11 +56,6 @@ export function GridHeader(props: {
 
     /**
      * Updates the filter value for a specific column ID based on an input change event.
-     *
-     * @param {keyof Todo} colId - The ID of the column to update the filter value for.
-     * @param {Object} e - The input change event object.
-     * @param {Object} e.target - The target property of the event object.
-     * @param {string} e.target.value - The value of the target input element.
      */
     const onInputChange = (colId: keyof Todo) => (e: { target: { value: string } }) => {
         const value = sortFilter.get();

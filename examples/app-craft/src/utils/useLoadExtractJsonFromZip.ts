@@ -46,7 +46,7 @@ export function useLoadExtractJsonFromZip() {
                 inputElement.removeEventListener('change', onChangeListener);
             }
         }
-    }, []);
+    }, [allPagesSignal]);
 
     return {ref: ref as LegacyRef<HTMLInputElement> | undefined}
 }

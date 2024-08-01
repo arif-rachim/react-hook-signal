@@ -53,7 +53,7 @@ export function format_ddMMMyyyy(date?: Date | string): string {
 
 /**
  * Formats a Date object as "DD-MMM-YYYY".
- * @param {Date | string} date - The Date object or date string.
+ * @param {Date | string} param - The Date object or date string.
  * @returns {string} The formatted date string.
  */
 export function format_ddMMM(param?: Date | string): string {
