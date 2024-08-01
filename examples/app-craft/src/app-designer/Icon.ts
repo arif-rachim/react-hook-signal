@@ -16,6 +16,7 @@ import {
 } from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
 import {RiPagesLine} from "react-icons/ri";
+import {BiReset} from "react-icons/bi";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -42,5 +43,6 @@ export const Icon = {
     Style: MdOutlineStyle,
     Property: TbJumpRope,
     Close : MdClose,
-    Question : MdOutlineQuestionMark
+    Question : MdOutlineQuestionMark,
+    Reset:BiReset
 }

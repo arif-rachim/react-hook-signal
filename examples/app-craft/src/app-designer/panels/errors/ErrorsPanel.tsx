@@ -86,7 +86,7 @@ export function ErrorsPanel() {
                                     addPanel({
                                         position:'sideCenter',
                                         component : () => {
-                                            return <VariableEditorPanel variableId={e.variableId} defaultType={'state'}/>
+                                            return <VariableEditorPanel variableId={e.variableId} defaultType={'state'} panelId={e.variableId}/>
                                         },
                                         title : `${type} : ${name}`,
                                         Icon : Icon.Component,

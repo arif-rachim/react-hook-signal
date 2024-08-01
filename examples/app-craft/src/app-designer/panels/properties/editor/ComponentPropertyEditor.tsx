@@ -49,6 +49,7 @@ export function ComponentPropertyEditor(props: {
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            overflow:'auto'
         }}>
             {() => {
                 const props = propsSignal.get();

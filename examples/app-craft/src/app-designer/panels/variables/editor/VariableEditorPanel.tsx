@@ -16,6 +16,7 @@ import {Icon} from "../../../Icon.ts";
 import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
+import {useRemoveDashboardPanel} from "../../../../dashboard/useRemoveDashboardPanel.ts";
 
 
 /**
@@ -24,15 +25,17 @@ import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 export function VariableEditorPanel(props: {
     variableId?: string,
     defaultType: VariableType,
+    panelId:string
 }) {
     const context = useContext(AppDesignerContext);
-    const {variableId, defaultType} = props;
+    const {variableId, defaultType,panelId} = props;
     const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
     const updateVariable = useUpdateVariable();
     const {allVariablesSignal, allPagesSignal} = context;
-
+    const isModified = useSignal<boolean>(false)
+    const removePanel = useRemoveDashboardPanel();
     function createNewVariable(): Variable {
         return {
             name: '',
@@ -74,10 +77,11 @@ export function VariableEditorPanel(props: {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
-        flexGrow:1,
+        flexGrow: 1,
     }}>
-        <div style={{display: 'flex', gap: 10,padding:10}}>
-            <LabelContainer label={'Name : '} style={{width: 250,flexDirection:'row',alignItems:'center',gap:10}} styleLabel={{fontStyle:'italic'}}>
+        <div style={{display: 'flex', gap: 10, padding: 10}}>
+            <LabelContainer label={'Name : '} style={{width: 250, flexDirection: 'row', alignItems: 'center', gap: 10}}
+                            styleLabel={{fontStyle: 'italic'}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                   value={() => {
@@ -96,18 +100,21 @@ export function VariableEditorPanel(props: {
                                       const newVariable = {...variableSignal.get()};
                                       newVariable.name = val;
                                       variableSignal.set(newVariable);
+                                      isModified.set(true);
                                       setTimeout(() => {
                                           dom.setSelectionRange(cursorPosition, cursorPosition);
                                       }, 0);
                                   }}/>
             </LabelContainer>
             {type !== 'state' &&
-                <LabelContainer label={'Dependency :'} style={{flexDirection:'row',alignItems:'center',gap:10}} styleLabel={{fontStyle:'italic'}}>
+                <LabelContainer label={'Dependency :'} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
+                                styleLabel={{fontStyle: 'italic'}}>
                     <notifiable.div>
                         {() => {
                             const variable = variableSignal.get();
                             return <DependencyInputSelector onChange={(result) => {
                                 variableSignal.set({...variable, dependencies: result});
+                                isModified.set(true);
                             }} value={variable.dependencies ?? []} valueToIgnore={[variable.id]}/>;
                         }}
                     </notifiable.div>
@@ -137,6 +144,7 @@ export function VariableEditorPanel(props: {
                                     const newVariable = {...variableSignal.get()};
                                     newVariable.schemaCode = value ?? '';
                                     variableSignal.set(newVariable);
+                                    isModified.set(true);
                                 }}
                             />
                         }}
@@ -169,6 +177,7 @@ export function VariableEditorPanel(props: {
                                 const newVariable = {...variableSignal.get()};
                                 newVariable.functionCode = value ?? '';
                                 variableSignal.set(newVariable);
+                                isModified.set(true);
                             }}
                         />
                     }}
@@ -176,32 +185,55 @@ export function VariableEditorPanel(props: {
             </CollapsibleLabelContainer>
 
         </div>
-        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, padding: 10}}>
-            <Button onClick={async () => {
-                const [isValid, errors] = validateForm();
-                if (isValid) {
-                    updateVariable(variableSignal.get());
-                } else {
-                    await showModal<string>(cp => {
-                        const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
-                            return errors[k]?.map(val => {
-                                return <div key={val}>{(val ?? '') as string}</div>
-                            })
-                        }).flat();
-                        return <ConfirmationDialog message={message} closePanel={cp} buttons={['Ok']}/>
-                    })
+        <notifiable.div style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, padding: 10,height:50}}>
+            {() => {
+                const modified = isModified.get();
+                if (!modified) {
+                    return <></>
                 }
-            }} style={{
-                display: 'flex',
-                gap: 5,
-                alignItems: 'center'
-            }}>
-                {'Save'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Save style={{fontSize: 18}}/>
-                </div>
-            </Button>
+                return <>
+                    <Button onClick={async () => {
+                        const [isValid, errors] = validateForm();
+                        if (isValid) {
+                            updateVariable(variableSignal.get());
+                            removePanel(panelId)
+                        } else {
+                            await showModal<string>(cp => {
+                                const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
+                                    return errors[k]?.map(val => {
+                                        return <div key={val}>{(val ?? '') as string}</div>
+                                    })
+                                }).flat();
+                                return <ConfirmationDialog message={message} closePanel={cp} buttons={['Ok']}/>
+                            })
+                        }
+                    }} style={{
+                        display: 'flex',
+                        gap: 5,
+                        alignItems: 'center'
+                    }}>
+                        {'Save'}
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <Icon.Save style={{fontSize: 18}}/>
+                        </div>
+                    </Button>
+                    <Button onClick={async () => {
+                        variableSignal.set(variable ?? createNewVariable());
+                        isModified.set(false);
+                    }} style={{
+                        display: 'flex',
+                        gap: 5,
+                        alignItems: 'center'
+                    }}>
+                        {'Reset'}
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <Icon.Reset style={{fontSize: 18}}/>
+                        </div>
+                    </Button>
+                </>
+            }}
 
-        </div>
+
+        </notifiable.div>
     </div>
 }

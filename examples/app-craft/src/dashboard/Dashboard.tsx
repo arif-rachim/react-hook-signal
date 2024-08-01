@@ -5,10 +5,11 @@ import React, {
     PropsWithChildren,
     ReactNode,
     useContext,
-    useEffect
+    useEffect,
+    useState
 } from "react";
 import {IconType} from "react-icons";
-import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {useHoveredOnPress} from "./useHoveredOnPress.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Signal} from "signal-polyfill";
@@ -16,6 +17,7 @@ import {Icon} from "../app-designer/Icon.ts";
 import {BORDER} from "../app-designer/Border.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {AppDesignerContext} from "../app-designer/AppDesignerContext.ts";
+import {useRemoveDashboardPanel} from "./useRemoveDashboardPanel.ts";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom' | 'sideCenter'
 export type Panel = {
@@ -266,6 +268,7 @@ function castSignal(value: unknown) {
     return value as unknown as Signal.State<SelectedPanelType>
 }
 
+
 function RenderTabPanel(props: {
     panelsSignal: Signal.State<Array<PanelInstance>>,
     selectedPanelSignal: Signal.State<SelectedPanelType>,
@@ -273,56 +276,50 @@ function RenderTabPanel(props: {
 }) {
     const {panelsSignal, selectedPanelSignal, position} = props;
     const {activePageIdSignal} = useContext(AppDesignerContext);
-    const panelsComputed = useComputed(() => {
+    const [panelsComputed, setPanelsComputed] = useState<Array<PanelInstance>>([]);
+    const [selectedPanel, setSelectedPanel] = useState<SelectedPanelType>({});
+    useSignalEffect(() => {
         const pageId = activePageIdSignal.get();
         let panels = panelsSignal.get().filter(p => p.position === position);
         if (position === 'sideCenter') {
             panels = panels.filter(p => p.pageId === pageId)
         }
-        return panels;
+        setPanelsComputed(panels)
+    });
+    useSignalEffect(() => {
+        setSelectedPanel(selectedPanelSignal.get())
     })
-    return <div style={{display: 'flex', flexDirection: 'column', flexBasis: '50%', overflow: 'auto'}}>
-        <notifiable.div style={{display: 'flex', flexDirection: 'row', borderBottom: BORDER}}>
-            {() => {
-                const selectedPanel = selectedPanelSignal.get();
+    const removePanel = useRemoveDashboardPanel();
+    const isEmpty = panelsComputed.length === 0;
+    const Component = panelsComputed.find(p => p.id === selectedPanel[position])?.component ?? EmptyComponent;
+    return <div style={{
+        display: isEmpty ? 'none' : 'flex',
+        flexDirection: 'column',
+        flexBasis: '50%',
+        flexGrow: 1,
+        overflow: 'auto',
+        borderLeft: position === 'sideCenter' ? BORDER : 'unset',
+    }}>
+        <div style={{display: isEmpty ? 'none' : 'flex', flexDirection: 'row', borderBottom: BORDER}}>
+            {panelsComputed.map(panel => {
 
-                return panelsComputed.get().map(panel => {
-                    const isSelected = panel.id === selectedPanel[position];
-                    return <TabButton onClick={() => {
-                        selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: panel.id});
-                    }} key={panel.id} isSelected={isSelected}>
-                        <div>{panel.title}</div>
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const panels = panelsSignal.get();
-                            const centerPanels = panels.filter(p => p.position === position);
-                            const panelIndex = centerPanels.findIndex(p => p.id === panel.id);
-                            if (panelIndex < centerPanels.length - 1) {
-                                const nextPanel = centerPanels[panelIndex + 1];
-                                selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: nextPanel.id});
-                            } else if (panelIndex > 0) {
-                                const nextPanel = centerPanels[panelIndex - 1];
-                                selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: nextPanel.id});
-                            }
-                            panelsSignal.set(panels.filter(i => i.id !== panel.id));
-                        }}><Icon.Close/>
-                        </div>
-                    </TabButton>
-                })
-            }}
-        </notifiable.div>
-        <notifiable.div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
-            {() => {
-                const panels = panelsComputed.get()
-                const selectedPanel = selectedPanelSignal.get()[position];
-                const Component = panels.find(p => p.id === selectedPanel)?.component ?? EmptyComponent;
-                if (Component) {
-                    return <Component/>
-                }
-                return <></>
-            }}
-        </notifiable.div>
+                const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
+                return <TabButton onClick={() => {
+                    selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: panel.id});
+                }} key={panel.id} isSelected={isSelected}>
+                    <div>{panel.title}</div>
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removePanel(panel.id);
+                    }}><Icon.Close/>
+                    </div>
+                </TabButton>
+            })}
+        </div>
+        <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
+            <Component/>
+        </div>
     </div>
 }
 
@@ -345,8 +342,15 @@ function TabButton(props: HTMLProps<HTMLDivElement> & { isSelected: boolean }) {
 }
 
 function EmptyComponent() {
-    return <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-        <Icon.Question/>
+    return <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 30,
+        gap: 10
+    }}>
+        <Icon.Question style={{fontSize: 18}}/>
         <div>
             Oops we cant find the component to render
         </div>
