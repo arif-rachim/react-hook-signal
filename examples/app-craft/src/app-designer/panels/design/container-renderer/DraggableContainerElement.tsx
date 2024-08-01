@@ -5,7 +5,7 @@ import {Container} from "../../../AppDesigner.tsx";
 import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {dropZones} from "./drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
-import {BORDER} from "../../../Border.ts";
+import {BORDER, BORDER_DASHED} from "../../../Border.ts";
 import {BasicDragEvent, CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {ContainerRenderer} from "./ContainerRenderer.tsx";
 import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
@@ -203,11 +203,12 @@ export function DraggableContainerElement(props: { container: Container }) {
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
         const container: Container = containerSignal.get();
+        const isContainer = ['vertical','horizontal'].includes(container.type);
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = container?.parent === '';
         const styleFromSignal = {
-            border: mode === 'design' ? BORDER : 'unset',
+            border: mode === 'design' ? isContainer ? BORDER_DASHED : BORDER : 'unset',
             background: 'white',
             minWidth: container?.minWidth,
             minHeight: container?.minHeight,
