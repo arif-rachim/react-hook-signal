@@ -17,6 +17,8 @@ import {VariablesPanel} from "./panels/variables/VariablesPanel.tsx";
 import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
+import PackagePanel from "./panels/package/PackagePanel.tsx";
+import {useRefresh} from "../utils/useRefresh.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -77,6 +79,7 @@ export type Container = {
 
 
 export default function AppDesigner(props: LayoutBuilderProps) {
+    useRefresh('app');
     const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
     const activePageIdSignal = useSignal<string>('');
     const activeDropZoneIdSignal = useSignal('');
@@ -86,6 +89,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
+
     useSignalEffect(() => {
         const errors = allErrorsSignal.get();
         console.log('errors', errors)
@@ -175,6 +179,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         Icon: Icon.Property,
                         position: 'right',
                         component: PropertiesPanel
+                    },
+                    bundle: {
+                        title: 'Package',
+                        Icon: Icon.Package,
+                        position: 'bottom',
+                        component: PackagePanel
                     }
                 }}
                            defaultSelectedPanel={{

@@ -22,7 +22,7 @@ export function ComponentPropertyEditor(props: {
     const context = useContext(AppDesignerContext);
     const {allVariablesSignal, elements, allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
-    const returnType = elements[selectedDragContainer?.type].property[props.name];
+    const returnType = elements[selectedDragContainer?.type]?.property[props.name];
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
 

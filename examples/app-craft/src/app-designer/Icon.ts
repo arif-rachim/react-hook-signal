@@ -1,4 +1,4 @@
-import {PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
+import {PiPackage, PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuSigmaSquare} from "react-icons/lu";
 import {IoCodeSlashOutline, IoLogoWebComponent, IoOpenOutline, IoTrashOutline} from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
@@ -44,5 +44,6 @@ export const Icon = {
     Property: TbJumpRope,
     Close : MdClose,
     Question : MdOutlineQuestionMark,
-    Reset:BiReset
+    Reset:BiReset,
+    Package:PiPackage
 }
