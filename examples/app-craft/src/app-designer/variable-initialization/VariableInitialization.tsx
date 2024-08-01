@@ -1,15 +1,14 @@
 import {useRecordErrorMessage} from "../hooks/useRecordErrorMessage.ts";
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {AnySignal, effect, useComputed, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {VariableInstance} from "../AppDesigner.tsx";
 import {undefined, z, ZodType} from "zod";
 import {useNavigateSignal} from "../hooks/useNavigateSignal.tsx";
+import {AppViewerContext} from "../app-viewer/AppViewer.tsx";
 
-export function VariableInitialization() {
+export function VariableInitialization(props:{context:AppViewerContext}) {
     const errorMessage = useRecordErrorMessage();
-    const {allVariablesSignal, allVariablesSignalInstance, variableInitialValueSignal} = useContext(AppDesignerContext);
+    const {allVariablesSignal, allVariablesSignalInstance, variableInitialValueSignal} = props.context;
     const navigateSignal = useNavigateSignal();
 
     const validatorsComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {

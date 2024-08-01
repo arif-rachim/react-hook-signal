@@ -18,16 +18,20 @@ type InferType<T extends ZodRawShape> = {
 };
 export type CancellableEvent = { stopPropagation: () => void, preventDefault: () => void };
 export type BasicDragEvent = CancellableEvent & { dataTransfer: DataTransfer | null, clientX: number, clientY: number };
-export type ElementProps = {
-    draggable: boolean,
+
+export interface ElementStyleProps{
     style: CSSProperties,
+    ['data-element-id']: string
+}
+
+export interface ElementProps extends ElementStyleProps{
+    draggable: boolean,
     onDragStart: (event: BasicDragEvent) => void,
     onDragOver: (event: BasicDragEvent) => void,
     onDrop: (event: BasicDragEvent) => void,
     onDragEnd: (event: BasicDragEvent) => void,
     onMouseOver: (event: CancellableEvent) => void,
     onClick: (event: CancellableEvent) => void,
-    ['data-element-id']: string
 }
 
 interface Element<T extends ZodRawShape = ZodRawShape> {

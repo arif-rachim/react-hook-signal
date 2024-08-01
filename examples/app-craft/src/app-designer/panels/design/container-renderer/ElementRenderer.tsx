@@ -22,8 +22,8 @@ import {PropertyInitialization} from "./property-initialization/PropertyInitiali
  */
 export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
     const {container, elementProps} = props;
-    const {elements} = useContext(AppDesignerContext);
-    const {component} = elements[container.type];
+    const context = useContext(AppDesignerContext);
+    const {component} = context.elements[container.type];
     const ref = useRef<HTMLElement>(null);
 
     const propsRef = useRef(elementProps);
@@ -71,7 +71,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         }
     }, [Component]);
     return <>
-        <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
+        <PropertyInitialization container={props.container} setComponentProps={setComponentProps} context={context}/>
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
 }

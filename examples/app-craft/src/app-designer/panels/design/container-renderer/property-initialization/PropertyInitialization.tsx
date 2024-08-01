@@ -1,16 +1,17 @@
 import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
-import {Dispatch, SetStateAction, useContext, useEffect} from "react";
-import {AppDesignerContext} from "../../../../AppDesignerContext.ts";
+import {Dispatch, SetStateAction, useEffect} from "react";
 import {Container} from "../../../../AppDesigner.tsx";
 import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts";
 import {useNavigateSignal} from "../../../../hooks/useNavigateSignal.tsx";
+import {AppViewerContext} from "../../../../app-viewer/AppViewer.tsx";
 
 export function PropertyInitialization(props: {
     container: Container,
-    setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>
+    setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>,
+    context: AppViewerContext
 }) {
     const {container, setComponentProps} = props;
-    const {elements: elementsLib} = useContext(AppDesignerContext);
+    const {allVariablesSignalInstance, allVariablesSignal, elements: elementsLib} = props.context;
     const {property} = elementsLib[container.type];
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
@@ -18,7 +19,7 @@ export function PropertyInitialization(props: {
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);
-    const {allVariablesSignalInstance, allVariablesSignal} = useContext(AppDesignerContext);
+
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
         const destroyerCallbacks: Array<() => void> = [];
@@ -31,7 +32,6 @@ export function PropertyInitialization(props: {
                 const navigate = navigateSignal.get();
                 const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
                 const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
-                // here we need to create navigation object !
 
                 const funcParams = ['module', 'navigate', ...propDependenciesName, containerProp.formula] as Array<string>;
                 propDependencies.forEach(p => p.get());

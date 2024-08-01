@@ -1,25 +1,17 @@
 import {createContext} from "react";
 import {Signal} from "signal-polyfill";
 import {Container, Page, Variable, VariableInstance} from "./AppDesigner.tsx";
-import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import {ErrorType} from "./errors/ErrorType.ts";
+import {AppViewerContext} from "./app-viewer/AppViewer.tsx";
 
 /**
  * Represents the context for the App Designer.
  */
-export interface AppDesignerContext {
-    allPagesSignal: Signal.State<Array<Page>>;
-    activePageIdSignal: Signal.State<string>;
+export interface AppDesignerContext extends AppViewerContext{
     activeDropZoneIdSignal: Signal.State<string>;
     selectedDragContainerIdSignal: Signal.State<string>;
     hoveredDragContainerIdSignal: Signal.State<string>;
-    allContainersSignal: Signal.Computed<Array<Container>>;
-    allVariablesSignal: Signal.Computed<Array<Variable>>;
-    variableInitialValueSignal: Signal.State<Record<string, unknown>>;
-    allVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
     uiDisplayModeSignal: Signal.State<'design' | 'view'>;
-    allErrorsSignal: Signal.State<Array<ErrorType>>;
-    elements: LayoutBuilderProps['elements'];
 }
 
 export const AppDesignerContext = createContext<AppDesignerContext>({

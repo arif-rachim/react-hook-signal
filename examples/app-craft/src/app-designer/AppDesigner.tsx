@@ -18,7 +18,6 @@ import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
 import PackagePanel from "./panels/package/PackagePanel.tsx";
-import {useRefresh} from "../utils/useRefresh.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -79,7 +78,6 @@ export type Container = {
 
 
 export default function AppDesigner(props: LayoutBuilderProps) {
-    useRefresh('app');
     const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
     const activePageIdSignal = useSignal<string>('');
     const activeDropZoneIdSignal = useSignal('');
@@ -124,25 +122,25 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     useSignalEffect(() => {
         onChange(allPagesSignal.get());
     })
-
+    const context: AppDesignerContext = {
+        allPagesSignal: allPagesSignal,
+        activePageIdSignal: activePageIdSignal,
+        hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
+        selectedDragContainerIdSignal: selectedDragContainerIdSignal,
+        activeDropZoneIdSignal: activeDropZoneIdSignal,
+        uiDisplayModeSignal: uiDisplayModeSignal,
+        allContainersSignal: allContainersSignal,
+        allVariablesSignal: allVariablesSignal,
+        variableInitialValueSignal: variableInitialValueSignal,
+        allVariablesSignalInstance: allVariablesSignalInstance,
+        allErrorsSignal: allErrorsSignal,
+        elements: props.elements
+    }
     return <ErrorBoundary>
         <ModalProvider>
             <AppDesignerContext.Provider
-                value={{
-                    allPagesSignal: allPagesSignal,
-                    activePageIdSignal: activePageIdSignal,
-                    hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
-                    selectedDragContainerIdSignal: selectedDragContainerIdSignal,
-                    activeDropZoneIdSignal: activeDropZoneIdSignal,
-                    uiDisplayModeSignal: uiDisplayModeSignal,
-                    allContainersSignal: allContainersSignal,
-                    allVariablesSignal: allVariablesSignal,
-                    variableInitialValueSignal: variableInitialValueSignal,
-                    allVariablesSignalInstance: allVariablesSignalInstance,
-                    allErrorsSignal: allErrorsSignal,
-                    elements: props.elements
-                }}>
-                <VariableInitialization/>
+                value={context}>
+                <VariableInitialization context={context}/>
                 <Dashboard panels={{
                     pages: {
                         title: 'Pages',
