@@ -16,7 +16,7 @@ import {Icon} from "../../../Icon.ts";
 import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
-import {useRemoveDashboardPanel} from "../../../../dashboard/useRemoveDashboardPanel.ts";
+import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 
 
 /**

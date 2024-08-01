@@ -9,14 +9,13 @@ import {colors} from "stock-watch/src/utils/colors.ts";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {BORDER} from "../../../Border.ts";
 import {Icon} from "../../../Icon.ts";
-import {useAddDashboardPanel} from "../../../../dashboard/useAddDashboardPanel.tsx";
+import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
 
 export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
     const {propertyName} = props;
     const context = useContext(AppDesignerContext);
     const containerSignal = useSelectedDragContainer();
     const addPanel = useAddDashboardPanel();
-    console.log(addPanel)
 
     return <LabelContainer key={propertyName} label={propertyName}
                            style={{flexDirection: 'row', alignItems: 'center'}}

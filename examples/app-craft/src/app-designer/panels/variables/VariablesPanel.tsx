@@ -12,7 +12,7 @@ import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
-import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
+import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import {guid} from "../../../utils/guid.ts";
 
 /**

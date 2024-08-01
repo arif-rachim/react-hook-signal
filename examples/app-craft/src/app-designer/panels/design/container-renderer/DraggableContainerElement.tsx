@@ -202,8 +202,8 @@ export function DraggableContainerElement(props: { container: Container }) {
 
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
-        const container: Container = containerSignal.get();
-        const isContainer = ['vertical','horizontal'].includes(container.type);
+        const container: Container|undefined = containerSignal.get();
+        const isContainer = ['vertical','horizontal'].includes(container?.type);
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = container?.parent === '';

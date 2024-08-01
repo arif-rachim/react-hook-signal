@@ -1,7 +1,7 @@
 import {useContext} from "react";
 import {DashboardContext, Panel} from "./Dashboard.tsx";
-import {guid} from "../utils/guid.ts";
-import {AppDesignerContext} from "../app-designer/AppDesignerContext.ts";
+import {guid} from "../../utils/guid.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 
 export function useAddDashboardPanel() {
     const {panelsSignal, selectedPanelSignal} = useContext(DashboardContext);

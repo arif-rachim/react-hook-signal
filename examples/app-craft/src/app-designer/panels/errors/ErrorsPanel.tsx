@@ -5,7 +5,7 @@ import {ComponentPropertyEditor} from "../properties/editor/ComponentPropertyEdi
 import {VariableEditorPanel} from "../variables/editor/VariableEditorPanel.tsx";
 import {Icon} from "../../Icon.ts";
 import {CSSProperties, useContext} from "react";
-import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
+import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 
 export function ErrorsPanel() {
     const addPanel = useAddDashboardPanel();

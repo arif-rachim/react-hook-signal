@@ -13,10 +13,10 @@ import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {useHoveredOnPress} from "./useHoveredOnPress.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Signal} from "signal-polyfill";
-import {Icon} from "../app-designer/Icon.ts";
-import {BORDER} from "../app-designer/Border.ts";
-import {isEmpty} from "../utils/isEmpty.ts";
-import {AppDesignerContext} from "../app-designer/AppDesignerContext.ts";
+import {Icon} from "../Icon.ts";
+import {BORDER} from "../Border.ts";
+import {isEmpty} from "../../utils/isEmpty.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useRemoveDashboardPanel} from "./useRemoveDashboardPanel.ts";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom' | 'sideCenter'

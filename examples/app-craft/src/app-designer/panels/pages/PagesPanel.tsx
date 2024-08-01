@@ -10,7 +10,7 @@ import {MdAdd} from "react-icons/md";
 import {notifiable} from "react-hook-signal";
 import {Icon} from "../../Icon.ts";
 import {PageNameDialog} from "./PageNameDialog.tsx";
-import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
+import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import {DesignPanel} from "../design/DesignPanel.tsx";
 
 export function PagesPanel() {

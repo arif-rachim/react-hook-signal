@@ -9,7 +9,7 @@ import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
 import {ErrorType} from "./errors/ErrorType.ts";
 import {createNewBlankPage} from "./createNewBlankPage.ts";
-import {Dashboard} from "../dashboard/Dashboard.tsx";
+import {Dashboard} from "./dashboard/Dashboard.tsx";
 import {Icon} from "./Icon.ts";
 import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
 import {ElementsPanel} from "./panels/elements/ElementsPanel.tsx";
