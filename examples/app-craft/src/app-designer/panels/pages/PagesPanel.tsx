@@ -10,10 +10,13 @@ import {MdAdd} from "react-icons/md";
 import {notifiable} from "react-hook-signal";
 import {Icon} from "../../Icon.ts";
 import {PageNameDialog} from "./PageNameDialog.tsx";
+import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
+import {DesignPanel} from "../design/DesignPanel.tsx";
 
 export function PagesPanel() {
     const {allPagesSignal, activePageIdSignal, allErrorsSignal} = useContext(AppDesignerContext);
     const showModal = useShowModal();
+    const addDashboardPanel = useAddDashboardPanel();
 
     async function addPage() {
         const page = createNewBlankPage();
@@ -39,7 +42,7 @@ export function PagesPanel() {
         updatePage({type: 'page-name', name: title, pageId: page.id})
     }
 
-    return <div style={{display:'flex',flexDirection:'column',padding:10}}>
+    return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
         <Button onClick={() => addPage()}
                 style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
             {'Add New Page'}
@@ -62,6 +65,15 @@ export function PagesPanel() {
                     }} key={page.id} onClick={() => {
                         allErrorsSignal.set([]);
                         activePageIdSignal.set(page.id);
+                        addDashboardPanel({
+                            position: 'mainCenter',
+                            component: () => {
+                                return <DesignPanel/>
+                            },
+                            title: page.name,
+                            Icon: Icon.Page,
+                            id: page.id
+                        })
                     }}>
                         <div></div>
                         <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{page.name}</div>

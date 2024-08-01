@@ -306,12 +306,19 @@ function RenderTabPanel(props: {
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
                 return <TabButton onClick={() => {
                     selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: panel.id});
+                    // if this is the main panel then we need to activate the signal id
+                    if(position === 'mainCenter') {
+                        activePageIdSignal.set(panel.pageId);
+                    }
                 }} key={panel.id} isSelected={isSelected}>
                     <div>{panel.title}</div>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        removePanel(panel.id);
+                        const nextPanelId = removePanel(panel.id);
+                        if(nextPanelId && position === 'mainCenter') {
+                            activePageIdSignal.set(nextPanelId);
+                        }
                     }}><Icon.Close/>
                     </div>
                 </TabButton>

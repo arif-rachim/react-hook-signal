@@ -1,9 +1,8 @@
-import {CSSProperties, useContext, useEffect} from "react";
+import {CSSProperties, useEffect} from "react";
 import {AnySignal, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
-import ButtonGroup from "./button/ButtonGroup.tsx";
 import {ToolBar} from "./ToolBar.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
@@ -18,7 +17,6 @@ import {VariablesPanel} from "./panels/variables/VariablesPanel.tsx";
 import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
-import {DesignPanel} from "./panels/design/DesignPanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -75,21 +73,6 @@ export type Container = {
     horizontalAlign: 'left' | 'center' | 'right' | '',
 
     properties: Record<string, ContainerPropertyType>,
-}
-
-
-function ToggleViewToolbar() {
-    const {uiDisplayModeSignal} = useContext(AppDesignerContext);
-    return <div style={{display: 'flex', justifyContent: 'center', padding: 5, background: 'rgba(0,0,0,0.05)'}}>
-        <ButtonGroup buttons={{
-            'Preview': {
-                onClick: () => uiDisplayModeSignal.set('view')
-            },
-            'Design': {
-                onClick: () => uiDisplayModeSignal.set('design')
-            }
-        }} defaultButton={'Design'}/>
-    </div>
 }
 
 
@@ -192,12 +175,6 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         Icon: Icon.Property,
                         position: 'right',
                         component: PropertiesPanel
-                    },
-                    design: {
-                        title: 'Design',
-                        Icon: Icon.Detail,
-                        position: 'mainCenter',
-                        component: DesignViewPanel
                     }
                 }}
                            defaultSelectedPanel={{
@@ -205,20 +182,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                leftBottom: 'variables',
                                bottom: 'errors',
                                right: 'styles',
-                               mainCenter: 'design'
                            }}>
-
                 </Dashboard>
+                <ToolBar/>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>
 }
 
-function DesignViewPanel() {
-    return <>
-        <ToggleViewToolbar/>
-        <DesignPanel/>
-        <ToolBar/>
-    </>
-}
 

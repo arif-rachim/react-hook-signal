@@ -3,6 +3,7 @@ import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import {DraggableContainerElement} from "./container-renderer/DraggableContainerElement.tsx";
 import ErrorBoundary from "../../ErrorBoundary.tsx";
+import ButtonGroup from "../../button/ButtonGroup.tsx";
 
 export function DesignPanel() {
     const {allContainersSignal, activePageIdSignal} = useContext(AppDesignerContext);
@@ -13,7 +14,9 @@ export function DesignPanel() {
         }
         return <></>
     });
-    return <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
+    return <>
+        <ToggleViewToolbar/>
+        <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
         {() => {
             const element = renderedElements.get()
             const activePage = activePageIdSignal.get();
@@ -21,5 +24,20 @@ export function DesignPanel() {
                 {element}
             </ErrorBoundary>
         }}
-    </notifiable.div>;
+    </notifiable.div>
+    </>
+}
+
+function ToggleViewToolbar() {
+    const {uiDisplayModeSignal} = useContext(AppDesignerContext);
+    return <div style={{display: 'flex', justifyContent: 'center', padding: 5, background: 'rgba(0,0,0,0.05)'}}>
+        <ButtonGroup buttons={{
+            'Preview': {
+                onClick: () => uiDisplayModeSignal.set('view')
+            },
+            'Design': {
+                onClick: () => uiDisplayModeSignal.set('design')
+            }
+        }} defaultButton={'Design'}/>
+    </div>
 }
