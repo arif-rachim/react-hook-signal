@@ -17,10 +17,13 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<C
     const selectedDragContainer = useSelectedDragContainer();
     const updateSelectedDragContainer = useUpdateSelectedDragContainer();
     const {property, label, dataSource} = props;
-    const [value, setValue] = useState<string>('');
+    const [value, setValue] = useState<string|undefined>();
     useSignalEffect(() => {
         const container = selectedDragContainer.get();
         if (container === undefined) {
+            return;
+        }
+        if(property === undefined){
             return;
         }
         setValue(container[property])

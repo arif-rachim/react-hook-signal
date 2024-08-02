@@ -1,11 +1,11 @@
 import {IconType} from "react-icons";
-import {useContext} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {BORDER} from "../../Border.ts";
+import {useAppContext} from "../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../AppDesignerContext.ts";
 
 export function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
     const Icon = props.icon;
-    const {activeDropZoneIdSignal} = useContext(AppDesignerContext);
+    const {activeDropZoneIdSignal} = useAppContext<AppDesignerContext>();
     return <div
         style={{
             border: BORDER,

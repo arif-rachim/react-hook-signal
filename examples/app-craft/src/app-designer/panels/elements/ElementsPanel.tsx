@@ -1,10 +1,9 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {MdHorizontalDistribute, MdVerticalDistribute} from "react-icons/md";
 import {DraggableItem} from "./DraggableItem.tsx";
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 export function ElementsPanel() {
-    const {elements} = useContext(AppDesignerContext);
+    const {elements} = useAppContext();
     return <div style={{display:'flex',flexDirection: 'row', flexWrap: 'wrap', gap: 10,justifyContent:'space-between',padding:10}}>
         <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
         <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>

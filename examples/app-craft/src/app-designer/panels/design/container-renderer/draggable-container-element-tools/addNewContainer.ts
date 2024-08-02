@@ -17,26 +17,9 @@ export function addNewContainer(allContainersSignal: Signal.Computed<Array<Conta
 
         children: [],
         parent: parentContainerId,
-        width: '',
-        height: '',
 
         minWidth: '24px',
         minHeight: '24px',
-
-        paddingTop: '',
-        paddingRight: '',
-        paddingBottom: '',
-        paddingLeft: '',
-
-        marginTop: '',
-        marginRight: '',
-        marginBottom: '',
-        marginLeft: '',
-
-        // this is specific only for container
-        gap: '',
-        verticalAlign: '',
-        horizontalAlign: '',
 
         properties: {}
     }

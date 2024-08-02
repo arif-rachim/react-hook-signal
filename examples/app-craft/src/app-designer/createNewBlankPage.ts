@@ -9,27 +9,7 @@ export function createNewBlankPage(): Page {
             id: guid(),
             type: 'vertical',
             children: [],
-            parent: '',
-            height: '',
-            width: '',
-            minWidth: '100px',
-            minHeight: '100px',
-
-            marginTop: '',
-            marginRight: '',
-            marginBottom: '',
-            marginLeft: '',
-
-            paddingTop: '',
-            paddingRight: '',
-            paddingBottom: '',
-            paddingLeft: '',
             properties: {},
-
-            gap: '',
-            verticalAlign: '',
-            horizontalAlign: '',
-
         }],
         name: 'home'
     }

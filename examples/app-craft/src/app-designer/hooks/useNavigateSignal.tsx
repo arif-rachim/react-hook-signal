@@ -1,9 +1,9 @@
 import {useComputed} from "react-hook-signal";
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useShowModal} from "../../modal/useShowModal.ts";
 import {Button} from "../button/Button.tsx";
 import {Icon} from "../Icon.ts";
+import {useAppContext} from "./useAppContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 
 export function useNavigateSignal() {
     const {
@@ -12,7 +12,7 @@ export function useNavigateSignal() {
         allErrorsSignal,
         uiDisplayModeSignal,
         variableInitialValueSignal
-    } = useContext(AppDesignerContext)
+    } = useAppContext<AppDesignerContext>()
     const showModal = useShowModal();
     return useComputed(() => {
         const allPages = allPagesSignal.get();

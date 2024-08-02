@@ -1,13 +1,4 @@
-import React, {
-    createContext,
-    CSSProperties,
-    HTMLProps,
-    PropsWithChildren,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState
-} from "react";
+import React, {createContext, CSSProperties, HTMLProps, PropsWithChildren, ReactNode, useEffect, useState} from "react";
 import {IconType} from "react-icons";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {useHoveredOnPress} from "./useHoveredOnPress.ts";
@@ -16,8 +7,9 @@ import {Signal} from "signal-polyfill";
 import {Icon} from "../Icon.ts";
 import {BORDER} from "../Border.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useRemoveDashboardPanel} from "./useRemoveDashboardPanel.ts";
+import {useAppContext} from "../hooks/useAppContext.ts";
+import {AppViewerContext} from "../../app-viewer/AppViewerContext.ts";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom' | 'sideCenter'
 export type Panel = {
@@ -275,7 +267,7 @@ function RenderTabPanel(props: {
     position: PanelPosition
 }) {
     const {panelsSignal, selectedPanelSignal, position} = props;
-    const {activePageIdSignal} = useContext(AppDesignerContext);
+    const {activePageIdSignal} = useAppContext<AppViewerContext>();
     const [panelsComputed, setPanelsComputed] = useState<Array<PanelInstance>>([]);
     const [selectedPanel, setSelectedPanel] = useState<SelectedPanelType>({});
     useSignalEffect(() => {

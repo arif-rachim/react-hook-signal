@@ -1,12 +1,12 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useComputed} from "react-hook-signal";
+import {useAppContext} from "./useAppContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 
 /**
  * Retrieves the selected drag container from the AppDesignerContext.
  */
 export function useSelectedDragContainer() {
-    const {selectedDragContainerIdSignal, allContainersSignal} = useContext(AppDesignerContext);
+    const {selectedDragContainerIdSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
     return useComputed(() => {
         const selectedDragContainerId = selectedDragContainerIdSignal.get();
         return allContainersSignal.get().find(i => i.id === selectedDragContainerId);

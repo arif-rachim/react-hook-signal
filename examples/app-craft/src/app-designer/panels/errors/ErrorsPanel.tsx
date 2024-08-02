@@ -1,15 +1,15 @@
 import {notifiable, useComputed} from "react-hook-signal";
 import {colors} from "stock-watch/src/utils/colors.ts";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {ComponentPropertyEditor} from "../properties/editor/ComponentPropertyEditor.tsx";
 import {VariableEditorPanel} from "../variables/editor/VariableEditorPanel.tsx";
 import {Icon} from "../../Icon.ts";
-import {CSSProperties, useContext} from "react";
+import {CSSProperties} from "react";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 export function ErrorsPanel() {
     const addPanel = useAddDashboardPanel();
-    const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useContext(AppDesignerContext);
+    const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useAppContext();
     const errorsComputed = useComputed(() => {
         let errors = allErrorsSignal.get();
         const containers = allContainersSignal.get();

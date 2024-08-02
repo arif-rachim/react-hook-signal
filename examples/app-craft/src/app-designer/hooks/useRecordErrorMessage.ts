@@ -1,8 +1,8 @@
-import {useCallback, useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {useCallback} from "react";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {ErrorType} from "../errors/ErrorType.ts";
 import {ZodError} from "zod";
+import {useAppContext} from "./useAppContext.ts";
 
 type Error = unknown;
 let lastInvokedTime = performance.now();
@@ -10,7 +10,7 @@ const maxAllowedBurstInvoked = 10;
 let currentBurstInvoked = 0;
 
 export function useRecordErrorMessage() {
-    const {allErrorsSignal} = useContext(AppDesignerContext);
+    const {allErrorsSignal} = useAppContext();
 
     const recordError = useCallback(function recordError(e: ErrorType) {
         const allErrors = allErrorsSignal.get();

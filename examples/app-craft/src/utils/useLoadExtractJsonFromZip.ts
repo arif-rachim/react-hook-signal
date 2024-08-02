@@ -1,11 +1,11 @@
-import {ChangeEvent, LegacyRef, useContext, useEffect, useRef} from "react";
+import {ChangeEvent, LegacyRef, useEffect, useRef} from "react";
 import JSZip from "jszip";
-import {AppDesignerContext} from "../app-designer/AppDesignerContext.ts";
+import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 
 
 export function useLoadExtractJsonFromZip() {
     const ref = useRef<HTMLInputElement>();
-    const {allPagesSignal} = useContext(AppDesignerContext);
+    const {allPagesSignal} = useAppContext();
     useEffect(() => {
         const inputElement = ref.current;
 

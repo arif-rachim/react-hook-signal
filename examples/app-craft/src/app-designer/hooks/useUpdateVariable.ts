@@ -1,11 +1,10 @@
 import {Variable} from "../AppDesigner.tsx";
 import {sortSignal} from "../sortSignal.ts";
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
+import {useAppContext} from "./useAppContext.ts";
 
 export function useUpdateVariable() {
-    const {allVariablesSignal} = useContext(AppDesignerContext);
+    const {allVariablesSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     return function updateVariable(variable: Variable) {
         const variables = [...allVariablesSignal.get()];

@@ -1,5 +1,3 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {useShowModal} from "../../../modal/useShowModal.ts";
 import {createNewBlankPage} from "../../createNewBlankPage.ts";
 import {isEmpty} from "../../../utils/isEmpty.ts";
@@ -12,9 +10,10 @@ import {Icon} from "../../Icon.ts";
 import {PageNameDialog} from "./PageNameDialog.tsx";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import {DesignPanel} from "../design/DesignPanel.tsx";
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 export function PagesPanel() {
-    const {allPagesSignal, activePageIdSignal, allErrorsSignal} = useContext(AppDesignerContext);
+    const {allPagesSignal, activePageIdSignal, allErrorsSignal} = useAppContext();
     const showModal = useShowModal();
     const addDashboardPanel = useAddDashboardPanel();
 

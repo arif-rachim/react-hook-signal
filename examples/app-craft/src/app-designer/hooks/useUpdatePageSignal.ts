@@ -1,6 +1,5 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {Container, Page, Variable} from "../AppDesigner.tsx";
+import {useAppContext} from "./useAppContext.ts";
 
 type ParamVariable = {
     type: 'variable',
@@ -28,7 +27,7 @@ type ParamAddPage = {
 }
 
 export function useUpdatePageSignal() {
-    const {allPagesSignal, activePageIdSignal} = useContext(AppDesignerContext);
+    const {allPagesSignal, activePageIdSignal} = useAppContext();
     return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage) {
         const allPages = [...allPagesSignal.get()];
         const pageId = param.pageId ?? activePageIdSignal.get();

@@ -1,7 +1,8 @@
-import {CSSProperties, useContext, useEffect, useId} from "react";
+import {CSSProperties, useEffect, useId} from "react";
 import {notifiable, useComputed} from "react-hook-signal";
-import {AppDesignerContext} from "../../../../AppDesignerContext.ts";
 import {dropZones} from "./dropZones.ts";
+import {useAppContext} from "../../../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../../../AppDesignerContext.ts";
 
 /**
  * Creates a drop zone element for dragging and dropping items.
@@ -11,7 +12,7 @@ export function DropZone(props: {
     parentContainerId: string
 }) {
     const id = useId();
-    const {activeDropZoneIdSignal} = useContext(AppDesignerContext)
+    const {activeDropZoneIdSignal} = useAppContext<AppDesignerContext>()
     useEffect(() => {
         const item = {
             id: id,

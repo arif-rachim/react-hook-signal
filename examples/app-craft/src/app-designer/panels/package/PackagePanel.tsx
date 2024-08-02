@@ -1,12 +1,13 @@
 import {Button} from "../../button/Button.tsx";
-import {MutableRefObject, useContext} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
+import {MutableRefObject} from "react";
 import {triggerDownloadZip} from "../../../utils/triggerDownloadZip.ts";
 import {useLoadExtractJsonFromZip} from "../../../utils/useLoadExtractJsonFromZip.ts";
 import {createNewBlankPage} from "../../createNewBlankPage.ts";
+import {useAppContext} from "../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../AppDesignerContext.ts";
 
 export default function PackagePanel() {
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext<AppDesignerContext>();
     const {ref} = useLoadExtractJsonFromZip();
     return <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, gap: 20}}>
         <Button onClick={async () => {

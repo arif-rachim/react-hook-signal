@@ -1,55 +1,20 @@
-import {ElementStyleProps, LayoutBuilderProps} from "../LayoutBuilderProps.ts";
+import {ElementStyleProps, LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
-import {createNewBlankPage} from "../createNewBlankPage.ts";
-import {Container, Page, Variable, VariableInstance} from "../AppDesigner.tsx";
+import {createNewBlankPage} from "../app-designer/createNewBlankPage.ts";
+import {Container, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {Signal} from "signal-polyfill";
-import {ErrorType} from "../errors/ErrorType.ts";
-import {
-    createContext,
-    CSSProperties,
-    forwardRef,
-    ReactNode,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState
-} from "react";
-import {VariableInitialization} from "../variable-initialization/VariableInitialization.tsx";
-import ErrorBoundary from "../ErrorBoundary.tsx";
-import {BORDER} from "../Border.ts";
+import {ErrorType} from "../app-designer/errors/ErrorType.ts";
+import {CSSProperties, forwardRef, ReactNode, useEffect, useMemo, useRef, useState} from "react";
+import {VariableInitialization} from "../app-designer/variable-initialization/VariableInitialization.tsx";
+import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
+import {BORDER} from "../app-designer/Border.ts";
 import {
     PropertyInitialization
-} from "../panels/design/container-renderer/property-initialization/PropertyInitialization.tsx";
-import {alignItems, justifyContent} from "../../utils/justifyContentAlignItems.ts";
+} from "../app-designer/panels/design/container-renderer/property-initialization/PropertyInitialization.tsx";
+import {alignItems, justifyContent} from "../utils/justifyContentAlignItems.ts";
+import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
+import {AppViewerContext} from "./AppViewerContext.ts";
 
-/**
- * Represents the context of an app viewer.
- */
-export interface AppViewerContext {
-    allPagesSignal: Signal.State<Array<Page>>;
-    activePageIdSignal: Signal.State<string>;
-    allContainersSignal: Signal.Computed<Array<Container>>;
-    allVariablesSignal: Signal.Computed<Array<Variable>>;
-    variableInitialValueSignal: Signal.State<Record<string, unknown>>;
-    allVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
-    allErrorsSignal: Signal.State<Array<ErrorType>>;
-    elements: LayoutBuilderProps['elements'];
-}
-
-/**
- * Context object for the App Viewer.
- */
-export const AppViewerContext = createContext<AppViewerContext>({
-    allPagesSignal: new Signal.State<Array<Page>>([]),
-    activePageIdSignal: new Signal.State(''),
-    allContainersSignal: new Signal.Computed<Array<Container>>(() => []),
-    variableInitialValueSignal: new Signal.State<Record<string, unknown>>({}),
-    allVariablesSignal: new Signal.Computed<Array<Variable>>(() => []),
-    allVariablesSignalInstance: new Signal.State<Array<VariableInstance>>([]),
-    allErrorsSignal: new Signal.State<Array<ErrorType>>([]),
-    elements: {},
-})
 /**
  * Renders the application viewer component.
  */
@@ -98,7 +63,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
 
     return <AppViewerContext.Provider value={context}>
         <ErrorBoundary>
-            <VariableInitialization context={context}/>
+            <VariableInitialization/>
             <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
                 {() => {
                     const container = allContainersSignal.get().find(item => item.parent === '');
@@ -116,7 +81,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
  * The ContainerElement component renders a container element based on the provided props.
  */
 function ContainerElement(props: { container: Container }) {
-    const {elements} = useContext(AppViewerContext);
+    const {elements} = useAppContext<AppViewerContext>();
     const {container} = props;
     const [computedStyle, setComputedStyle] = useState<CSSProperties>({})
     const containerSignal = useSignal(container);
@@ -175,7 +140,7 @@ function ContainerElement(props: { container: Container }) {
 function ContainerRenderer(props: { elementProps: ElementStyleProps, container: Container }) {
     const {elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
-    const {allContainersSignal} = useContext(AppViewerContext);
+    const {allContainersSignal} = useAppContext<AppViewerContext>();
     const containerSignal = useSignal(props.container);
     const containerProp = props.container;
 
@@ -207,7 +172,7 @@ function ContainerRenderer(props: { elementProps: ElementStyleProps, container: 
  */
 function ElementRenderer(props: { container: Container, elementProps: ElementStyleProps }) {
     const {container, elementProps} = props;
-    const context = useContext(AppViewerContext);
+    const context = useAppContext<AppViewerContext>();
     const {component} = context.elements[container.type];
     const ref = useRef<HTMLElement>(null);
 
@@ -225,7 +190,7 @@ function ElementRenderer(props: { container: Container, elementProps: ElementSty
         }
     }, [Component]);
     return <>
-        <PropertyInitialization container={props.container} setComponentProps={setComponentProps} context={context}/>
+        <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
 }

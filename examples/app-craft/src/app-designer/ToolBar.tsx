@@ -2,14 +2,14 @@ import {
     CSSProperties,
     type DragEvent as ReactDragEvent,
     HTMLAttributes,
-    type MouseEvent as ReactMouseEvent,
-    useContext
+    type MouseEvent as ReactMouseEvent
 } from "react";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {notifiable, useComputed} from "react-hook-signal";
 import {MdArrowUpward, MdCancel, MdDragIndicator} from "react-icons/md";
 import {useSelectedDragContainer} from "./hooks/useSelectedDragContainer.ts";
 import {useUpdatePageSignal} from "./hooks/useUpdatePageSignal.ts";
+import {useAppContext} from "./hooks/useAppContext.ts";
+import {AppDesignerContext} from "./AppDesignerContext.ts";
 
 /**
  * Represents a toolbar component that provides actions for a container.
@@ -21,7 +21,7 @@ export function ToolBar() {
         activeDropZoneIdSignal,
         hoveredDragContainerIdSignal,
         uiDisplayModeSignal
-    } = useContext(AppDesignerContext);
+    } = useAppContext<AppDesignerContext>();
     const containerSignal = useSelectedDragContainer();
     const updatePage = useUpdatePageSignal();
 

@@ -1,9 +1,8 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
 import {Button} from "../button/Button.tsx";
+import {useAppContext} from "../hooks/useAppContext.ts";
 
 /**
  * A component for selecting dependencies.
@@ -14,7 +13,7 @@ export function DependencySelector(props: {
     signalsToFilterOut: Array<string>
 }) {
     const {closePanel, signalsToFilterOut} = props;
-    const {allVariablesSignal} = useContext(AppDesignerContext);
+    const {allVariablesSignal} = useAppContext();
     const selectedSignal = useSignal<Array<string>>(props.value);
     const elements = useComputed(() => {
         const variables = allVariablesSignal.get();

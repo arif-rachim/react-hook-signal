@@ -1,5 +1,3 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {notifiable, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
@@ -11,6 +9,7 @@ import {Icon} from "../../../Icon.ts";
 import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import {BORDER} from "../../../Border.ts";
 import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
+import {useAppContext} from "../../../hooks/useAppContext.ts";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -19,7 +18,7 @@ export function ComponentPropertyEditor(props: {
     name: string,
     containerId: string,
 }) {
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext();
     const {allVariablesSignal, elements, allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements[selectedDragContainer?.type]?.property[props.name];

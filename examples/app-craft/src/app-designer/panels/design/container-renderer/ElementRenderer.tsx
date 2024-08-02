@@ -1,8 +1,8 @@
 import {Container} from "../../../AppDesigner.tsx";
-import {forwardRef, useContext, useEffect, useMemo, useRef, useState} from "react";
-import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {forwardRef, useEffect, useMemo, useRef, useState} from "react";
 import {CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {PropertyInitialization} from "./property-initialization/PropertyInitialization.tsx";
+import {useAppContext} from "../../../hooks/useAppContext.ts";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -22,7 +22,7 @@ import {PropertyInitialization} from "./property-initialization/PropertyInitiali
  */
 export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
     const {container, elementProps} = props;
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext();
     const {component} = context.elements[container.type];
     const ref = useRef<HTMLElement>(null);
 
@@ -71,7 +71,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         }
     }, [Component]);
     return <>
-        <PropertyInitialization container={props.container} setComponentProps={setComponentProps} context={context}/>
+        <PropertyInitialization container={props.container} setComponentProps={setComponentProps} />
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
 }

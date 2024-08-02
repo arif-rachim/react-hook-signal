@@ -1,7 +1,7 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {Container} from "../AppDesigner.tsx";
 import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
+import {useAppContext} from "./useAppContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 
 /**
  * A hook that returns a function to update the selected drag container.
@@ -12,7 +12,7 @@ import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
  * });
  */
 export function useUpdateSelectedDragContainer() {
-    const {selectedDragContainerIdSignal} = useContext(AppDesignerContext);
+    const {selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
     const updateDragContainer = useUpdateDragContainer();
     return function update(callback: (selectedContainer: Container) => void) {
         return updateDragContainer(selectedDragContainerIdSignal.get(), callback);
@@ -23,7 +23,7 @@ export function useUpdateSelectedDragContainer() {
  * Allows updating a drag container in the AppDesignerContext.
  */
 export function useUpdateDragContainer() {
-    const {allContainersSignal} = useContext(AppDesignerContext);
+    const {allContainersSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     return function update(containerId: string, callback: (selectedContainer: Container) => void) {
         const allContainers = [...allContainersSignal.get()];

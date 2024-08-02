@@ -4,11 +4,11 @@ import {Signal} from "signal-polyfill";
 import {VariableInstance} from "../AppDesigner.tsx";
 import {undefined, z, ZodType} from "zod";
 import {useNavigateSignal} from "../hooks/useNavigateSignal.tsx";
-import {AppViewerContext} from "../app-viewer/AppViewer.tsx";
+import {useAppContext} from "../hooks/useAppContext.ts";
 
-export function VariableInitialization(props:{context:AppViewerContext}) {
+export function VariableInitialization() {
     const errorMessage = useRecordErrorMessage();
-    const {allVariablesSignal, allVariablesSignalInstance, variableInitialValueSignal} = props.context;
+    const {allVariablesSignal, allVariablesSignalInstance, variableInitialValueSignal} = useAppContext();
     const navigateSignal = useNavigateSignal();
 
     const validatorsComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {

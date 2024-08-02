@@ -1,18 +1,19 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {notifiable} from "react-hook-signal";
 import {DraggableContainerElement} from "./container-renderer/DraggableContainerElement.tsx";
 import ErrorBoundary from "../../ErrorBoundary.tsx";
 import ButtonGroup from "../../button/ButtonGroup.tsx";
+import {useAppContext} from "../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../AppDesignerContext.ts";
+import {isEmpty} from "../../../utils/isEmpty.ts";
 
 export function DesignPanel() {
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext();
     return <>
             <ToggleViewToolbar/>
             <ErrorBoundary>
                 <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
                     {() => {
-                        const container = context.allContainersSignal.get().find(item => item.parent === '');
+                        const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
                         if (container) {
                             return <DraggableContainerElement container={container}/>
                         }
@@ -24,7 +25,7 @@ export function DesignPanel() {
 }
 
 function ToggleViewToolbar() {
-    const {uiDisplayModeSignal} = useContext(AppDesignerContext);
+    const {uiDisplayModeSignal} = useAppContext<AppDesignerContext>();
     return <div style={{display: 'flex', justifyContent: 'center', padding: 5, background: 'rgba(0,0,0,0.05)'}}>
         <ButtonGroup buttons={{
             'Preview': {

@@ -1,15 +1,16 @@
 import {ElementProps} from "../../../LayoutBuilderProps.ts";
 import {Container} from "../../../AppDesigner.tsx";
-import {ReactNode, useContext, useEffect, useState} from "react";
-import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {ReactNode, useEffect, useState} from "react";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {DropZone} from "./drop-zone/DropZone.tsx";
 import {DraggableContainerElement} from "./DraggableContainerElement.tsx";
+import {useAppContext} from "../../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 
 export function ContainerRenderer(props: { elementProps: ElementProps, container: Container }) {
     const {elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
-    const {uiDisplayModeSignal, allContainersSignal} = useContext(AppDesignerContext);
+    const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
     const containerSignal = useSignal(props.container);
     const containerProp = props.container;
 

@@ -1,5 +1,3 @@
-import {useContext} from "react";
-import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {Button} from "../../../button/Button.tsx";
 import {ComponentPropertyEditor} from "../editor/ComponentPropertyEditor.tsx";
@@ -10,10 +8,11 @@ import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {BORDER} from "../../../Border.ts";
 import {Icon} from "../../../Icon.ts";
 import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
+import {useAppContext} from "../../../hooks/useAppContext.ts";
 
 export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
     const {propertyName} = props;
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext();
     const containerSignal = useSelectedDragContainer();
     const addPanel = useAddDashboardPanel();
 

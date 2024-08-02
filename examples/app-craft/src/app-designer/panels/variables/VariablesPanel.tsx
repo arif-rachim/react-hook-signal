@@ -1,4 +1,3 @@
-import {useContext} from "react";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 import {useShowModal} from "../../../modal/useShowModal.ts";
@@ -14,12 +13,13 @@ import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import {guid} from "../../../utils/guid.ts";
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 /**
  * Represents a panel for managing variables.
  */
 export function VariablesPanel() {
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext<AppDesignerContext>();
     const {allVariablesSignal} = context;
     const updatePage = useUpdatePageSignal();
     const showModal = useShowModal();
@@ -28,13 +28,13 @@ export function VariablesPanel() {
     async function editVariable(forType: VariableType, variable?: Variable) {
         const panelId = variable?.id ?? guid();
         addPanel({
-            position:'sideCenter',
-            component : () => {
+            position: 'sideCenter',
+            component: () => {
                 return <VariableEditorPanel variableId={variable?.id} defaultType={forType} panelId={panelId}/>
             },
-            title : `${variable?.name?variable?.name:`Add ${forType}`}`,
-            Icon : Icon.Component,
-            id : panelId
+            title: `${variable?.name ? variable?.name : `Add ${forType}`}`,
+            Icon: Icon.Component,
+            id: panelId
         })
     }
 

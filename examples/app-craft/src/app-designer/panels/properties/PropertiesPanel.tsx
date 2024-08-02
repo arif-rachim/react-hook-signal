@@ -1,13 +1,13 @@
 import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {PropertyCallbackItemRenderer} from "./item-renderer/PropertyCallbackItemRenderer.tsx";
 import {ZodFunction} from "zod";
-import {useContext, useState} from "react";
-import {AppDesignerContext} from "../../AppDesignerContext.ts";
+import {useState} from "react";
 import {useSelectedDragContainer} from "../../hooks/useSelectedDragContainer.ts";
 import {useSignalEffect} from "react-hook-signal";
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 export function PropertiesPanel() {
-    const {elements} = useContext(AppDesignerContext);
+    const {elements} = useAppContext();
     const selectedDragContainerSignal = useSelectedDragContainer();
     const [callbacksAndAttributes, setCallbacksAndAttributes] = useState<{
         callbacks: Array<string>,

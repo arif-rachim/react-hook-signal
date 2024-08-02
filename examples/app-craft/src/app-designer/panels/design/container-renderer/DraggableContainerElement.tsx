@@ -1,8 +1,7 @@
 import {useSignal, useSignalEffect} from "react-hook-signal";
-import {CSSProperties, useContext, useEffect, useState} from "react";
+import {CSSProperties, useEffect, useState} from "react";
 import {useRefresh} from "../../../../utils/useRefresh.ts";
 import {Container} from "../../../AppDesigner.tsx";
-import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {dropZones} from "./drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
 import {BORDER, BORDER_DASHED} from "../../../Border.ts";
@@ -12,6 +11,9 @@ import {addNewContainer} from "./draggable-container-element-tools/addNewContain
 import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
 import {useUpdatePageSignal} from "../../../hooks/useUpdatePageSignal.ts";
 import {alignItems, justifyContent} from "../../../../utils/justifyContentAlignItems.ts";
+import {useAppContext} from "../../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../../AppDesignerContext.ts";
+import {isEmpty} from "../../../../utils/isEmpty.ts";
 
 const VERTICAL = 'vertical';
 const HORIZONTAL = 'horizontal';
@@ -36,7 +38,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         selectedDragContainerIdSignal,
         uiDisplayModeSignal,
         allContainersSignal
-    } = useContext(AppDesignerContext);
+    } = useAppContext<AppDesignerContext>();
     const {refresh} = useRefresh('DraggableContainer');
     useSignalEffect(() => {
         uiDisplayModeSignal.get();
@@ -143,7 +145,8 @@ export function DraggableContainerElement(props: { container: Container }) {
         const isContainer = ['vertical','horizontal'].includes(container?.type);
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
-        const isRoot = container?.parent === '';
+        const isRoot = isEmpty(container?.parent);
+
         const styleFromSignal = {
             border: mode === 'design' ? isContainer ? BORDER_DASHED : BORDER : 'unset',
             background: 'white',

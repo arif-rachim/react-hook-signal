@@ -3,15 +3,17 @@ import {Dispatch, SetStateAction, useEffect} from "react";
 import {Container} from "../../../../AppDesigner.tsx";
 import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts";
 import {useNavigateSignal} from "../../../../hooks/useNavigateSignal.tsx";
-import {AppViewerContext} from "../../../../app-viewer/AppViewer.tsx";
+import {useAppContext} from "../../../../hooks/useAppContext.ts";
+import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
 
 export function PropertyInitialization(props: {
     container: Container,
     setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>,
-    context: AppViewerContext
 }) {
+    const context = useAppContext<AppViewerContext>();
+
     const {container, setComponentProps} = props;
-    const {allVariablesSignalInstance, allVariablesSignal, elements: elementsLib} = props.context;
+    const {allVariablesSignalInstance, allVariablesSignal, elements: elementsLib} = context;
     const {property} = elementsLib[container.type];
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);

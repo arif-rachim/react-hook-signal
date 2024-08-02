@@ -1,6 +1,5 @@
-import {useContext, useRef, useState} from "react";
+import {useRef, useState} from "react";
 import {useShowModal} from "../../../../modal/useShowModal.ts";
-import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {guid} from "../../../../utils/guid.ts";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
@@ -17,6 +16,7 @@ import {DependencyInputSelector} from "../../../dependency-selector/DependencyIn
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
+import {useAppContext} from "../../../hooks/useAppContext.ts";
 
 
 /**
@@ -27,7 +27,7 @@ export function VariableEditorPanel(props: {
     defaultType: VariableType,
     panelId:string
 }) {
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext();
     const {variableId, defaultType,panelId} = props;
     const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);

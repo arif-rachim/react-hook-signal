@@ -49,29 +49,29 @@ export type Page = {
 export type Container = {
     id: string,
     children: string[],
-    parent: string,
+    parent?: string,
     type: 'horizontal' | 'vertical' | string,
-    width: CSSProperties['width'],
-    height: CSSProperties['height'],
+    width?: CSSProperties['width'],
+    height?: CSSProperties['height'],
 
-    minWidth: CSSProperties['minWidth'],
-    minHeight: CSSProperties['minHeight'],
+    minWidth?: CSSProperties['minWidth'],
+    minHeight?: CSSProperties['minHeight'],
 
 
-    paddingTop: CSSProperties['paddingTop'],
-    paddingRight: CSSProperties['paddingRight'],
-    paddingBottom: CSSProperties['paddingBottom'],
-    paddingLeft: CSSProperties['paddingLeft'],
+    paddingTop?: CSSProperties['paddingTop'],
+    paddingRight?: CSSProperties['paddingRight'],
+    paddingBottom?: CSSProperties['paddingBottom'],
+    paddingLeft?: CSSProperties['paddingLeft'],
 
-    marginTop: CSSProperties['marginTop'],
-    marginRight: CSSProperties['marginRight'],
-    marginBottom: CSSProperties['marginBottom'],
-    marginLeft: CSSProperties['marginLeft'],
+    marginTop?: CSSProperties['marginTop'],
+    marginRight?: CSSProperties['marginRight'],
+    marginBottom?: CSSProperties['marginBottom'],
+    marginLeft?: CSSProperties['marginLeft'],
 
     // only for container
-    gap: CSSProperties['gap'],
-    verticalAlign: 'top' | 'center' | 'bottom' | '',
-    horizontalAlign: 'left' | 'center' | 'right' | '',
+    gap?: CSSProperties['gap'],
+    verticalAlign?: 'top' | 'center' | 'bottom' | '',
+    horizontalAlign?: 'left' | 'center' | 'right' | '',
 
     properties: Record<string, ContainerPropertyType>,
 }
@@ -140,7 +140,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         <ModalProvider>
             <AppDesignerContext.Provider
                 value={context}>
-                <VariableInitialization context={context}/>
+                <VariableInitialization/>
                 <Dashboard panels={{
                     pages: {
                         title: 'Pages',

@@ -1,8 +1,8 @@
 import {useShowModal} from "../../modal/useShowModal.ts";
-import {useContext} from "react";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {DependencySelector} from "./DependencySelector.tsx";
 import {BORDER} from "../Border.ts";
+import {useAppContext} from "../hooks/useAppContext.ts";
 
 export function DependencyInputSelector(props: {
     value: Array<string>,
@@ -10,7 +10,7 @@ export function DependencyInputSelector(props: {
     valueToIgnore: Array<string>
 }) {
     const showModal = useShowModal();
-    const context = useContext(AppDesignerContext);
+    const context = useAppContext<AppDesignerContext>();
     const {allVariablesSignal} = context;
     const {value, onChange, valueToIgnore} = props;
 
