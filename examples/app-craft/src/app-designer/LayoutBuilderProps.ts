@@ -1,5 +1,5 @@
 import {IconType} from "react-icons";
-import {CSSProperties, ForwardRefRenderFunction} from "react";
+import {CSSProperties, ForwardRefRenderFunction, FunctionComponent} from "react";
 import {Page} from "./AppDesigner.tsx";
 import {z, ZodRawShape} from "zod";
 
@@ -34,19 +34,24 @@ export interface ElementProps extends ElementStyleProps{
     onClick: (event: CancellableEvent) => void,
 }
 
-interface Element<T extends ZodRawShape = ZodRawShape> {
+export interface Element<T extends ZodRawShape = ZodRawShape> {
     icon: IconType,
-    // eslint-disable-next-line
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
-    property: T
+    property: T,
+    propertyEditor? : {[K in keyof T]?: {
+        label : string,
+        component : FunctionComponent
+    }}
 }
 
 export function element<T extends ZodRawShape>(props: {
     property: T,
+    propertyEditor? : {[K in keyof T]?: {
+        label : string,
+        component : FunctionComponent
+    }}
     icon: IconType,
-    // eslint-disable-next-line
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
-    // eslint-disable-next-line
-}): any {
-    return props;
+}):Element<ZodRawShape> {
+    return props as Element<ZodRawShape>;
 }

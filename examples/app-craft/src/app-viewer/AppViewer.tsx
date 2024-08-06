@@ -43,7 +43,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
             if (!hasSelection) {
                 allErrorsSignal.set([]);
                 variableInitialValueSignal.set({});
-                activePageIdSignal.set(value[1].id)
+                activePageIdSignal.set(value[0].id)
             }
         }
     }, [activePageIdSignal, allErrorsSignal, allPagesSignal, value, variableInitialValueSignal]);
@@ -61,6 +61,45 @@ export default function AppViewer(props: LayoutBuilderProps) {
         elements: props.elements
     }
 
+    return <AppViewerContext.Provider value={context}>
+        <ErrorBoundary>
+            <VariableInitialization/>
+            <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
+                {() => {
+                    const container = allContainersSignal.get().find(item => item.parent === '');
+                    if (container) {
+                        return <ContainerElement container={container}/>
+                    }
+                    return <></>
+                }}
+            </notifiable.div>
+        </ErrorBoundary>
+    </AppViewerContext.Provider>
+}
+
+
+export function PageViewer(props: { elements: LayoutBuilderProps['elements'], page: Page } & Record<string, unknown>) {
+    const {elements, page,...properties} = props;
+    const variableInitialValueSignal = useSignal<Record<string, unknown>>(properties);
+    useEffect(() => {
+        variableInitialValueSignal.set(properties);
+    }, [properties, variableInitialValueSignal]);
+    const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allErrorsSignal = useSignal<Array<ErrorType>>([]);
+    const allVariablesSignal = useComputed(() => props.page.variables)
+    const allContainersSignal = useComputed(() => props.page.containers);
+    const allPagesSignal = useSignal<Array<Page>>([page]);
+    const activePageIdSignal = useSignal(page.id)
+    const context: AppViewerContext = {
+        allPagesSignal,
+        activePageIdSignal,
+        allContainersSignal,
+        variableInitialValueSignal,
+        allVariablesSignal,
+        allVariablesSignalInstance,
+        allErrorsSignal,
+        elements: elements
+    }
     return <AppViewerContext.Provider value={context}>
         <ErrorBoundary>
             <VariableInitialization/>
