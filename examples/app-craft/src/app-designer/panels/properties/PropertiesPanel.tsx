@@ -6,6 +6,7 @@ import {useSelectedDragContainer} from "../../hooks/useSelectedDragContainer.ts"
 import {useSignalEffect} from "react-hook-signal";
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {Element} from "../../LayoutBuilderProps.ts";
+import {LabelContainer} from "../../label-container/LabelContainer.tsx";
 
 export function PropertiesPanel() {
     const {elements} = useAppContext();
@@ -42,26 +43,25 @@ export function PropertiesPanel() {
         setCallbacksAndAttributes({callbacks, attributes,propertyEditor:{}});
     })
 
+    function propertyCallbackItemRenderer(propKey:string){
+        if(callbacksAndAttributes && callbacksAndAttributes.propertyEditor && callbacksAndAttributes.propertyEditor[propKey]){
+            const editor = callbacksAndAttributes.propertyEditor[propKey]!;
+            const Component = editor.component!;
+            return <LabelContainer key={propKey} label={editor.label}
+                                   style={{flexDirection: 'row', alignItems: 'center'}}
+                                   styleLabel={{width: 65, fontSize: 13}} styleContent={{display:'flex',flexDirection:'column',flexGrow:1}}>
+                <Component />
+            </LabelContainer>
+        }
+        return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey}/>
+    }
+
     return <>
         <CollapsibleLabelContainer label={'Properties'} key={'properties'} styleContent={{gap: 10}}>
-            {callbacksAndAttributes.attributes.map(propKey => {
-                if(callbacksAndAttributes && callbacksAndAttributes.propertyEditor && callbacksAndAttributes.propertyEditor[propKey]){
-                    const editor = callbacksAndAttributes.propertyEditor[propKey]!;
-                    const Component = editor.component!;
-                    return <Component key={propKey} />
-                }
-                return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey}/>
-            })}
+            {callbacksAndAttributes.attributes.map(propertyCallbackItemRenderer)}
         </CollapsibleLabelContainer>
         <CollapsibleLabelContainer label={'Callbacks'} key={'callbacks'} styleContent={{gap: 10}}>
-            {callbacksAndAttributes.callbacks.map(propKey => {
-                if(callbacksAndAttributes && callbacksAndAttributes.propertyEditor && callbacksAndAttributes.propertyEditor[propKey]){
-                    const editor = callbacksAndAttributes.propertyEditor[propKey]!;
-                    const Component = editor.component!;
-                    return <Component key={propKey} />
-                }
-                return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey}/>
-            })}
+            {callbacksAndAttributes.callbacks.map(propertyCallbackItemRenderer)}
         </CollapsibleLabelContainer>
     </>
 }

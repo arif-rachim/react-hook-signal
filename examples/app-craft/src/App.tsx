@@ -74,7 +74,7 @@ export function App() {
             },
             propertyEditor : {
                 component : {
-                    label : 'Component',
+                    label : 'component',
                     component : PageSelectionPropertyEditor
                 }
             },
