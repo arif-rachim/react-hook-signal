@@ -40,7 +40,7 @@ export interface Element<T extends ZodRawShape = ZodRawShape> {
     property: T,
     propertyEditor? : {[K in keyof T]?: {
         label : string,
-        component : FunctionComponent
+        component : FunctionComponent<{propertyName:string}>
     }}
 }
 
@@ -48,7 +48,7 @@ export function element<T extends ZodRawShape>(props: {
     property: T,
     propertyEditor? : {[K in keyof T]?: {
         label : string,
-        component : FunctionComponent
+        component : FunctionComponent<{propertyName:string}>
     }}
     icon: IconType,
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,

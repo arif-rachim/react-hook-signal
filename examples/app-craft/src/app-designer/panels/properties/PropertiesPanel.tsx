@@ -50,7 +50,7 @@ export function PropertiesPanel() {
             return <LabelContainer key={propKey} label={editor.label}
                                    style={{flexDirection: 'row', alignItems: 'center'}}
                                    styleLabel={{width: 65, fontSize: 13}} styleContent={{display:'flex',flexDirection:'column',flexGrow:1}}>
-                <Component />
+                <Component propertyName={propKey}/>
             </LabelContainer>
         }
         return <PropertyCallbackItemRenderer key={propKey} propertyName={propKey}/>

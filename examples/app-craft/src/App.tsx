@@ -1,14 +1,21 @@
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {MdInput, MdSmartButton} from "react-icons/md";
 import AppDesigner, {Page} from "./app-designer/AppDesigner.tsx";
-import {CSSProperties, ForwardedRef, forwardRef, MutableRefObject, useEffect, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useEffect, useState} from "react";
 import {element} from "./app-designer/LayoutBuilderProps.ts";
 import {z} from "zod";
 import {BORDER} from "./app-designer/Border.ts";
-import {Button, defaultTheme, Provider} from "@adobe/react-spectrum";
+import {defaultTheme, Provider} from "@adobe/react-spectrum";
 import {FaGripHorizontal} from "react-icons/fa";
 import {useAppContext} from "./app-designer/hooks/useAppContext.ts";
 import {PageViewer} from "./app-viewer/AppViewer.tsx";
+import {isEmpty} from "./utils/isEmpty.ts";
+import {ComponentPropertyEditor} from "./app-designer/panels/properties/editor/ComponentPropertyEditor.tsx";
+import {Icon} from "./app-designer/Icon.ts";
+import {colors} from "stock-watch/src/utils/colors.ts";
+import {useSelectedDragContainer} from "./app-designer/hooks/useSelectedDragContainer.ts";
+import {useAddDashboardPanel} from "./app-designer/dashboard/useAddDashboardPanel.tsx";
+import {Button} from "./app-designer/button/Button.tsx";
 
 export function App() {
     const [value, setValue] = useState<Array<Page>>(() => {
@@ -50,14 +57,10 @@ export function App() {
                 onPress: z.function().args().returns(z.void())
             },
             component: ({label, onPress}, ref) => {
-                const mutableRef = ref as MutableRefObject<HTMLElement | undefined>
                 return <Provider theme={defaultTheme}>
                     <Button
-                        ref={(instance) => {
-                            mutableRef.current = instance?.UNSAFE_getDOMNode()
-                        }}
-                        variant="accent"
-                        onPress={() => onPress()}
+                        ref={ref}
+                        onClick={() => onPress()}
                     >
                         {label}
                     </Button>
@@ -88,9 +91,57 @@ export function App() {
     }}/>
 }
 
-function PageSelectionPropertyEditor(){
-    return <div>
+function PageSelectionPropertyEditor(props:{propertyName:string}){
+    const containerSignal = useSelectedDragContainer();
+    const context = useAppContext();
+    const container = containerSignal.get();
+    const {propertyName} = props;
+    const addPanel = useAddDashboardPanel();
+    const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.containerId === container?.id) !== undefined;
+    let isFormulaEmpty = true;
 
+    if (container && container.properties[propertyName]) {
+        const formula = container.properties[propertyName].formula;
+        isFormulaEmpty = isEmpty(formula);
+    }
+
+    const onClick = async () => {
+        addPanel({
+            position : 'sideCenter',
+            component : () => {
+                return <ComponentPropertyEditor name={propertyName} containerId={container?.id ?? ''}/>
+            },
+            title : `${container?.type} : ${propertyName}`,
+            Icon : Icon.Property,
+            id : `${container?.id}-${propertyName}`,
+        })
+    }
+    const style:CSSProperties = {
+        width: 80,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 0,
+        backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
+        padding: 0
+    };
+    return <div style={{display: 'flex'}}>
+        <Button style={style} onClick={onClick}><Icon.Formula style={{fontSize: 22}}/></Button>
+
+        <div style={{
+            display: 'flex',
+            padding: '0px 5px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.05)',
+            border: BORDER,
+            borderTopRightRadius: 20,
+            borderBottomRightRadius: 20
+        }}>
+            {hasError && <Icon.Error style={{fontSize: 18, color: colors.red}}/>}
+            {!hasError && <Icon.Checked style={{fontSize: 18, color: colors.green}}/>}
+        </div>
     </div>
 }
 
