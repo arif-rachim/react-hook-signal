@@ -1,7 +1,7 @@
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {MdInput, MdSmartButton} from "react-icons/md";
 import AppDesigner, {Container, Page} from "./app-designer/AppDesigner.tsx";
-import {CSSProperties, ForwardedRef, forwardRef, useEffect, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, memo, useEffect, useState} from "react";
 import {element} from "./app-designer/LayoutBuilderProps.ts";
 import {z} from "zod";
 import {BORDER} from "./app-designer/Border.ts";
@@ -150,10 +150,9 @@ function PageSelectionPropertyEditor(props:{propertyName:string}){
     </div>
 }
 
-const DataGroup = forwardRef(function DataGroup(props:{component:string,style:CSSProperties,data:Array<Record<string, unknown>>,direction:'vertical'|'horizontal',keyId:string},ref){
+const DataGroup = memo(forwardRef(function DataGroup(props:{component:string,style:CSSProperties,data:Array<Record<string, unknown>>,direction:'vertical'|'horizontal',keyId:string},ref){
     const {keyId,direction,style: propsStyle,data,component} = props;
     const [page,setPage] = useState<Page|undefined>(undefined);
-
     const style:CSSProperties = {
         display:'flex',
         flexDirection : direction === 'horizontal' ? 'row' : 'column',
@@ -182,4 +181,19 @@ const DataGroup = forwardRef(function DataGroup(props:{component:string,style:CS
             return <PageViewer elements={elements} page={page!} key={key} {...item}/>
         })}
     </div>    
+}),(prevProps, nextProps) => {
+    if(prevProps.component !== nextProps.component){
+        return false;
+    }
+    if(prevProps.keyId !== nextProps.keyId){
+        return false;
+    }
+    if(prevProps.data !== nextProps.data){
+        return false;
+    }
+    if(prevProps.direction !== nextProps.direction){
+        return false;
+    }
+    return true;
+
 })
