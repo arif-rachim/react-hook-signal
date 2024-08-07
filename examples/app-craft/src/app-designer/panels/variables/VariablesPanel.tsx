@@ -34,7 +34,10 @@ export function VariablesPanel() {
             },
             title: `${variable?.name ? variable?.name : `Add ${forType}`}`,
             Icon: Icon.Component,
-            id: panelId
+            id: panelId,
+            tag : {
+                variableId : panelId
+            }
         })
     }
 
@@ -46,7 +49,11 @@ export function VariablesPanel() {
                     <div>Unable to delete due to signals referred in :</div>
                     {signalsDependentOnThisVariable.map(i => <code key={i.id}>{i.name}</code>)}
                 </div>
-                return <ConfirmationDialog message={message} closePanel={closePanel} buttons={['Ok']}/>
+                return <ConfirmationDialog message={message} closePanel={closePanel} buttons={[{
+                    icon : Icon.Exit,
+                    label : 'Ok',
+                    id : 'Ok'
+                }]}/>
             });
         } else {
             const deleteVariableConfirm = await showModal<string>(closePanel => {

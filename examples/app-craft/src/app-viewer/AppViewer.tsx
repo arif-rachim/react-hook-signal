@@ -14,6 +14,7 @@ import {
 import {alignItems, justifyContent} from "../utils/justifyContentAlignItems.ts";
 import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 import {AppViewerContext} from "./AppViewerContext.ts";
+import {isEmpty} from "../utils/isEmpty.ts";
 
 /**
  * Renders the application viewer component.
@@ -105,7 +106,7 @@ export function PageViewer(props: { elements: LayoutBuilderProps['elements'], pa
             <VariableInitialization/>
             <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
                 {() => {
-                    const container = allContainersSignal.get().find(item => item.parent === '');
+                    const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
                     if (container) {
                         return <ContainerElement container={container}/>
                     }

@@ -6,7 +6,10 @@ import {useAppContext} from "../hooks/useAppContext.ts";
 export function useAddDashboardPanel() {
     const {panelsSignal, selectedPanelSignal} = useContext(DashboardContext);
     const {activePageIdSignal} = useAppContext();
-    return function addPanel(panel: Panel & { id?: string }) {
+    return function addPanel(panel: Panel & {
+        id?: string,
+        tag?: { containerId?: string, propertyName?: string, variableId?: string }
+    }) {
         panel.id = panel.id ?? guid();
         const panels = panelsSignal.get();
         const isEmpty = panels.find(p => p.id === panel.id) === undefined;

@@ -1,11 +1,19 @@
 import {PiPackage, PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuSigmaSquare} from "react-icons/lu";
-import {IoCodeSlashOutline, IoLogoWebComponent, IoOpenOutline, IoTrashOutline} from "react-icons/io5";
+import {
+    IoCodeSlashOutline,
+    IoInformationCircleOutline,
+    IoLogoWebComponent,
+    IoOpenOutline,
+    IoSquareOutline,
+    IoTrashOutline
+} from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineFieldString} from "react-icons/ai";
 import {TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
 import {
     MdCheck,
+    MdCheckBox,
     MdClose,
     MdDataArray,
     MdDataObject,
@@ -45,5 +53,8 @@ export const Icon = {
     Close : MdClose,
     Question : MdOutlineQuestionMark,
     Reset:BiReset,
-    Package:PiPackage
+    Package:PiPackage,
+    CheckboxBlank:IoSquareOutline,
+    CheckboxChecked:MdCheckBox,
+    Confirmation:IoInformationCircleOutline
 }

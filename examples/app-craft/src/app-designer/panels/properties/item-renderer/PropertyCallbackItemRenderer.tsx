@@ -32,14 +32,20 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                 }
 
                 const onClick = async () => {
+                    const panelId = `${container?.id}-${propertyName}`;
                     addPanel({
-                        position : 'sideCenter',
-                        component : () => {
-                            return <ComponentPropertyEditor name={propertyName} containerId={container?.id ?? ''}/>
+                        position: 'sideCenter',
+                        component: () => {
+                            return <ComponentPropertyEditor name={propertyName} containerId={container?.id ?? ''}
+                                                            panelId={panelId}/>
                         },
-                        title : `${container?.type} : ${propertyName}`,
-                        Icon : Icon.Property,
-                        id : `${container?.id}-${propertyName}`,
+                        title: `${container?.type} : ${propertyName}`,
+                        Icon: Icon.Property,
+                        id: panelId,
+                        tag: {
+                            containerId: container?.id,
+                            propertyName: propertyName
+                        }
                     })
                 }
                 return <div style={{display: 'flex'}}>

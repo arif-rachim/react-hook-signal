@@ -9,7 +9,7 @@ import {BORDER} from "../Border.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {useRemoveDashboardPanel} from "./useRemoveDashboardPanel.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
-import {AppViewerContext} from "../../app-viewer/AppViewerContext.ts";
+import {AppDesignerContext} from "../AppDesignerContext.ts";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom' | 'sideCenter'
 export type Panel = {
@@ -23,7 +23,8 @@ type SelectedPanelType = {
 }
 type PanelInstance = Panel & {
     id: string,
-    pageId: string | 'global'
+    pageId: string | 'global',
+    tag?: { containerId?: string, propertyName?: string, variableId?: string }
 }
 export const DashboardContext = createContext<{
     panelsSignal: Signal.State<Array<PanelInstance>>,
@@ -267,14 +268,20 @@ function RenderTabPanel(props: {
     position: PanelPosition
 }) {
     const {panelsSignal, selectedPanelSignal, position} = props;
-    const {activePageIdSignal} = useAppContext<AppViewerContext>();
+    const {activePageIdSignal,selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
     const [panelsComputed, setPanelsComputed] = useState<Array<PanelInstance>>([]);
     const [selectedPanel, setSelectedPanel] = useState<SelectedPanelType>({});
     useSignalEffect(() => {
         const pageId = activePageIdSignal.get();
+        const container = selectedDragContainerIdSignal.get();
         let panels = panelsSignal.get().filter(p => p.position === position);
         if (position === 'sideCenter') {
-            panels = panels.filter(p => p.pageId === pageId)
+            panels = panels.filter(p => p.pageId === pageId).filter(p => {
+                if(p.tag?.containerId && container){
+                    return p.tag.containerId === container;
+                }
+                return true;
+            })
         }
         setPanelsComputed(panels)
     });

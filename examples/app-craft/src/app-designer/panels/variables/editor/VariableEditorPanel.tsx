@@ -25,10 +25,10 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 export function VariableEditorPanel(props: {
     variableId?: string,
     defaultType: VariableType,
-    panelId:string
+    panelId: string
 }) {
     const context = useAppContext();
-    const {variableId, defaultType,panelId} = props;
+    const {variableId, defaultType, panelId} = props;
     const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
@@ -36,6 +36,7 @@ export function VariableEditorPanel(props: {
     const {allVariablesSignal, allPagesSignal} = context;
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
+
     function createNewVariable(): Variable {
         return {
             name: '',
@@ -54,6 +55,10 @@ export function VariableEditorPanel(props: {
     })
 
     function validateForm(): [boolean, Partial<Record<keyof Variable, Array<string>>>] {
+        function nameIsDuplicate(name: string, id: string) {
+            return allVariablesSignal.get().filter(v => v.id !== id).find(v => v.name === name) !== undefined;
+        }
+
         const errors: Partial<Record<keyof Variable, Array<string>>> = {};
         const variable = variableSignal.get();
         if (isEmpty(variable.name)) {
@@ -61,6 +66,9 @@ export function VariableEditorPanel(props: {
         }
         if (isEmpty(variable.functionCode)) {
             errors.functionCode = ['Code cannot be empty'];
+        }
+        if (nameIsDuplicate(variable.name, variable.id)) {
+            errors.name = ['Variable name should be unique'];
         }
         if (monacoRef.current) {
             const markers = monacoRef.current?.editor.getModelMarkers({});
@@ -79,8 +87,8 @@ export function VariableEditorPanel(props: {
         overflow: 'auto',
         flexGrow: 1,
     }}>
-        <div style={{display: 'flex', gap: 10, padding: 10}}>
-            <LabelContainer label={'Name : '} style={{width: 250, flexDirection: 'row', alignItems: 'center', gap: 10}}
+        <div style={{display: 'flex', gap: 10, padding: 10,backgroundColor:'rgba(0,0,0,0.02)' }}>
+            <LabelContainer label={'Name : '} style={{flexGrow:1,flexBasis:'50%', flexDirection: 'row', alignItems: 'center', gap: 10}}
                             styleLabel={{fontStyle: 'italic'}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
@@ -107,9 +115,9 @@ export function VariableEditorPanel(props: {
                                   }}/>
             </LabelContainer>
             {type !== 'state' &&
-                <LabelContainer label={'Dependency :'} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
-                                styleLabel={{fontStyle: 'italic'}}>
-                    <notifiable.div>
+                <LabelContainer label={'Dependency :'} style={{flexGrow:1,flexBasis:'50%',flexDirection: 'row', alignItems: 'center', gap: 10}}
+                                styleLabel={{fontStyle: 'italic'}} styleContent={{display:'flex',flexDirection:'column'}}>
+                    <notifiable.div style={{display:'flex',flexDirection:'column'}}>
                         {() => {
                             const variable = variableSignal.get();
                             return <DependencyInputSelector onChange={(result) => {
@@ -185,7 +193,8 @@ export function VariableEditorPanel(props: {
             </CollapsibleLabelContainer>
 
         </div>
-        <notifiable.div style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, padding: 10,height:50}}>
+        <notifiable.div
+            style={{display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: BORDER, padding: 10, height: 50}}>
             {() => {
                 const modified = isModified.get();
                 if (!modified) {
@@ -204,7 +213,11 @@ export function VariableEditorPanel(props: {
                                         return <div key={val}>{(val ?? '') as string}</div>
                                     })
                                 }).flat();
-                                return <ConfirmationDialog message={message} closePanel={cp} buttons={['Ok']}/>
+                                return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
+                                    icon : Icon.Exit,
+                                    label : 'Ok',
+                                    id : 'Ok'
+                                }]}/>
                             })
                         }
                     }} style={{

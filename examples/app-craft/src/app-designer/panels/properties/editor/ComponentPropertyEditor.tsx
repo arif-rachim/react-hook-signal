@@ -10,6 +10,7 @@ import {DependencyInputSelector} from "../../../dependency-selector/DependencyIn
 import {BORDER} from "../../../Border.ts";
 import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
+import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -17,14 +18,16 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 export function ComponentPropertyEditor(props: {
     name: string,
     containerId: string,
+    panelId: string
 }) {
     const context = useAppContext();
+    const removePanel = useRemoveDashboardPanel();
     const {allVariablesSignal, elements, allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements[selectedDragContainer?.type]?.property[props.name];
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
-
+    const isModified = useSignal<boolean>(false)
     const update = useUpdateDragContainer();
     return <div style={{
         display: 'flex',
@@ -33,14 +36,22 @@ export function ComponentPropertyEditor(props: {
         flexGrow: 1
     }}>
 
-        <LabelContainer label={'Dependency'} style={{flexDirection: 'row', alignItems: 'center', gap: 10, margin: 10}}>
-            <notifiable.div>{() => {
+        <LabelContainer label={'Dependency :'} styleLabel={{fontStyle:'italic'}} style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            padding: 10,
+            borderBottom: BORDER,
+            backgroundColor: 'rgba(0,0,0,0.02)'
+        }}>
+            <notifiable.div style={{width: '100%', display: 'flex', flexDirection: 'column'}}>{() => {
                 const props = propsSignal.get();
                 return <DependencyInputSelector value={props.dependencies ?? []} valueToIgnore={[]}
                                                 onChange={(result) => {
                                                     const item = {...props};
                                                     item.dependencies = result ?? [];
                                                     propsSignal.set({...item});
+                                                    isModified.set(true);
                                                 }}/>;
             }}</notifiable.div>
         </LabelContainer>
@@ -48,7 +59,7 @@ export function ComponentPropertyEditor(props: {
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            overflow:'auto'
+            overflow: 'auto'
         }}>
             {() => {
                 const props = propsSignal.get();
@@ -68,9 +79,10 @@ export function ComponentPropertyEditor(props: {
                     value={formula}
                     options={{selectOnLineNumbers: true}}
                     onChange={(value?: string) => {
-                        const item = propsSignal.get();
+                        const item = {...propsSignal.get()};
                         item.formula = value ?? '';
                         propsSignal.set({...item});
+                        isModified.set(true);
                     }}
                 />
             }}
@@ -87,6 +99,7 @@ export function ComponentPropertyEditor(props: {
                 update(props.containerId, selectedContainer => {
                     selectedContainer.properties = {...selectedContainer.properties, [props.name]: propsSignal.get()}
                 })
+                removePanel(props.panelId);
             }} style={{
                 display: 'flex',
                 gap: 5,
@@ -95,6 +108,19 @@ export function ComponentPropertyEditor(props: {
                 {'Save'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <Icon.Save style={{fontSize: 18}}/>
+                </div>
+            </Button>
+            <Button onClick={async () => {
+                propsSignal.set(initialValue);
+                isModified.set(false);
+            }} style={{
+                display: 'flex',
+                gap: 5,
+                alignItems: 'center'
+            }}>
+                {'Reset'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Reset style={{fontSize: 18}}/>
                 </div>
             </Button>
         </div>

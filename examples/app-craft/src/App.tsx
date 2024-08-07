@@ -1,6 +1,6 @@
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {MdInput, MdSmartButton} from "react-icons/md";
-import AppDesigner, {Page} from "./app-designer/AppDesigner.tsx";
+import AppDesigner, {Container, Page} from "./app-designer/AppDesigner.tsx";
 import {CSSProperties, ForwardedRef, forwardRef, useEffect, useState} from "react";
 import {element} from "./app-designer/LayoutBuilderProps.ts";
 import {z} from "zod";
@@ -10,12 +10,12 @@ import {FaGripHorizontal} from "react-icons/fa";
 import {useAppContext} from "./app-designer/hooks/useAppContext.ts";
 import {PageViewer} from "./app-viewer/AppViewer.tsx";
 import {isEmpty} from "./utils/isEmpty.ts";
-import {ComponentPropertyEditor} from "./app-designer/panels/properties/editor/ComponentPropertyEditor.tsx";
 import {Icon} from "./app-designer/Icon.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {useSelectedDragContainer} from "./app-designer/hooks/useSelectedDragContainer.ts";
-import {useAddDashboardPanel} from "./app-designer/dashboard/useAddDashboardPanel.tsx";
 import {Button} from "./app-designer/button/Button.tsx";
+import {PageInputSelector} from "./app-designer/page-selector/PageInputSelector.tsx";
+import {useUpdateDragContainer} from "./app-designer/hooks/useUpdateSelectedDragContainer.ts";
 
 export function App() {
     const [value, setValue] = useState<Array<Page>>(() => {
@@ -96,7 +96,6 @@ function PageSelectionPropertyEditor(props:{propertyName:string}){
     const context = useAppContext();
     const container = containerSignal.get();
     const {propertyName} = props;
-    const addPanel = useAddDashboardPanel();
     const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.containerId === container?.id) !== undefined;
     let isFormulaEmpty = true;
 
@@ -104,31 +103,37 @@ function PageSelectionPropertyEditor(props:{propertyName:string}){
         const formula = container.properties[propertyName].formula;
         isFormulaEmpty = isEmpty(formula);
     }
-
-    const onClick = async () => {
-        addPanel({
-            position : 'sideCenter',
-            component : () => {
-                return <ComponentPropertyEditor name={propertyName} containerId={container?.id ?? ''}/>
-            },
-            title : `${container?.type} : ${propertyName}`,
-            Icon : Icon.Property,
-            id : `${container?.id}-${propertyName}`,
-        })
-    }
+    const update = useUpdateDragContainer();
     const style:CSSProperties = {
         width: 80,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         borderTopRightRadius: 0,
+        borderTopLeftRadius:20,
+        borderBottomLeftRadius:20,
         borderBottomRightRadius: 0,
         backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
         padding: 0
     };
     return <div style={{display: 'flex'}}>
-        <Button style={style} onClick={onClick}><Icon.Formula style={{fontSize: 22}}/></Button>
 
+        <PageInputSelector value={''} style={style} onChange={(value) => {
+            const containerId = containerSignal.get()?.id;
+            if(containerId) {
+                update(containerId, (selectedContainer: Container) => {
+                    if(value){
+                        selectedContainer.properties = {...selectedContainer.properties,[propertyName]:{formula : `module.exports = "${value}"`,dependencies:[]}}
+                        return selectedContainer;
+                    }else{
+                        selectedContainer.properties = {...selectedContainer.properties};
+                        delete selectedContainer.properties[propertyName];
+                        return selectedContainer;
+                    }
+
+                });
+            }
+        }} />
         <div style={{
             display: 'flex',
             padding: '0px 5px',
@@ -168,7 +173,7 @@ const DataGroup = forwardRef(function DataGroup(props:{component:string,style:CS
         setPage(page);
     })
     return <div ref={ref as ForwardedRef<HTMLDivElement>} style={style} >
-        {(data ?? []).map((item,index) => {
+        {page && (data ?? []).map((item,index) => {
             // here we need to render page
             let key:string = index.toString();
             if(item !== undefined && item !== null && typeof item === 'object' && keyId in item){

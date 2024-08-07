@@ -6,10 +6,11 @@ import {Icon} from "../../Icon.ts";
 import {CSSProperties} from "react";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import {useAppContext} from "../../hooks/useAppContext.ts";
+import {AppDesignerContext} from "../../AppDesignerContext.ts";
 
 export function ErrorsPanel() {
     const addPanel = useAddDashboardPanel();
-    const {allErrorsSignal, allContainersSignal, allVariablesSignal} = useAppContext();
+    const {allErrorsSignal, allContainersSignal, allVariablesSignal,selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
     const errorsComputed = useComputed(() => {
         let errors = allErrorsSignal.get();
         const containers = allContainersSignal.get();
@@ -85,15 +86,23 @@ export function ErrorsPanel() {
                         }} onClick={async () => {
 
                             if (e.type === 'property') {
+                                const panelId = `${e?.containerId}-${name}`;
+                                selectedDragContainerIdSignal.set(e.containerId);
                                 addPanel({
                                     position: 'sideCenter',
                                     component: () => {
                                         return <ComponentPropertyEditor name={e.propertyName}
-                                                                        containerId={e?.containerId ?? ''}/>
+                                                                        containerId={e?.containerId ?? ''}
+                                                                        panelId={panelId}
+                                        />
                                     },
                                     title: `${type} : ${name}`,
                                     Icon: Icon.Property,
-                                    id: `${e?.containerId}-${name}`,
+                                    id: panelId,
+                                    tag: {
+                                        containerId: e.containerId,
+                                        propertyName: e.propertyName
+                                    }
                                 })
                             }
 
@@ -106,7 +115,10 @@ export function ErrorsPanel() {
                                     },
                                     title: `${type} : ${name}`,
                                     Icon: Icon.Component,
-                                    id: e.variableId
+                                    id: e.variableId,
+                                    tag: {
+                                        variableId: e.variableId
+                                    }
                                 })
 
                             }

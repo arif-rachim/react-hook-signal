@@ -71,7 +71,7 @@ export function PagesPanel() {
                             },
                             title: page.name,
                             Icon: Icon.Page,
-                            id: page.id
+                            id: page.id,
                         })
                     }}>
                         <div></div>

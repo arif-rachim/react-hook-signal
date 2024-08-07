@@ -34,13 +34,14 @@ export function DependencyInputSelector(props: {
             border: BORDER,
             display: 'flex',
             borderRadius: 5,
+            backgroundColor:'white',
             flexGrow: 1,
             minHeight: 34,
             minWidth: 80,
             justifyContent: 'space-evenly',
             alignItems: 'center',
             flexWrap: 'wrap',
-            padding: '0px 5px',
+            padding: '5px 5px',
             gap: 5,
         }}
         onClick={showDependencySelector}>{value.map(dep => {
