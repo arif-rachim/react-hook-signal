@@ -8,7 +8,8 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
     style?: CSSProperties,
     styleLabel?: CSSProperties,
     styleContent?: CSSProperties,
-    defaultOpen?: boolean
+    defaultOpen?: boolean,
+    autoGrowWhenOpen?: boolean
 }>) {
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? true);
     return <LabelContainer label={<>
@@ -18,7 +19,11 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
         </div>
         {props.label}
     </>}
-                           style={{overflow: 'auto', minHeight: 30, ...props.style}}
+                           style={{
+                               overflow: 'auto',
+                               minHeight: 30,
+                               flexGrow: props.autoGrowWhenOpen && isOpen ? 1 : undefined, ...props.style
+                           }}
                            styleLabel={{
                                flexShrink: 0,
                                borderBottom: BORDER,

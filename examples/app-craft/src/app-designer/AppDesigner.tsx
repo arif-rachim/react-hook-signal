@@ -49,9 +49,7 @@ export type Fetcher = {
     contentType: 'application/x-www-form-urlencoded' | 'application/json'
     path: string,
     headers: Array<FetcherParameter>,
-    cookies: Array<FetcherParameter>,
     paths: Array<FetcherParameter>,
-    queries: Array<FetcherParameter>,
     data: Array<FetcherParameter>,
     returnTypeSchemaCode: string
 }

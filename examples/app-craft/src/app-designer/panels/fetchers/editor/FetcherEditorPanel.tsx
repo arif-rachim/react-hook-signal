@@ -14,6 +14,8 @@ import {useUpdateFetcher} from "../../../hooks/useUpdateFetcher.ts";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import untrack = Signal.subtle.untrack;
+import {format_hhmmss} from "../../../../utils/dateFormat.ts";
+import {Editor} from "@monaco-editor/react";
 
 const LABEL_WIDTH = 60;
 
@@ -26,6 +28,12 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
     const updateFetcher = useUpdateFetcher();
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
+    const testMessages = useSignal<Array<{ id: string, date: Date, message: string }>>([]);
+    const responseData = useSignal<string>('');
+    const responseSchema = useSignal<string>('');
+    function logTestMessage(message: string) {
+        testMessages.set([...testMessages.get(), {id: guid(), date: new Date(), message: message}])
+    }
 
     function createNewFetcher(): Fetcher {
         return {
@@ -38,9 +46,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             contentType: 'application/json',
             path: '',
             headers: [],
-            cookies: [],
             paths: [],
-            queries: [],
             data: [],
             returnTypeSchemaCode: ''
         }
@@ -48,7 +54,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
 
     const fetcherSignal = useSignal(fetcher ?? createNewFetcher());
 
-    function addParam(type: 'headers' | 'cookies' | 'paths' | 'queries' | 'data') {
+    function addParam(type: 'headers' | 'paths' | 'data') {
         const newFetcher = {...fetcherSignal.get()};
 
         newFetcher[type] = [...newFetcher[type], {
@@ -153,15 +159,10 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             return str.replace(/^\/+|\/+$/g, '')
         }
 
-        function cookiesToHeaderString(cookies: Record<string, string>) {
-            return Object.entries(cookies).map(([key, value]) => `${key}=${value}`).join('; ')
-        }
-
         const address = `${url}/${trimSlashes(path.trim())}`
         const requestInit: RequestInit = {
             method: fetcher.method,
             headers: fetcher.headers.reduce(toRecord(true), {
-                'Cookie': cookiesToHeaderString(fetcher.cookies.reduce(toRecord(true), {})),
                 'Content-Type': fetcher.contentType
             }),
         }
@@ -178,9 +179,22 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                 requestInit.body = JSON.stringify(fetcher.data.reduce(toRecord(false), {}))
             }
         }
-        console.log('FETCHING ', requestInit);
-        const result = await fetch(address, requestInit)
-        console.log("WE HAVE RESPONSE ", result);
+        logTestMessage(`[Request] ${address}`);
+        logTestMessage(`[Request] ${JSON.stringify(requestInit)}`)
+        const response = await fetch(address, requestInit);
+        const contentType = response.headers.get('Content-Type');
+        logTestMessage(`[Response] ${response.statusText} ${contentType}`);
+        if (contentType && contentType.includes('application/json')) {
+            // its json we can do something here
+            const json = await response.json();
+            responseData.set(JSON.stringify(json));
+            const ts = naiveJsonToTs(json);
+            logTestMessage(`[Response] ${ts}`);
+            responseSchema.set(ts);
+        } else {
+            const text = await response.text();
+            logTestMessage(`[Response] ${text}`);
+        }
     }
 
     return <div style={{
@@ -189,7 +203,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
         overflow: 'auto',
         flexGrow: 1,
     }}>
-        <div style={{display: 'flex', flexDirection: 'column'}}>
             <div style={{display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px'}}>
                 <LabelContainer label={'Name : '} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
                                 styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH}}>
@@ -398,16 +411,53 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                 </div>
                 <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}/>
             </CollapsibleLabelContainer>
-            <CollapsibleLabelContainer label={'Cookies'} defaultOpen={false}>
-                <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
-                    <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('cookies')}>
-                        <div style={{paddingBottom: 2}}>Add Cookie</div>
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Add style={{fontSize: 20}}/>
-                        </div>
-                    </Button>
-                </div>
-                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'cookies'}/>
+            <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
+                <notifiable.div style={{display: 'table'}}>
+                    {() => {
+                        const messages = testMessages.get();
+                        return <>
+                            <div style={{display: 'table-row'}}>
+                                <div style={{display: 'table-cell',width:100}}>Time</div>
+                                <div style={{display: 'table-cell'}}>Messages</div>
+                            </div>
+                            {messages.map(message => {
+                                return <div key={message.id} style={{display: 'table-row'}}>
+                                    <div style={{display: 'table-cell', width: 100}}>{format_hhmmss(message.date)}</div>
+                                    <div style={{display: 'table-cell'}}>{message.message}</div>
+                                </div>
+                            })}
+                        </>
+                    }}
+                </notifiable.div>
+            </CollapsibleLabelContainer>
+            <CollapsibleLabelContainer label={'Test Result Data'} autoGrowWhenOpen={true} >
+                <notifiable.div style={{minHeight: 100,flexGrow:1}}>{
+                    () => {
+                        return <Editor
+                            language="json"
+                            value={responseData.get()}
+                            options={{
+                                selectOnLineNumbers: false,
+                                lineNumbers: 'off',
+                            }}
+                        />
+                    }
+                }
+                </notifiable.div>
+            </CollapsibleLabelContainer>
+            <CollapsibleLabelContainer label={'Test Result Schema'} autoGrowWhenOpen={true}>
+                <notifiable.div style={{minHeight: 100,flexGrow:1}}>
+                    {() => {
+                        return <Editor
+                            language="json"
+                            value={responseSchema.get()}
+                            options={{
+                                selectOnLineNumbers: false,
+                                lineNumbers: 'off',
+                            }}
+                        />
+                    }}
+                </notifiable.div>
             </CollapsibleLabelContainer>
             <div style={{display: 'flex', justifyContent: 'flex-end', padding: '10px 20px', gap: 10}}>
                 <Button onClick={async () => {
@@ -442,9 +492,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                         <Icon.Save/></div>
                 </Button>
             </div>
-        </div>
-
-
     </div>
 }
 
@@ -462,7 +509,7 @@ function RenderParameters(props: {
     nameReadOnly?: boolean,
     fetcherSignal: Signal.State<Fetcher>,
     isModified: Signal.State<boolean>,
-    type: 'headers' | 'cookies' | 'paths' | 'queries' | 'data'
+    type: 'headers' | 'paths' | 'data'
 }) {
     const {fetcherSignal, isModified, type, nameReadOnly} = props;
     return <>
@@ -552,4 +599,37 @@ function RenderParameters(props: {
             }}
         </notifiable.div>
     </>
+}
+
+function naiveJsonToTs(param:unknown):string{
+    if(Array.isArray(param)) {
+        const types:string[] = [];
+        for (const paramElement of param) {
+            const type = naiveJsonToTs(paramElement);
+            if(!types.includes(type)){
+                types.push(type);
+            }
+        }
+        return `${types.join('|')}[]`
+    }else if(typeof param === 'string') {
+        return 'string'
+    }else if(typeof param === 'number') {
+        return 'number'
+    }else if(typeof param === 'boolean') {
+        return 'boolean'
+    }else if(isRecord(param)){
+        const result = [];
+        for (const [key,value] of Object.entries(param) ) {
+            result.push(`${key}:${naiveJsonToTs(value)}`);
+        }
+        return `{${result.join(',')}}`
+    }else{
+        return 'unknown'
+    }
+}
+
+function isRecord(obj: unknown): obj is Record<string, unknown> {
+    return obj !== null &&
+        typeof obj === 'object' &&
+        !Array.isArray(obj);
 }
