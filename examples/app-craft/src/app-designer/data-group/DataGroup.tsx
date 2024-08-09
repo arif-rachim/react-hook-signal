@@ -3,6 +3,7 @@ import {Page} from "../AppDesigner.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {PageViewer} from "../../app-viewer/AppViewer.tsx";
+import {BORDER} from "../Border.ts";
 
 export const DataGroup = memo(forwardRef(DataGroupFC), (prevProps, nextProps) => {
     if (prevProps.component !== nextProps.component) {
@@ -14,10 +15,8 @@ export const DataGroup = memo(forwardRef(DataGroupFC), (prevProps, nextProps) =>
     if (prevProps.data !== nextProps.data) {
         return false;
     }
-    if (prevProps.direction !== nextProps.direction) {
-        return false;
-    }
-    return true
+    return prevProps.direction === nextProps.direction;
+
 });
 
 
@@ -33,6 +32,9 @@ function DataGroupFC(props: {
     const style: CSSProperties = {
         display: 'flex',
         flexDirection: direction === 'horizontal' ? 'row' : 'column',
+        minHeight:20,
+        minWidth:20,
+        border : BORDER,
         ...propsStyle
     }
 
