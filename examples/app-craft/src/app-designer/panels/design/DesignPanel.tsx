@@ -9,18 +9,18 @@ import {isEmpty} from "../../../utils/isEmpty.ts";
 export function DesignPanel() {
     const context = useAppContext();
     return <>
-            <ToggleViewToolbar/>
-            <ErrorBoundary>
-                <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
-                    {() => {
-                        const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
-                        if (container) {
-                            return <DraggableContainerElement container={container}/>
-                        }
-                        return <></>
-                    }}
-                </notifiable.div>
-            </ErrorBoundary>
+        <ToggleViewToolbar/>
+        <ErrorBoundary>
+            <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
+                {() => {
+                    const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
+                    if (container) {
+                        return <DraggableContainerElement container={container}/>
+                    }
+                    return <></>
+                }}
+            </notifiable.div>
+        </ErrorBoundary>
     </>
 }
 

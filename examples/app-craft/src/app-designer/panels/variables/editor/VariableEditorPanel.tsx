@@ -62,13 +62,13 @@ export function VariableEditorPanel(props: {
         const errors: Partial<Record<keyof Variable, Array<string>>> = {};
         const variable = variableSignal.get();
         if (isEmpty(variable.name)) {
-            errors.name = ['Name must have value'];
+            errors.name = ['The "name" field cannot be empty; it must have a value.'];
         }
         if (isEmpty(variable.functionCode)) {
-            errors.functionCode = ['Code cannot be empty'];
+            errors.functionCode = ['The "code" field cannot be empty; it must have a value.'];
         }
         if (nameIsDuplicate(variable.name, variable.id)) {
-            errors.name = ['Variable name should be unique'];
+            errors.name = [`The variable name "${variable.name}" is already in use. Please choose a different name.`];
         }
         if (monacoRef.current) {
             const markers = monacoRef.current?.editor.getModelMarkers({});
@@ -87,8 +87,9 @@ export function VariableEditorPanel(props: {
         overflow: 'auto',
         flexGrow: 1,
     }}>
-        <div style={{display: 'flex', gap: 10, padding: 10,backgroundColor:'rgba(0,0,0,0.02)' }}>
-            <LabelContainer label={'Name : '} style={{flexGrow:1,flexBasis:'50%', flexDirection: 'row', alignItems: 'center', gap: 10}}
+        <div style={{display: 'flex', gap: 10, padding: 10, backgroundColor: 'rgba(0,0,0,0.02)'}}>
+            <LabelContainer label={'Name : '}
+                            style={{flexGrow: 1, flexBasis: '50%', flexDirection: 'row', alignItems: 'center', gap: 10}}
                             styleLabel={{fontStyle: 'italic'}}>
                 <notifiable.input name={'signalName'} autoComplete={'unset'}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
@@ -115,9 +116,16 @@ export function VariableEditorPanel(props: {
                                   }}/>
             </LabelContainer>
             {type !== 'state' &&
-                <LabelContainer label={'Dependency :'} style={{flexGrow:1,flexBasis:'50%',flexDirection: 'row', alignItems: 'center', gap: 10}}
-                                styleLabel={{fontStyle: 'italic'}} styleContent={{display:'flex',flexDirection:'column'}}>
-                    <notifiable.div style={{display:'flex',flexDirection:'column'}}>
+                <LabelContainer label={'Dependency :'} style={{
+                    flexGrow: 1,
+                    flexBasis: '50%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10
+                }}
+                                styleLabel={{fontStyle: 'italic'}}
+                                styleContent={{display: 'flex', flexDirection: 'column'}}>
+                    <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                         {() => {
                             const variable = variableSignal.get();
                             return <DependencyInputSelector onChange={(result) => {
@@ -129,9 +137,10 @@ export function VariableEditorPanel(props: {
                 </LabelContainer>
             }
         </div>
-        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, overflow: 'auto'}}>
+        <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, overflow: 'unset'}}>
             {type !== 'effect' &&
-                <CollapsibleLabelContainer label={'Schema'} styleContent={{padding: '5px 10px'}}>
+                <CollapsibleLabelContainer label={'Schema'} style={{overflow: 'unset'}}
+                                           styleContent={{padding: '5px 10px', overflow: 'unset'}}>
                     <notifiable.div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -159,7 +168,8 @@ export function VariableEditorPanel(props: {
                     </notifiable.div>
                 </CollapsibleLabelContainer>
             }
-            <CollapsibleLabelContainer label={'Code'} style={{flexGrow: 1}} styleContent={{padding: '5px 10px'}}>
+            <CollapsibleLabelContainer label={'Code'} style={{flexGrow: 1, overflow: 'unset'}}
+                                       styleContent={{padding: '5px 10px', overflow: 'unset'}}>
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -214,9 +224,9 @@ export function VariableEditorPanel(props: {
                                     })
                                 }).flat();
                                 return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                    icon : Icon.Exit,
-                                    label : 'Ok',
-                                    id : 'Ok'
+                                    icon: Icon.Exit,
+                                    label: 'Ok',
+                                    id: 'Ok'
                                 }]}/>
                             })
                         }

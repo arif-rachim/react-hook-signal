@@ -14,17 +14,17 @@ export function PropertiesPanel() {
     const [callbacksAndAttributes, setCallbacksAndAttributes] = useState<{
         callbacks: Array<string>,
         attributes: Array<string>,
-        propertyEditor : Element['propertyEditor']
-    }>({callbacks: [], attributes: [],propertyEditor:{}});
+        propertyEditor: Element['propertyEditor']
+    }>({callbacks: [], attributes: [], propertyEditor: {}});
     useSignalEffect(() => {
         const callbacks: Array<string> = [];
         const attributes: Array<string> = [];
         const selectedDragContainer = selectedDragContainerSignal.get();
         if (selectedDragContainer === undefined) {
-            return setCallbacksAndAttributes({callbacks, attributes,propertyEditor:{}})
+            return setCallbacksAndAttributes({callbacks, attributes, propertyEditor: {}})
         }
         const elementName = selectedDragContainer?.type;
-        const isCustomElement = elementName && elementName in elements;
+        const isCustomElement = elements && elementName && elementName in elements;
 
         if (isCustomElement) {
             const element = elements[elementName];
@@ -38,18 +38,19 @@ export function PropertiesPanel() {
                     attributes.push(propKey)
                 }
             }
-            return setCallbacksAndAttributes({callbacks, attributes,propertyEditor:element.propertyEditor});
+            return setCallbacksAndAttributes({callbacks, attributes, propertyEditor: element.propertyEditor});
         }
-        setCallbacksAndAttributes({callbacks, attributes,propertyEditor:{}});
+        setCallbacksAndAttributes({callbacks, attributes, propertyEditor: {}});
     })
 
-    function propertyCallbackItemRenderer(propKey:string){
-        if(callbacksAndAttributes && callbacksAndAttributes.propertyEditor && callbacksAndAttributes.propertyEditor[propKey]){
+    function propertyCallbackItemRenderer(propKey: string) {
+        if (callbacksAndAttributes && callbacksAndAttributes.propertyEditor && callbacksAndAttributes.propertyEditor[propKey]) {
             const editor = callbacksAndAttributes.propertyEditor[propKey]!;
             const Component = editor.component!;
             return <LabelContainer key={propKey} label={editor.label}
                                    style={{flexDirection: 'row', alignItems: 'center'}}
-                                   styleLabel={{width: 65, fontSize: 13}} styleContent={{display:'flex',flexDirection:'column',flexGrow:1}}>
+                                   styleLabel={{width: 65, fontSize: 13}}
+                                   styleContent={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
                 <Component propertyName={propKey}/>
             </LabelContainer>
         }

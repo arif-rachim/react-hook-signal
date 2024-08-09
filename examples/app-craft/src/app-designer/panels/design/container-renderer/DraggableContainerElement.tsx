@@ -70,7 +70,7 @@ export function DraggableContainerElement(props: { container: Container }) {
             return;
         }
         const id = event.dataTransfer.getData('text');
-        const keys = Object.keys(elementsLib);
+        const keys = Object.keys(elementsLib as Record<string, unknown>);
         if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
             addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal, updatePage);
         } else if (id) {
@@ -141,8 +141,8 @@ export function DraggableContainerElement(props: { container: Container }) {
 
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
-        const container: Container|undefined = containerSignal.get();
-        const isContainer = ['vertical','horizontal'].includes(container?.type);
+        const container: Container | undefined = containerSignal.get();
+        const isContainer = ['vertical', 'horizontal'].includes(container?.type);
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = isEmpty(container?.parent);
@@ -202,7 +202,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         ['data-element-id']: props.container?.id
     };
 
-    if (elementsLib[containerProp?.type]) {
+    if (elementsLib && elementsLib[containerProp?.type]) {
         return <ElementRenderer container={containerProp} elementProps={elementProps}/>
     }
 

@@ -24,11 +24,14 @@ export function ComponentPropertyEditor(props: {
     const removePanel = useRemoveDashboardPanel();
     const {allVariablesSignal, elements, allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
-    const returnType = elements[selectedDragContainer?.type]?.property[props.name];
+    const returnType = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
     const isModified = useSignal<boolean>(false)
     const update = useUpdateDragContainer();
+    if (returnType === undefined) {
+        return <></>
+    }
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -36,7 +39,7 @@ export function ComponentPropertyEditor(props: {
         flexGrow: 1
     }}>
 
-        <LabelContainer label={'Dependency :'} styleLabel={{fontStyle:'italic'}} style={{
+        <LabelContainer label={'Dependency :'} styleLabel={{fontStyle: 'italic'}} style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: 10,

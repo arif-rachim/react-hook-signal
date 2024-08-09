@@ -23,7 +23,7 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
     const {container, elementProps} = props;
     const context = useAppContext();
-    const {component} = context.elements[container.type];
+    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyElement};
     const ref = useRef<HTMLElement>(null);
 
     const propsRef = useRef(elementProps);
@@ -71,7 +71,11 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         }
     }, [Component]);
     return <>
-        <PropertyInitialization container={props.container} setComponentProps={setComponentProps} />
+        <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
+}
+
+function EmptyElement() {
+    return <div></div>
 }

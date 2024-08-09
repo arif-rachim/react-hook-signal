@@ -1,4 +1,4 @@
-import {Container, Page, Variable} from "../AppDesigner.tsx";
+import {Container, Fetcher, Page, Variable} from "../AppDesigner.tsx";
 import {useAppContext} from "./useAppContext.ts";
 
 type ParamVariable = {
@@ -26,13 +26,22 @@ type ParamAddPage = {
     pageId?: string
 }
 
+type ParamFetcher = {
+    type: 'fetcher',
+    fetchers: Array<Fetcher>,
+    pageId?: string
+}
+
 export function useUpdatePageSignal() {
     const {allPagesSignal, activePageIdSignal} = useAppContext();
-    return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage) {
+    return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage | ParamFetcher) {
         const allPages = [...allPagesSignal.get()];
         const pageId = param.pageId ?? activePageIdSignal.get();
         const page = allPages.find(i => i.id === pageId);
         if (page) {
+            if (param.type === 'fetcher') {
+                allPages.splice(allPages.indexOf(page), 1, {...page, fetchers: param.fetchers});
+            }
             if (param.type === 'variable') {
                 allPages.splice(allPages.indexOf(page), 1, {...page, variables: param.variables});
             }

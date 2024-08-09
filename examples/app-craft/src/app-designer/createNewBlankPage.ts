@@ -5,12 +5,13 @@ export function createNewBlankPage(): Page {
     return {
         id: guid(),
         variables: [],
+        fetchers: [],
         containers: [{
             id: guid(),
             type: 'vertical',
             children: [],
             properties: {},
         }],
-        name: 'home'
+        name: 'home',
     }
 }

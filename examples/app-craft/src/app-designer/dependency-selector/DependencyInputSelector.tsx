@@ -34,7 +34,7 @@ export function DependencyInputSelector(props: {
             border: BORDER,
             display: 'flex',
             borderRadius: 5,
-            backgroundColor:'white',
+            backgroundColor: 'white',
             flexGrow: 1,
             minHeight: 34,
             minWidth: 80,

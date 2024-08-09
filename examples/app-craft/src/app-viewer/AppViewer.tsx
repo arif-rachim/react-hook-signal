@@ -1,7 +1,7 @@
 import {ElementStyleProps, LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {createNewBlankPage} from "../app-designer/createNewBlankPage.ts";
-import {Container, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
+import {Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {Signal} from "signal-polyfill";
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
 import {CSSProperties, forwardRef, ReactNode, useEffect, useMemo, useRef, useState} from "react";
@@ -35,6 +35,11 @@ export default function AppViewer(props: LayoutBuilderProps) {
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)?.containers ?? []
     });
+    const allFetchersSignal = useComputed<Array<Fetcher>>(() => {
+        const activePageId = activePageIdSignal.get();
+        const allPages = allPagesSignal.get();
+        return allPages.find(i => i.id === activePageId)?.fetchers ?? []
+    });
     const {value, onChange} = props;
     useEffect(() => {
         if (value && value.length > 0) {
@@ -59,6 +64,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
         allVariablesSignal,
         allVariablesSignalInstance,
         allErrorsSignal,
+        allFetchersSignal,
         elements: props.elements
     }
 
@@ -80,7 +86,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
 
 
 export function PageViewer(props: { elements: LayoutBuilderProps['elements'], page: Page } & Record<string, unknown>) {
-    const {elements, page,...properties} = props;
+    const {elements, page, ...properties} = props;
     const variableInitialValueSignal = useSignal<Record<string, unknown>>(properties);
     useEffect(() => {
         variableInitialValueSignal.set(properties);
@@ -89,6 +95,7 @@ export function PageViewer(props: { elements: LayoutBuilderProps['elements'], pa
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
     const allVariablesSignal = useComputed(() => props.page.variables)
     const allContainersSignal = useComputed(() => props.page.containers);
+    const allFetchersSignal = useComputed(() => props.page.fetchers);
     const allPagesSignal = useSignal<Array<Page>>([page]);
     const activePageIdSignal = useSignal(page.id)
     const context: AppViewerContext = {
@@ -99,6 +106,7 @@ export function PageViewer(props: { elements: LayoutBuilderProps['elements'], pa
         allVariablesSignal,
         allVariablesSignalInstance,
         allErrorsSignal,
+        allFetchersSignal,
         elements: elements
     }
     return <AppViewerContext.Provider value={context}>
@@ -134,8 +142,10 @@ function ContainerElement(props: { container: Container }) {
     useSignalEffect(() => {
         const container: Container | undefined = containerSignal.get();
         const isRoot = container?.parent === '';
+        const isContainer = ['vertical', 'horizontal'].includes(container.type);
         const styleFromSignal = {
-            border: BORDER,
+
+            border: isContainer ? undefined : BORDER,
             background: 'white',
             minWidth: container?.minWidth,
             minHeight: container?.minHeight,
@@ -164,9 +174,9 @@ function ContainerElement(props: { container: Container }) {
 
     const elementProps: ElementStyleProps = {
         style: computedStyle,
-        ['data-element-id']: container?.id
+        ['data-element-id']: container?.id ?? ''
     };
-    if (elements[container?.type]) {
+    if (elements && elements[container?.type]) {
         return <ElementRenderer container={container} elementProps={elementProps}/>
     }
 
@@ -213,8 +223,8 @@ function ContainerRenderer(props: { elementProps: ElementStyleProps, container: 
 function ElementRenderer(props: { container: Container, elementProps: ElementStyleProps }) {
     const {container, elementProps} = props;
     const context = useAppContext<AppViewerContext>();
-    const {component} = context.elements[container.type];
-    const ref = useRef<HTMLElement>(null);
+    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyElement};
+    const ref = useRef<HTMLElement | null>(null);
 
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
@@ -233,4 +243,8 @@ function ElementRenderer(props: { container: Container, elementProps: ElementSty
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
+}
+
+function EmptyElement() {
+    return <></>
 }

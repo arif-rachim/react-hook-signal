@@ -5,6 +5,7 @@ import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts"
 import {useNavigateSignal} from "../../../../hooks/useNavigateSignal.tsx";
 import {useAppContext} from "../../../../hooks/useAppContext.ts";
 import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
+import {ZodRawShape} from "zod";
 
 export function PropertyInitialization(props: {
     container: Container,
@@ -14,7 +15,7 @@ export function PropertyInitialization(props: {
 
     const {container, setComponentProps} = props;
     const {allVariablesSignalInstance, allVariablesSignal, elements: elementsLib} = context;
-    const {property} = elementsLib[container.type];
+    const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
     const navigateSignal = useNavigateSignal();
@@ -27,7 +28,7 @@ export function PropertyInitialization(props: {
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];
-            const returnType = property[containerPropKey];
+            const returnType = property ? property[containerPropKey] : undefined;
             const destroyer = effect(() => {
                 const allVariablesInstance = allVariablesSignalInstance.get();
                 const allVariables = allVariablesSignal.get();

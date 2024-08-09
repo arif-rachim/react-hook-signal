@@ -5,7 +5,8 @@ export type ErrorType =
     | PropertySchemaError
     | PropertyValueError
     | PropertyValidationError
-    | CallbackInvocationError;
+    | CallbackInvocationError
+    | FetcherInvocationError
 
 type VariableSchemaError = {
     type: 'variable',
@@ -57,5 +58,12 @@ type CallbackInvocationError = {
     category: 'invocation',
     containerId: string,
     propertyName: string,
+    message: string
+}
+
+type FetcherInvocationError = {
+    type: 'fetcher',
+    category: 'invocation';
+    fetcherId: string,
     message: string
 }

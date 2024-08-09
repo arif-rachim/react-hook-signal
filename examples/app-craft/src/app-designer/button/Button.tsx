@@ -4,7 +4,7 @@ import {BORDER} from "../Border.ts";
 /**
  * A custom Button component.
  */
-export const Button = forwardRef(function Button(props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>,ref) {
+export const Button = forwardRef(function Button(props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, ref) {
     const {style, ...properties} = props;
     const buttonStyle: CSSProperties = useMemo(() => {
         const defaultStyle: CSSProperties = {
@@ -16,5 +16,6 @@ export const Button = forwardRef(function Button(props: DetailedHTMLProps<Button
         };
         return {...defaultStyle, ...style}
     }, [style]);
-    return <button ref={ref as LegacyRef<HTMLButtonElement>} style={buttonStyle} {...properties}>{props.children}</button>
+    return <button ref={ref as LegacyRef<HTMLButtonElement>}
+                   style={buttonStyle} {...properties}>{props.children}</button>
 })

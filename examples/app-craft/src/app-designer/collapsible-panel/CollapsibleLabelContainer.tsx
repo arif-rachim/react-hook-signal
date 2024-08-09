@@ -7,9 +7,10 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
     label: ReactNode,
     style?: CSSProperties,
     styleLabel?: CSSProperties,
-    styleContent?: CSSProperties
+    styleContent?: CSSProperties,
+    defaultOpen?: boolean
 }>) {
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(props.defaultOpen ?? true);
     return <LabelContainer label={<>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             {isOpen && <Icon.ArrowDown/>}
@@ -31,7 +32,7 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
                            styleContent={{
                                boxShadow: '0px 5px 5px -3px rgba(0,0,0,0.1) inset',
                                overflow: 'auto',
-                               borderBottom:BORDER,
+                               borderBottom: BORDER,
                                display: isOpen ? 'flex' : 'none',
                                flexDirection: 'column',
                                padding: '15px 10px',

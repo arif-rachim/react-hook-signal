@@ -13,11 +13,11 @@ export function PageNameDialog(props: { closePanel: (param?: string) => void, al
     function nameIsValid() {
         const name = valueSignal.get();
         if (isEmpty(name)) {
-            return 'Name is required';
+            return 'The page name cannot be empty;it must have a value.';
         }
         const existingPage = props.allPages.find(i => i.name === name && i.id !== props.page.id);
         if (existingPage) {
-            return 'Name is already taken'
+            return `The page name "${name}" is already in use. Please choose a different name.`
         }
         return '';
     }

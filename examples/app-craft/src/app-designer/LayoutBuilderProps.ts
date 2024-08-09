@@ -7,7 +7,7 @@ import {z, ZodRawShape} from "zod";
  * Represents the props for the LayoutBuilder component.
  */
 export type LayoutBuilderProps = {
-    elements: Record<string, Element>,
+    elements?: Record<string, Element>,
     value: Array<Page>,
     onChange: (param: Array<Page>) => void
 }
@@ -19,12 +19,12 @@ type InferType<T extends ZodRawShape> = {
 export type CancellableEvent = { stopPropagation: () => void, preventDefault: () => void };
 export type BasicDragEvent = CancellableEvent & { dataTransfer: DataTransfer | null, clientX: number, clientY: number };
 
-export interface ElementStyleProps{
+export interface ElementStyleProps {
     style: CSSProperties,
     ['data-element-id']: string
 }
 
-export interface ElementProps extends ElementStyleProps{
+export interface ElementProps extends ElementStyleProps {
     draggable: boolean,
     onDragStart: (event: BasicDragEvent) => void,
     onDragOver: (event: BasicDragEvent) => void,
@@ -38,20 +38,24 @@ export interface Element<T extends ZodRawShape = ZodRawShape> {
     icon: IconType,
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
     property: T,
-    propertyEditor? : {[K in keyof T]?: {
-        label : string,
-        component : FunctionComponent<{propertyName:string}>
-    }}
+    propertyEditor?: {
+        [K in keyof T]?: {
+            label: string,
+            component: FunctionComponent<{ propertyName: string }>
+        }
+    }
 }
 
 export function element<T extends ZodRawShape>(props: {
     property: T,
-    propertyEditor? : {[K in keyof T]?: {
-        label : string,
-        component : FunctionComponent<{propertyName:string}>
-    }}
+    propertyEditor?: {
+        [K in keyof T]?: {
+            label: string,
+            component: FunctionComponent<{ propertyName: string }>
+        }
+    }
     icon: IconType,
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
-}):Element<ZodRawShape> {
+}): Element<ZodRawShape> {
     return props as Element<ZodRawShape>;
 }

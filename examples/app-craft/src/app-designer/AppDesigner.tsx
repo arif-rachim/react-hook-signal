@@ -18,6 +18,8 @@ import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
 import PackagePanel from "./panels/package/PackagePanel.tsx";
+import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
+import {DefaultElements} from "./DefaultElements.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -28,6 +30,30 @@ export type Variable = {
     functionCode: string,
     schemaCode: string,
     dependencies?: Array<string> // this is only for computed and effect
+}
+
+export type FetcherParameter = {
+    id: string,
+    name: string,
+    value: string,
+    required: boolean,
+}
+
+export type Fetcher = {
+    id: string,
+    name: string,
+    protocol: 'http' | 'https',
+    port: string,
+    domain: string,
+    method: 'post' | 'get',
+    contentType: 'application/x-www-form-urlencoded' | 'application/json'
+    path: string,
+    headers: Array<FetcherParameter>,
+    cookies: Array<FetcherParameter>,
+    paths: Array<FetcherParameter>,
+    queries: Array<FetcherParameter>,
+    data: Array<FetcherParameter>,
+    returnTypeSchemaCode: string
 }
 
 export type VariableInstance = {
@@ -43,7 +69,8 @@ export type Page = {
     id: string,
     name: string,
     containers: Array<Container>,
-    variables: Array<Variable>
+    variables: Array<Variable>,
+    fetchers: Array<Fetcher>
 }
 
 export type Container = {
@@ -76,7 +103,6 @@ export type Container = {
     properties: Record<string, ContainerPropertyType>,
 }
 
-
 export default function AppDesigner(props: LayoutBuilderProps) {
     const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
     const activePageIdSignal = useSignal<string>('');
@@ -88,9 +114,13 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
 
+
     useSignalEffect(() => {
-        const errors = allErrorsSignal.get();
-        console.log('errors', errors)
+        const fetchers = allFetchersSignal.get();
+        console.log('fetchers', fetchers)
+    })
+    useSignalEffect(() => {
+        console.log('We have ROOT', activePageIdSignal.get());
     })
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
@@ -103,6 +133,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         const activePageId = activePageIdSignal.get();
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)?.containers ?? []
+    });
+
+    const allFetchersSignal = useComputed<Array<Fetcher>>(() => {
+        const activePageId = activePageIdSignal.get();
+        const allPages = allPagesSignal.get();
+        return allPages.find(i => i.id === activePageId)?.fetchers ?? []
     });
 
     const {value, onChange} = props;
@@ -134,7 +170,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         variableInitialValueSignal: variableInitialValueSignal,
         allVariablesSignalInstance: allVariablesSignalInstance,
         allErrorsSignal: allErrorsSignal,
-        elements: props.elements
+        allFetchersSignal: allFetchersSignal,
+        elements: {...DefaultElements, ...props.elements}
     }
     return <ErrorBoundary>
         <ModalProvider>
@@ -159,6 +196,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         Icon: Icon.Variable,
                         position: 'leftBottom',
                         component: VariablesPanel
+                    },
+                    fetchers: {
+                        title: 'Fetchers',
+                        Icon: Icon.Fetcher,
+                        position: 'leftBottom',
+                        component: FetchersPanel
                     },
                     errors: {
                         title: 'Errors',

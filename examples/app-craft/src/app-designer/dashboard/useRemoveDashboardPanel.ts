@@ -17,7 +17,7 @@ export function useRemoveDashboardPanel() {
             const nextPanel = filteredPanels[panelIndex - 1];
             nextPanelId = nextPanel.id;
         }
-        if(nextPanelId){
+        if (nextPanelId) {
             selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: nextPanelId});
         }
         panelsSignal.set(panels.filter(i => i.id !== panelId));

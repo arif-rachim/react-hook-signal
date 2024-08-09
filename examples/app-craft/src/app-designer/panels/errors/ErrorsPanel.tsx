@@ -10,7 +10,12 @@ import {AppDesignerContext} from "../../AppDesignerContext.ts";
 
 export function ErrorsPanel() {
     const addPanel = useAddDashboardPanel();
-    const {allErrorsSignal, allContainersSignal, allVariablesSignal,selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
+    const {
+        allErrorsSignal,
+        allContainersSignal,
+        allVariablesSignal,
+        selectedDragContainerIdSignal
+    } = useAppContext<AppDesignerContext>();
     const errorsComputed = useComputed(() => {
         let errors = allErrorsSignal.get();
         const containers = allContainersSignal.get();

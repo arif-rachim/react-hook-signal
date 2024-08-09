@@ -102,6 +102,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                             return {
                                 display: noPanel ? 'none' : 'flex',
                                 flexDirection: 'column',
+                                flexShrink: 0,
                                 width: 200,
                                 overflow: 'auto',
                                 borderRight: BORDER
@@ -126,6 +127,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                             return {
                                 display: noPanel ? 'none' : 'flex',
                                 flexDirection: 'column',
+                                flexShrink: 0,
                                 width: 200,
                                 overflow: 'auto',
                                 borderLeft: BORDER
@@ -268,7 +270,7 @@ function RenderTabPanel(props: {
     position: PanelPosition
 }) {
     const {panelsSignal, selectedPanelSignal, position} = props;
-    const {activePageIdSignal,selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
+    const {activePageIdSignal, selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
     const [panelsComputed, setPanelsComputed] = useState<Array<PanelInstance>>([]);
     const [selectedPanel, setSelectedPanel] = useState<SelectedPanelType>({});
     useSignalEffect(() => {
@@ -277,7 +279,7 @@ function RenderTabPanel(props: {
         let panels = panelsSignal.get().filter(p => p.position === position);
         if (position === 'sideCenter') {
             panels = panels.filter(p => p.pageId === pageId).filter(p => {
-                if(p.tag?.containerId && container){
+                if (p.tag?.containerId && container) {
                     return p.tag.containerId === container;
                 }
                 return true;
@@ -306,7 +308,7 @@ function RenderTabPanel(props: {
                 return <TabButton onClick={() => {
                     selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: panel.id});
                     // if this is the main panel then we need to activate the signal id
-                    if(position === 'mainCenter') {
+                    if (position === 'mainCenter') {
                         activePageIdSignal.set(panel.pageId);
                     }
                 }} key={panel.id} isSelected={isSelected}>
@@ -315,7 +317,7 @@ function RenderTabPanel(props: {
                         e.preventDefault();
                         e.stopPropagation();
                         const nextPanelId = removePanel(panel.id);
-                        if(nextPanelId && position === 'mainCenter') {
+                        if (nextPanelId && position === 'mainCenter') {
                             activePageIdSignal.set(nextPanelId);
                         }
                     }}><Icon.Close/>

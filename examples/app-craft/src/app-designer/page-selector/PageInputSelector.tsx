@@ -8,7 +8,7 @@ import {CSSProperties} from "react";
 export function PageInputSelector(props: {
     value?: string,
     onChange: (value?: string) => void,
-    style?:CSSProperties
+    style?: CSSProperties
 }) {
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();

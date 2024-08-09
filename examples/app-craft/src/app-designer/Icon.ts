@@ -9,9 +9,10 @@ import {
     IoTrashOutline
 } from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
-import {AiOutlineFieldString} from "react-icons/ai";
+import {AiOutlineApi, AiOutlineFieldString} from "react-icons/ai";
 import {TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
 import {
+    MdAdd,
     MdCheck,
     MdCheckBox,
     MdClose,
@@ -50,11 +51,13 @@ export const Icon = {
     Variable: PiTrafficSignal,
     Style: MdOutlineStyle,
     Property: TbJumpRope,
-    Close : MdClose,
-    Question : MdOutlineQuestionMark,
-    Reset:BiReset,
-    Package:PiPackage,
-    CheckboxBlank:IoSquareOutline,
-    CheckboxChecked:MdCheckBox,
-    Confirmation:IoInformationCircleOutline
+    Close: MdClose,
+    Question: MdOutlineQuestionMark,
+    Reset: BiReset,
+    Package: PiPackage,
+    CheckboxBlank: IoSquareOutline,
+    CheckboxChecked: MdCheckBox,
+    Confirmation: IoInformationCircleOutline,
+    Fetcher: AiOutlineApi,
+    Add: MdAdd
 }

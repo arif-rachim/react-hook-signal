@@ -35,13 +35,13 @@ export function VariablesPanel() {
             title: `${variable?.name ? variable?.name : `Add ${forType}`}`,
             Icon: Icon.Component,
             id: panelId,
-            tag : {
-                variableId : panelId
+            tag: {
+                variableId: panelId
             }
         })
     }
 
-    async function deleteVariable(variable?: Variable) {
+    async function deleteVariable(variable: Variable) {
         const signalsDependentOnThisVariable = allVariablesSignal.get().filter(i => (i.dependencies ?? []).includes(variable?.id ?? ''));
         if (signalsDependentOnThisVariable.length) {
             await showModal(closePanel => {
@@ -50,9 +50,9 @@ export function VariablesPanel() {
                     {signalsDependentOnThisVariable.map(i => <code key={i.id}>{i.name}</code>)}
                 </div>
                 return <ConfirmationDialog message={message} closePanel={closePanel} buttons={[{
-                    icon : Icon.Exit,
-                    label : 'Ok',
-                    id : 'Ok'
+                    icon: Icon.Exit,
+                    label: 'Ok',
+                    id: 'Ok'
                 }]}/>
             });
         } else {
@@ -118,7 +118,7 @@ export function VariablesPanel() {
 }
 
 
-function renderVariableItem(deleteVariable: (variable?: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType, context: AppDesignerContext) {
+function renderVariableItem(deleteVariable: (variable: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType, context: AppDesignerContext) {
 
     return (variable: Variable) => {
         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>

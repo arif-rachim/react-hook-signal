@@ -35,6 +35,10 @@ input:focus {
     outline: none;
 }
 
+select:focus {
+    outline: none;
+}
+
 * {
     box-sizing: border-box
 }

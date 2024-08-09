@@ -18,11 +18,19 @@ export function ConfirmationDialog(props: {
         icon: Icon.Exit
     }]
     return <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-        <div style={{padding: '10px 20px', borderBottom: BORDER, backgroundColor: 'rgba(0,0,0,0.05)',display:'flex',gap:5,alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Icon.Confirmation style={{fontSize:32,color:'rgba(0,0,0,0.7)'}}/></div>
+        <div style={{
+            padding: '10px 20px',
+            borderBottom: BORDER,
+            backgroundColor: 'rgba(0,0,0,0.05)',
+            display: 'flex',
+            gap: 5,
+            alignItems: 'center'
+        }}>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Icon.Confirmation
+                style={{fontSize: 32, color: 'rgba(0,0,0,0.7)'}}/></div>
             <div>Confirmation</div>
         </div>
-        <div style={{padding:'10px 20px'}}>{props.message}</div>
+        <div style={{padding: '10px 20px'}}>{props.message}</div>
         <div style={{
             display: 'flex',
             flexDirection: 'row',
