@@ -31,7 +31,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
     const removePanel = useRemoveDashboardPanel();
     const testMessages = useSignal<Array<{ id: string, date: Date, message: string }>>([]);
     const responseData = useSignal<string>('');
-    const responseSchema = useSignal<string>('');
 
     function logTestMessage(message: string) {
         testMessages.set([...testMessages.get(), {id: guid(), date: new Date(), message: message}])
@@ -182,17 +181,17 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
         }
         logTestMessage(`[Request] ${address}`);
         logTestMessage(`[Request] ${JSON.stringify(requestInit)}`);
-        let contentType:string = '';
-        let response:Response|null = null;
-        try{
+        let contentType: string = '';
+        let response: Response | null = null;
+        try {
             response = await fetch(address, requestInit);
             contentType = response.headers.get('Content-Type') ?? '';
-        }catch(err){
-            if(err !== undefined && err !== null && typeof err === 'object' && 'message' in err){
+        } catch (err) {
+            if (err !== undefined && err !== null && typeof err === 'object' && 'message' in err) {
                 logTestMessage(`[Response] ${err.message}`)
             }
         }
-        if(response === null){
+        if (response === null) {
             return;
         }
         logTestMessage(`[Response] ${response.statusText} ${contentType}`);
@@ -200,9 +199,12 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             // its json we can do something here
             const json = await response.json();
             responseData.set(JSON.stringify(json));
-            const ts = naiveJsonToTs(json,1);
+            const ts = naiveJsonToTs(json, 1);
             logTestMessage(`[Response] ${ts}`);
-            responseSchema.set(ts);
+
+            const newFetcher = {...fetcherSignal.get()};
+            newFetcher.returnTypeSchemaCode = ts
+            fetcherSignal.set(newFetcher);
         } else {
             const text = await response.text();
             logTestMessage(`[Response] ${text}`);
@@ -360,9 +362,9 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                                         isModified.set(true);
                                     }}>
                                     <option
-                                        value={'application/x-www-form-urlencoded'}>application/x-www-form-urlencoded
+                                        value={'application/x-www-form-urlencoded'}>Form
                                     </option>
-                                    <option value={'application/json'}>application/json</option>
+                                    <option value={'application/json'}>Json</option>
                                 </notifiable.select>
                             </LabelContainer>
                         }}
@@ -433,17 +435,17 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             }
             </notifiable.div>
         </CollapsibleLabelContainer>
-        <CollapsibleLabelContainer label={'Test Result Schema'} autoGrowWhenOpen={true}>
+        <CollapsibleLabelContainer label={'Schema'} autoGrowWhenOpen={true}>
             <notifiable.div style={{minHeight: 100, flexGrow: 1}}>
                 {() => {
                     return <Editor
                         language="javascript"
-                        value={`${responseSchema.get()}`}
+                        value={`${fetcherSignal.get().returnTypeSchemaCode}`}
                         beforeMount={onBeforeMountHandler({
-                            dependencies:[],
-                            allVariables:[],
+                            dependencies: [],
+                            allVariables: [],
                             returnType: 'any',
-                            allPages:[]
+                            allPages: []
                         })}
                         options={{
                             selectOnLineNumbers: false,
@@ -505,6 +507,8 @@ function RenderParameters(props: {
     isModified: Signal.State<boolean>,
     type: 'headers' | 'paths' | 'data'
 }) {
+    const deleteAble = props.type !== 'paths';
+    const notDeleteAble = !deleteAble;
     const {fetcherSignal, isModified, type, nameReadOnly} = props;
     return <>
         <notifiable.div style={{display: 'table'}}>
@@ -526,14 +530,29 @@ function RenderParameters(props: {
                             padding: '0px 10px'
                         }}>Value
                         </div>
+                        {deleteAble &&
+                            <div style={{
+                                display: 'table-cell',
+                                fontWeight: 'bold',
+                                fontStyle: 'italic',
+                                padding: '0px 10px',
+                                width: 50
+                            }}>Value
+                            </div>
+                        }
                     </div>
-                    {parameters.map(param => {
+                    {parameters.map((param, index, source) => {
+                        const isFirstIndex = index === 0;
+                        const isLastIndex = index === source.length - 1;
                         return <div key={param.id} style={{display: 'table-row'}}>
                             <div style={{display: 'table-cell'}}>
                                 <input name={'paramName'} autoComplete={'unset'}
                                        readOnly={nameReadOnly}
                                        style={{
                                            border: BORDER,
+                                           borderTop: isFirstIndex ? BORDER : 'unset',
+                                           borderTopLeftRadius: isFirstIndex ? 20 : 'unset',
+                                           borderBottomLeftRadius: isLastIndex ? 20 : 'unset',
                                            borderRight: 'unset',
                                            flexGrow: 1,
                                            padding: '5px 10px',
@@ -566,6 +585,10 @@ function RenderParameters(props: {
                                 <input name={'valueName'} autoComplete={'unset'}
                                        style={{
                                            border: BORDER,
+                                           borderTop: isFirstIndex ? BORDER : 'unset',
+                                           borderTopRightRadius: notDeleteAble && isFirstIndex ? 20 : 'unset',
+                                           borderBottomRightRadius: notDeleteAble && isLastIndex ? 20 : 'unset',
+                                           borderRight: notDeleteAble ? BORDER : 'unset',
                                            flexGrow: 1,
                                            padding: '5px 10px',
                                            width: '100%',
@@ -587,6 +610,33 @@ function RenderParameters(props: {
                                        }}
                                 />
                             </div>
+                            {deleteAble &&
+                            <div style={{display: 'table-cell',verticalAlign:'middle'}}>
+                                <Button style={{
+                                    border: BORDER,
+                                    borderRadius:0,
+                                    borderTop: isFirstIndex ? BORDER : 'unset',
+                                    borderTopRightRadius: isFirstIndex ? 20 : 'unset',
+                                    borderBottomRightRadius: isLastIndex ? 20 : 'unset',
+                                    flexGrow: 1,
+                                    padding: '5px 10px',
+                                    width: '100%',
+                                    fontSize:21,
+                                    display:'flex',
+                                    alignItems: 'center',
+                                    justifyContent:'center'
+                                }} onClick={() => {
+                                    const newFetcher = {...fetcherSignal.get()};
+                                    newFetcher[type] = [...newFetcher[type]];
+                                    const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
+                                    newFetcher[type].splice(paramIndex, 1)
+                                    fetcherSignal.set(newFetcher);
+                                    isModified.set(true);
+                                }}>
+                                    <Icon.Delete/>
+                                </Button>
+                            </div>
+                            }
                         </div>
                     })}
                 </>
@@ -595,21 +645,21 @@ function RenderParameters(props: {
     </>
 }
 
-function naiveJsonToTs(param: unknown,level:number): string {
-    const identation = Array.from({length:level+1}).join('\t');
+function naiveJsonToTs(param: unknown, level: number): string {
+    const identation = Array.from({length: level + 1}).join('\t');
     if (Array.isArray(param)) {
         const types: string[] = [];
         for (const paramElement of param) {
-            const type = naiveJsonToTs(paramElement,level+1);
+            const type = naiveJsonToTs(paramElement, level + 1);
             if (!types.includes(type)) {
                 types.push(type);
             }
         }
         if (types.length > 1) {
             return `z.array(z.union([${types.join(',')}]))`
-        }else if(types.length > 0) {
+        } else if (types.length > 0) {
             return `z.array(${types[0]})`
-        }else{
+        } else {
             return `z.array(z.unknown())`
         }
 
@@ -622,7 +672,7 @@ function naiveJsonToTs(param: unknown,level:number): string {
     } else if (isRecord(param)) {
         const result = [];
         for (const [key, value] of Object.entries(param)) {
-            result.push(`${key}:${naiveJsonToTs(value,level+1)}`);
+            result.push(`${key}:${naiveJsonToTs(value, level + 1)}`);
         }
         return `z.object({\n${identation}${result.join(`,\n${identation}`)}\n})`
     } else {
