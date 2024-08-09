@@ -13,9 +13,10 @@ import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {useUpdateFetcher} from "../../../hooks/useUpdateFetcher.ts";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
-import untrack = Signal.subtle.untrack;
 import {format_hhmmss} from "../../../../utils/dateFormat.ts";
 import {Editor} from "@monaco-editor/react";
+import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
 
@@ -31,6 +32,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
     const testMessages = useSignal<Array<{ id: string, date: Date, message: string }>>([]);
     const responseData = useSignal<string>('');
     const responseSchema = useSignal<string>('');
+
     function logTestMessage(message: string) {
         testMessages.set([...testMessages.get(), {id: guid(), date: new Date(), message: message}])
     }
@@ -41,7 +43,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             name: '',
             protocol: 'https',
             domain: '',
-            port: '',
             method: 'get',
             contentType: 'application/json',
             path: '',
@@ -131,7 +132,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
 
     async function testFetcher() {
         const fetcher = fetcherSignal.get();
-        const url = `${fetcher.protocol}://${fetcher.domain}${fetcher.port ? `:${fetcher.port}` : ''}`;
+        const url = `${fetcher.protocol}://${fetcher.domain}`;
 
         function populateTemplate(template: string, parameters: Record<string, string>) {
             return template.replace(/{(.*?)}/g, (match, p1) => {
@@ -180,15 +181,26 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             }
         }
         logTestMessage(`[Request] ${address}`);
-        logTestMessage(`[Request] ${JSON.stringify(requestInit)}`)
-        const response = await fetch(address, requestInit);
-        const contentType = response.headers.get('Content-Type');
+        logTestMessage(`[Request] ${JSON.stringify(requestInit)}`);
+        let contentType:string = '';
+        let response:Response|null = null;
+        try{
+            response = await fetch(address, requestInit);
+            contentType = response.headers.get('Content-Type') ?? '';
+        }catch(err){
+            if(err !== undefined && err !== null && typeof err === 'object' && 'message' in err){
+                logTestMessage(`[Response] ${err.message}`)
+            }
+        }
+        if(response === null){
+            return;
+        }
         logTestMessage(`[Response] ${response.statusText} ${contentType}`);
         if (contentType && contentType.includes('application/json')) {
             // its json we can do something here
             const json = await response.json();
             responseData.set(JSON.stringify(json));
-            const ts = naiveJsonToTs(json);
+            const ts = naiveJsonToTs(json,1);
             logTestMessage(`[Response] ${ts}`);
             responseSchema.set(ts);
         } else {
@@ -203,6 +215,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
         overflow: 'auto',
         flexGrow: 1,
     }}>
+        <CollapsibleLabelContainer label={'Info'}>
             <div style={{display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px'}}>
                 <LabelContainer label={'Name : '} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
                                 styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH}}>
@@ -270,32 +283,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                                               const newVariable = {...fetcherSignal.get()};
                                               newVariable.domain = val;
                                               fetcherSignal.set(newVariable);
-                                              isModified.set(true);
-                                              setTimeout(() => {
-                                                  dom.setSelectionRange(cursorPosition, cursorPosition);
-                                              }, 0);
-                                          }}/>
-                    </LabelContainer>
-                    <LabelContainer label={'Port : '} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
-                                    styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH - 30}}>
-                        <notifiable.input name={'portName'} autoComplete={'unset'}
-                                          style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
-                                          value={() => {
-                                              return fetcherSignal.get().port
-                                          }}
-                                          onKeyDown={(e) => {
-                                              if (e.key === " ") {
-                                                  e.preventDefault();
-                                                  e.stopPropagation();
-                                              }
-                                          }}
-                                          onChange={(event) => {
-                                              const dom = event.target;
-                                              const cursorPosition = dom.selectionStart;
-                                              const val = dom.value;
-                                              const newFetcher = {...fetcherSignal.get()};
-                                              newFetcher.port = val;
-                                              fetcherSignal.set(newFetcher);
                                               isModified.set(true);
                                               setTimeout(() => {
                                                   dom.setSelectionRange(cursorPosition, cursorPosition);
@@ -382,116 +369,123 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                     </notifiable.div>
                 </div>
             </div>
-            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                {() => {
-                    if (!isPost.get()) {
-                        return <></>
-                    }
-                    return <CollapsibleLabelContainer label={'Post Data Param'}>
-                        <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
-                            <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')}>
-                                <div style={{paddingBottom: 2}}>Add Post Param</div>
-                                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                    <Icon.Add style={{fontSize: 20}}/>
-                                </div>
-                            </Button>
-                        </div>
-                        <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}/>
-                    </CollapsibleLabelContainer>
-                }}
-            </notifiable.div>
-            <CollapsibleLabelContainer label={'Headers'} defaultOpen={false}>
-                <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
-                    <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('headers')}>
-                        <div style={{paddingBottom: 2}}>Add Header</div>
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Add style={{fontSize: 20}}/>
-                        </div>
-                    </Button>
-                </div>
-                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}/>
-            </CollapsibleLabelContainer>
-            <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
-                <notifiable.div style={{display: 'table'}}>
-                    {() => {
-                        const messages = testMessages.get();
-                        return <>
-                            <div style={{display: 'table-row'}}>
-                                <div style={{display: 'table-cell',width:100}}>Time</div>
-                                <div style={{display: 'table-cell'}}>Messages</div>
-                            </div>
-                            {messages.map(message => {
-                                return <div key={message.id} style={{display: 'table-row'}}>
-                                    <div style={{display: 'table-cell', width: 100}}>{format_hhmmss(message.date)}</div>
-                                    <div style={{display: 'table-cell'}}>{message.message}</div>
-                                </div>
-                            })}
-                        </>
-                    }}
-                </notifiable.div>
-            </CollapsibleLabelContainer>
-            <CollapsibleLabelContainer label={'Test Result Data'} autoGrowWhenOpen={true} >
-                <notifiable.div style={{minHeight: 100,flexGrow:1}}>{
-                    () => {
-                        return <Editor
-                            language="json"
-                            value={responseData.get()}
-                            options={{
-                                selectOnLineNumbers: false,
-                                lineNumbers: 'off',
-                            }}
-                        />
-                    }
+        </CollapsibleLabelContainer>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+            {() => {
+                if (!isPost.get()) {
+                    return <></>
                 }
-                </notifiable.div>
-            </CollapsibleLabelContainer>
-            <CollapsibleLabelContainer label={'Test Result Schema'} autoGrowWhenOpen={true}>
-                <notifiable.div style={{minHeight: 100,flexGrow:1}}>
-                    {() => {
-                        return <Editor
-                            language="json"
-                            value={responseSchema.get()}
-                            options={{
-                                selectOnLineNumbers: false,
-                                lineNumbers: 'off',
-                            }}
-                        />
-                    }}
-                </notifiable.div>
-            </CollapsibleLabelContainer>
-            <div style={{display: 'flex', justifyContent: 'flex-end', padding: '10px 20px', gap: 10}}>
-                <Button onClick={async () => {
-                    await testFetcher()
-                }} style={{display: 'flex', alignItems: 'center', gap: 5}}>
-                    <div>Test</div>
-                    <div style={{fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        <Icon.Fetcher/></div>
-                </Button>
-                <Button onClick={async () => {
-                    const [isValid, errors] = validateForm();
-                    if (isValid) {
-                        updateFetcher(fetcherSignal.get());
-                        removePanel(panelId)
-                    } else {
-                        await showModal<string>(cp => {
-                            const message = (Object.keys(errors) as Array<keyof Fetcher>).map(k => {
-                                return errors[k]?.map(val => {
-                                    return <div key={val}>{(val ?? '') as string}</div>
-                                })
-                            }).flat();
-                            return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                icon: Icon.Exit,
-                                label: 'Ok',
-                                id: 'Ok'
-                            }]}/>
-                        })
-                    }
-                }} style={{display: 'flex', alignItems: 'center', gap: 5}}>
-                    <div>Save</div>
-                    <div style={{fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        <Icon.Save/></div>
+                return <CollapsibleLabelContainer label={'Post Data Param'}>
+                    <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
+                        <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')}>
+                            <div style={{paddingBottom: 2}}>Add Post Param</div>
+                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                <Icon.Add style={{fontSize: 20}}/>
+                            </div>
+                        </Button>
+                    </div>
+                    <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}/>
+                </CollapsibleLabelContainer>
+            }}
+        </notifiable.div>
+        <CollapsibleLabelContainer label={'Headers'} defaultOpen={false}>
+            <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
+                <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('headers')}>
+                    <div style={{paddingBottom: 2}}>Add Header</div>
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <Icon.Add style={{fontSize: 20}}/>
+                    </div>
                 </Button>
             </div>
+            <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}/>
+        </CollapsibleLabelContainer>
+        <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
+            <notifiable.div style={{display: 'table'}}>
+                {() => {
+                    const messages = testMessages.get();
+                    return <>
+                        <div style={{display: 'table-row'}}>
+                            <div style={{display: 'table-cell', width: 100}}>Time</div>
+                            <div style={{display: 'table-cell'}}>Messages</div>
+                        </div>
+                        {messages.map(message => {
+                            return <div key={message.id} style={{display: 'table-row'}}>
+                                <div style={{display: 'table-cell', width: 100}}>{format_hhmmss(message.date)}</div>
+                                <div style={{display: 'table-cell'}}>{message.message}</div>
+                            </div>
+                        })}
+                    </>
+                }}
+            </notifiable.div>
+        </CollapsibleLabelContainer>
+        <CollapsibleLabelContainer label={'Test Result Data'} autoGrowWhenOpen={true}>
+            <notifiable.div style={{minHeight: 100, flexGrow: 1}}>{
+                () => {
+                    return <Editor
+                        language="json"
+                        value={responseData.get()}
+                        options={{
+                            selectOnLineNumbers: false,
+                            lineNumbers: 'off',
+                        }}
+                    />
+                }
+            }
+            </notifiable.div>
+        </CollapsibleLabelContainer>
+        <CollapsibleLabelContainer label={'Test Result Schema'} autoGrowWhenOpen={true}>
+            <notifiable.div style={{minHeight: 100, flexGrow: 1}}>
+                {() => {
+                    return <Editor
+                        language="javascript"
+                        value={`${responseSchema.get()}`}
+                        beforeMount={onBeforeMountHandler({
+                            dependencies:[],
+                            allVariables:[],
+                            returnType: 'any',
+                            allPages:[]
+                        })}
+                        options={{
+                            selectOnLineNumbers: false,
+                            lineNumbers: 'off',
+                        }}
+                    />
+                }}
+            </notifiable.div>
+        </CollapsibleLabelContainer>
+        <div style={{display: 'flex', justifyContent: 'flex-end', padding: '10px 20px', gap: 10}}>
+            <Button onClick={async () => {
+                await testFetcher()
+            }} style={{display: 'flex', alignItems: 'center', gap: 5}}>
+                <div>Test</div>
+                <div style={{fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Fetcher/></div>
+            </Button>
+            <Button onClick={async () => {
+                const [isValid, errors] = validateForm();
+                if (isValid) {
+                    updateFetcher(fetcherSignal.get());
+                    removePanel(panelId)
+                } else {
+                    await showModal<string>(cp => {
+                        const message = (Object.keys(errors) as Array<keyof Fetcher>).map(k => {
+                            return errors[k]?.map(val => {
+                                return <div key={val}>{(val ?? '') as string}</div>
+                            })
+                        }).flat();
+                        return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
+                            icon: Icon.Exit,
+                            label: 'Ok',
+                            id: 'Ok'
+                        }]}/>
+                    })
+                }
+            }} style={{display: 'flex', alignItems: 'center', gap: 5}}>
+                <div>Save</div>
+                <div style={{fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Icon.Save/></div>
+            </Button>
+        </div>
     </div>
 }
 
@@ -601,30 +595,38 @@ function RenderParameters(props: {
     </>
 }
 
-function naiveJsonToTs(param:unknown):string{
-    if(Array.isArray(param)) {
-        const types:string[] = [];
+function naiveJsonToTs(param: unknown,level:number): string {
+    const identation = Array.from({length:level+1}).join('\t');
+    if (Array.isArray(param)) {
+        const types: string[] = [];
         for (const paramElement of param) {
-            const type = naiveJsonToTs(paramElement);
-            if(!types.includes(type)){
+            const type = naiveJsonToTs(paramElement,level+1);
+            if (!types.includes(type)) {
                 types.push(type);
             }
         }
-        return `${types.join('|')}[]`
-    }else if(typeof param === 'string') {
-        return 'string'
-    }else if(typeof param === 'number') {
-        return 'number'
-    }else if(typeof param === 'boolean') {
-        return 'boolean'
-    }else if(isRecord(param)){
-        const result = [];
-        for (const [key,value] of Object.entries(param) ) {
-            result.push(`${key}:${naiveJsonToTs(value)}`);
+        if (types.length > 1) {
+            return `z.array(z.union([${types.join(',')}]))`
+        }else if(types.length > 0) {
+            return `z.array(${types[0]})`
+        }else{
+            return `z.array(z.unknown())`
         }
-        return `{${result.join(',')}}`
-    }else{
-        return 'unknown'
+
+    } else if (typeof param === 'string') {
+        return 'z.string()'
+    } else if (typeof param === 'number') {
+        return 'z.number()'
+    } else if (typeof param === 'boolean') {
+        return 'z.boolean()'
+    } else if (isRecord(param)) {
+        const result = [];
+        for (const [key, value] of Object.entries(param)) {
+            result.push(`${key}:${naiveJsonToTs(value,level+1)}`);
+        }
+        return `z.object({\n${identation}${result.join(`,\n${identation}`)}\n})`
+    } else {
+        return 'z.unknown()'
     }
 }
 

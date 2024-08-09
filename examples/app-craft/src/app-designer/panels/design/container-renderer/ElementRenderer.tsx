@@ -3,6 +3,7 @@ import {forwardRef, useEffect, useMemo, useRef, useState} from "react";
 import {CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {PropertyInitialization} from "./property-initialization/PropertyInitialization.tsx";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
+import {EmptyComponent} from "../../../empty-component/EmptyComponent.tsx";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -23,7 +24,7 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
     const {container, elementProps} = props;
     const context = useAppContext();
-    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyElement};
+    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyComponent};
     const ref = useRef<HTMLElement>(null);
 
     const propsRef = useRef(elementProps);
@@ -74,8 +75,4 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
-}
-
-function EmptyElement() {
-    return <div></div>
 }

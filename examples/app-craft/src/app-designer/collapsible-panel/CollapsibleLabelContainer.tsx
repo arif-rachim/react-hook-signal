@@ -21,7 +21,7 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
     </>}
                            style={{
                                overflow: 'auto',
-                               minHeight: 30,
+                               minHeight: 32,
                                flexGrow: props.autoGrowWhenOpen && isOpen ? 1 : undefined, ...props.style
                            }}
                            styleLabel={{

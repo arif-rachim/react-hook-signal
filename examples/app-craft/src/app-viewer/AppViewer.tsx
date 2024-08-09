@@ -15,6 +15,7 @@ import {alignItems, justifyContent} from "../utils/justifyContentAlignItems.ts";
 import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 import {AppViewerContext} from "./AppViewerContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {EmptyComponent} from "../app-designer/empty-component/EmptyComponent.tsx";
 
 /**
  * Renders the application viewer component.
@@ -223,7 +224,7 @@ function ContainerRenderer(props: { elementProps: ElementStyleProps, container: 
 function ElementRenderer(props: { container: Container, elementProps: ElementStyleProps }) {
     const {container, elementProps} = props;
     const context = useAppContext<AppViewerContext>();
-    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyElement};
+    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyComponent};
     const ref = useRef<HTMLElement | null>(null);
 
     const propsRef = useRef(elementProps);
@@ -243,8 +244,4 @@ function ElementRenderer(props: { container: Container, elementProps: ElementSty
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
     </>
-}
-
-function EmptyElement() {
-    return <></>
 }

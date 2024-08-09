@@ -10,6 +10,7 @@ import {isEmpty} from "../../utils/isEmpty.ts";
 import {useRemoveDashboardPanel} from "./useRemoveDashboardPanel.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {EmptyComponent} from "../empty-component/EmptyComponent.tsx";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom' | 'sideCenter'
 export type Panel = {
@@ -346,21 +347,5 @@ function TabButton(props: HTMLProps<HTMLDivElement> & { isSelected: boolean }) {
 
     return <div ref={ref}  {...properties} style={elementStyle}>
         {props.children}
-    </div>
-}
-
-function EmptyComponent() {
-    return <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 30,
-        gap: 10
-    }}>
-        <Icon.Question style={{fontSize: 18}}/>
-        <div>
-            Oops we cant find the component to render
-        </div>
     </div>
 }

@@ -43,7 +43,6 @@ export type Fetcher = {
     id: string,
     name: string,
     protocol: 'http' | 'https',
-    port: string,
     domain: string,
     method: 'post' | 'get',
     contentType: 'application/x-www-form-urlencoded' | 'application/json'
