@@ -17,9 +17,11 @@ import {format_hhmmss} from "../../../../utils/dateFormat.ts";
 import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import Visible from "../../../visible/Visible.tsx";
+import {createRequest} from "./createRequest.ts";
 import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
+
 
 export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string }) {
     const {allFetchersSignal} = useAppContext();
@@ -128,58 +130,11 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             setTimeout(() => fetcherSignal.set(newSignal), 0)
         }
     })
-    const isPost = useComputed(() => fetcherSignal.get().method === 'post')
+    const hasContent = useComputed(() => ['post','patch','put'].includes(fetcherSignal.get().method))
 
     async function testFetcher() {
         const fetcher = fetcherSignal.get();
-        const url = `${fetcher.protocol}://${fetcher.domain}`;
-
-        function populateTemplate(template: string, parameters: Record<string, string>) {
-            return template.replace(/{(.*?)}/g, (match, p1) => {
-                // remove any extra whitespace from the parameter name
-                const paramName = p1.trim();
-                // return the parameter value or the original placeholder
-                return parameters[paramName] !== undefined ? parameters[paramName] : match
-            })
-        }
-
-        function toRecord(encodeString: boolean) {
-            return (result: Record<string, string>, parameter: FetcherParameter) => {
-                if (encodeString) {
-                    result[encodeURIComponent(parameter.name)] = encodeURIComponent(parameter.value)
-                } else {
-                    result[parameter.name] = parameter.value
-                }
-                return result;
-            }
-        }
-
-        const path = populateTemplate(fetcher.path, fetcher.paths.reduce(toRecord(true), {}));
-
-        function trimSlashes(str: string) {
-            return str.replace(/^\/+|\/+$/g, '')
-        }
-
-        const address = `${url}/${trimSlashes(path.trim())}`
-        const requestInit: RequestInit = {
-            method: fetcher.method,
-            headers: fetcher.headers.reduce(toRecord(true), {
-                'Content-Type': fetcher.contentType
-            }),
-        }
-
-        function objectToUrlEncodedString(obj: Record<string, string>) {
-            return Object.entries(obj).map(([key, value]) => `${key}=${value}`).join('&')
-        }
-
-        if (fetcher.method === 'post') {
-            if (fetcher.contentType === 'application/x-www-form-urlencoded') {
-                requestInit.body = objectToUrlEncodedString(fetcher.data.reduce(toRecord(true), {}))
-            }
-            if (fetcher.contentType === 'application/json') {
-                requestInit.body = JSON.stringify(fetcher.data.reduce(toRecord(false), {}))
-            }
-        }
+        const {address, requestInit} = createRequest(fetcher, {});
         logTestMessage(`[Request] ${address}`);
         logTestMessage(`[Request] ${JSON.stringify(requestInit)}`);
         let contentType: string = '';
@@ -340,9 +295,12 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                             }}>
                             <option value={'get'}>GET</option>
                             <option value={'post'}>POST</option>
+                            <option value={'put'}>PUT</option>
+                            <option value={'patch'}>PATCH</option>
+                            <option value={'delete'}>DELETE</option>
                         </notifiable.select>
                     </LabelContainer>
-                    <Visible when={() => isPost.get()}>
+                    <Visible when={() => hasContent.get()}>
                         <LabelContainer label={'Content Type : '}
                                         style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
                                         styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH + 20}}>
@@ -368,7 +326,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                 </div>
             </div>
         </CollapsibleLabelContainer>
-        <Visible when={() => isPost.get()}>
+        <Visible when={() => hasContent.get()}>
             <CollapsibleLabelContainer label={'Post Data Param'}>
                 <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
                     <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')}>
@@ -438,6 +396,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                         beforeMount={onBeforeMountHandler({
                             dependencies: [],
                             allVariables: [],
+                            allFetchers: [],
                             returnType: 'any',
                             allPages: []
                         })}

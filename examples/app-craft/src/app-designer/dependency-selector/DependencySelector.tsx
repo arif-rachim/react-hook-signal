@@ -13,9 +13,9 @@ export function DependencySelector(props: {
     signalsToFilterOut: Array<string>
 }) {
     const {closePanel, signalsToFilterOut} = props;
-    const {allVariablesSignal} = useAppContext();
+    const {allVariablesSignal, allFetchersSignal} = useAppContext();
     const selectedSignal = useSignal<Array<string>>(props.value);
-    const elements = useComputed(() => {
+    const variablesElements = useComputed(() => {
         const variables = allVariablesSignal.get();
         const selected = selectedSignal.get();
         return variables.filter(i => {
@@ -62,6 +62,53 @@ export function DependencySelector(props: {
                 <div>{i.name}</div>
             </div>
         })
+    })
+
+    const fetchersElements = useComputed(() => {
+        const fetchers = allFetchersSignal.get();
+        const selected = selectedSignal.get();
+        return fetchers.filter(i => {
+            return !signalsToFilterOut.includes(i.id);
+
+        }).map((i) => {
+            const isSelected = selected.indexOf(i.id) >= 0;
+            return <div key={i.id} style={{display: 'flex', alignItems: 'center', width: '33.33%'}} onClick={() => {
+                const selected = selectedSignal.get();
+                const isSelected = selected.indexOf(i.id) >= 0;
+                if (isSelected) {
+                    selectedSignal.set(selectedSignal.get().filter(id => id !== i.id))
+                } else {
+                    selectedSignal.set([...selectedSignal.get(), i.id])
+                }
+            }}>
+
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 20,
+                    fontSize: 18
+                }}>
+                    {isSelected && <Icon.CheckboxChecked/>}
+                    {!isSelected && <Icon.CheckboxBlank/>}
+                </div>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '5px',
+                    fontSize: 18
+                }}>
+                    <Icon.Fetcher/>
+                </div>
+                <div>{i.name}</div>
+            </div>
+        })
+    })
+    const elements = useComputed(() => {
+        return [...variablesElements.get(), ...fetchersElements.get()]
     })
     return <div style={{display: 'flex', flexDirection: 'column', gap: 10, width: 600, height: 300}}>
         <div style={{

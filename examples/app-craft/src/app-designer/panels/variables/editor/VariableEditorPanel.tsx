@@ -33,7 +33,7 @@ export function VariableEditorPanel(props: {
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
     const updateVariable = useUpdateVariable();
-    const {allVariablesSignal, allPagesSignal} = context;
+    const {allVariablesSignal, allPagesSignal, allFetchersSignal} = context;
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
 
@@ -179,6 +179,7 @@ export function VariableEditorPanel(props: {
                         const variable = variableSignal.get();
                         const dependencies = variable.dependencies ?? []
                         const allVariables = allVariablesSignal.get();
+                        const allFetchers = allFetchersSignal.get();
                         const allPages = allPagesSignal.get();
                         const formula = variable.functionCode;
                         return <Editor
@@ -187,6 +188,7 @@ export function VariableEditorPanel(props: {
                             beforeMount={onBeforeMountHandler({
                                 dependencies,
                                 allVariables,
+                                allFetchers,
                                 returnType: zodSchemaToJson(variable.schemaCode),
                                 allPages
                             })}

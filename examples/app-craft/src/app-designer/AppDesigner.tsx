@@ -44,7 +44,7 @@ export type Fetcher = {
     name: string,
     protocol: 'http' | 'https',
     domain: string,
-    method: 'post' | 'get',
+    method: 'post' | 'get' | 'put' | 'patch' | 'delete',
     contentType: 'application/x-www-form-urlencoded' | 'application/json'
     path: string,
     headers: Array<FetcherParameter>,
@@ -57,6 +57,12 @@ export type VariableInstance = {
     id: string,
     instance: AnySignal<unknown>
 }
+
+export type FetcherInstance = {
+    id: string,
+    instance: (param: unknown) => Promise<{ error: string, result: unknown }>
+}
+
 export type ContainerPropertyType = {
     formula: string,
     dependencies?: Array<string>

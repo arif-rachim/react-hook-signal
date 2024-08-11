@@ -11,7 +11,7 @@ export function DependencyInputSelector(props: {
 }) {
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
-    const {allVariablesSignal} = context;
+    const {allVariablesSignal, allFetchersSignal} = context;
     const {value, onChange, valueToIgnore} = props;
 
     async function showDependencySelector() {
@@ -46,6 +46,8 @@ export function DependencyInputSelector(props: {
         }}
         onClick={showDependencySelector}>{value.map(dep => {
         const variable = allVariablesSignal.get().find(i => i.id === dep);
+        const fetcher = allFetchersSignal.get().find(i => i.id === dep);
+        const name = variable?.name ?? fetcher?.name;
         return <div key={dep} style={{
             backgroundColor: 'rgba(0,0,0,0.1)',
             borderRadius: 5,
@@ -53,7 +55,7 @@ export function DependencyInputSelector(props: {
             flexGrow: 1,
             padding: '0px 5px'
         }}>
-            {variable?.name}
+            {name}
         </div>
     })}</div>
 }

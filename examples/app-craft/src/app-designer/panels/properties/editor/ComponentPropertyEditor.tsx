@@ -22,7 +22,7 @@ export function ComponentPropertyEditor(props: {
 }) {
     const context = useAppContext();
     const removePanel = useRemoveDashboardPanel();
-    const {allVariablesSignal, elements, allPagesSignal} = context;
+    const {allVariablesSignal,allFetchersSignal, elements, allPagesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
@@ -67,6 +67,7 @@ export function ComponentPropertyEditor(props: {
             {() => {
                 const props = propsSignal.get();
                 const allVariables = allVariablesSignal.get();
+                const allFetchers = allFetchersSignal.get();
                 const formula = props.formula ?? '';
                 const dependencies = props.dependencies ?? [];
                 const allPages = allPagesSignal.get();
@@ -76,6 +77,7 @@ export function ComponentPropertyEditor(props: {
                     beforeMount={onBeforeMountHandler({
                         dependencies,
                         allVariables,
+                        allFetchers,
                         returnType: zodTypeToJson(returnType),
                         allPages
                     })}
