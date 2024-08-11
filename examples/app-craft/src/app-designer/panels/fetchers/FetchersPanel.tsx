@@ -1,6 +1,5 @@
 import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
-import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {notifiable} from "react-hook-signal";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
@@ -45,13 +44,12 @@ export function FetchersPanel() {
         })
     }
 
-    return <>
-        <CollapsibleLabelContainer label={'Page Scope'}>
+    return <div style={{display:'flex',flexDirection:'column',padding:10}}>
             <Button
                 style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}
                 onClick={() => editFetcher()}
             >
-                {'Add Local Fetcher'}
+                {'Add Fetcher'}
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <MdAdd style={{fontSize: 20}}/>
                 </div>
@@ -100,6 +98,5 @@ export function FetchersPanel() {
                     })
                 }}
             </notifiable.div>
-        </CollapsibleLabelContainer>
-    </>
+    </div>
 }

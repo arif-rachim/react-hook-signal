@@ -58,3 +58,9 @@ select:focus {
     background-color: darkgrey;
     border-radius: 4px;
 }
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding : 5px 10px 5px 5px
+}

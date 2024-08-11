@@ -36,7 +36,7 @@ export type FetcherParameter = {
     id: string,
     name: string,
     value: string,
-    required: boolean,
+    isInput: boolean,
 }
 
 export type Fetcher = {

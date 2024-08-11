@@ -16,6 +16,7 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {format_hhmmss} from "../../../../utils/dateFormat.ts";
 import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import Visible from "../../../visible/Visible.tsx";
 import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
@@ -59,7 +60,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
 
         newFetcher[type] = [...newFetcher[type], {
             id: guid(),
-            required: false,
+            isInput: false,
             name: '',
             value: ''
         }]
@@ -117,7 +118,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                 newPaths.push({
                     id: guid(),
                     name: param,
-                    required: true,
+                    isInput: false,
                     value: ''
                 })
             }
@@ -341,55 +342,46 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                             <option value={'post'}>POST</option>
                         </notifiable.select>
                     </LabelContainer>
-                    <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                        {() => {
-                            if (!isPost.get()) {
-                                return <></>
-                            }
-                            return <LabelContainer label={'Content Type : '}
-                                                   style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
-                                                   styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH + 20}}>
-                                <notifiable.select
-                                    style={{border: BORDER, padding: '6px 10px', borderRadius: 5}}
-                                    value={() => {
-                                        return fetcherSignal.get().contentType
-                                    }}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        const newVariable = {...fetcherSignal.get()};
-                                        newVariable.contentType = value as Fetcher['contentType'];
-                                        fetcherSignal.set(newVariable);
-                                        isModified.set(true);
-                                    }}>
-                                    <option
-                                        value={'application/x-www-form-urlencoded'}>Form
-                                    </option>
-                                    <option value={'application/json'}>Json</option>
-                                </notifiable.select>
-                            </LabelContainer>
-                        }}
-                    </notifiable.div>
+                    <Visible when={() => isPost.get()}>
+                        <LabelContainer label={'Content Type : '}
+                                        style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
+                                        styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH + 20}}>
+                            <notifiable.select
+                                style={{border: BORDER, padding: '6px 10px', borderRadius: 5}}
+                                value={() => {
+                                    return fetcherSignal.get().contentType
+                                }}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    const newVariable = {...fetcherSignal.get()};
+                                    newVariable.contentType = value as Fetcher['contentType'];
+                                    fetcherSignal.set(newVariable);
+                                    isModified.set(true);
+                                }}>
+                                <option
+                                    value={'application/x-www-form-urlencoded'}>Form
+                                </option>
+                                <option value={'application/json'}>Json</option>
+                            </notifiable.select>
+                        </LabelContainer>
+                    </Visible>
                 </div>
             </div>
         </CollapsibleLabelContainer>
-        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-            {() => {
-                if (!isPost.get()) {
-                    return <></>
-                }
-                return <CollapsibleLabelContainer label={'Post Data Param'}>
-                    <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
-                        <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')}>
-                            <div style={{paddingBottom: 2}}>Add Post Param</div>
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                <Icon.Add style={{fontSize: 20}}/>
-                            </div>
-                        </Button>
-                    </div>
-                    <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}/>
-                </CollapsibleLabelContainer>
-            }}
-        </notifiable.div>
+        <Visible when={() => isPost.get()}>
+            <CollapsibleLabelContainer label={'Post Data Param'}>
+                <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
+                    <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')}>
+                        <div style={{paddingBottom: 2}}>Add Post Param</div>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <Icon.Add style={{fontSize: 20}}/>
+                        </div>
+                    </Button>
+                </div>
+                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}/>
+            </CollapsibleLabelContainer>
+        </Visible>
+
         <CollapsibleLabelContainer label={'Headers'} defaultOpen={false}>
             <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
                 <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('headers')}>
@@ -401,40 +393,42 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             </div>
             <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}/>
         </CollapsibleLabelContainer>
-        <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
-            <notifiable.div style={{display: 'table'}}>
-                {() => {
-                    const messages = testMessages.get();
-                    return <>
-                        <div style={{display: 'table-row'}}>
-                            <div style={{display: 'table-cell', width: 100}}>Time</div>
-                            <div style={{display: 'table-cell'}}>Messages</div>
-                        </div>
-                        {messages.map(message => {
-                            return <div key={message.id} style={{display: 'table-row'}}>
-                                <div style={{display: 'table-cell', width: 100}}>{format_hhmmss(message.date)}</div>
-                                <div style={{display: 'table-cell'}}>{message.message}</div>
+        <Visible when={() => testMessages.get().length > 0}>
+            <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
+                <notifiable.div style={{display: 'table'}}>
+                    {() => {
+                        const messages = testMessages.get();
+                        return <>
+                            <div style={{display: 'table-row'}}>
+                                <div style={{display: 'table-cell', width: 100}}>Time</div>
+                                <div style={{display: 'table-cell'}}>Messages</div>
                             </div>
-                        })}
-                    </>
-                }}
-            </notifiable.div>
-        </CollapsibleLabelContainer>
-        <CollapsibleLabelContainer label={'Test Result Data'} autoGrowWhenOpen={true}>
-            <notifiable.div style={{minHeight: 100, flexGrow: 1}}>{
-                () => {
-                    return <Editor
-                        language="json"
-                        value={responseData.get()}
-                        options={{
-                            selectOnLineNumbers: false,
-                            lineNumbers: 'off',
-                        }}
-                    />
+                            {messages.map(message => {
+                                return <div key={message.id} style={{display: 'table-row'}}>
+                                    <div style={{display: 'table-cell', width: 100}}>{format_hhmmss(message.date)}</div>
+                                    <div style={{display: 'table-cell'}}>{message.message}</div>
+                                </div>
+                            })}
+                        </>
+                    }}
+                </notifiable.div>
+            </CollapsibleLabelContainer>
+            <CollapsibleLabelContainer label={'Test Result Data'} autoGrowWhenOpen={true}>
+                <notifiable.div style={{minHeight: 100, flexGrow: 1}}>{
+                    () => {
+                        return <Editor
+                            language="json"
+                            value={responseData.get()}
+                            options={{
+                                selectOnLineNumbers: false,
+                                lineNumbers: 'off',
+                            }}
+                        />
+                    }
                 }
-            }
-            </notifiable.div>
-        </CollapsibleLabelContainer>
+                </notifiable.div>
+            </CollapsibleLabelContainer>
+        </Visible>
         <CollapsibleLabelContainer label={'Schema'} autoGrowWhenOpen={true}>
             <notifiable.div style={{minHeight: 100, flexGrow: 1}}>
                 {() => {
@@ -510,121 +504,155 @@ function RenderParameters(props: {
     const deleteAble = props.type !== 'paths';
     const notDeleteAble = !deleteAble;
     const {fetcherSignal, isModified, type, nameReadOnly} = props;
-    return <>
-        <notifiable.div style={{display: 'table'}}>
-            {() => {
-                const parameters = fetcherSignal.get()[type];
-                return <>
-                    <div style={{display: 'table-row'}}>
+    return <notifiable.div style={{display: 'table'}}>
+        {() => {
+            const parameters = fetcherSignal.get()[type];
+            return <>
+                <div style={{display: 'table-row'}}>
+                    <div style={{
+                        display: 'table-cell',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic',
+                        padding: '0px 10px'
+                    }}>Name
+                    </div>
+                    <div style={{
+                        display: 'table-cell',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic',
+                        padding: '0px 10px'
+                    }}>Value
+                    </div>
+                    <div style={{
+                        display: 'table-cell',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic',
+                        padding: '0px 10px',
+                        whiteSpace: 'nowrap'
+                    }}>
+                        Input Parameter
+                    </div>
+                    {deleteAble &&
                         <div style={{
                             display: 'table-cell',
                             fontWeight: 'bold',
                             fontStyle: 'italic',
-                            padding: '0px 10px'
-                        }}>Name
-                        </div>
-                        <div style={{
-                            display: 'table-cell',
-                            fontWeight: 'bold',
-                            fontStyle: 'italic',
-                            padding: '0px 10px'
+                            padding: '0px 10px',
+                            width: 50
                         }}>Value
                         </div>
+                    }
+                </div>
+                {parameters.map((param, index, source) => {
+                    const isFirstIndex = index === 0;
+                    const isLastIndex = index === source.length - 1;
+                    return <div key={param.id} style={{display: 'table-row'}}>
+                        <div style={{display: 'table-cell'}}>
+                            <input name={'paramName'} autoComplete={'unset'}
+                                   readOnly={nameReadOnly}
+                                   style={{
+                                       border: BORDER,
+                                       borderTop: isFirstIndex ? BORDER : 'unset',
+                                       borderTopLeftRadius: isFirstIndex ? 20 : 'unset',
+                                       borderBottomLeftRadius: isLastIndex ? 20 : 'unset',
+                                       borderRight: 'unset',
+                                       flexGrow: 1,
+                                       padding: '5px 10px',
+                                       width: '100%',
+                                   }}
+                                   value={param.name}
+                                   onKeyDown={(e) => {
+                                       if (e.key === " ") {
+                                           e.preventDefault();
+                                           e.stopPropagation();
+                                       }
+                                   }}
+                                   onChange={(event) => {
+                                       const dom = event.target;
+                                       const cursorPosition = dom.selectionStart;
+                                       const val = dom.value;
+                                       const newFetcher = {...fetcherSignal.get()};
+                                       newFetcher[type] = [...newFetcher[type]];
+                                       const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
+                                       newFetcher[type].splice(paramIndex, 1, {...param, name: val})
+                                       fetcherSignal.set(newFetcher);
+                                       isModified.set(true);
+                                       setTimeout(() => {
+                                           dom.setSelectionRange(cursorPosition, cursorPosition);
+                                       }, 0);
+                                   }}
+                            />
+                        </div>
+                        <div style={{display: 'table-cell'}}>
+                            <input name={'valueName'} autoComplete={'unset'}
+                                   style={{
+                                       border: BORDER,
+                                       borderTop: isFirstIndex ? BORDER : 'unset',
+                                       borderRight: 'unset',
+                                       flexGrow: 1,
+                                       padding: '5px 10px',
+                                       width: '100%',
+                                   }}
+                                   value={param.value}
+                                   onChange={(event) => {
+                                       const dom = event.target;
+                                       const cursorPosition = dom.selectionStart;
+                                       const val = dom.value;
+                                       const newFetcher = {...fetcherSignal.get()};
+                                       newFetcher[type] = [...newFetcher[type]];
+                                       const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
+                                       newFetcher[type].splice(paramIndex, 1, {...param, value: val})
+                                       fetcherSignal.set(newFetcher);
+                                       isModified.set(true);
+                                       setTimeout(() => {
+                                           dom.setSelectionRange(cursorPosition, cursorPosition);
+                                       }, 0);
+                                   }}
+                            />
+                        </div>
+                        <div style={{display: 'table-cell', verticalAlign: 'middle'}}>
+                            <select style={{
+                                border: BORDER,
+                                borderTop: isFirstIndex ? BORDER : 'unset',
+                                borderTopRightRadius: notDeleteAble && isFirstIndex ? 20 : 'unset',
+                                borderBottomRightRadius: notDeleteAble && isLastIndex ? 20 : 'unset',
+                                borderRight: notDeleteAble ? BORDER : 'unset',
+                                flexGrow: 1,
+                                padding: '5px 10px 5px 10px',
+                                width: '100%',
+                                margin: 0,
+                            }}
+                                    value={param.isInput ? 'true' : 'false'}
+                                    onChange={(event) => {
+                                        const dom = event.target;
+                                        const val = dom.value;
+                                        const newFetcher = {...fetcherSignal.get()};
+                                        newFetcher[type] = [...newFetcher[type]];
+                                        const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
+                                        newFetcher[type].splice(paramIndex, 1, {...param, isInput: val === 'true'})
+                                        fetcherSignal.set(newFetcher);
+                                        isModified.set(true);
+                                    }}
+                            >
+                                <option value={'false'}>No</option>
+                                <option value={'true'}>Yes</option>
+                            </select>
+                        </div>
                         {deleteAble &&
-                            <div style={{
-                                display: 'table-cell',
-                                fontWeight: 'bold',
-                                fontStyle: 'italic',
-                                padding: '0px 10px',
-                                width: 50
-                            }}>Value
-                            </div>
-                        }
-                    </div>
-                    {parameters.map((param, index, source) => {
-                        const isFirstIndex = index === 0;
-                        const isLastIndex = index === source.length - 1;
-                        return <div key={param.id} style={{display: 'table-row'}}>
-                            <div style={{display: 'table-cell'}}>
-                                <input name={'paramName'} autoComplete={'unset'}
-                                       readOnly={nameReadOnly}
-                                       style={{
-                                           border: BORDER,
-                                           borderTop: isFirstIndex ? BORDER : 'unset',
-                                           borderTopLeftRadius: isFirstIndex ? 20 : 'unset',
-                                           borderBottomLeftRadius: isLastIndex ? 20 : 'unset',
-                                           borderRight: 'unset',
-                                           flexGrow: 1,
-                                           padding: '5px 10px',
-                                           width: '100%',
-                                       }}
-                                       value={param.name}
-                                       onKeyDown={(e) => {
-                                           if (e.key === " ") {
-                                               e.preventDefault();
-                                               e.stopPropagation();
-                                           }
-                                       }}
-                                       onChange={(event) => {
-                                           const dom = event.target;
-                                           const cursorPosition = dom.selectionStart;
-                                           const val = dom.value;
-                                           const newFetcher = {...fetcherSignal.get()};
-                                           newFetcher[type] = [...newFetcher[type]];
-                                           const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
-                                           newFetcher[type].splice(paramIndex, 1, {...param, name: val})
-                                           fetcherSignal.set(newFetcher);
-                                           isModified.set(true);
-                                           setTimeout(() => {
-                                               dom.setSelectionRange(cursorPosition, cursorPosition);
-                                           }, 0);
-                                       }}
-                                />
-                            </div>
-                            <div style={{display: 'table-cell'}}>
-                                <input name={'valueName'} autoComplete={'unset'}
-                                       style={{
-                                           border: BORDER,
-                                           borderTop: isFirstIndex ? BORDER : 'unset',
-                                           borderTopRightRadius: notDeleteAble && isFirstIndex ? 20 : 'unset',
-                                           borderBottomRightRadius: notDeleteAble && isLastIndex ? 20 : 'unset',
-                                           borderRight: notDeleteAble ? BORDER : 'unset',
-                                           flexGrow: 1,
-                                           padding: '5px 10px',
-                                           width: '100%',
-                                       }}
-                                       value={param.value}
-                                       onChange={(event) => {
-                                           const dom = event.target;
-                                           const cursorPosition = dom.selectionStart;
-                                           const val = dom.value;
-                                           const newFetcher = {...fetcherSignal.get()};
-                                           newFetcher[type] = [...newFetcher[type]];
-                                           const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
-                                           newFetcher[type].splice(paramIndex, 1, {...param, value: val})
-                                           fetcherSignal.set(newFetcher);
-                                           isModified.set(true);
-                                           setTimeout(() => {
-                                               dom.setSelectionRange(cursorPosition, cursorPosition);
-                                           }, 0);
-                                       }}
-                                />
-                            </div>
-                            {deleteAble &&
-                            <div style={{display: 'table-cell',verticalAlign:'middle'}}>
+                            <div style={{display: 'table-cell', verticalAlign: 'middle'}}>
                                 <Button style={{
                                     border: BORDER,
-                                    borderRadius:0,
+                                    borderRadius: 0,
                                     borderTop: isFirstIndex ? BORDER : 'unset',
                                     borderTopRightRadius: isFirstIndex ? 20 : 'unset',
                                     borderBottomRightRadius: isLastIndex ? 20 : 'unset',
                                     flexGrow: 1,
                                     padding: '5px 10px',
                                     width: '100%',
-                                    fontSize:21,
-                                    display:'flex',
+                                    fontSize: 21,
+                                    display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent:'center'
+                                    justifyContent: 'center'
                                 }} onClick={() => {
                                     const newFetcher = {...fetcherSignal.get()};
                                     newFetcher[type] = [...newFetcher[type]];
@@ -636,13 +664,12 @@ function RenderParameters(props: {
                                     <Icon.Delete/>
                                 </Button>
                             </div>
-                            }
-                        </div>
-                    })}
-                </>
-            }}
-        </notifiable.div>
-    </>
+                        }
+                    </div>
+                })}
+            </>
+        }}
+    </notifiable.div>
 }
 
 function naiveJsonToTs(param: unknown, level: number): string {
