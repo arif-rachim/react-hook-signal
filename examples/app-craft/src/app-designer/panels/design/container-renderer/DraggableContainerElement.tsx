@@ -52,9 +52,9 @@ export function DraggableContainerElement(props: { container: Container }) {
     useSignalEffect(() => {
         mousePosition.get();
         const isContainer = ['vertical', 'horizontal'].includes(containerSignal.get()?.type);
-        if(isContainer){
+        if (isContainer) {
             hoveredDragContainerIdSignal.set(containerSignal.get()?.id);
-        }else{
+        } else {
             hoveredDragContainerIdSignal.set(parentContainerId);
         }
     })
@@ -87,8 +87,7 @@ export function DraggableContainerElement(props: { container: Container }) {
 
     function onDrop(event: BasicDragEvent) {
         event.stopPropagation();
-        event.preventDefault(); // ini dibutuhin
-        console.log("ON DROP");
+        event.preventDefault();
         if (event.dataTransfer === null || event.dataTransfer === undefined) {
             return;
         }
@@ -109,11 +108,13 @@ export function DraggableContainerElement(props: { container: Container }) {
     }
 
     function onSelected(event: CancellableEvent) {
-        event.preventDefault();
-        event.stopPropagation();
-        selectedDragContainerIdSignal.set(containerSignal.get().id);
-        activeDropZoneIdSignal.set('');
-        hoveredDragContainerIdSignal.set('');
+        const mode = uiDisplayModeSignal.get();
+        if(mode === 'design'){
+            event.preventDefault();
+            event.stopPropagation();
+            onDragEnd();
+            selectedDragContainerIdSignal.set(containerSignal.get().id);
+        }
     }
 
     function onMouseOver(event: CancellableEvent) {
@@ -199,7 +200,7 @@ export function DraggableContainerElement(props: { container: Container }) {
 
             justifyContent: justifyContent(container),
             alignItems: alignItems(container),
-            transition: 'all 100ms linear'
+            transition: mode === 'design' ? 'all 100ms linear' : 'unset'
         };
 
         if (isRoot) {
@@ -222,7 +223,6 @@ export function DraggableContainerElement(props: { container: Container }) {
             styleFromSignal.paddingLeft = 5;
             styleFromSignal.gap = 5;
         }
-        console.log("setting ",styleFromSignal);
         setComputedStyle(styleFromSignal as CSSProperties)
     });
 

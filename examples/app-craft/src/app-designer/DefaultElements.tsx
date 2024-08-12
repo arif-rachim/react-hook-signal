@@ -68,7 +68,9 @@ export const DefaultElements: Record<string, Element> = {
         },
         component: (props, ref) => {
             const {onClick, label} = props;
-            return <Button ref={ref as LegacyRef<HTMLButtonElement>} onClick={onClick}>
+            return <Button ref={ref as LegacyRef<HTMLButtonElement>} onClick={() => {
+                onClick()
+            }}>
                 {label}
             </Button>
         }

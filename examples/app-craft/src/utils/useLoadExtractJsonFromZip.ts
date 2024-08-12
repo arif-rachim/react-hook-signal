@@ -30,7 +30,6 @@ export function useLoadExtractJsonFromZip() {
 
             try {
                 const jsonData = JSON.parse(jsonString);
-                console.log('Extracted JSON data:', jsonData);
                 allPagesSignal.set(jsonData);
 
             } catch (error) {

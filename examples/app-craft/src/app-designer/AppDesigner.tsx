@@ -118,13 +118,6 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
 
 
-    useSignalEffect(() => {
-        const fetchers = allFetchersSignal.get();
-        console.log('fetchers', fetchers)
-    })
-    useSignalEffect(() => {
-        console.log('We have ROOT', activePageIdSignal.get());
-    })
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
