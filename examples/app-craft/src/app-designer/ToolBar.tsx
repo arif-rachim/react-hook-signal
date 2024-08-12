@@ -100,6 +100,18 @@ export function ToolBar() {
             return;
         }
         event.dataTransfer.setData('text/plain', container.id);
+        const dragElement = document.querySelector(`[data-element-id="${container.id}"]`);
+        if (dragElement === null) {
+            return;
+        }
+        const clone = dragElement.cloneNode(true) as HTMLElement;
+        clone.style.position = 'absolute';
+        clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
+        document.body.appendChild(clone);
+        event.dataTransfer.setDragImage(clone, 0, 0);
+        setTimeout(() => {
+            document.body.removeChild(clone);
+        }, 0);
     }
 
     function onDragEnd() {

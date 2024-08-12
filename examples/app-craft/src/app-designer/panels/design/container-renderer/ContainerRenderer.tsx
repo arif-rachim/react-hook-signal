@@ -1,6 +1,6 @@
 import {ElementProps} from "../../../LayoutBuilderProps.ts";
 import {Container} from "../../../AppDesigner.tsx";
-import {ReactNode, useEffect, useState} from "react";
+import {createContext, ReactNode, useEffect, useState} from "react";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {DropZone} from "./drop-zone/DropZone.tsx";
 import {DraggableContainerElement} from "./DraggableContainerElement.tsx";
@@ -40,7 +40,8 @@ export function ContainerRenderer(props: { elementProps: ElementProps, container
         setElements(result);
     });
     const {onDrop, onClick, onDragEnd, onDragOver, onDragStart, onMouseOver, style, draggable} = elementProps;
-    return <div
+    return <ContainerRendererIdContext.Provider value={elementProps["data-element-id"]}>
+        <div
         draggable={draggable}
         style={style}
         onMouseOver={onMouseOver}
@@ -52,5 +53,7 @@ export function ContainerRenderer(props: { elementProps: ElementProps, container
         data-element-id={elementProps["data-element-id"]}
     >
         {elements}
-    </div>
+    </div></ContainerRendererIdContext.Provider>
 }
+
+export const ContainerRendererIdContext = createContext<string>('')
