@@ -33,7 +33,7 @@ export function FetchersPanel() {
     function editFetcher(fetcher?: Fetcher) {
         const panelId = fetcher?.id ?? guid();
         addPanel({
-            position: 'sideCenter',
+            position: 'mainCenter',
             component: () => {
                 return <FetcherEditorPanel fetcherId={fetcher?.id} panelId={panelId}/>
             },

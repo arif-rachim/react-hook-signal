@@ -34,7 +34,7 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                 const onClick = async () => {
                     const panelId = `${container?.id}-${propertyName}`;
                     addPanel({
-                        position: 'sideCenter',
+                        position: 'mainCenter',
                         component: () => {
                             return <ComponentPropertyEditor name={propertyName} containerId={container?.id ?? ''}
                                                             panelId={panelId}/>

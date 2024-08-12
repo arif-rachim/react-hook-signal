@@ -56,9 +56,9 @@ export function VariableInitialization() {
     })
 
     useSignalEffect(() => {
-        const variables = allVariablesSignal.get();
-        const fetchers = allFetchersSignal.get();
-        const variableInitialValue = variableInitialValueSignal.get();
+        const variables = allVariablesSignal.get() ?? [];
+        const fetchers = allFetchersSignal.get() ?? [];
+        const variableInitialValue = variableInitialValueSignal.get() ?? {};
         const variablesInstance: Array<VariableInstance> = [];
         const fetchersInstance: Array<FetcherInstance> = [];
         const destructorCallbacks: Array<() => void> = [];

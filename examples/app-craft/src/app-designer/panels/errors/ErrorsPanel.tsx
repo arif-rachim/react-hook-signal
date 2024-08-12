@@ -94,7 +94,7 @@ export function ErrorsPanel() {
                                 const panelId = `${e?.containerId}-${name}`;
                                 selectedDragContainerIdSignal.set(e.containerId);
                                 addPanel({
-                                    position: 'sideCenter',
+                                    position: 'mainCenter',
                                     component: () => {
                                         return <ComponentPropertyEditor name={e.propertyName}
                                                                         containerId={e?.containerId ?? ''}
@@ -113,7 +113,7 @@ export function ErrorsPanel() {
 
                             if (e.type === 'variable') {
                                 addPanel({
-                                    position: 'sideCenter',
+                                    position: 'mainCenter',
                                     component: () => {
                                         return <VariableEditorPanel variableId={e.variableId} defaultType={'state'}
                                                                     panelId={e.variableId}/>

@@ -28,7 +28,7 @@ export function VariablesPanel() {
     async function editVariable(forType: VariableType, variable?: Variable) {
         const panelId = variable?.id ?? guid();
         addPanel({
-            position: 'sideCenter',
+            position: 'mainCenter',
             component: () => {
                 return <VariableEditorPanel variableId={variable?.id} defaultType={forType} panelId={panelId}/>
             },
