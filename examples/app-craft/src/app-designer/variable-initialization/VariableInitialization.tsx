@@ -6,14 +6,16 @@ import {undefined, z, ZodType} from "zod";
 import {useNavigateSignal} from "../hooks/useNavigateSignal.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {createRequest} from "../panels/fetchers/editor/createRequest.ts";
+import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
 
+const db = dbSchemaInitialization()
 export function VariableInitialization() {
     const errorMessage = useRecordErrorMessage();
     const {
         allVariablesSignal,
         allFetchersSignal,
         allVariablesSignalInstance,
-        variableInitialValueSignal
+        variableInitialValueSignal,
     } = useAppContext();
     const navigateSignal = useNavigateSignal();
 
@@ -143,7 +145,7 @@ export function VariableInitialization() {
 
                 }
                 if (v.type === 'effect') {
-                    const params = ['navigate', ...dependencies.map(d => d.name), v.functionCode];
+                    const params = ['navigate','db', ...dependencies.map(d => d.name), v.functionCode];
                     try {
                         const init = new Function(...params);
                         const destructor = effect(() => {
@@ -153,7 +155,7 @@ export function VariableInitialization() {
                                     dep.instance.get();
                                 }
                             }
-                            const instances = [navigate, ...dependencies.map(d => d.instance)]
+                            const instances = [navigate,db, ...dependencies.map(d => d.instance)]
                             try {
                                 init.call(null, ...instances);
                                 errorMessage.variableValue({variableId: v.id})
@@ -176,3 +178,6 @@ export function VariableInitialization() {
     });
     return <></>
 }
+
+
+

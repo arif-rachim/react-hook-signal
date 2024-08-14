@@ -28,17 +28,17 @@ interface ExecuteQuery {
 
 type Payload = SaveToOPFS | LoadFromOPFS | ExecuteQuery | DeleteFromOPFS;
 
-export default async function sqlite(payload: Payload): Promise<{ success: boolean, value?: unknown }> {
+export default async function sqlite(payload: Payload): Promise<{ errors?: string, value?: unknown }> {
     if (payload.type === 'saveToFile') {
         const result = await saveToOPFS({
             binaryArray: payload.binaryArray,
             fileName: payload.fileName ?? defaultFileName
         });
-        return {value: undefined, success: result.success}
+        return {value: undefined, errors: result.success ? undefined:'Unable to save file'}
     }
     if (payload.type === 'loadFromFile') {
         const result = await loadFromOPFS({fileName: payload.fileName ?? defaultFileName});
-        return {value: result.data, success: result.success}
+        return {value: result.data, errors: result.success ? undefined:'Unable to load file'}
     }
     if (payload.type === 'executeQuery') {
         const result = await executeQuery({
@@ -46,13 +46,13 @@ export default async function sqlite(payload: Payload): Promise<{ success: boole
             query: payload.query,
             params: payload.params
         });
-        return {value: {columns: result.columns, values: result.values}, success: result.success}
+        return {value: {columns: result.columns, values: result.values}, errors: result.errors}
     }
     if (payload.type === 'deleteFromFile') {
         const result = await deleteFromOPFS({fileName: payload.fileName ?? defaultFileName});
-        return {value: result.data, success: result.success}
+        return {value: result.data,errors: result.success ? undefined:'Unable to delete file'}
     }
-    return {success: false, value: 'Unable to identify payload type'}
+    return {errors: 'Unable to identify payload type', value: ''}
 }
 
 async function saveToOPFS({binaryArray, fileName}: {
@@ -128,7 +128,7 @@ async function executeQuery({query, params, fileName}: {
     params?: BindParams,
     fileName: string
 }): Promise<{
-    success: boolean,
+    errors?: string,
     columns: string[],
     values: SqlValue[][]
 }> {
@@ -136,17 +136,31 @@ async function executeQuery({query, params, fileName}: {
     const db = await getDatabase(fileName);
     if (db !== undefined) {
         log('[ExecuteQuery] invoking ', query)
-        const result = db.exec(query, params);
-        const {columns, values} = result.pop()!;
-        log('[ExecuteQuery] result ', values.length, 'records')
-        return {
-            success: true,
-            columns,
-            values
+        try{
+            const result = db.exec(query, params);
+            if(result.length > 0){
+                const {columns, values} = result.pop()!;
+                log('[ExecuteQuery] result ', values.length, 'records')
+                return {
+                    columns,
+                    values
+                }
+            }
+            return {
+                columns:[],
+                values:[]
+            }
+        }catch(err){
+            const error = err as {message:string};
+            return {
+                errors: error.message,
+                columns:[],
+                values:[]
+            }
         }
     }
     return {
-        success: false,
+        errors: "DB Is undefined",
         columns: [],
         values: []
     }

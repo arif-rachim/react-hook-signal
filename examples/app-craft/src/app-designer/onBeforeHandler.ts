@@ -3,6 +3,7 @@ import {Fetcher, Page, Variable} from "./AppDesigner.tsx";
 import {zodSchemaToJson} from "./zodSchemaToJson.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {Table} from "./panels/database/service/getTables.ts";
+import {composeDbSchema} from "./variable-initialization/dbSchemaInitialization.ts";
 
 /**
  * Executes the onBeforeMountHandler function.
@@ -70,23 +71,4 @@ function composeNavigation(allPages: Array<Page>) {
         return `${p.name}:(param:{${param}}) => void`;
     }).join(',')
     return `declare const navigate:{${type}};`
-}
-
-function composeDbSchema(allTables:Array<Table>){
-    const dbSchema = [];
-    for (const table of allTables) {
-        const schema:string[] = [];
-        for (const info of table.tableInfo) {
-            schema.push(`${info.name}:${info.type}`)
-        }
-        dbSchema.push(`${table.name} : { ${schema.join(',')} }`)
-    }
-    return `
-type DbSchema { ${dbSchema.join(',')} }
-declare const db:{
-    record:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
-    remove:<N extends keyof DbSchema>(name:N,key:string) => Promise<DbSchema[N]>,
-    read:<N extends keyof DbSchema>(name:N,key:string) => Promise<DbSchema[N]>
-};
-`
 }

@@ -17,7 +17,7 @@ export async function getTables() {
         query: `select * from sqlite_master where type like "table"  order by name asc`
     });
     const data: Table[] = [];
-    if (result.success) {
+    if (!result.errors) {
         if (result.value !== null && typeof result.value === 'object' && 'values' in result.value && 'columns' in result.value) {
             const values = result.value.values as SqlValue[][];
 
@@ -51,7 +51,7 @@ export interface TableInfo {
 export async function getTableInfo(tableName: string) {
     const result = await sqlite({type: 'executeQuery', query: `pragma table_info(${tableName})`})
     const data: TableInfo[] = [];
-    if (result.success) {
+    if (!result.errors) {
         if (result.value !== null && typeof result.value === 'object' && 'values' in result.value && 'columns' in result.value) {
             const values = result.value.values as SqlValue[][];
             for (const item of values) {

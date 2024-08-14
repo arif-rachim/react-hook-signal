@@ -1,6 +1,6 @@
 import {MdAdd} from "react-icons/md";
 import {Button} from "../../button/Button.tsx";
-import {useRef} from "react";
+import {ChangeEvent, useRef} from "react";
 import sqlite from "./sqlite/sqlite.ts";
 import {getTables, Table} from "./service/getTables.ts";
 import {notifiable, useComputed} from "react-hook-signal";
@@ -24,7 +24,7 @@ export function DatabasePanel() {
 
     const updateApplication = useUpdateApplication();
 
-    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
         if (e.target.files === null || e.target.files.length === 0) {
             return;
         }
@@ -33,9 +33,8 @@ export function DatabasePanel() {
         if (file) {
             const arrayBuffer = await file.arrayBuffer();
             const result = await sqlite({type: 'saveToFile', binaryArray: new Uint8Array(arrayBuffer)})
-            if (result.success) {
+            if (!result.errors) {
                 const result = await getTables();
-
                 updateApplication(old => {
                     old.tables = result;
                 })

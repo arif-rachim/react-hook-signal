@@ -6,7 +6,7 @@ export async function queryDb(sql: string, page?: { size: number, number: number
     const count = `SELECT COUNT(*) AS total_rows FROM (${sql}) AS sub`
     const countResponse = await sqlite({type: 'executeQuery', query: count});
     let totalRows = 0;
-    if (countResponse.success) {
+    if (!countResponse.errors) {
         const value = countResponse.value as {values:number[][]}
         totalRows = value.values[0][0] as number;
     }
@@ -16,7 +16,7 @@ export async function queryDb(sql: string, page?: { size: number, number: number
     const queryResponse = await sqlite({type: 'executeQuery', query: pageRecords});
     let columns: string[] = [];
     let values: SqlValue[][] = [];
-    if (queryResponse.success) {
+    if (!queryResponse.errors) {
         const result = queryResponse.value as { columns: string[], values: SqlValue[][] };
         columns = result.columns;
         values = result.values;

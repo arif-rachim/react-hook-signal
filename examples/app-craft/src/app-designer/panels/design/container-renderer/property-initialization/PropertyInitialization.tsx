@@ -6,7 +6,9 @@ import {useNavigateSignal} from "../../../../hooks/useNavigateSignal.tsx";
 import {useAppContext} from "../../../../hooks/useAppContext.ts";
 import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
 import {ZodRawShape} from "zod";
+import {dbSchemaInitialization} from "../../../../variable-initialization/dbSchemaInitialization.ts";
 
+const db = dbSchemaInitialization()
 export function PropertyInitialization(props: {
     container: Container,
     setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>,
@@ -36,12 +38,12 @@ export function PropertyInitialization(props: {
                 const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
                 const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
 
-                const funcParams = ['module', 'navigate', ...propDependenciesName, containerProp.formula] as Array<string>;
+                const funcParams = ['module', 'navigate','db', ...propDependenciesName, containerProp.formula] as Array<string>;
                 propDependencies.forEach(p => p.get());
                 const module: { exports: unknown } = {exports: {}};
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, navigate, ...propDependencies];
+                    const funcParamsInstance = [module, navigate,db, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {
