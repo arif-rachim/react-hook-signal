@@ -1,6 +1,7 @@
 import type {BindParams, Database, SqlValue} from "sql.js";
+
 const defaultFileName = 'database.db';
-const log = (...args) => console.log(...args)
+const log = (...args:unknown[]) => console.log(...args)
 
 interface SaveToOPFS {
     type: 'saveToFile',
@@ -132,7 +133,7 @@ async function executeQuery({query, params, fileName}: {
     values: SqlValue[][]
 }> {
     log('[ExecuteQuery]', query)
-    let db = await getDatabase(fileName);
+    const db = await getDatabase(fileName);
     if (db !== undefined) {
         log('[ExecuteQuery] invoking ', query)
         const result = db.exec(query, params);

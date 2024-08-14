@@ -1,4 +1,3 @@
-import {MdHorizontalDistribute, MdVerticalDistribute} from "react-icons/md";
 import {DraggableItem} from "./DraggableItem.tsx";
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {Icon} from "../../Icon.ts";

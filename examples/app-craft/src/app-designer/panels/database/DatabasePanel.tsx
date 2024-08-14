@@ -23,7 +23,7 @@ export function DatabasePanel(){
             const result = await getTables();
             tablesSignal.set(result);
         })();
-    }, []);
+    }, [tablesSignal]);
 
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.files === null || e.target.files.length === 0) {
@@ -43,7 +43,7 @@ export function DatabasePanel(){
 
     function openDetail(table:Table){
         addPanel({
-            visible : (params) => true,
+            visible : () => true,
             title : `${table.tblName}`,
             Icon : Icon.Database,
             id : `${table.tblName}`,

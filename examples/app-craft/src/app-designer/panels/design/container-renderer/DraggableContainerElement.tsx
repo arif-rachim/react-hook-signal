@@ -4,7 +4,6 @@ import {useRefresh} from "../../../../utils/useRefresh.ts";
 import {Container} from "../../../AppDesigner.tsx";
 import {dropZones} from "./drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
-import {BORDER, BORDER_DASHED} from "../../../Border.ts";
 import {BasicDragEvent, CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {ContainerRenderer, ContainerRendererIdContext} from "./ContainerRenderer.tsx";
 import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";

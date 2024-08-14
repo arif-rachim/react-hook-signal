@@ -72,7 +72,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         }
     }, [Component]);
     const {style,...componentProperties} = componentProps;
-    let defaultStyle = (style ?? {}) as CSSProperties;
+    const defaultStyle = (style ?? {}) as CSSProperties;
     console.log("WE GOT elementProps.style",elementProps.style);
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>

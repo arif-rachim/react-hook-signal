@@ -25,8 +25,8 @@ async function queryTable(table: Table, currentPage: number, setTableData: (valu
         const col: Column = {
             name: c,
             title: c,
-            renderer: ({rowIndex, item}) => {
-                return <div>{item[c]}</div>
+            renderer: ({item}) => {
+                return <div>{item[c] as string}</div>
             }
         }
         return col;
@@ -74,7 +74,7 @@ export default function TableEditor(props: { table: Table }) {
 }
 type Column = {
     name: string,
-    renderer: (props: { rowIndex: number, item: unknown }) => JSX.Element,
+    renderer: (props: { rowIndex: number, item: Record<string,unknown> }) => JSX.Element,
     title: string
 }
 
@@ -83,7 +83,7 @@ function SimpleTableFooter(props: { totalPages: number, value: number, onChange:
     const maxButtons = 7;
     const halfRange = Math.floor(maxButtons / 2);
     let startPage = Math.max(value - halfRange, 1);
-    let endPage = Math.min(startPage + maxButtons - 1, totalPages);
+    const endPage = Math.min(startPage + maxButtons - 1, totalPages);
 
     if (endPage - startPage < maxButtons - 1) {
         startPage = Math.max(endPage - maxButtons + 1, 1);
@@ -134,7 +134,7 @@ function SimpleTable<T extends Record<string, unknown>>(props: {
         {data.map((item, rowIndex) => {
             const key = keyField in item ? item[keyField] : rowIndex;
             return <div style={{display: 'table-row'}} key={`${key}`}>
-                {columns.map((col, colIndex) => {
+                {columns.map((col) => {
                     return <div style={{
                         display: 'table-cell',
                         fontWeight: 'bold',

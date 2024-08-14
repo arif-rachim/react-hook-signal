@@ -1,5 +1,5 @@
 import {PiPackage, PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
-import {LuDatabase, LuFormInput, LuSigmaSquare} from "react-icons/lu";
+import {LuFormInput, LuSigmaSquare} from "react-icons/lu";
 import {
     IoCodeSlashOutline,
     IoInformationCircleOutline,
