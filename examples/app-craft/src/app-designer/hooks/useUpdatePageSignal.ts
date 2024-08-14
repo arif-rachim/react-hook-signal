@@ -33,12 +33,17 @@ type ParamFetcher = {
 }
 
 export function useUpdatePageSignal() {
-    const {allPagesSignal, activePageIdSignal} = useAppContext();
+    const {applicationSignal,allPagesSignal, activePageIdSignal} = useAppContext();
     return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage | ParamFetcher) {
         const allPages = [...allPagesSignal.get()];
         const pageId = param.pageId ?? activePageIdSignal.get();
         const page = allPages.find(i => i.id === pageId);
-        if (page) {
+        if (param.type === 'add-page') {
+            allPages.push(param.page)
+            const application = {...applicationSignal.get()};
+            application.pages = allPages;
+            applicationSignal.set(application);
+        }else if (page) {
             if (param.type === 'fetcher') {
                 allPages.splice(allPages.indexOf(page), 1, {...page, fetchers: param.fetchers});
             }
@@ -54,10 +59,9 @@ export function useUpdatePageSignal() {
             if (param.type === 'delete-page') {
                 allPages.splice(allPages.indexOf(page), 1);
             }
-            if (param.type === 'add-page') {
-                allPages.push(param.page)
-            }
-            allPagesSignal.set(allPages);
+            const application = {...applicationSignal.get()};
+            application.pages = allPages;
+            applicationSignal.set(application);
         }
     }
 }

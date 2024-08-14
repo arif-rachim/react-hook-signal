@@ -1,5 +1,5 @@
 import {Signal} from "signal-polyfill";
-import {Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
+import {Application, Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {createContext} from "react";
@@ -8,7 +8,8 @@ import {createContext} from "react";
  * Represents the context of an app viewer.
  */
 export interface AppViewerContext {
-    allPagesSignal: Signal.State<Array<Page>>;
+    applicationSignal:Signal.State<Application>;
+    allPagesSignal: Signal.Computed<Array<Page>>;
     activePageIdSignal: Signal.State<string>;
     allContainersSignal: Signal.Computed<Array<Container>>;
     allVariablesSignal: Signal.Computed<Array<Variable>>;

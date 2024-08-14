@@ -7,7 +7,8 @@ export async function queryDb(sql: string, page?: { size: number, number: number
     const countResponse = await sqlite({type: 'executeQuery', query: count});
     let totalRows = 0;
     if (countResponse.success) {
-        totalRows = countResponse.value.values[0][0] as number;
+        const value = countResponse.value as {values:number[][]}
+        totalRows = value.values[0][0] as number;
     }
     const limit = size;
     const offset = (number - 1) * limit;

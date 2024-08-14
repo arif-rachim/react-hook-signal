@@ -1,8 +1,8 @@
-import AppDesigner, {Page} from "./app-designer/AppDesigner.tsx";
+import AppDesigner, {Application} from "./app-designer/AppDesigner.tsx";
 import {useState} from "react";
 
 export function App() {
-    const [value, setValue] = useState<Array<Page>>(() => {
+    const [value, setValue] = useState<Application>(() => {
         const val = localStorage.getItem('app-designer');
         if (val && val.length > 0) {
             return JSON.parse(val);

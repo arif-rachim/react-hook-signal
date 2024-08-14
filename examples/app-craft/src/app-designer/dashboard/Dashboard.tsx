@@ -18,7 +18,7 @@ export type Panel = {
     Icon: IconType,
     component: React.FC,
     position: PanelPosition,
-    visible?: (centerPanelTag: Record<string, unknown>) => boolean
+    visible?: (centerPanelTag?: Record<string, unknown>) => boolean
 }
 type SelectedPanelType = {
     [k in PanelPosition]?: string
@@ -210,7 +210,7 @@ function RenderIcons(props: {
     panels: Array<PanelInstance>,
     value: string,
     onChange: (key?: string) => void,
-    centerTag: Record<string, unknown>
+    centerTag?: Record<string, unknown>
 }) {
     const {panels, onChange, value, centerTag} = props;
 

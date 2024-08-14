@@ -8,7 +8,6 @@ import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
 import {ErrorType} from "./errors/ErrorType.ts";
-import {createNewBlankPage} from "./createNewBlankPage.ts";
 import {Dashboard} from "./dashboard/Dashboard.tsx";
 import {Icon} from "./Icon.ts";
 import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
@@ -21,6 +20,7 @@ import PackagePanel from "./panels/package/PackagePanel.tsx";
 import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
 import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
+import {createNewBlankApplication} from "./createNewBlankApplication.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -77,6 +77,12 @@ export type Page = {
     fetchers: Array<Fetcher>
 }
 
+export type Application = {
+    id: string,
+    name: string,
+    pages: Array<Page>
+}
+
 export type Container = {
     id: string,
     children: string[],
@@ -108,7 +114,8 @@ export type Container = {
 }
 
 export default function AppDesigner(props: LayoutBuilderProps) {
-    const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
+    const applicationSignal = useSignal(createNewBlankApplication());
+    const allPagesSignal = useComputed<Array<Page>>(() => applicationSignal.get().pages ?? []);
     const activePageIdSignal = useSignal<string>('');
     const activeDropZoneIdSignal = useSignal('');
     const selectedDragContainerIdSignal = useSignal('');
@@ -140,22 +147,23 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 
     const {value, onChange} = props;
     useEffect(() => {
-        if (value && value.length > 0) {
-            allPagesSignal.set(value);
+        applicationSignal.set(value);
+        if(value && value.pages && value.pages.length > 0){
             const currentActivePageId = activePageIdSignal.get();
-            const hasSelection = value.findIndex(i => i.id === currentActivePageId) >= 0;
+            const hasSelection = value.pages.findIndex(i => i.id === currentActivePageId) >= 0;
             if (!hasSelection) {
                 allErrorsSignal.set([]);
                 variableInitialValueSignal.set({});
-                activePageIdSignal.set(value[0].id)
+                activePageIdSignal.set(value.pages[0].id)
             }
         }
-    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, value, variableInitialValueSignal]);
+    }, [activePageIdSignal, allErrorsSignal, applicationSignal, value, variableInitialValueSignal]);
 
     useSignalEffect(() => {
-        onChange(allPagesSignal.get());
+        onChange(applicationSignal.get());
     })
     const context: AppDesignerContext = {
+        applicationSignal:applicationSignal,
         allPagesSignal: allPagesSignal,
         activePageIdSignal: activePageIdSignal,
         hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,

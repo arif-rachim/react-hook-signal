@@ -1,6 +1,5 @@
 import {ElementStyleProps, LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
-import {createNewBlankPage} from "../app-designer/createNewBlankPage.ts";
 import {Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {Signal} from "signal-polyfill";
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
@@ -16,12 +15,14 @@ import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 import {AppViewerContext} from "./AppViewerContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {EmptyComponent} from "../app-designer/empty-component/EmptyComponent.tsx";
+import {createNewBlankApplication} from "../app-designer/createNewBlankApplication.ts";
 
 /**
  * Renders the application viewer component.
  */
 export default function AppViewer(props: LayoutBuilderProps) {
-    const allPagesSignal = useSignal<Array<Page>>([createNewBlankPage()])
+    const applicationSignal = useSignal(createNewBlankApplication());
+    const allPagesSignal = useComputed<Array<Page>>(() => applicationSignal.get().pages);
     const activePageIdSignal = useSignal<string>('');
     const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
@@ -43,21 +44,22 @@ export default function AppViewer(props: LayoutBuilderProps) {
     });
     const {value, onChange} = props;
     useEffect(() => {
-        if (value && value.length > 0) {
-            allPagesSignal.set(value);
+        applicationSignal.set(value);
+        if(value && value.pages && value.pages.length > 0){
             const currentActivePageId = activePageIdSignal.get();
-            const hasSelection = value.findIndex(i => i.id === currentActivePageId) >= 0;
+            const hasSelection = value.pages.findIndex(i => i.id === currentActivePageId) >= 0;
             if (!hasSelection) {
                 allErrorsSignal.set([]);
                 variableInitialValueSignal.set({});
-                activePageIdSignal.set(value[0].id)
+                activePageIdSignal.set(value.pages[0].id)
             }
         }
-    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, value, variableInitialValueSignal]);
+    }, [activePageIdSignal, allErrorsSignal, applicationSignal, value, variableInitialValueSignal]);
     useSignalEffect(() => {
-        onChange(allPagesSignal.get());
+        onChange(applicationSignal.get());
     })
     const context: AppViewerContext = {
+        applicationSignal,
         allPagesSignal,
         activePageIdSignal,
         allContainersSignal,
@@ -92,14 +94,17 @@ export function PageViewer(props: { elements: LayoutBuilderProps['elements'], pa
     useEffect(() => {
         variableInitialValueSignal.set(properties);
     }, [properties, variableInitialValueSignal]);
+
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
     const allVariablesSignal = useComputed(() => props.page.variables)
     const allContainersSignal = useComputed(() => props.page.containers);
     const allFetchersSignal = useComputed(() => props.page.fetchers);
-    const allPagesSignal = useSignal<Array<Page>>([page]);
+    const allPagesSignal = useComputed<Array<Page>>(() => [page]);
+    const applicationSignal = useSignal(createNewBlankApplication());
     const activePageIdSignal = useSignal(page.id)
     const context: AppViewerContext = {
+        applicationSignal,
         allPagesSignal,
         activePageIdSignal,
         allContainersSignal,

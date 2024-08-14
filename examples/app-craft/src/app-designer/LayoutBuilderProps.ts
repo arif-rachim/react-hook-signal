@@ -1,6 +1,6 @@
 import {IconType} from "react-icons";
 import {CSSProperties, ForwardRefRenderFunction, FunctionComponent} from "react";
-import {Page} from "./AppDesigner.tsx";
+import {Application} from "./AppDesigner.tsx";
 import {z, ZodRawShape} from "zod";
 
 /**
@@ -8,8 +8,8 @@ import {z, ZodRawShape} from "zod";
  */
 export type LayoutBuilderProps = {
     elements?: Record<string, Element>,
-    value: Array<Page>,
-    onChange: (param: Array<Page>) => void
+    value: Application,
+    onChange: (param: Application) => void
 }
 
 // InferType will use the TypeMap to infer the actual types

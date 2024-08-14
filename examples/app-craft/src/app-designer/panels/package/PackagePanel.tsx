@@ -2,9 +2,9 @@ import {Button} from "../../button/Button.tsx";
 import {MutableRefObject} from "react";
 import {triggerDownloadZip} from "../../../utils/triggerDownloadZip.ts";
 import {useLoadExtractJsonFromZip} from "../../../utils/useLoadExtractJsonFromZip.ts";
-import {createNewBlankPage} from "../../createNewBlankPage.ts";
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
+import {createNewBlankApplication} from "../../createNewBlankApplication.ts";
 
 export default function PackagePanel() {
     const context = useAppContext<AppDesignerContext>();
@@ -22,7 +22,7 @@ export default function PackagePanel() {
         }}>Import App</Button>
         <input ref={ref} type={'file'} style={{display: 'none'}}/>
         <Button onClick={() => {
-            context.allPagesSignal.set([createNewBlankPage()]);
+            context.applicationSignal.set(createNewBlankApplication());
             context.activePageIdSignal.set('');
             context.activeDropZoneIdSignal.set('');
             context.selectedDragContainerIdSignal.set('');

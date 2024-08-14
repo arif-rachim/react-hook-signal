@@ -5,7 +5,7 @@ import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 
 export function useLoadExtractJsonFromZip() {
     const ref = useRef<HTMLInputElement>();
-    const {allPagesSignal} = useAppContext();
+    const {applicationSignal} = useAppContext();
     useEffect(() => {
         const inputElement = ref.current;
 
@@ -30,7 +30,7 @@ export function useLoadExtractJsonFromZip() {
 
             try {
                 const jsonData = JSON.parse(jsonString);
-                allPagesSignal.set(jsonData);
+                applicationSignal.set(jsonData);
 
             } catch (error) {
                 console.error('Failed to extract JSON from ZIP:', error);
@@ -45,7 +45,7 @@ export function useLoadExtractJsonFromZip() {
                 inputElement.removeEventListener('change', onChangeListener);
             }
         }
-    }, [allPagesSignal]);
+    }, [applicationSignal]);
 
     return {ref: ref as LegacyRef<HTMLInputElement> | undefined}
 }
