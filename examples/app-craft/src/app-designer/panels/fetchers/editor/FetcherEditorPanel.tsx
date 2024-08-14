@@ -398,7 +398,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                             allVariables: [],
                             allFetchers: [],
                             returnType: 'any',
-                            allPages: []
+                            allPages: [],
+                            allTables:[]
                         })}
                         options={{
                             selectOnLineNumbers: false,

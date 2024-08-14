@@ -127,7 +127,9 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
 
-
+    const allTablesSignal = useComputed<Array<Table>>(() => {
+        return applicationSignal.get().tables ?? []
+    });
 
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
@@ -166,6 +168,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     })
     const context: AppDesignerContext = {
         applicationSignal:applicationSignal,
+        allTablesSignal:allTablesSignal,
         allPagesSignal: allPagesSignal,
         activePageIdSignal: activePageIdSignal,
         hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,

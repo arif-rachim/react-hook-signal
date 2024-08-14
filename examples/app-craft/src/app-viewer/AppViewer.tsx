@@ -16,6 +16,7 @@ import {AppViewerContext} from "./AppViewerContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {EmptyComponent} from "../app-designer/empty-component/EmptyComponent.tsx";
 import {createNewBlankApplication} from "../app-designer/createNewBlankApplication.ts";
+import {Table} from "../app-designer/panels/database/service/getTables.ts";
 
 /**
  * Renders the application viewer component.
@@ -27,6 +28,8 @@ export default function AppViewer(props: LayoutBuilderProps) {
     const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
+
+    const allTablesSignal = useComputed(() => applicationSignal.get().tables ?? []);
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
         const allPages = allPagesSignal.get();
@@ -45,7 +48,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
     const {value, onChange} = props;
     useEffect(() => {
         applicationSignal.set(value);
-        if(value && value.pages && value.pages.length > 0){
+        if (value && value.pages && value.pages.length > 0) {
             const currentActivePageId = activePageIdSignal.get();
             const hasSelection = value.pages.findIndex(i => i.id === currentActivePageId) >= 0;
             if (!hasSelection) {
@@ -60,6 +63,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
     })
     const context: AppViewerContext = {
         applicationSignal,
+        allTablesSignal,
         allPagesSignal,
         activePageIdSignal,
         allContainersSignal,
@@ -88,7 +92,11 @@ export default function AppViewer(props: LayoutBuilderProps) {
 }
 
 
-export function PageViewer(props: { elements: LayoutBuilderProps['elements'], page: Page } & Record<string, unknown>) {
+export function PageViewer(props: {
+    elements: LayoutBuilderProps['elements'],
+    page: Page,
+    allTables: Array<Table>
+} & Record<string, unknown>) {
     const {elements, page, ...properties} = props;
     const variableInitialValueSignal = useSignal<Record<string, unknown>>(properties);
     useEffect(() => {
@@ -96,6 +104,7 @@ export function PageViewer(props: { elements: LayoutBuilderProps['elements'], pa
     }, [properties, variableInitialValueSignal]);
 
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allTablesSignal = useComputed(() => props.allTables)
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
     const allVariablesSignal = useComputed(() => props.page.variables)
     const allContainersSignal = useComputed(() => props.page.containers);
@@ -105,6 +114,7 @@ export function PageViewer(props: { elements: LayoutBuilderProps['elements'], pa
     const activePageIdSignal = useSignal(page.id)
     const context: AppViewerContext = {
         applicationSignal,
+        allTablesSignal,
         allPagesSignal,
         activePageIdSignal,
         allContainersSignal,

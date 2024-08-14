@@ -38,7 +38,7 @@ function DataGroupFC(props: {
         ...propsStyle
     }
 
-    const {allPagesSignal, elements} = useAppContext();
+    const {allPagesSignal, elements,allTablesSignal} = useAppContext();
     const componentIdSignal = useSignal(component);
     useEffect(() => {
         componentIdSignal.set(component)
@@ -57,7 +57,7 @@ function DataGroupFC(props: {
             if (item !== undefined && item !== null && typeof item === 'object' && keyId in item) {
                 key = (item[keyId] as string).toString();
             }
-            return <PageViewer elements={elements} page={page!} key={key} {...item}/>
+            return <PageViewer elements={elements} page={page!} key={key} allTables={allTablesSignal.get()} {...item}/>
         })}
     </div>
 }

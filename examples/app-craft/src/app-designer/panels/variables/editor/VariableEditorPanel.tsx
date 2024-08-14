@@ -33,7 +33,7 @@ export function VariableEditorPanel(props: {
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
     const updateVariable = useUpdateVariable();
-    const {allVariablesSignal, allPagesSignal, allFetchersSignal} = context;
+    const {allVariablesSignal, allPagesSignal, allFetchersSignal,allTablesSignal} = context;
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
 
@@ -181,6 +181,7 @@ export function VariableEditorPanel(props: {
                         const allVariables = allVariablesSignal.get();
                         const allFetchers = allFetchersSignal.get();
                         const allPages = allPagesSignal.get();
+                        const allTables = allTablesSignal.get();
                         const formula = variable.functionCode;
                         return <Editor
                             language="javascript"
@@ -190,7 +191,8 @@ export function VariableEditorPanel(props: {
                                 allVariables,
                                 allFetchers,
                                 returnType: zodSchemaToJson(variable.schemaCode),
-                                allPages
+                                allPages,
+                                allTables
                             })}
                             value={formula}
                             onChange={(value?: string) => {

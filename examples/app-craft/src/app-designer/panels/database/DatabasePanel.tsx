@@ -10,18 +10,20 @@ import TableEditor from "./table-editor/TableEditor.tsx";
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 
-export function DatabasePanel(){
-    const fileInputRef = useRef<HTMLInputElement|null>(null);
+export function DatabasePanel() {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const {applicationSignal} = useAppContext();
     const tablesSignal = useComputed<Table[]>(() => applicationSignal.get().tables);
     const addPanel = useAddDashboardPanel();
-    function addSqlLite(){
-        if(fileInputRef.current){
+
+    function addSqlLite() {
+        if (fileInputRef.current) {
             (fileInputRef.current as HTMLInputElement).click();
         }
     }
 
     const updateApplication = useUpdateApplication();
+
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.files === null || e.target.files.length === 0) {
             return;
@@ -30,9 +32,10 @@ export function DatabasePanel(){
 
         if (file) {
             const arrayBuffer = await file.arrayBuffer();
-            const result = await sqlite({type:'saveToFile',binaryArray:new Uint8Array(arrayBuffer)})
-            if(result.success){
+            const result = await sqlite({type: 'saveToFile', binaryArray: new Uint8Array(arrayBuffer)})
+            if (result.success) {
                 const result = await getTables();
+
                 updateApplication(old => {
                     old.tables = result;
                 })
@@ -40,21 +43,21 @@ export function DatabasePanel(){
         }
     }
 
-    function openDetail(table:Table){
+    function openDetail(table: Table) {
         addPanel({
-            visible : () => true,
-            title : `${table.tblName}`,
-            Icon : Icon.Database,
-            id : `${table.tblName}`,
-            tag : {
-                type : 'TableEditor',
+            visible: () => true,
+            title: `${table.tblName}`,
+            Icon: Icon.Database,
+            id: `${table.tblName}`,
+            tag: {
+                type: 'TableEditor',
             },
-            component : () => <TableEditor table={table} />,
-            position : 'mainCenter',
+            component: () => <TableEditor table={table}/>,
+            position: 'mainCenter',
         })
     }
 
-    return <div style={{display:'flex',flexDirection:'column',padding:10}}>
+    return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
         <Button
             style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}
             onClick={() => addSqlLite()}
@@ -70,7 +73,7 @@ export function DatabasePanel(){
                style={{padding: 10, display: 'none'}}
                onChange={handleFileChange}
         />
-        <notifiable.div style={{display:'flex',flexDirection:'column'}}>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
             {() => {
                 const tables = tablesSignal.get() ?? [];
                 return tables.map(table => {

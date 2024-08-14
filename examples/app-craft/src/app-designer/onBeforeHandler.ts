@@ -2,6 +2,7 @@ import {Monaco} from "@monaco-editor/react";
 import {Fetcher, Page, Variable} from "./AppDesigner.tsx";
 import {zodSchemaToJson} from "./zodSchemaToJson.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {Table} from "./panels/database/service/getTables.ts";
 
 /**
  * Executes the onBeforeMountHandler function.
@@ -12,17 +13,19 @@ export const onBeforeMountHandler = (props: {
     dependencies: Array<string>,
     returnType: string,
     allPages: Array<Page>,
+    allTables: Array<Table>
 }) => (monaco: Monaco) => {
-    const {allVariables, dependencies, returnType, allPages,allFetchers} = props;
+    const {allVariables, dependencies, returnType, allPages, allFetchers,allTables} = props;
     // extra libraries
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeLibrary(allVariables,allFetchers, dependencies), "ts:filename/local-source.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeLibrary(allVariables, allFetchers, dependencies), "ts:filename/local-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(returnTypeDefinition(returnType), "ts:filename/return-type-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeNavigation(allPages), "ts:filename/navigation-source.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeDbSchema(allTables), "ts:filename/db-source.d.ts");
 }
 
 const returnTypeDefinition = (returnType: string) => `declare const module:{exports:${returnType}};`
 
-function composeLibrary(allVariables: Array<Variable>,allFetchers:Array<Fetcher>, dependencies: Array<string>) {
+function composeLibrary(allVariables: Array<Variable>, allFetchers: Array<Fetcher>, dependencies: Array<string>) {
     const variables = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
         const schema = zodSchemaToJson(i.schemaCode);
         let type = `Signal.State<${schema}>`;
@@ -33,30 +36,30 @@ function composeLibrary(allVariables: Array<Variable>,allFetchers:Array<Fetcher>
     });
     const fetchers = allFetchers.filter(i => dependencies.includes(i.id)).map(i => {
         const schema = zodSchemaToJson(i.returnTypeSchemaCode);
-        let paths = [...i.paths,...i.headers].reduce((result,path) => {
-            if(!path.isInput){
+        let paths = [...i.paths, ...i.headers].reduce((result, path) => {
+            if (!path.isInput) {
                 return result;
             }
-            if(isEmpty(path.name)){
+            if (isEmpty(path.name)) {
                 return result;
             }
             result.push(`${path.name}:string`)
-            return result ;
-        },[] as Array<string>)
-        paths = i.data.reduce((result,path) => {
-            if(!path.isInput){
+            return result;
+        }, [] as Array<string>)
+        paths = i.data.reduce((result, path) => {
+            if (!path.isInput) {
                 return result;
             }
-            if(isEmpty(path.name)){
+            if (isEmpty(path.name)) {
                 return result;
             }
-            result.push(`${path.name}:unkown`)
-            return result ;
-        },paths)
-        const type = '{'+paths.join(',')+'}'
+            result.push(`${path.name}:unknown`)
+            return result;
+        }, paths)
+        const type = '{' + paths.join(',') + '}'
         return `declare function ${i.name}(props:${type}):Promise<{error:string,result:${schema}}>;`
     })
-    return [...variables,...fetchers].join('\n');
+    return [...variables, ...fetchers].join('\n');
 }
 
 function composeNavigation(allPages: Array<Page>) {
@@ -67,4 +70,23 @@ function composeNavigation(allPages: Array<Page>) {
         return `${p.name}:(param:{${param}}) => void`;
     }).join(',')
     return `declare const navigate:{${type}};`
+}
+
+function composeDbSchema(allTables:Array<Table>){
+    const dbSchema = [];
+    for (const table of allTables) {
+        const schema:string[] = [];
+        for (const info of table.tableInfo) {
+            schema.push(`${info.name}:${info.type}`)
+        }
+        dbSchema.push(`${table.name} : { ${schema.join(',')} }`)
+    }
+    return `
+type DbSchema { ${dbSchema.join(',')} }
+declare const db:{
+    record:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
+    remove:<N extends keyof DbSchema>(name:N,key:string) => Promise<DbSchema[N]>,
+    read:<N extends keyof DbSchema>(name:N,key:string) => Promise<DbSchema[N]>
+};
+`
 }
