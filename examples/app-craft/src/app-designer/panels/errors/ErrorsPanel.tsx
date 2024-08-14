@@ -106,7 +106,8 @@ export function ErrorsPanel() {
                                     id: panelId,
                                     tag: {
                                         containerId: e.containerId,
-                                        propertyName: e.propertyName
+                                        propertyName: e.propertyName,
+                                        type : 'ComponentPropertyEditor'
                                     }
                                 })
                             }
@@ -122,7 +123,8 @@ export function ErrorsPanel() {
                                     Icon: Icon.Component,
                                     id: e.variableId,
                                     tag: {
-                                        variableId: e.variableId
+                                        variableId: e.variableId,
+                                        type : 'VariableEditorPanel'
                                     }
                                 })
 

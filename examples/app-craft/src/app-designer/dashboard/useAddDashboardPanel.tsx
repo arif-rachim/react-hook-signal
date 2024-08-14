@@ -8,7 +8,7 @@ export function useAddDashboardPanel() {
     const {activePageIdSignal} = useAppContext();
     return function addPanel(panel: Panel & {
         id?: string,
-        tag?: { containerId?: string, propertyName?: string, variableId?: string }
+        tag?: { containerId?: string, propertyName?: string, variableId?: string, type: string }
     }) {
         panel.id = panel.id ?? guid();
         const panels = panelsSignal.get();

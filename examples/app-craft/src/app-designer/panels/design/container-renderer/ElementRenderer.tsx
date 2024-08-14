@@ -1,5 +1,5 @@
 import {Container} from "../../../AppDesigner.tsx";
-import {forwardRef, useEffect, useMemo, useRef, useState} from "react";
+import {CSSProperties, forwardRef, useEffect, useMemo, useRef, useState} from "react";
 import {CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {PropertyInitialization} from "./property-initialization/PropertyInitialization.tsx";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
@@ -71,8 +71,11 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
             }
         }
     }, [Component]);
+    const {style,...componentProperties} = componentProps;
+    let defaultStyle = (style ?? {}) as CSSProperties;
+    console.log("WE GOT elementProps.style",elementProps.style);
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
-        <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
+        <Component ref={ref} key={container?.id} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
     </>
 }

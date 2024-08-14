@@ -44,7 +44,8 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                         id: panelId,
                         tag: {
                             containerId: container?.id,
-                            propertyName: propertyName
+                            propertyName: propertyName,
+                            type : 'ComponentPropertyEditor'
                         }
                     })
                 }

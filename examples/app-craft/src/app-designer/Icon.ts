@@ -1,5 +1,5 @@
 import {PiPackage, PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
-import {LuSigmaSquare} from "react-icons/lu";
+import {LuDatabase, LuFormInput, LuSigmaSquare} from "react-icons/lu";
 import {
     IoCodeSlashOutline,
     IoInformationCircleOutline,
@@ -21,11 +21,15 @@ import {
     MdError,
     MdMinimize,
     MdOutlineQuestionMark,
-    MdOutlineStyle
+    MdOutlineStyle,
+    MdTitle,
+    MdTouchApp
 } from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
 import {RiPagesLine} from "react-icons/ri";
 import {BiReset} from "react-icons/bi";
+import {HiCollection, HiViewBoards} from "react-icons/hi";
+import {GoDatabase} from "react-icons/go";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -59,5 +63,11 @@ export const Icon = {
     CheckboxChecked: MdCheckBox,
     Confirmation: IoInformationCircleOutline,
     Fetcher: AiOutlineApi,
-    Add: MdAdd
+    Add: MdAdd,
+    Button: MdTouchApp,
+    Input: LuFormInput,
+    Table: HiCollection,
+    Row: HiViewBoards,
+    Title: MdTitle,
+    Database: GoDatabase
 }

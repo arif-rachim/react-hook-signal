@@ -20,6 +20,7 @@ import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
 import PackagePanel from "./panels/package/PackagePanel.tsx";
 import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
 import {DefaultElements} from "./DefaultElements.tsx";
+import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -209,19 +210,27 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         title: 'Styles',
                         Icon: Icon.Style,
                         position: 'right',
-                        component: StylePanel
+                        component: StylePanel,
+                        visible : (tag) => tag?.type === 'DesignPanel'
                     },
                     properties: {
                         title: 'Properties',
                         Icon: Icon.Property,
                         position: 'right',
-                        component: PropertiesPanel
+                        component: PropertiesPanel,
+                        visible : (tag) => tag?.type === 'DesignPanel'
                     },
                     bundle: {
                         title: 'Package',
                         Icon: Icon.Package,
                         position: 'bottom',
                         component: PackagePanel
+                    },
+                    database : {
+                        title : 'Database',
+                        Icon : Icon.Database,
+                        position : 'leftBottom',
+                        component : DatabasePanel
                     }
                 }}
                            defaultSelectedPanel={{

@@ -1,6 +1,7 @@
 import {MdHorizontalDistribute, MdVerticalDistribute} from "react-icons/md";
 import {DraggableItem} from "./DraggableItem.tsx";
 import {useAppContext} from "../../hooks/useAppContext.ts";
+import {Icon} from "../../Icon.ts";
 
 export function ElementsPanel() {
     const {elements} = useAppContext();
@@ -12,8 +13,8 @@ export function ElementsPanel() {
         justifyContent: 'space-between',
         padding: 10
     }}>
-        <DraggableItem icon={MdVerticalDistribute} draggableDataType={'vertical'}/>
-        <DraggableItem icon={MdHorizontalDistribute} draggableDataType={'horizontal'}/>
+        <DraggableItem icon={Icon.Row} draggableDataType={'vertical'} styleIcon={{transform:'rotate(90deg)'}}/>
+        <DraggableItem icon={Icon.Row} draggableDataType={'horizontal'} />
         {
             Object.keys(elements ?? {}).map((key) => {
                 if (elements && key in elements) {

@@ -15,7 +15,7 @@ import {useAppContext} from "../../hooks/useAppContext.ts";
 export function PagesPanel() {
     const {allPagesSignal, activePageIdSignal, allErrorsSignal} = useAppContext();
     const showModal = useShowModal();
-    const addDashboardPanel = useAddDashboardPanel();
+    const addPanel = useAddDashboardPanel();
 
     async function addPage() {
         const page = createNewBlankPage();
@@ -64,7 +64,7 @@ export function PagesPanel() {
                     }} key={page.id} onClick={() => {
                         allErrorsSignal.set([]);
                         activePageIdSignal.set(page.id);
-                        addDashboardPanel({
+                        addPanel({
                             position: 'mainCenter',
                             component: () => {
                                 return <DesignPanel/>
@@ -72,6 +72,9 @@ export function PagesPanel() {
                             title: page.name,
                             Icon: Icon.Page,
                             id: page.id,
+                            tag : {
+                                type : 'DesignPanel'
+                            }
                         })
                     }}>
                         <div></div>

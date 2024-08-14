@@ -175,7 +175,6 @@ export function DraggableContainerElement(props: { container: Container }) {
         const isRoot = isEmpty(container?.parent);
 
         const styleFromSignal = {
-            border: mode === 'design' ? isContainer ? BORDER_DASHED : BORDER : 'unset',
             background: 'white',
             minWidth: container?.minWidth,
             minHeight: container?.minHeight,
@@ -200,7 +199,6 @@ export function DraggableContainerElement(props: { container: Container }) {
 
             justifyContent: justifyContent(container),
             alignItems: alignItems(container),
-            transition: mode === 'design' ? 'all 100ms linear' : 'unset'
         };
 
         if (isRoot) {
@@ -208,7 +206,6 @@ export function DraggableContainerElement(props: { container: Container }) {
             return;
         }
         if (isFocused && mode === 'design') {
-            styleFromSignal.border = BORDER;
             styleFromSignal.background = 'rgba(14,255,242,0.3)';
         }
 

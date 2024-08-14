@@ -1,8 +1,6 @@
 import {element, Element} from "./LayoutBuilderProps.ts";
-import {MdInput} from "react-icons/md";
 import {z} from "zod";
 import {BORDER} from "./Border.ts";
-import {FaGripHorizontal} from "react-icons/fa";
 import {useSelectedDragContainer} from "./hooks/useSelectedDragContainer.ts";
 import {useAppContext} from "./hooks/useAppContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
@@ -18,7 +16,7 @@ import {notifiable} from "react-hook-signal";
 
 export const DefaultElements: Record<string, Element> = {
     input: element({
-        icon: MdInput,
+        icon: Icon.Input,
         property: {
             value: z.string(),
             onChange: z.function().args(z.string()).returns(z.promise(z.void())),
@@ -37,12 +35,12 @@ export const DefaultElements: Record<string, Element> = {
                         await onChange(val);
                     }
                 }}
-                style={{...style, borderRadius: 20}}
+                style={{...style,border:BORDER, borderRadius: 20}}
             />
         }
     }),
     dataGroup: element({
-        icon: FaGripHorizontal,
+        icon: Icon.Table,
         property: {
             data: z.array(z.record(z.unknown())),
             component: z.string(),
@@ -61,7 +59,7 @@ export const DefaultElements: Record<string, Element> = {
         }
     }),
     button: element({
-        icon: Icon.Component,
+        icon: Icon.Button,
         property: {
             onClick: z.function().returns(z.void()),
             label: z.string()
@@ -73,6 +71,25 @@ export const DefaultElements: Record<string, Element> = {
             }}>
                 {label}
             </Button>
+        }
+    }),
+    title: element({
+        icon: Icon.Title,
+        property: {
+            title: z.string(),
+            style: z.object({
+                fontSize: z.number().optional(),
+                color: z.string().optional(),
+                border : z.string().optional(),
+                borderTop : z.string().optional(),
+                borderLeft : z.string().optional(),
+                borderRight : z.string().optional(),
+                borderBottom : z.string().optional(),
+            })
+        },
+        component: (props, ref) => {
+            const {style, title, containerStyle} = props;
+            return <div ref={ref as LegacyRef<HTMLDivElement>} style={{...style}}>{title}</div>
         }
     })
 }

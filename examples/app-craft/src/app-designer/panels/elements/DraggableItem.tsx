@@ -2,8 +2,9 @@ import {IconType} from "react-icons";
 import {BORDER} from "../../Border.ts";
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
+import {CSSProperties} from "react";
 
-export function DraggableItem(props: { draggableDataType: string, icon: IconType }) {
+export function DraggableItem(props: { draggableDataType: string, icon: IconType, styleIcon?: CSSProperties }) {
     const Icon = props.icon;
     const {activeDropZoneIdSignal} = useAppContext<AppDesignerContext>();
     return <div
@@ -36,6 +37,6 @@ export function DraggableItem(props: { draggableDataType: string, icon: IconType
         }, 0);
     }}
         draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}>
-        <Icon fontSize={18}/>
+        <Icon fontSize={18} style={props.styleIcon}/>
     </div>
 }

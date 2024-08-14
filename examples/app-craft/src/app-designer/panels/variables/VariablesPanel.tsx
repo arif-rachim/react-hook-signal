@@ -36,7 +36,8 @@ export function VariablesPanel() {
             Icon: Icon.Component,
             id: panelId,
             tag: {
-                variableId: panelId
+                variableId: panelId,
+                type : 'VariableEditorPanel'
             }
         })
     }
