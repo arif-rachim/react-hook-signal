@@ -1,16 +1,19 @@
 import {MdAdd} from "react-icons/md";
 import {Button} from "../../button/Button.tsx";
-import {useEffect, useRef} from "react";
+import {useRef} from "react";
 import sqlite from "./sqlite/sqlite.ts";
 import {getTables, Table} from "./service/getTables.ts";
-import {notifiable, useSignal} from "react-hook-signal";
+import {notifiable, useComputed} from "react-hook-signal";
 import {Icon} from "../../Icon.ts";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import TableEditor from "./table-editor/TableEditor.tsx";
+import {useAppContext} from "../../hooks/useAppContext.ts";
+import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 
 export function DatabasePanel(){
     const fileInputRef = useRef<HTMLInputElement|null>(null);
-    const tablesSignal = useSignal<Table[]>([]);
+    const {applicationSignal} = useAppContext();
+    const tablesSignal = useComputed<Table[]>(() => applicationSignal.get().tables);
     const addPanel = useAddDashboardPanel();
     function addSqlLite(){
         if(fileInputRef.current){
@@ -18,13 +21,7 @@ export function DatabasePanel(){
         }
     }
 
-    useEffect(() => {
-        (async () => {
-            const result = await getTables();
-            tablesSignal.set(result);
-        })();
-    }, [tablesSignal]);
-
+    const updateApplication = useUpdateApplication();
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.files === null || e.target.files.length === 0) {
             return;
@@ -36,7 +33,9 @@ export function DatabasePanel(){
             const result = await sqlite({type:'saveToFile',binaryArray:new Uint8Array(arrayBuffer)})
             if(result.success){
                 const result = await getTables();
-                tablesSignal.set(result);
+                updateApplication(old => {
+                    old.tables = result;
+                })
             }
         }
     }
@@ -73,7 +72,7 @@ export function DatabasePanel(){
         />
         <notifiable.div style={{display:'flex',flexDirection:'column'}}>
             {() => {
-                const tables = tablesSignal.get();
+                const tables = tablesSignal.get() ?? [];
                 return tables.map(table => {
                     return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={table.tblName}>
                         <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{table.tblName}</div>

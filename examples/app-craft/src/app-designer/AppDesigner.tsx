@@ -21,6 +21,7 @@ import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
 import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
 import {createNewBlankApplication} from "./createNewBlankApplication.ts";
+import {Table} from "./panels/database/service/getTables.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -80,7 +81,8 @@ export type Page = {
 export type Application = {
     id: string,
     name: string,
-    pages: Array<Page>
+    pages: Array<Page>,
+    tables : Array<Table>
 }
 
 export type Container = {
