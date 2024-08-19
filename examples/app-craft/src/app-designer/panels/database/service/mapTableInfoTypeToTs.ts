@@ -1,49 +1,56 @@
 export function mapTableInfoTypeToTs(param:string){
     const type = param.toLowerCase();
     if(type.includes('char')){
-        return 'string';
+        return 'z.string().nullable()';
     }
     if(type.includes('binary')){
-        return 'Uint8Array';
+        return 'z.any()';
     }
     if(type.includes('int')){
-        return 'number';
+        return 'z.number().nullable()';
     }
     if(type.includes('float')){
-        return 'number';
+        return 'z.number().nullable()';
     }
     if(type.includes('double')){
-        return 'number';
+        return 'z.number().nullable()';
     }
     if(type.includes('decimal')){
-        return 'number';
+        return 'z.number().nullable()';
     }
     if(type.includes('numeric')){
-        return 'number';
+        return 'z.number().nullable()';
     }
     if(type.includes('date')){
-        return 'string';
+        return 'z.string().nullable()';
     }
     if(type.includes('time')){
-        return 'string';
+        return 'z.string().nullable()';
     }
     if(type.includes('year')){
-        return 'string';
+        return 'z.string().nullable()';
     }
     if(type.includes('bool')){
-        return 'number';
+        return 'z.number().nullable()';
     }
     if(type.includes('real')){
-        return 'number';
+        return 'z.number().nullable()';
+    }
+    if(type.includes('bit')){
+        return 'z.number().nullable()';
     }
     if(type.includes('blob')){
-        return 'Uint8Array';
+        return 'z.any()';
     }
     if(type.includes('text')){
-        return 'string';
+        return 'z.string().nullable()';
+    }
+    if(type.includes('uniqueidentifier')){
+        return 'z.string().nullable()';
     }
     if(type === ""){
-        return 'string';
+        return 'z.string().nullable()';
     }
+
     throw new Error('Unable to map [' + type + ']');
 }

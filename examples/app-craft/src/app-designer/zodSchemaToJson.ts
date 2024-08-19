@@ -15,8 +15,8 @@ export function zodSchemaToJson(schemaCode: string) {
 export function zodTypeToJson(type: ZodType) {
     try {
         return printNode(zodToTs(type).node)
-    } catch (err) {
-        console.error('zodTypeToJson', err)
+    } catch (_) {
+        // we dont need to print this error
     }
     return printNode(zodToTs(z.any()).node)
 }

@@ -22,7 +22,7 @@ export function ComponentPropertyEditor(props: {
 }) {
     const context = useAppContext();
     const removePanel = useRemoveDashboardPanel();
-    const {allVariablesSignal,allFetchersSignal, elements, allPagesSignal,allTablesSignal} = context;
+    const {allVariablesSignal,allFetchersSignal, elements, allPagesSignal,allTablesSignal,allCallablesSignal} = context;
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
@@ -55,7 +55,7 @@ export function ComponentPropertyEditor(props: {
                                                     item.dependencies = result ?? [];
                                                     propsSignal.set({...item});
                                                     isModified.set(true);
-                                                }}/>;
+                                                }} scope={'page'}/>;
             }}</notifiable.div>
         </LabelContainer>
         <notifiable.div style={{
@@ -69,6 +69,7 @@ export function ComponentPropertyEditor(props: {
                 const allVariables = allVariablesSignal.get();
                 const allFetchers = allFetchersSignal.get();
                 const allTables = allTablesSignal.get()
+                const allCallables = allCallablesSignal.get()
                 const formula = props.formula ?? '';
                 const dependencies = props.dependencies ?? [];
                 const allPages = allPagesSignal.get();
@@ -81,7 +82,8 @@ export function ComponentPropertyEditor(props: {
                         allFetchers,
                         returnType: zodTypeToJson(returnType),
                         allPages,
-                        allTables
+                        allTables,
+                        allCallables
                     })}
                     value={formula}
                     options={{selectOnLineNumbers: true}}

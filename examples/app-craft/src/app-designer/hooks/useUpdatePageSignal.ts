@@ -1,5 +1,6 @@
 import {Container, Fetcher, Page, Variable} from "../AppDesigner.tsx";
 import {useAppContext} from "./useAppContext.ts";
+import {useUpdateApplication} from "./useUpdateApplication.ts";
 
 type ParamVariable = {
     type: 'variable',
@@ -33,17 +34,18 @@ type ParamFetcher = {
 }
 
 export function useUpdatePageSignal() {
-    const {applicationSignal,allPagesSignal, activePageIdSignal} = useAppContext();
+    const {allPagesSignal, activePageIdSignal} = useAppContext();
+    const updateApplication = useUpdateApplication();
     return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage | ParamFetcher) {
         const allPages = [...allPagesSignal.get()];
         const pageId = param.pageId ?? activePageIdSignal.get();
         const page = allPages.find(i => i.id === pageId);
         if (param.type === 'add-page') {
             allPages.push(param.page)
-            const application = {...applicationSignal.get()};
-            application.pages = allPages;
-            applicationSignal.set(application);
-        }else if (page) {
+            updateApplication(application => {
+                application.pages = allPages;
+            })
+        } else if (page) {
             if (param.type === 'fetcher') {
                 allPages.splice(allPages.indexOf(page), 1, {...page, fetchers: param.fetchers});
             }
@@ -59,9 +61,9 @@ export function useUpdatePageSignal() {
             if (param.type === 'delete-page') {
                 allPages.splice(allPages.indexOf(page), 1);
             }
-            const application = {...applicationSignal.get()};
-            application.pages = allPages;
-            applicationSignal.set(application);
+            updateApplication(application => {
+                application.pages = allPages;
+            })
         }
     }
 }

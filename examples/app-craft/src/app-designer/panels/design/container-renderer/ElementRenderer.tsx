@@ -25,7 +25,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const {container, elementProps} = props;
     const context = useAppContext();
     const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyComponent};
-    const ref = useRef<HTMLElement>(null);
+    const ref = useRef<HTMLElement|null>(null);
 
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
@@ -73,9 +73,8 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     }, [Component]);
     const {style,...componentProperties} = componentProps;
     const defaultStyle = (style ?? {}) as CSSProperties;
-    console.log("WE GOT elementProps.style",elementProps.style);
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
-        <Component ref={ref} key={container?.id} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
+        <Component ref={ref} key={container?.id} container={container} data-element-id={elementProps["data-element-id"]} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
     </>
 }

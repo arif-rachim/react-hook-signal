@@ -5,11 +5,10 @@ import {Container} from "../../../AppDesigner.tsx";
 import {dropZones} from "./drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
 import {BasicDragEvent, CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
-import {ContainerRenderer, ContainerRendererIdContext} from "./ContainerRenderer.tsx";
+import {ContainerRendererIdContext} from "./ContainerRenderer.tsx";
 import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
 import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
 import {useUpdatePageSignal} from "../../../hooks/useUpdatePageSignal.ts";
-import {alignItems, justifyContent} from "../../../../utils/justifyContentAlignItems.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
@@ -50,7 +49,7 @@ export function DraggableContainerElement(props: { container: Container }) {
     const parentContainerId = useContext(ContainerRendererIdContext);
     useSignalEffect(() => {
         mousePosition.get();
-        const isContainer = ['vertical', 'horizontal'].includes(containerSignal.get()?.type);
+        const isContainer = containerSignal.get()?.type === 'container';
         if (isContainer) {
             hoveredDragContainerIdSignal.set(containerSignal.get()?.id);
         } else {
@@ -108,11 +107,11 @@ export function DraggableContainerElement(props: { container: Container }) {
 
     function onSelected(event: CancellableEvent) {
         const mode = uiDisplayModeSignal.get();
-        if(mode === 'design'){
+        if (mode === 'design') {
             event.preventDefault();
             event.stopPropagation();
             onDragEnd();
-            selectedDragContainerIdSignal.set(containerSignal.get().id);
+            selectedDragContainerIdSignal.set(containerSignal.get()?.id);
         }
     }
 
@@ -164,40 +163,36 @@ export function DraggableContainerElement(props: { container: Container }) {
         activeDropZoneIdSignal.set(nearestDropZoneId);
     })
 
-
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
         const container: Container | undefined = containerSignal.get();
-        const isContainer = ['vertical', 'horizontal'].includes(container?.type);
+        const isContainer = container?.type === 'container';
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = isEmpty(container?.parent);
-
         const styleFromSignal = {
             background: 'white',
-            minWidth: container?.minWidth,
-            minHeight: container?.minHeight,
+            minWidth: container?.properties?.defaultStyle?.minWidth ?? 24,
+            minHeight: container?.properties?.defaultStyle?.minHeight ?? 24,
 
-            paddingTop: container?.paddingTop ?? 0,
-            paddingRight: container?.paddingRight ?? 0,
-            paddingBottom: container?.paddingBottom ?? 0,
-            paddingLeft: container?.paddingLeft ?? 0,
+            paddingTop: container?.properties?.defaultStyle?.paddingTop ?? 0,
+            paddingRight: container?.properties?.defaultStyle?.paddingRight ?? 0,
+            paddingBottom: container?.properties?.defaultStyle?.paddingBottom ?? 0,
+            paddingLeft: container?.properties?.defaultStyle?.paddingLeft ?? 0,
 
-            marginTop: container?.marginTop,
-            marginRight: container?.marginRight,
-            marginBottom: container?.marginBottom,
-            marginLeft: container?.marginLeft,
+            marginTop: container?.properties?.defaultStyle?.marginTop,
+            marginRight: container?.properties?.defaultStyle?.marginRight,
+            marginBottom: container?.properties?.defaultStyle?.marginBottom,
+            marginLeft: container?.properties?.defaultStyle?.marginLeft,
 
             display: 'flex',
-            flexDirection: container?.type === 'horizontal' ? 'row' : 'column',
-            width: isRoot ? '100%' : container?.width,
-            height: isRoot ? '100%' : container?.height,
+            flexDirection: container?.properties?.defaultStyle?.flexDirection ?? 'column',
+            width: isRoot ? '100%' : container?.properties?.defaultStyle?.width,
+            height: isRoot ? '100%' : container?.properties?.defaultStyle?.height,
             position: 'relative',
-
-            gap: container?.gap ?? 0,
-
-            justifyContent: justifyContent(container),
-            alignItems: alignItems(container),
+            gap: container?.properties?.defaultStyle?.gap ?? 0,
+            alignItems: container?.properties?.defaultStyle?.alignItems,
+            justifyContent: container?.properties?.defaultStyle?.justifyContent,
         };
 
         if (isRoot) {
@@ -211,13 +206,29 @@ export function DraggableContainerElement(props: { container: Container }) {
         if (isHovered && mode === 'design' && !isFocused) {
             styleFromSignal.background = 'rgba(14,255,242,0.1)';
         }
-
+        if (mode === 'design' && isContainer) {
+            (styleFromSignal as CSSProperties).transition = ['height','width','padding-left','padding-right','padding-top','padding-bottom','margin-left','margin-right','margin-top','margin-bottom'].map(key => `${key} 100ms linear`).join(', ');
+        }
+        function toInt(text:unknown){
+            if(typeof text === 'string'){
+                return parseInt(text)
+            }
+            return -1;
+        }
         if (isHovered && mode === 'design' && isContainer) {
-            styleFromSignal.paddingTop = 5;
-            styleFromSignal.paddingRight = 5;
-            styleFromSignal.paddingBottom = 5;
-            styleFromSignal.paddingLeft = 5;
-            styleFromSignal.gap = 5;
+            styleFromSignal.minHeight = 50;
+            styleFromSignal.minWidth = 50;
+            styleFromSignal.paddingTop = toInt(styleFromSignal?.paddingTop) < 5 ? 5 : styleFromSignal.paddingTop;
+            styleFromSignal.paddingRight = toInt(styleFromSignal?.paddingRight) < 5 ? 5 : styleFromSignal.paddingRight;
+            styleFromSignal.paddingBottom = toInt(styleFromSignal?.paddingBottom) < 5 ? 5 : styleFromSignal.paddingBottom;
+            styleFromSignal.paddingLeft = toInt(styleFromSignal?.paddingLeft) < 5 ? 5 : styleFromSignal.paddingLeft;
+
+            styleFromSignal.marginTop = toInt(styleFromSignal.marginTop) < 5 ? 5 : styleFromSignal.marginTop;
+            styleFromSignal.marginRight = toInt(styleFromSignal.marginRight) < 5 ? 5 : styleFromSignal.marginRight;
+            styleFromSignal.marginBottom = toInt(styleFromSignal.marginBottom) < 5 ? 5 : styleFromSignal.marginBottom;
+            styleFromSignal.marginLeft = toInt(styleFromSignal.marginLeft) < 5 ? 5 : styleFromSignal.marginLeft;
+
+            styleFromSignal.gap = toInt(styleFromSignal.gap) < 5 ? 5 : styleFromSignal.gap;
         }
         setComputedStyle(styleFromSignal as CSSProperties)
     });
@@ -231,12 +242,11 @@ export function DraggableContainerElement(props: { container: Container }) {
         onDragEnd,
         onMouseOver,
         onClick: onSelected,
+        container : props.container,
         ['data-element-id']: props.container?.id
     };
-
     if (elementsLib && elementsLib[containerProp?.type]) {
         return <ElementRenderer container={containerProp} elementProps={elementProps}/>
     }
-
-    return <ContainerRenderer container={containerProp} elementProps={elementProps}/>
+    return <></>
 }

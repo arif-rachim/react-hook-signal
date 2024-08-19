@@ -4,7 +4,7 @@ import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {BORDER} from "../../../Border.ts";
 import {useSelectedDragContainer} from "../../../hooks/useSelectedDragContainer.ts";
 import {useUpdateSelectedDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
-import {ContainerPropertyType, PropertyType} from "./PropertyType.ts";
+import {PropertyType} from "./PropertyType.ts";
 
 /**
  * A property editor component for handling numerical percentage values.
@@ -16,7 +16,7 @@ import {ContainerPropertyType, PropertyType} from "./PropertyType.ts";
  *   - styleLabel: Optional CSS properties for styling the label.
  */
 export function NumericalPercentagePropertyEditor(props: {
-    property: (PropertyType | ContainerPropertyType),
+    property: PropertyType,
     label: string,
     style?: CSSProperties,
     styleLabel?: CSSProperties
@@ -30,7 +30,9 @@ export function NumericalPercentagePropertyEditor(props: {
         if (dragContainer === undefined) {
             return;
         }
-        const val: string = (dragContainer[property] ?? '').toString() as unknown as string;
+        dragContainer.properties = dragContainer.properties ?? {};
+        dragContainer.properties.defaultStyle = dragContainer.properties.defaultStyle ?? {};
+        const val: string = (dragContainer.properties?.defaultStyle[property] ?? '').toString() as unknown as string;
         if (val.endsWith('%')) {
             setTypeOfValue('%');
         } else if (val.endsWith('px')) {
@@ -42,17 +44,18 @@ export function NumericalPercentagePropertyEditor(props: {
 
     function extractValue() {
         const selectedDragContainerItem = selectedDragContainer.get();
+
         if (selectedDragContainerItem === undefined) {
             return '';
         }
-        const val: string = (selectedDragContainerItem[property] ?? '').toString();
+        const val: string = (((selectedDragContainerItem.properties?.defaultStyle ?? {})[property]) ?? '').toString();
         if (val.endsWith('%')) {
             return parseInt(val.replace('%', ''))
         }
         if (val.endsWith('px')) {
             return parseInt(val.replace('px', ''))
         }
-        return selectedDragContainerItem[property] ?? ''
+        return val ?? ''
     }
 
     return <LabelContainer label={label} style={props.style} styleLabel={{width: 100, ...props.styleLabel}}>
@@ -77,18 +80,19 @@ export function NumericalPercentagePropertyEditor(props: {
                               }
 
                               updateSelectedDragContainer((selectedContainer) => {
+                                  selectedContainer.properties = {...selectedContainer.properties};
+                                  selectedContainer.properties.defaultStyle = {...selectedContainer.properties.defaultStyle};
                                   const isNanValue = isNaN(parseInt(val));
                                   if (typeOfValue === 'n.a') {
-                                      selectedContainer[property] = val;
+                                      selectedContainer.properties.defaultStyle[property] = val;
                                   } else if (typeOfValue === 'px' && !isNanValue) {
-                                      selectedContainer[property] = `${val}${typeOfValue}`;
+                                      selectedContainer.properties.defaultStyle[property] = `${val}${typeOfValue}`;
                                   } else if (typeOfValue === '%' && !isNanValue) {
-                                      selectedContainer[property] = `${val}${typeOfValue}`;
+                                      selectedContainer.properties.defaultStyle[property] = `${val}${typeOfValue}`;
                                   } else {
-                                      selectedContainer[property] = val;
+                                      selectedContainer.properties.defaultStyle[property] = val;
                                   }
                               })
-
                           }}/>
         <select
             style={{border: BORDER, borderTopRightRadius: 20, borderBottomRightRadius: 20}}
@@ -97,10 +101,12 @@ export function NumericalPercentagePropertyEditor(props: {
                 const typeValue = e.target.value;
                 const value = extractValue();
                 updateSelectedDragContainer((selectedContainer) => {
+                    selectedContainer.properties = {...selectedContainer.properties};
+                    selectedContainer.properties.defaultStyle = {...selectedContainer.properties.defaultStyle};
                     if (typeValue !== 'n.a') {
-                        selectedContainer[property] = `${value}${typeValue}`
+                        selectedContainer.properties.defaultStyle[property] = `${value}${typeValue}`
                     } else {
-                        selectedContainer[property] = `${value}`
+                        selectedContainer.properties.defaultStyle[property] = `${value}`
                     }
                 })
             }}>

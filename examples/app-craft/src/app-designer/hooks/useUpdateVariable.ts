@@ -2,18 +2,27 @@ import {Variable} from "../AppDesigner.tsx";
 import {sortSignal} from "../sortSignal.ts";
 import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
 import {useAppContext} from "./useAppContext.ts";
+import {useUpdateApplication} from "./useUpdateApplication.ts";
 
-export function useUpdateVariable() {
-    const {allVariablesSignal} = useAppContext();
+export function useUpdateVariable(scope:'page'|'application') {
+    const {allVariablesSignal,allApplicationVariablesSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
+    const updateApplication = useUpdateApplication();
     return function updateVariable(variable: Variable) {
-        const variables = [...allVariablesSignal.get()];
+        const variables = scope === 'page' ? [...allVariablesSignal.get()] : [...allApplicationVariablesSignal.get()];
         const indexOfVariable = variables.findIndex(i => i.id === variable.id);
         if (indexOfVariable >= 0) {
             variables.splice(indexOfVariable, 1, {...variable});
         } else {
             variables.push({...variable});
         }
-        updatePage({type: 'variable', variables: variables.sort(sortSignal)});
+        if(scope === 'page'){
+            updatePage({type: 'variable', variables: variables.sort(sortSignal)});
+        }else{
+            updateApplication(original => {
+                original.variables = variables.sort(sortSignal)
+            })
+        }
+
     }
 }

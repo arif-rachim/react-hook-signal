@@ -1,6 +1,6 @@
 import {IconType} from "react-icons";
 import {CSSProperties, ForwardRefRenderFunction, FunctionComponent} from "react";
-import {Application} from "./AppDesigner.tsx";
+import {Application, Container} from "./AppDesigner.tsx";
 import {z, ZodRawShape} from "zod";
 
 /**
@@ -21,7 +21,8 @@ export type BasicDragEvent = CancellableEvent & { dataTransfer: DataTransfer | n
 
 export interface ElementStyleProps {
     style: CSSProperties,
-    ['data-element-id']: string
+    ['data-element-id']: string,
+    container: Container
 }
 
 export interface ElementProps extends ElementStyleProps {
@@ -55,7 +56,7 @@ export function element<T extends ZodRawShape>(props: {
         }
     }
     icon: IconType,
-    component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & { style: CSSProperties })>,
+    component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & ElementStyleProps)>,
 }): Element<ZodRawShape> {
-    return props as Element<ZodRawShape>;
+    return props as unknown as Element<ZodRawShape>;
 }

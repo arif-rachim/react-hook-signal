@@ -8,15 +8,15 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../../../AppDesignerContext.ts";
 
 export function ContainerRenderer(props: { elementProps: ElementProps, container: Container }) {
-    const {elementProps} = props;
+    const {container,elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
     const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
-    const containerSignal = useSignal(props.container);
-    const containerProp = props.container;
+    const containerSignal = useSignal(container);
+
 
     useEffect(() => {
-        containerSignal.set(containerProp);
-    }, [containerSignal, containerProp]);
+        containerSignal.set(container);
+    }, [containerSignal, container]);
 
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();

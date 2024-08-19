@@ -8,10 +8,10 @@ export function createNewBlankPage(): Page {
         fetchers: [],
         containers: [{
             id: guid(),
-            type: 'vertical',
+            type: 'container',
             children: [],
             properties: {},
         }],
-        name: 'home',
+        name: 'home'
     }
 }

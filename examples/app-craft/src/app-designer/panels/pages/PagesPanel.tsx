@@ -74,7 +74,8 @@ export function PagesPanel() {
                             id: page.id,
                             tag : {
                                 type : 'DesignPanel'
-                            }
+                            },
+                            visible: () => true
                         })
                     }}>
                         <div></div>

@@ -1,14 +1,15 @@
 import {useContext} from "react";
-import {DashboardContext, Panel} from "./Dashboard.tsx";
+import {DashboardContext, Panel, PanelInstance} from "./Dashboard.tsx";
 import {guid} from "../../utils/guid.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
+
 
 export function useAddDashboardPanel() {
     const {panelsSignal, selectedPanelSignal} = useContext(DashboardContext);
     const {activePageIdSignal} = useAppContext();
     return function addPanel(panel: Panel & {
         id?: string,
-        tag?: { containerId?: string, propertyName?: string, variableId?: string, type: string }
+        tag: PanelInstance['tag']
     }) {
         panel.id = panel.id ?? guid();
         const panels = panelsSignal.get();

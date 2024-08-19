@@ -11,6 +11,7 @@ export interface Table {
     tableInfo: TableInfo[]
 }
 
+
 export async function getTables() {
     const result = await sqlite({
         type: 'executeQuery',

@@ -108,7 +108,8 @@ export function ErrorsPanel() {
                                         containerId: e.containerId,
                                         propertyName: e.propertyName,
                                         type : 'ComponentPropertyEditor'
-                                    }
+                                    },
+                                    visible: () => true
                                 })
                             }
 
@@ -117,7 +118,7 @@ export function ErrorsPanel() {
                                     position: 'mainCenter',
                                     component: () => {
                                         return <VariableEditorPanel variableId={e.variableId} defaultType={'state'}
-                                                                    panelId={e.variableId}/>
+                                                                    panelId={e.variableId} scope={'page'}/>
                                     },
                                     title: `${type} : ${name}`,
                                     Icon: Icon.Component,

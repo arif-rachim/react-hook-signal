@@ -1,15 +1,18 @@
 import {
-    CSSProperties,
     type DragEvent as ReactDragEvent,
     HTMLAttributes,
-    type MouseEvent as ReactMouseEvent
+    type MouseEvent as ReactMouseEvent,
+    useContext,
+    useRef
 } from "react";
-import {notifiable, useComputed} from "react-hook-signal";
+import {useComputed, useSignalEffect} from "react-hook-signal";
 import {MdArrowUpward, MdCancel, MdDragIndicator} from "react-icons/md";
 import {useSelectedDragContainer} from "./hooks/useSelectedDragContainer.ts";
 import {useUpdatePageSignal} from "./hooks/useUpdatePageSignal.ts";
 import {useAppContext} from "./hooks/useAppContext.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
+import {DashboardContext} from "./dashboard/Dashboard.tsx";
+import {isEmpty} from "../utils/isEmpty.ts";
 
 /**
  * Represents a toolbar component that provides actions for a container.
@@ -20,8 +23,12 @@ export function ToolBar() {
         allContainersSignal,
         activeDropZoneIdSignal,
         hoveredDragContainerIdSignal,
-        uiDisplayModeSignal
+        uiDisplayModeSignal,
+        activePageIdSignal,
+        allPagesSignal
     } = useAppContext<AppDesignerContext>();
+    const {selectedPanelSignal, panelsSignal} = useContext(DashboardContext);
+    const toolbarRef = useRef<HTMLDivElement|null>(null);
     const containerSignal = useSelectedDragContainer();
     const updatePage = useUpdatePageSignal();
 
@@ -30,41 +37,69 @@ export function ToolBar() {
         event.stopPropagation();
     }
 
-    const computedStyle = useComputed(() => {
+    const centerPanelComputed = useComputed(() => {
+        const mainCenterId = selectedPanelSignal.get().mainCenter;
+        return panelsSignal.get().find(p => p.id === mainCenterId);
+    })
+
+    useSignalEffect(() => {
         const container = containerSignal.get();
+
         const displayMode = uiDisplayModeSignal.get();
-        const style: CSSProperties = {
-            display: 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.5)',
-            position: 'absolute',
-            padding: '3px 5px',
-            borderRadius: 5,
-            color: 'white',
-            fontSize: 18
-        };
+        const isDesignPanel = centerPanelComputed.get()?.tag?.type === 'DesignPanel';
+        const element = toolbarRef.current;
+        if(element === undefined || element === null){
+            return;
+        }
+        if (!isDesignPanel) {
+            element.style.display = 'none';
+            return;
+        }
         if (displayMode === "view") {
-            return style as CSSProperties;
+            element.style.display = 'none';
+            return;
         }
         if (container === undefined) {
-            return style as CSSProperties;
+            element.style.display = 'none';
+            return;
         }
         const isRoot = container.parent === '';
         if (isRoot) {
-            return style as CSSProperties;
+            element.style.display = 'none';
+            return;
         }
-        const element = document.querySelector(`[data-element-id="${container.id}"]`);
-        if (element === null) {
-            return style as CSSProperties;
+        const pageRootId = (allPagesSignal.get().find(p => p.id === activePageIdSignal.get())?.containers??[]).find(c => isEmpty(c.parent))?.id
+        const anchorElement = document.querySelector(`[data-element-id="${container.id}"]`);
+        const pageRootElement = document.querySelector(`[data-element-id="${pageRootId}"]`);
+        if (anchorElement === null) {
+            element.style.display = 'none';
+            return;
+        }
+        const resizeObserver = new ResizeObserver(() => {
+            const contentRect = anchorElement.getBoundingClientRect();
+            if(contentRect){
+                element.style.display = 'flex';
+                element.style.top = `${contentRect.top - 15}px`;
+                element.style.left = `${contentRect.left + contentRect.width - 70}px`;
+            }
+        })
+        resizeObserver.observe(anchorElement);
+        if(pageRootElement){
+            resizeObserver.observe(pageRootElement);
+
         }
 
-
-        const {top, left, width} = element.getBoundingClientRect();
-        style.display = 'flex';
-        style.top = top - 15;
-        style.left = left + width - 70;
-        return style as CSSProperties;
+        return () => {
+            if(resizeObserver && anchorElement){
+                resizeObserver.unobserve(anchorElement)
+            }
+            if(resizeObserver && pageRootElement){
+                resizeObserver.unobserve(pageRootElement)
+            }
+            if(resizeObserver){
+                resizeObserver.disconnect();
+            }
+        }
     })
 
     function onFocusUp() {
@@ -132,9 +167,18 @@ export function ToolBar() {
         onMouseOver,
     }
 
-    return <notifiable.div style={computedStyle} onClick={preventClick} {...elementProps}>
+    return <div ref={toolbarRef} style={{
+        display: 'none',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0,0,0,0.5)',
+        position: 'absolute',
+        padding: '3px 5px',
+        borderRadius: 5,
+        color: 'white',
+        fontSize: 18}} onClick={preventClick} {...elementProps}>
         <MdArrowUpward onClick={onFocusUp}/>
         <MdDragIndicator/>
         <MdCancel onClick={onDelete}/>
-    </notifiable.div>
+    </div>
 }

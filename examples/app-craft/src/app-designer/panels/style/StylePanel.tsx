@@ -1,9 +1,24 @@
 import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {NumericalPercentagePropertyEditor} from "./editor/NumericalPercentagePropertyEditor.tsx";
 import {VerticalHorizontalAlignmentPropertyEditor} from "./editor/VerticalHorizontalAlignmentPropertyEditor.tsx";
+import {VerticalHorizonPropertyEditor} from "./editor/VerticalHorizonPropertyEditor.tsx";
 
 export function StylePanel() {
     return <>
+        <CollapsibleLabelContainer label={'Alignment'} styleContent={{overflowX: 'hidden'}}>
+            <div style={{display: 'flex', gap: 10}}>
+                <VerticalHorizonPropertyEditor label={'Direction'} style={{width:85}}/>
+                <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} style={{width: 85}}/>
+            </div>
+            <div style={{display: 'flex', gap: 10}}>
+                <VerticalHorizontalAlignmentPropertyEditor property={'verticalAlign'} style={{width: 85}}
+                                                           label={'Vertical'}
+                                                           dataSource={['', 'top', 'center', 'bottom']}/>
+                <VerticalHorizontalAlignmentPropertyEditor property={'horizontalAlign'} style={{width: 85}}
+                                                           label={'Horizontal'}
+                                                           dataSource={['', 'left', 'center', 'right']}/>
+            </div>
+        </CollapsibleLabelContainer>
         <CollapsibleLabelContainer label={'Size'}>
             <div style={{display: 'flex', gap: 10}}>
                 <NumericalPercentagePropertyEditor property={'height'} label={'Height'}
@@ -49,16 +64,7 @@ export function StylePanel() {
             </div>
         </CollapsibleLabelContainer>
 
-        <CollapsibleLabelContainer label={'Alignment'} styleContent={{overflowX: 'hidden'}}>
-            <div style={{display: 'flex', gap: 10}}>
-                <VerticalHorizontalAlignmentPropertyEditor property={'verticalAlign'} style={{width: 85}}
-                                                           label={'Vertical'}
-                                                           dataSource={['', 'top', 'center', 'bottom']}/>
-                <VerticalHorizontalAlignmentPropertyEditor property={'horizontalAlign'} style={{width: 85}}
-                                                           label={'Horizontal'}
-                                                           dataSource={['', 'left', 'center', 'right']}/>
-            </div>
-            <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} style={{width: 85}}/>
-        </CollapsibleLabelContainer>
+
+
     </>
 }

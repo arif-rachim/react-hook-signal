@@ -26,16 +26,12 @@ export function DropZone(props: {
     const computedStyle = useComputed(() => {
         const isFocused = id === activeDropZoneIdSignal.get();
         const style: CSSProperties = {
-            top: -5,
-            left: -5,
             minWidth: 10,
             minHeight: 10,
             backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: 10,
-            flexGrow: 1,
             position: 'absolute',
-            height: `calc(100% + 10px)`,
-            width: `calc(100% + 10px)`,
+            height: `calc(100%)`,
+            width: `calc(100%)`,
             transition: 'background-color 300ms ease-in-out',
             zIndex: -1
         };
@@ -51,6 +47,8 @@ export function DropZone(props: {
         backgroundColor: 'rgba(84,193,240,0.5)',
         position: 'relative',
         display: 'flex',
+        alignItems:'center',
+        justifyContent:'center',
         flexDirection: 'column'
     };
     return <div style={containerStyle}>

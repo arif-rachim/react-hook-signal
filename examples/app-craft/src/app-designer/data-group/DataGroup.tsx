@@ -3,7 +3,6 @@ import {Page} from "../AppDesigner.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {PageViewer} from "../../app-viewer/AppViewer.tsx";
-import {BORDER} from "../Border.ts";
 
 export const DataGroup = memo(forwardRef(DataGroupFC), (prevProps, nextProps) => {
     if (prevProps.component !== nextProps.component) {
@@ -27,18 +26,19 @@ function DataGroupFC(props: {
     direction: 'vertical' | 'horizontal',
     keyId: string
 }, ref: unknown) {
+    const max_page = 50;
     const {keyId, direction, style: propsStyle, data, component} = props;
     const [page, setPage] = useState<Page | undefined>(undefined);
     const style: CSSProperties = {
         display: 'flex',
         flexDirection: direction === 'horizontal' ? 'row' : 'column',
-        minHeight:20,
-        minWidth:20,
-        border : BORDER,
+        overflow: 'auto',
+        minHeight: 20,
+        minWidth: 20,
         ...propsStyle
     }
 
-    const {allPagesSignal, elements,allTablesSignal} = useAppContext();
+    const {allPagesSignal, elements, allTablesSignal,allCallablesSignal} = useAppContext();
     const componentIdSignal = useSignal(component);
     useEffect(() => {
         componentIdSignal.set(component)
@@ -49,15 +49,24 @@ function DataGroupFC(props: {
         const componentId = componentIdSignal.get();
         const page = allPages.find(p => p.id === componentId);
         setPage(page);
-    })
+    });
+    const dataPerPage = (data ?? []).filter((_,index) => {
+        return index < max_page;
+    });
     return <div ref={ref as ForwardedRef<HTMLDivElement>} style={style}>
-        {page && (data ?? []).map((item, index) => {
+        {page && dataPerPage.map((item, index) => {
             // here we need to render page
             let key: string = index.toString();
             if (item !== undefined && item !== null && typeof item === 'object' && keyId in item) {
                 key = (item[keyId] as string).toString();
             }
-            return <PageViewer elements={elements} page={page!} key={key} allTables={allTablesSignal.get()} {...item}/>
+            return <PageViewer
+                elements={elements}
+                page={page!}
+                key={key}
+                allTables={allTablesSignal.get()}
+                allCallables={allCallablesSignal.get()}
+                {...item}/>
         })}
     </div>
 }

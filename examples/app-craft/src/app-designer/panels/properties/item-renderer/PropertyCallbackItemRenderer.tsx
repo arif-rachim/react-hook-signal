@@ -46,7 +46,8 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                             containerId: container?.id,
                             propertyName: propertyName,
                             type : 'ComponentPropertyEditor'
-                        }
+                        },
+                        visible: () => true
                     })
                 }
                 return <div style={{display: 'flex'}}>

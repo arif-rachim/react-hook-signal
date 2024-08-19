@@ -17,7 +17,10 @@ import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLab
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
+import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
+import {Signal} from "signal-polyfill";
 
+const empty = new Signal.Computed(() => []);
 
 /**
  * Represents a panel for editing variables.
@@ -25,15 +28,27 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 export function VariableEditorPanel(props: {
     variableId?: string,
     defaultType: VariableType,
-    panelId: string
+    panelId: string,
+    scope: 'page' | 'application'
 }) {
     const context = useAppContext();
-    const {variableId, defaultType, panelId} = props;
-    const variable = context.allVariablesSignal.get().find(v => v.id === variableId);
+    const {variableId, defaultType, panelId, scope} = props;
+    const variable = [...context.allVariablesSignal.get(), ...context.allApplicationVariablesSignal.get()].find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
-    const updateVariable = useUpdateVariable();
-    const {allVariablesSignal, allPagesSignal, allFetchersSignal,allTablesSignal} = context;
+    const updateVariable = useUpdateVariable(scope);
+    const {
+        allVariablesSignal: allPageVariablesSignal,
+        allPagesSignal,
+        allFetchersSignal: allPageFetchersSignal,
+        allTablesSignal,
+        allCallablesSignal,
+        allApplicationVariablesSignal
+    } = context;
+
+    const allVariablesSignal = scope === 'page' ? allPageVariablesSignal : allApplicationVariablesSignal;
+    const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
+
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
 
@@ -131,7 +146,8 @@ export function VariableEditorPanel(props: {
                             return <DependencyInputSelector onChange={(result) => {
                                 variableSignal.set({...variable, dependencies: result});
                                 isModified.set(true);
-                            }} value={variable.dependencies ?? []} valueToIgnore={[variable.id]}/>;
+                            }} value={variable.dependencies ?? []} valueToIgnore={[variable.id]}
+                                                            scope={scope}/>;
                         }}
                     </notifiable.div>
                 </LabelContainer>
@@ -182,6 +198,7 @@ export function VariableEditorPanel(props: {
                         const allFetchers = allFetchersSignal.get();
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
+                        const allCallables = allCallablesSignal.get();
                         const formula = variable.functionCode;
                         return <Editor
                             language="javascript"
@@ -190,9 +207,10 @@ export function VariableEditorPanel(props: {
                                 dependencies,
                                 allVariables,
                                 allFetchers,
-                                returnType: zodSchemaToJson(variable.schemaCode),
+                                returnType: zodSchemaToJson(wrapWithZObjectIfNeeded(variable.schemaCode)),
                                 allPages,
-                                allTables
+                                allTables,
+                                allCallables
                             })}
                             value={formula}
                             onChange={(value?: string) => {

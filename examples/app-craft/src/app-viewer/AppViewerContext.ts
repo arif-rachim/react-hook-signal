@@ -1,5 +1,13 @@
 import {Signal} from "signal-polyfill";
-import {Application, Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
+import {
+    Application,
+    Callable,
+    Container,
+    Fetcher,
+    Page,
+    Variable,
+    VariableInstance
+} from "../app-designer/AppDesigner.tsx";
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {createContext} from "react";
@@ -10,6 +18,7 @@ import {Table} from "../app-designer/panels/database/service/getTables.ts";
  */
 export interface AppViewerContext {
     applicationSignal:Signal.State<Application>;
+    allCallablesSignal:Signal.Computed<Array<Callable>>;
     allTablesSignal: Signal.Computed<Array<Table>>;
     allPagesSignal: Signal.Computed<Array<Page>>;
     activePageIdSignal: Signal.State<string>;
@@ -19,6 +28,8 @@ export interface AppViewerContext {
     variableInitialValueSignal: Signal.State<Record<string, unknown>>;
     allVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
     allErrorsSignal: Signal.State<Array<ErrorType>>;
+    allApplicationVariablesSignal: Signal.Computed<Array<Variable>>,
+    allApplicationVariablesSignalInstance : Signal.State<Array<VariableInstance>>,
     elements: LayoutBuilderProps['elements'];
 }
 

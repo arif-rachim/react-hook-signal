@@ -3,7 +3,6 @@ import {AnySignal, useComputed, useSignal, useSignalEffect} from "react-hook-sig
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
-import {ToolBar} from "./ToolBar.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
@@ -12,7 +11,7 @@ import {Dashboard} from "./dashboard/Dashboard.tsx";
 import {Icon} from "./Icon.ts";
 import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
 import {ElementsPanel} from "./panels/elements/ElementsPanel.tsx";
-import {VariablesPanel} from "./panels/variables/VariablesPanel.tsx";
+import {createVariablePanel} from "./panels/variables/VariablesPanel.tsx";
 import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
@@ -22,6 +21,7 @@ import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
 import {createNewBlankApplication} from "./createNewBlankApplication.ts";
 import {Table} from "./panels/database/service/getTables.ts";
+import CallablePanel from "./panels/callable/CallablePanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -32,6 +32,14 @@ export type Variable = {
     functionCode: string,
     schemaCode: string,
     dependencies?: Array<string> // this is only for computed and effect
+}
+
+export interface Callable {
+    id: string,
+    name: string,
+    schemaCode: string,
+    inputSchemaCode: string,
+    functionCode: string,
 }
 
 export type FetcherParameter = {
@@ -82,77 +90,56 @@ export type Application = {
     id: string,
     name: string,
     pages: Array<Page>,
-    tables : Array<Table>
+    tables: Array<Table>,
+    callables: Array<Callable>,
+    variables: Array<Variable>, // application variables, we can use this to store the login state !
 }
 
 export type Container = {
     id: string,
     children: string[],
     parent?: string,
-    type: 'horizontal' | 'vertical' | string,
-    width?: CSSProperties['width'],
-    height?: CSSProperties['height'],
-
-    minWidth?: CSSProperties['minWidth'],
-    minHeight?: CSSProperties['minHeight'],
-
-
-    paddingTop?: CSSProperties['paddingTop'],
-    paddingRight?: CSSProperties['paddingRight'],
-    paddingBottom?: CSSProperties['paddingBottom'],
-    paddingLeft?: CSSProperties['paddingLeft'],
-
-    marginTop?: CSSProperties['marginTop'],
-    marginRight?: CSSProperties['marginRight'],
-    marginBottom?: CSSProperties['marginBottom'],
-    marginLeft?: CSSProperties['marginLeft'],
-
-    // only for container
-    gap?: CSSProperties['gap'],
+    type: 'container' | string,
     verticalAlign?: 'top' | 'center' | 'bottom' | '',
     horizontalAlign?: 'left' | 'center' | 'right' | '',
-
-    properties: Record<string, ContainerPropertyType>,
+    properties: Record<string, ContainerPropertyType> & { defaultStyle?: CSSProperties },
 }
 
 export default function AppDesigner(props: LayoutBuilderProps) {
     const applicationSignal = useSignal(createNewBlankApplication());
+
+    const allCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
     const allPagesSignal = useComputed<Array<Page>>(() => applicationSignal.get().pages ?? []);
+    const allTablesSignal = useComputed<Array<Table>>(() => applicationSignal.get().tables ?? []);
+
     const activePageIdSignal = useSignal<string>('');
     const activeDropZoneIdSignal = useSignal('');
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
+
     const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-    const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
+    const variableInitialValueSignal = useSignal<Record<string, unknown>>({});
+    const allApplicationVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
 
-    const allTablesSignal = useComputed<Array<Table>>(() => {
-        return applicationSignal.get().tables ?? []
-    });
-
-    const allVariablesSignal = useComputed<Array<Variable>>(() => {
+    const activePageSignal = useComputed(() => {
         const activePageId = activePageIdSignal.get();
         const allPages = allPagesSignal.get();
-        return allPages.find(i => i.id === activePageId)?.variables ?? []
-    });
+        return allPages.find(i => i.id === activePageId)
+    })
 
-    const allContainersSignal = useComputed<Array<Container>>(() => {
-        const activePageId = activePageIdSignal.get();
-        const allPages = allPagesSignal.get();
-        return allPages.find(i => i.id === activePageId)?.containers ?? []
-    });
-
-    const allFetchersSignal = useComputed<Array<Fetcher>>(() => {
-        const activePageId = activePageIdSignal.get();
-        const allPages = allPagesSignal.get();
-        return allPages.find(i => i.id === activePageId)?.fetchers ?? []
-    });
+    const allApplicationVariablesSignal = useComputed<Array<Variable>>(() => applicationSignal.get().variables ?? []);
+    const allVariablesSignal = useComputed<Array<Variable>>(() => activePageSignal.get()?.variables ?? []);
+    const allContainersSignal = useComputed<Array<Container>>(() => activePageSignal.get()?.containers ?? []);
+    const allFetchersSignal = useComputed<Array<Fetcher>>(() => activePageSignal.get()?.fetchers ?? []);
 
     const {value, onChange} = props;
+
     useEffect(() => {
         applicationSignal.set(value);
-        if(value && value.pages && value.pages.length > 0){
+        if (value && value.pages && value.pages.length > 0) {
             const currentActivePageId = activePageIdSignal.get();
             const hasSelection = value.pages.findIndex(i => i.id === currentActivePageId) >= 0;
             if (!hasSelection) {
@@ -167,8 +154,9 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         onChange(applicationSignal.get());
     })
     const context: AppDesignerContext = {
-        applicationSignal:applicationSignal,
-        allTablesSignal:allTablesSignal,
+        applicationSignal: applicationSignal,
+        allCallablesSignal: allCallablesSignal,
+        allTablesSignal: allTablesSignal,
         allPagesSignal: allPagesSignal,
         activePageIdSignal: activePageIdSignal,
         hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
@@ -181,6 +169,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         allVariablesSignalInstance: allVariablesSignalInstance,
         allErrorsSignal: allErrorsSignal,
         allFetchersSignal: allFetchersSignal,
+        allApplicationVariablesSignal: allApplicationVariablesSignal,
+        allApplicationVariablesSignalInstance: allApplicationVariablesSignalInstance,
         elements: {...DefaultElements, ...props.elements}
     }
     return <ErrorBoundary>
@@ -195,23 +185,44 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         position: 'left',
                         component: PagesPanel
                     },
+                    functions: {
+                        title: 'Application Callables',
+                        Icon: Icon.Function,
+                        position: 'left',
+                        component: CallablePanel,
+                    },
+                    applicationVariables: {
+                        title: 'Application Variables',
+                        Icon: Icon.ApplicationVariable,
+                        position: 'left',
+                        component: createVariablePanel('application')
+                    },
+                    database: {
+                        title: 'Database',
+                        Icon: Icon.Database,
+                        position: 'left',
+                        component: DatabasePanel
+                    },
                     components: {
                         title: 'Components',
                         Icon: Icon.Component,
-                        position: 'left',
-                        component: ElementsPanel
+                        position: 'leftBottom',
+                        component: ElementsPanel,
+                        visible: (_,selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     variables: {
                         title: 'Variables',
                         Icon: Icon.Variable,
                         position: 'leftBottom',
-                        component: VariablesPanel
+                        component: createVariablePanel('page'),
+                        visible: (_,selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     fetchers: {
                         title: 'Fetchers',
                         Icon: Icon.Fetcher,
                         position: 'leftBottom',
-                        component: FetchersPanel
+                        component: FetchersPanel,
+                        visible: (_,selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     errors: {
                         title: 'Errors',
@@ -224,36 +235,30 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         Icon: Icon.Style,
                         position: 'right',
                         component: StylePanel,
-                        visible : (tag) => tag?.type === 'DesignPanel'
+                        visible: (tag) => tag?.type === 'DesignPanel'
                     },
                     properties: {
                         title: 'Properties',
                         Icon: Icon.Property,
                         position: 'right',
                         component: PropertiesPanel,
-                        visible : (tag) => tag?.type === 'DesignPanel'
+                        visible: (tag) => tag?.type === 'DesignPanel'
                     },
                     bundle: {
                         title: 'Package',
                         Icon: Icon.Package,
                         position: 'bottom',
                         component: PackagePanel
-                    },
-                    database : {
-                        title : 'Database',
-                        Icon : Icon.Database,
-                        position : 'leftBottom',
-                        component : DatabasePanel
                     }
                 }}
                            defaultSelectedPanel={{
-                               left: 'components',
-                               leftBottom: 'variables',
+                               left: 'pages',
+                               leftBottom: 'components',
                                bottom: 'errors',
                                right: 'styles',
                            }}>
                 </Dashboard>
-                <ToolBar/>
+
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>

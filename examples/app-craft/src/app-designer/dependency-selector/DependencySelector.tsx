@@ -3,17 +3,23 @@ import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
 import {Button} from "../button/Button.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
+import {Signal} from "signal-polyfill";
 
+const empty = new Signal.Computed(() => []);
 /**
  * A component for selecting dependencies.
  */
 export function DependencySelector(props: {
     closePanel: (param: Array<string> | 'cancel') => void,
     value: Array<string>,
-    signalsToFilterOut: Array<string>
+    signalsToFilterOut: Array<string>,
+    scope:'page'|'application'
 }) {
-    const {closePanel, signalsToFilterOut} = props;
-    const {allVariablesSignal, allFetchersSignal} = useAppContext();
+    const {closePanel, signalsToFilterOut,scope} = props;
+    const {allVariablesSignal:allPageVariablesSignal, allFetchersSignal:allPageFetchersSignal,allApplicationVariablesSignal} = useAppContext();
+    const allVariablesSignal = scope === 'page' ? allPageVariablesSignal : allApplicationVariablesSignal;
+    const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
+
     const selectedSignal = useSignal<Array<string>>(props.value);
     const variablesElements = useComputed(() => {
         const variables = allVariablesSignal.get();

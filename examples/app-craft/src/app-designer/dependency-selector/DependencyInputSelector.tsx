@@ -3,16 +3,22 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {DependencySelector} from "./DependencySelector.tsx";
 import {BORDER} from "../Border.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
+import {Signal} from "signal-polyfill";
 
+const empty = new Signal.Computed(() => []);
 export function DependencyInputSelector(props: {
     value: Array<string>,
     onChange: (value: Array<string>) => void,
-    valueToIgnore: Array<string>
+    valueToIgnore: Array<string>,
+    scope: 'page' | 'application'
 }) {
+
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
-    const {allVariablesSignal, allFetchersSignal} = context;
-    const {value, onChange, valueToIgnore} = props;
+    const {value, onChange, valueToIgnore, scope} = props;
+    const {allVariablesSignal:allPageVariablesSignal, allFetchersSignal:allPageFetchersSignal,allApplicationVariablesSignal} = context;
+    const allVariablesSignal = scope === 'page' ? allPageVariablesSignal : allApplicationVariablesSignal;
+    const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
 
     async function showDependencySelector() {
         const result = await showModal<Array<string> | 'cancel'>(closePanel => {
@@ -21,6 +27,7 @@ export function DependencyInputSelector(props: {
                     closePanel={closePanel}
                     value={value}
                     signalsToFilterOut={valueToIgnore}
+                    scope={scope}
                 />
             </AppDesignerContext.Provider>
         });

@@ -1,9 +1,10 @@
 import {Monaco} from "@monaco-editor/react";
-import {Fetcher, Page, Variable} from "./AppDesigner.tsx";
+import {Callable, Fetcher, Page, Variable} from "./AppDesigner.tsx";
 import {zodSchemaToJson} from "./zodSchemaToJson.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {Table} from "./panels/database/service/getTables.ts";
 import {composeDbSchema} from "./variable-initialization/dbSchemaInitialization.ts";
+import {composeCallableSchema} from "./variable-initialization/callableSchemaInitialization.ts";
 
 /**
  * Executes the onBeforeMountHandler function.
@@ -14,14 +15,16 @@ export const onBeforeMountHandler = (props: {
     dependencies: Array<string>,
     returnType: string,
     allPages: Array<Page>,
-    allTables: Array<Table>
+    allTables: Array<Table>,
+    allCallables: Array<Callable>
 }) => (monaco: Monaco) => {
-    const {allVariables, dependencies, returnType, allPages, allFetchers,allTables} = props;
+    const {allVariables, dependencies, returnType, allPages, allFetchers, allTables, allCallables} = props;
     // extra libraries
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeLibrary(allVariables, allFetchers, dependencies), "ts:filename/local-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(returnTypeDefinition(returnType), "ts:filename/return-type-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeNavigation(allPages), "ts:filename/navigation-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeDbSchema(allTables), "ts:filename/db-source.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeCallableSchema(allCallables), "ts:filename/callable-source.d.ts");
 }
 
 const returnTypeDefinition = (returnType: string) => `declare const module:{exports:${returnType}};`

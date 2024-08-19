@@ -14,13 +14,8 @@ export function addNewContainer(allContainersSignal: Signal.Computed<Array<Conta
     const newContainer: Container = {
         id: guid(),
         type: config.type,
-
         children: [],
         parent: parentContainerId,
-
-        minWidth: '24px',
-        minHeight: '24px',
-
         properties: {}
     }
 

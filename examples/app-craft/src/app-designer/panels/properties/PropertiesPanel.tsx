@@ -25,22 +25,24 @@ export function PropertiesPanel() {
         }
         const elementName = selectedDragContainer?.type;
         const isCustomElement = elements && elementName && elementName in elements;
+        let property:Record<string, unknown> = {};
+        let propertyEditor : Element['propertyEditor'] = {};
 
         if (isCustomElement) {
             const element = elements[elementName];
-            const property = element.property;
-            for (const propKey of Object.keys(property)) {
-                const type = property[propKey];
-                const isZodFunction = type instanceof ZodFunction;
-                if (isZodFunction) {
-                    callbacks.push(propKey)
-                } else {
-                    attributes.push(propKey)
-                }
-            }
-            return setCallbacksAndAttributes({callbacks, attributes, propertyEditor: element.propertyEditor});
+            property = element.property;
+            propertyEditor = element.propertyEditor;
         }
-        setCallbacksAndAttributes({callbacks, attributes, propertyEditor: {}});
+        for (const propKey of Object.keys(property)) {
+            const type = property[propKey];
+            const isZodFunction = type instanceof ZodFunction;
+            if (isZodFunction) {
+                callbacks.push(propKey)
+            } else {
+                attributes.push(propKey)
+            }
+        }
+        return setCallbacksAndAttributes({callbacks, attributes, propertyEditor});
     })
 
     function propertyCallbackItemRenderer(propKey: string) {

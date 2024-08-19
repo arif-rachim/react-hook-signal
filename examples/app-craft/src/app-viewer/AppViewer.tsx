@@ -1,16 +1,15 @@
 import {ElementStyleProps, LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
-import {Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
+import {Callable, Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {Signal} from "signal-polyfill";
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
-import {CSSProperties, forwardRef, ReactNode, useEffect, useMemo, useRef, useState} from "react";
+import {CSSProperties, forwardRef, useEffect, useMemo, useRef, useState} from "react";
 import {VariableInitialization} from "../app-designer/variable-initialization/VariableInitialization.tsx";
 import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
 import {BORDER} from "../app-designer/Border.ts";
 import {
     PropertyInitialization
 } from "../app-designer/panels/design/container-renderer/property-initialization/PropertyInitialization.tsx";
-import {alignItems, justifyContent} from "../utils/justifyContentAlignItems.ts";
 import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 import {AppViewerContext} from "./AppViewerContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
@@ -28,8 +27,10 @@ export default function AppViewer(props: LayoutBuilderProps) {
     const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-
+    const allCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
     const allTablesSignal = useComputed(() => applicationSignal.get().tables ?? []);
+    const allApplicationVariablesSignal= useComputed(() => applicationSignal.get().variables ?? []);
+    const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
     const allVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
         const allPages = allPagesSignal.get();
@@ -63,6 +64,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
     })
     const context: AppViewerContext = {
         applicationSignal,
+        allCallablesSignal,
         allTablesSignal,
         allPagesSignal,
         activePageIdSignal,
@@ -72,6 +74,8 @@ export default function AppViewer(props: LayoutBuilderProps) {
         allVariablesSignalInstance,
         allErrorsSignal,
         allFetchersSignal,
+        allApplicationVariablesSignal,
+        allApplicationVariablesSignalInstance,
         elements: props.elements
     }
 
@@ -95,7 +99,8 @@ export default function AppViewer(props: LayoutBuilderProps) {
 export function PageViewer(props: {
     elements: LayoutBuilderProps['elements'],
     page: Page,
-    allTables: Array<Table>
+    allTables: Array<Table>,
+    allCallables:Array<Callable>
 } & Record<string, unknown>) {
     const {elements, page, ...properties} = props;
     const variableInitialValueSignal = useSignal<Record<string, unknown>>(properties);
@@ -104,6 +109,7 @@ export function PageViewer(props: {
     }, [properties, variableInitialValueSignal]);
 
     const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allCallablesSignal = useComputed(() => props.allCallables);
     const allTablesSignal = useComputed(() => props.allTables)
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
     const allVariablesSignal = useComputed(() => props.page.variables)
@@ -111,9 +117,13 @@ export function PageViewer(props: {
     const allFetchersSignal = useComputed(() => props.page.fetchers);
     const allPagesSignal = useComputed<Array<Page>>(() => [page]);
     const applicationSignal = useSignal(createNewBlankApplication());
+    const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
+    const allApplicationVariablesSignal= useComputed<Array<Variable>>(() => [])
     const activePageIdSignal = useSignal(page.id)
+
     const context: AppViewerContext = {
         applicationSignal,
+        allCallablesSignal,
         allTablesSignal,
         allPagesSignal,
         activePageIdSignal,
@@ -123,20 +133,16 @@ export function PageViewer(props: {
         allVariablesSignalInstance,
         allErrorsSignal,
         allFetchersSignal,
+        allApplicationVariablesSignalInstance,
+        allApplicationVariablesSignal,
         elements: elements
     }
+    const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
+
     return <AppViewerContext.Provider value={context}>
         <ErrorBoundary>
             <VariableInitialization/>
-            <notifiable.div style={{flexGrow: 1, overflow: 'auto'}}>
-                {() => {
-                    const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
-                    if (container) {
-                        return <ContainerElement container={container}/>
-                    }
-                    return <></>
-                }}
-            </notifiable.div>
+            {container && <ContainerElement container={container}/>}
         </ErrorBoundary>
     </AppViewerContext.Provider>
 }
@@ -158,80 +164,47 @@ function ContainerElement(props: { container: Container }) {
     useSignalEffect(() => {
         const container: Container | undefined = containerSignal.get();
         const isRoot = container?.parent === '';
-        const isContainer = ['vertical', 'horizontal'].includes(container.type);
+        const isContainer = container?.type === 'container';
         const styleFromSignal = {
 
             border: isContainer ? undefined : BORDER,
             background: 'white',
-            minWidth: container?.minWidth,
-            minHeight: container?.minHeight,
+            minWidth: container?.properties?.defaultStyle?.minWidth,
+            minHeight: container?.properties?.defaultStyle?.minHeight,
 
-            paddingTop: container?.paddingTop,
-            paddingRight: container?.paddingRight,
-            paddingBottom: container?.paddingBottom,
-            paddingLeft: container?.paddingLeft,
+            paddingTop: container?.properties?.defaultStyle?.paddingTop,
+            paddingRight: container?.properties?.defaultStyle?.paddingRight,
+            paddingBottom: container?.properties?.defaultStyle?.paddingBottom,
+            paddingLeft: container?.properties?.defaultStyle?.paddingLeft,
 
-            marginTop: container?.marginTop,
-            marginRight: container?.marginRight,
-            marginBottom: container?.marginBottom,
-            marginLeft: container?.marginLeft,
+            marginTop: container?.properties?.defaultStyle?.marginTop,
+            marginRight: container?.properties?.defaultStyle?.marginRight,
+            marginBottom: container?.properties?.defaultStyle?.marginBottom,
+            marginLeft: container?.properties?.defaultStyle?.marginLeft,
 
             display: 'flex',
-            flexDirection: container?.type === 'horizontal' ? 'row' : 'column',
-            width: isRoot ? '100%' : container?.width,
-            height: isRoot ? '100%' : container?.height,
+            flexDirection: container?.properties?.defaultStyle?.flexDirection ?? 'column',
+            width: isRoot ? '100%' : container?.properties?.defaultStyle?.width,
+            height: isRoot ? '100%' : container?.properties?.defaultStyle?.height,
             position: 'relative',
-            gap: container?.gap,
-            justifyContent: justifyContent(container),
-            alignItems: alignItems(container),
+            gap: container?.properties?.defaultStyle?.gap,
+            justifyContent: container?.properties?.defaultStyle?.justifyContent,
+            alignItems: container?.properties?.defaultStyle?.alignItems,
         };
         setComputedStyle(styleFromSignal as CSSProperties)
     });
 
     const elementProps: ElementStyleProps = {
         style: computedStyle,
-        ['data-element-id']: container?.id ?? ''
+        ['data-element-id']: container?.id ?? '',
+        container : container
     };
     if (elements && elements[container?.type]) {
         return <ElementRenderer container={container} elementProps={elementProps}/>
     }
-
-    return <ContainerRenderer container={container} elementProps={elementProps}/>
+    return <></>
 }
 
-
-/**
- * Renders a container with its child elements.
- */
-function ContainerRenderer(props: { elementProps: ElementStyleProps, container: Container }) {
-    const {elementProps} = props;
-    const [elements, setElements] = useState<ReactNode[]>([]);
-    const {allContainersSignal} = useAppContext<AppViewerContext>();
-    const containerSignal = useSignal(props.container);
-    const containerProp = props.container;
-
-    useEffect(() => {
-        containerSignal.set(containerProp);
-    }, [containerSignal, containerProp]);
-
-    useSignalEffect(() => {
-        const container: Container | undefined = containerSignal.get();
-        const children = container?.children ?? [];
-        const result: Array<ReactNode> = [];
-        for (let i = 0; i < children?.length; i++) {
-            const childId = children[i];
-            const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-            result.push(<ContainerElement container={childContainer} key={childId}/>)
-        }
-        setElements(result);
-    });
-    const {style} = elementProps;
-    return <div
-        style={style}
-        data-element-id={elementProps["data-element-id"]}>
-        {elements}
-    </div>
-}
 
 /**
  * Renders an element inside a container with specified props.
@@ -257,6 +230,6 @@ function ElementRenderer(props: { container: Container, elementProps: ElementSty
     }, [Component]);
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
-        <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style}/>
+        <Component ref={ref} key={container?.id} {...componentProps} style={elementProps.style} />
     </>
 }

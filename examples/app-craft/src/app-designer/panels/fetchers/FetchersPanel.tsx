@@ -40,6 +40,10 @@ export function FetchersPanel() {
             title: fetcher ? `Edit ${fetcher.name}` : `Add Fetcher`,
             Icon: Icon.Component,
             id: panelId,
+            tag : {
+                type : 'FetcherEditorPanel'
+            },
+            visible: () => true
         })
     }
 

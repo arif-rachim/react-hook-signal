@@ -1,6 +1,6 @@
 import {BORDER} from "../Border.ts";
 import {LabelContainer} from "../label-container/LabelContainer.tsx";
-import {CSSProperties, PropsWithChildren, ReactNode, useState} from "react";
+import {CSSProperties, PropsWithChildren, ReactNode, useEffect, useState} from "react";
 import {Icon} from "../Icon.ts";
 
 export default function CollapsibleLabelContainer(props: PropsWithChildren<{
@@ -9,9 +9,16 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
     styleLabel?: CSSProperties,
     styleContent?: CSSProperties,
     defaultOpen?: boolean,
-    autoGrowWhenOpen?: boolean
+    autoGrowWhenOpen?: boolean,
+    onOpenChange?:(isOpen:boolean) => void
 }>) {
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? true);
+    const onOpenChange = props.onOpenChange;
+    useEffect(() => {
+        if(onOpenChange){
+            onOpenChange(isOpen);
+        }
+    }, [isOpen,onOpenChange]);
     return <LabelContainer label={<>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             {isOpen && <Icon.ArrowDown/>}

@@ -5,6 +5,9 @@ import {SqlValue} from "sql.js";
 import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
+import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {composeTableSchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
+import {Editor} from "@monaco-editor/react";
 
 async function queryTable(table: Table, currentPage: number, setTableData: (value: (((prevState: {
     columns: Column[];
@@ -59,9 +62,21 @@ export default function TableEditor(props: { table: Table }) {
             await queryTable(table, 1, setTableData);
         })();
     }, [table]);
-
+    const [isOpen,setOpen] = useState(false);
     return <div
         style={{display: 'flex', flexDirection: 'column', overflow: 'auto', height: '100%'}}>
+        <CollapsibleLabelContainer label={'Table Schema'} style={{minHeight:isOpen?300:32}} defaultOpen={false} autoGrowWhenOpen={true} onOpenChange={setOpen} >
+            <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+            <Editor
+                language="javascript"
+                value={composeTableSchema(props.table)}
+                options={{
+                    selectOnLineNumbers: false,
+                    lineNumbers: 'off',
+                }}
+            />
+            </div>
+        </CollapsibleLabelContainer>
         <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
             <SimpleTable columns={tableData.columns} data={tableData.data as Array<Record<string, unknown>>}
                          keyField={'id'}/>
@@ -125,9 +140,10 @@ function SimpleTable<T extends Record<string, unknown>>(props: {
             {columns.map(col => {
                 return <div style={{
                     display: 'table-cell',
-                    backgroundColor: '#888',
-                    color: "white",
-                    padding: '0px 10px'
+                    borderBottom : BORDER,
+                    backgroundColor: '#F2F2F2',
+                    color: "black",
+                    padding: '5px 10px'
                 }}>{col.title}</div>
             })}
         </div>

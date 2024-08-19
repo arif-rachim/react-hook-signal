@@ -4,15 +4,20 @@ import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {BORDER} from "../../../Border.ts";
 import {useSelectedDragContainer} from "../../../hooks/useSelectedDragContainer.ts";
 import {useUpdateSelectedDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
-import {Container} from "../../../AppDesigner.tsx";
+import {
+    alignItems,
+    horizontalAlign,
+    justifyContent,
+    verticalAlign
+} from "../../../../utils/justifyContentAlignItems.ts";
 
 
-export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<Container, 'verticalAlign' | 'horizontalAlign'>>(props: {
+export function VerticalHorizontalAlignmentPropertyEditor<T extends 'verticalAlign'|'horizontalAlign'>(props: {
     property: T,
     label: string,
     style?: CSSProperties,
     styleLabel?: CSSProperties,
-    dataSource: Array<Container[T]>
+    dataSource: Array<string>
 }) {
     const selectedDragContainer = useSelectedDragContainer();
     const updateSelectedDragContainer = useUpdateSelectedDragContainer();
@@ -26,7 +31,15 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<C
         if (property === undefined) {
             return;
         }
-        setValue(container[property])
+        const defaultStyle = container.properties.defaultStyle ?? {};
+        const type = defaultStyle.flexDirection === 'row' ? 'horizontal' : 'vertical';
+        if(property === 'verticalAlign'){
+            const value = verticalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent});
+            setValue(value);
+        }else{
+            const value = horizontalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent});
+            setValue(value);
+        }
     })
 
     return <LabelContainer label={label} style={props.style} styleLabel={{width: 100, ...props.styleLabel}}>
@@ -41,7 +54,14 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends keyof Pick<C
             onChange={(e) => {
                 const value = e.target.value;
                 updateSelectedDragContainer((selectedContainer) => {
-                    selectedContainer[property] = value as Container[T]
+                    selectedContainer.properties = {...selectedContainer.properties};
+                    selectedContainer.properties.defaultStyle = {...selectedContainer.properties.defaultStyle};
+                    const type = selectedContainer.properties.defaultStyle.flexDirection === 'row' ? 'horizontal' : 'vertical';
+                    const defaultStyle = selectedContainer.properties.defaultStyle;
+                    const currentVerticalAlign = verticalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent})
+                    const currentHorizontalAlign = horizontalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent});
+                    defaultStyle.alignItems = alignItems({type,verticalAlign:currentVerticalAlign,horizontalAlign:currentHorizontalAlign,[property]:value});
+                    defaultStyle.justifyContent = justifyContent({type,verticalAlign:currentVerticalAlign,horizontalAlign:currentHorizontalAlign,[property]:value});
                 })
             }}>
             {dataSource.map(key => {
