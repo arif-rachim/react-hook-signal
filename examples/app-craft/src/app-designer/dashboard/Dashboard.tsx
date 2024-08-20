@@ -91,7 +91,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
             isChanged = true;
         }
         if(isChanged){
-            selectedPanelSignal.set(selectedPanel);
+            selectedPanelSignal.set({...selectedPanel});
         }
     })
     return (
