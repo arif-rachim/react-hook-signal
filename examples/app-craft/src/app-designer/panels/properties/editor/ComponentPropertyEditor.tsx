@@ -1,4 +1,4 @@
-import {notifiable, useSignal} from "react-hook-signal";
+import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import {Button} from "../../../button/Button.tsx";
@@ -22,7 +22,10 @@ export function ComponentPropertyEditor(props: {
 }) {
     const context = useAppContext();
     const removePanel = useRemoveDashboardPanel();
-    const {allVariablesSignal,allFetchersSignal, elements, allPagesSignal,allTablesSignal,allCallablesSignal} = context;
+    const {allVariablesSignal:allPageVariablesSignal,allApplicationVariablesSignal,allFetchersSignal, elements, allPagesSignal,allTablesSignal,allCallablesSignal} = context;
+    const allVariablesSignal = useComputed(() => {
+        return [...allPageVariablesSignal.get(),...allApplicationVariablesSignal.get()]
+    })
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();

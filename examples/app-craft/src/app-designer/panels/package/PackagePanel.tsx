@@ -11,7 +11,7 @@ export default function PackagePanel() {
     const {ref} = useLoadExtractJsonFromZip();
     return <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, gap: 20}}>
         <Button onClick={async () => {
-            await triggerDownloadZip('app-builder', context.allPagesSignal.get());
+            await triggerDownloadZip('app-builder', context.applicationSignal.get());
         }}>Export App</Button>
 
         <Button onClick={() => {

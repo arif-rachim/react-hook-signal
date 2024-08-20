@@ -8,7 +8,7 @@ import {
     IoTrashOutline
 } from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
-import {AiOutlineApi, AiOutlineAppstore, AiOutlineFieldString, AiOutlineGroup} from "react-icons/ai";
+import {AiOutlineApi, AiOutlineFieldString, AiOutlineGroup} from "react-icons/ai";
 import {TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
 import {
     MdAdd,
@@ -25,12 +25,12 @@ import {
     MdTouchApp
 } from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
-import {RiApps2Line, RiPagesLine} from "react-icons/ri";
+import {RiPagesLine} from "react-icons/ri";
 import {BiReset} from "react-icons/bi";
 import {HiCollection, HiViewBoards} from "react-icons/hi";
 import {GoDatabase} from "react-icons/go";
-import {RxComponent1} from "react-icons/rx";
-import {FiPhone} from "react-icons/fi";
+import {SiAzurefunctions} from "react-icons/si";
+import {FaCubes, FaHollyBerry} from "react-icons/fa6";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -52,9 +52,9 @@ export const Icon = {
     Formula: IoCodeSlashOutline,
     Minimize: MdMinimize,
     Page: RiPagesLine,
-    Component: RxComponent1,
-    Variable: RiApps2Line,
-    ApplicationVariable : AiOutlineAppstore,
+    Component: FaCubes,
+    Variable: FaHollyBerry,
+    ApplicationVariable : FaHollyBerry,
     Style: MdOutlineStyle,
     Property: TbJumpRope,
     Close: MdClose,
@@ -72,6 +72,6 @@ export const Icon = {
     Row: HiViewBoards,
     Title: MdTitle,
     Database: GoDatabase,
-    Function : FiPhone,
+    Function : SiAzurefunctions,
     Container : AiOutlineGroup
 }

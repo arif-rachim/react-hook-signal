@@ -1,4 +1,4 @@
-import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
+import {AnySignal, effect, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Dispatch, SetStateAction, useEffect} from "react";
 import {Container} from "../../../../AppDesigner.tsx";
 import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts";
@@ -7,8 +7,13 @@ import {useAppContext} from "../../../../hooks/useAppContext.ts";
 import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
 import {ZodRawShape} from "zod";
 import {dbSchemaInitialization} from "../../../../variable-initialization/dbSchemaInitialization.ts";
+import {fetchersInitialization} from "../../../../variable-initialization/fetcherSchemaInitialization.ts";
+import {Signal} from "signal-polyfill";
+import {callableInitialization} from "../../../../variable-initialization/callableSchemaInitialization.ts";
+import untrack = Signal.subtle.untrack;
 
-const db = dbSchemaInitialization()
+const db = dbSchemaInitialization();
+
 export function PropertyInitialization(props: {
     container: Container,
     setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>,
@@ -16,7 +21,22 @@ export function PropertyInitialization(props: {
     const context = useAppContext<AppViewerContext>();
 
     const {container, setComponentProps} = props;
-    const {allVariablesSignalInstance, allVariablesSignal, elements: elementsLib} = context;
+    const {
+        allVariablesSignalInstance: allPageVariablesSignalInstance,
+        allApplicationVariablesSignalInstance,
+        allVariablesSignal: allPageVariablesSignal,
+        allApplicationVariablesSignal,
+        elements: elementsLib,
+        allFetchersSignal,
+        allCallablesSignal,
+    } = context;
+
+    const allVariablesSignalInstance = useComputed(() => {
+        return [...allPageVariablesSignalInstance.get(), ...allApplicationVariablesSignalInstance.get()]
+    })
+    const allVariablesSignal = useComputed(() => {
+        return [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()]
+    })
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
@@ -27,6 +47,8 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
+        const fetchers = untrack(() => fetchersInitialization(allFetchersSignal.get() ?? []));
+        const call = untrack(() => callableInitialization(allCallablesSignal.get() ?? []));
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];
@@ -38,12 +60,12 @@ export function PropertyInitialization(props: {
                 const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
                 const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
 
-                const funcParams = ['module', 'navigate','db', ...propDependenciesName, containerProp.formula] as Array<string>;
+                const funcParams = ['module', 'navigate', 'db', 'fetchers','call', ...propDependenciesName, containerProp.formula] as Array<string>;
                 propDependencies.forEach(p => p.get());
                 const module: { exports: unknown } = {exports: {}};
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, navigate,db, ...propDependencies];
+                    const funcParamsInstance = [module, navigate, db, fetchers,call, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {

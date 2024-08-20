@@ -12,7 +12,8 @@ export function zodSchemaToJson(schemaCode: string) {
     return zodTypeToJson(returnType)
 }
 
-export function zodTypeToJson(type: ZodType) {
+export function zodTypeToJson(type?: ZodType) {
+    type = type ?? z.any();
     try {
         return printNode(zodToTs(type).node)
     } catch (_) {

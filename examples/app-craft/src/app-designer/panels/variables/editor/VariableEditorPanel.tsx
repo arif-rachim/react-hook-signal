@@ -1,7 +1,7 @@
 import {useRef, useState} from "react";
 import {useShowModal} from "../../../../modal/useShowModal.ts";
 import {guid} from "../../../../utils/guid.ts";
-import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
+import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {Editor, Monaco} from "@monaco-editor/react";
 import {Button} from "../../../button/Button.tsx";
@@ -46,7 +46,15 @@ export function VariableEditorPanel(props: {
         allApplicationVariablesSignal
     } = context;
 
-    const allVariablesSignal = scope === 'page' ? allPageVariablesSignal : allApplicationVariablesSignal;
+    const allVariablesSignal = useComputed(() => {
+        const allPageVariables = allPageVariablesSignal.get();
+        const allApplicationVariables = allApplicationVariablesSignal.get();
+        if(scope === "page"){
+            return [...allPageVariables,...allApplicationVariables];
+        }
+        return allApplicationVariables
+    });
+
     const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
 
     const isModified = useSignal<boolean>(false)

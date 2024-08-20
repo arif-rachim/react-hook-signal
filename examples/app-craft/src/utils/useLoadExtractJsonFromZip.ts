@@ -17,7 +17,6 @@ export function useLoadExtractJsonFromZip() {
             }
 
             const file = fileInput.files[0];
-
             const zip = new JSZip();
             const zipContent = await zip.loadAsync(file);
             const jsonFile = zipContent.file('data.json');

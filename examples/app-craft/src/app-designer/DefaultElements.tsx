@@ -13,6 +13,8 @@ import {Container} from "./AppDesigner.tsx";
 import {DropZone} from "./panels/design/container-renderer/drop-zone/DropZone.tsx";
 import {DraggableContainerElement} from "./panels/design/container-renderer/DraggableContainerElement.tsx";
 import {ContainerRendererIdContext} from "./panels/design/container-renderer/ContainerRenderer.tsx";
+import {Signal} from "signal-polyfill";
+import {ContainerElement} from "../app-viewer/ContainerElement.tsx";
 
 export const DefaultElements: Record<string, Element> = {
     container : element({
@@ -40,7 +42,7 @@ export const DefaultElements: Record<string, Element> = {
             return <notifiable.input
                 type={type}
                 ref={ref}
-                value={value}
+                value={value ?? ''}
                 onChange={async (e) => {
                     const val = e.target.value;
                     if (onChange) {
@@ -106,10 +108,14 @@ export const DefaultElements: Record<string, Element> = {
     })
 }
 
+const viewMode = new Signal.Computed(() => 'view');
+
 const LayoutContainer =  forwardRef(function LayoutContainer(props:{container:Container,style:CSSProperties,["data-element-id"]:string},ref){
+
     const {container,...elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
     const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
+    const displayMode = uiDisplayModeSignal ?? viewMode;
     const containerSignal = useSignal(container);
 
     useEffect(() => {
@@ -117,7 +123,7 @@ const LayoutContainer =  forwardRef(function LayoutContainer(props:{container:Co
     }, [containerSignal, container]);
 
     useSignalEffect(() => {
-        const mode = uiDisplayModeSignal.get();
+        const mode = displayMode.get();
         const container: Container | undefined = containerSignal.get();
         const children = container?.children ?? [];
         const result: Array<ReactNode> = [];
@@ -129,10 +135,13 @@ const LayoutContainer =  forwardRef(function LayoutContainer(props:{container:Co
         for (let i = 0; i < children?.length; i++) {
             const childId = children[i];
             const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-            result.push(<DraggableContainerElement container={childContainer} key={childId}/>)
+
             if (mode === 'design') {
+                result.push(<DraggableContainerElement container={childContainer} key={childId}/>)
                 result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
                                       parentContainerId={container?.id ?? ''}/>);
+            }else{
+                result.push(<ContainerElement container={childContainer} key={childId}/>)
             }
         }
         setElements(result);

@@ -3,9 +3,7 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {DependencySelector} from "./DependencySelector.tsx";
 import {BORDER} from "../Border.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
-import {Signal} from "signal-polyfill";
 
-const empty = new Signal.Computed(() => []);
 export function DependencyInputSelector(props: {
     value: Array<string>,
     onChange: (value: Array<string>) => void,
@@ -16,9 +14,7 @@ export function DependencyInputSelector(props: {
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
     const {value, onChange, valueToIgnore, scope} = props;
-    const {allVariablesSignal:allPageVariablesSignal, allFetchersSignal:allPageFetchersSignal,allApplicationVariablesSignal} = context;
-    const allVariablesSignal = scope === 'page' ? allPageVariablesSignal : allApplicationVariablesSignal;
-    const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
+    const {allVariablesSignal:allPageVariablesSignal,allApplicationVariablesSignal} = context;
 
     async function showDependencySelector() {
         const result = await showModal<Array<string> | 'cancel'>(closePanel => {
@@ -52,9 +48,8 @@ export function DependencyInputSelector(props: {
             gap: 5,
         }}
         onClick={showDependencySelector}>{value.map(dep => {
-        const variable = allVariablesSignal.get().find(i => i.id === dep);
-        const fetcher = allFetchersSignal.get().find(i => i.id === dep);
-        const name = variable?.name ?? fetcher?.name;
+        const variable = [...allPageVariablesSignal.get(),...allApplicationVariablesSignal.get()].find(i => i.id === dep);
+        const name = variable?.name;
         return <div key={dep} style={{
             backgroundColor: 'rgba(0,0,0,0.1)',
             borderRadius: 5,

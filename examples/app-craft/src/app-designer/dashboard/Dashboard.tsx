@@ -90,7 +90,6 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
             delete selectedPanel.leftBottom
             isChanged = true;
         }
-        console.log('isChanged',isChanged,selectedPanel);
         if(isChanged){
             selectedPanelSignal.set(selectedPanel);
         }
@@ -374,9 +373,11 @@ function RenderTabPanel(props: {
         </div>
         <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
             {panelsComputed.map(panel => {
-                const Component = panel.component ?? EmptyComponent;
+                const isDesignPanel = panel.tag?.type === 'DesignPanel';
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
-                return <div style={{display:isSelected?'flex':'none',flexDirection:'column',overflow:'auto',zIndex:isSelected?0:-1,flexGrow:1}} key={panel.id}>
+                // if its design panel, we need to ensure only one component mounted at a time, so here we use EmptyComponent to replace it
+                const Component = isDesignPanel && !isSelected ? EmptyComponent : panel.component ?? EmptyComponent;
+                return <div style={{display:isSelected ? 'flex':'none',flexDirection:'column',overflow:'auto',flexGrow:1}} key={panel.id} >
                     <Component/>
                 </div>
             })}

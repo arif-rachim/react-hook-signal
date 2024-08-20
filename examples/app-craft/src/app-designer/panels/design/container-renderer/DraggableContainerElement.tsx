@@ -49,12 +49,10 @@ export function DraggableContainerElement(props: { container: Container }) {
     const parentContainerId = useContext(ContainerRendererIdContext);
     useSignalEffect(() => {
         mousePosition.get();
+        // we will have a mechanism to set the hovered drag container delayed before finally chose it
         const isContainer = containerSignal.get()?.type === 'container';
-        if (isContainer) {
-            hoveredDragContainerIdSignal.set(containerSignal.get()?.id);
-        } else {
-            hoveredDragContainerIdSignal.set(parentContainerId);
-        }
+        const nextHoveredDragContainerId = (isContainer ? containerSignal.get()?.id : parentContainerId) ?? '';
+        hoveredDragContainerIdSignal.set(nextHoveredDragContainerId);
     })
 
     function onDragStart(event: BasicDragEvent) {
@@ -207,7 +205,8 @@ export function DraggableContainerElement(props: { container: Container }) {
             styleFromSignal.background = 'rgba(14,255,242,0.1)';
         }
         if (mode === 'design' && isContainer) {
-            (styleFromSignal as CSSProperties).transition = ['height','width','padding-left','padding-right','padding-top','padding-bottom','margin-left','margin-right','margin-top','margin-bottom'].map(key => `${key} 100ms linear`).join(', ');
+            (styleFromSignal as CSSProperties).border = '1px dashed rgba(0,0,0,0.1)';
+            //(styleFromSignal as CSSProperties).transition = ['height','width','padding-left','padding-right','padding-top','padding-bottom','margin-left','margin-right','margin-top','margin-bottom'].map(key => `${key} 100ms linear`).join(', ');
         }
         function toInt(text:unknown){
             if(typeof text === 'string'){
@@ -215,20 +214,21 @@ export function DraggableContainerElement(props: { container: Container }) {
             }
             return -1;
         }
-        if (isHovered && mode === 'design' && isContainer) {
-            styleFromSignal.minHeight = 50;
-            styleFromSignal.minWidth = 50;
-            styleFromSignal.paddingTop = toInt(styleFromSignal?.paddingTop) < 5 ? 5 : styleFromSignal.paddingTop;
-            styleFromSignal.paddingRight = toInt(styleFromSignal?.paddingRight) < 5 ? 5 : styleFromSignal.paddingRight;
-            styleFromSignal.paddingBottom = toInt(styleFromSignal?.paddingBottom) < 5 ? 5 : styleFromSignal.paddingBottom;
-            styleFromSignal.paddingLeft = toInt(styleFromSignal?.paddingLeft) < 5 ? 5 : styleFromSignal.paddingLeft;
+        const MIN_SPACE = 1;
+        if (mode === 'design' && isContainer) {
+            styleFromSignal.minHeight = 24;
+            styleFromSignal.minWidth = 24;
+            styleFromSignal.paddingTop = toInt(styleFromSignal?.paddingTop) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingTop;
+            styleFromSignal.paddingRight = toInt(styleFromSignal?.paddingRight) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingRight;
+            styleFromSignal.paddingBottom = toInt(styleFromSignal?.paddingBottom) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingBottom;
+            styleFromSignal.paddingLeft = toInt(styleFromSignal?.paddingLeft) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingLeft;
 
-            styleFromSignal.marginTop = toInt(styleFromSignal.marginTop) < 5 ? 5 : styleFromSignal.marginTop;
-            styleFromSignal.marginRight = toInt(styleFromSignal.marginRight) < 5 ? 5 : styleFromSignal.marginRight;
-            styleFromSignal.marginBottom = toInt(styleFromSignal.marginBottom) < 5 ? 5 : styleFromSignal.marginBottom;
-            styleFromSignal.marginLeft = toInt(styleFromSignal.marginLeft) < 5 ? 5 : styleFromSignal.marginLeft;
+            styleFromSignal.marginTop = toInt(styleFromSignal.marginTop) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginTop;
+            styleFromSignal.marginRight = toInt(styleFromSignal.marginRight) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginRight;
+            styleFromSignal.marginBottom = toInt(styleFromSignal.marginBottom) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginBottom;
+            styleFromSignal.marginLeft = toInt(styleFromSignal.marginLeft) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginLeft;
 
-            styleFromSignal.gap = toInt(styleFromSignal.gap) < 5 ? 5 : styleFromSignal.gap;
+            styleFromSignal.gap = toInt(styleFromSignal.gap) < MIN_SPACE ? MIN_SPACE : styleFromSignal.gap;
         }
         setComputedStyle(styleFromSignal as CSSProperties)
     });

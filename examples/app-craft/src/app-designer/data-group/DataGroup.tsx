@@ -2,7 +2,7 @@ import {CSSProperties, ForwardedRef, forwardRef, memo, useEffect, useState} from
 import {Page} from "../AppDesigner.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
-import {PageViewer} from "../../app-viewer/AppViewer.tsx";
+import {PageViewer} from "../../app-viewer/PageViewer.tsx";
 
 export const DataGroup = memo(forwardRef(DataGroupFC), (prevProps, nextProps) => {
     if (prevProps.component !== nextProps.component) {
@@ -55,6 +55,7 @@ function DataGroupFC(props: {
     });
     return <div ref={ref as ForwardedRef<HTMLDivElement>} style={style}>
         {page && dataPerPage.map((item, index) => {
+
             // here we need to render page
             let key: string = index.toString();
             if (item !== undefined && item !== null && typeof item === 'object' && keyId in item) {

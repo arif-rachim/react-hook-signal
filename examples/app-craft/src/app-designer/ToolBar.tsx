@@ -22,7 +22,6 @@ export function ToolBar() {
         selectedDragContainerIdSignal,
         allContainersSignal,
         activeDropZoneIdSignal,
-        hoveredDragContainerIdSignal,
         uiDisplayModeSignal,
         activePageIdSignal,
         allPagesSignal
@@ -86,7 +85,6 @@ export function ToolBar() {
         resizeObserver.observe(anchorElement);
         if(pageRootElement){
             resizeObserver.observe(pageRootElement);
-
         }
 
         return () => {
@@ -157,7 +155,7 @@ export function ToolBar() {
     function onMouseOver(event: ReactMouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
-        hoveredDragContainerIdSignal.set(containerSignal.get()?.id ?? '');
+        //hoveredDragContainerIdSignal.set(containerSignal.get()?.id ?? '');
     }
 
     const elementProps: (HTMLAttributes<HTMLElement>) = {

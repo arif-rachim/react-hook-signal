@@ -1,10 +1,10 @@
 import {Monaco} from "@monaco-editor/react";
 import {Callable, Fetcher, Page, Variable} from "./AppDesigner.tsx";
 import {zodSchemaToJson} from "./zodSchemaToJson.ts";
-import {isEmpty} from "../utils/isEmpty.ts";
 import {Table} from "./panels/database/service/getTables.ts";
 import {composeDbSchema} from "./variable-initialization/dbSchemaInitialization.ts";
 import {composeCallableSchema} from "./variable-initialization/callableSchemaInitialization.ts";
+import {composeFetcherSchema} from "./variable-initialization/fetcherSchemaInitialization.ts";
 
 /**
  * Executes the onBeforeMountHandler function.
@@ -20,16 +20,17 @@ export const onBeforeMountHandler = (props: {
 }) => (monaco: Monaco) => {
     const {allVariables, dependencies, returnType, allPages, allFetchers, allTables, allCallables} = props;
     // extra libraries
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeLibrary(allVariables, allFetchers, dependencies), "ts:filename/local-source.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeLibrary(allVariables, dependencies), "ts:filename/local-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(returnTypeDefinition(returnType), "ts:filename/return-type-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeNavigation(allPages), "ts:filename/navigation-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeDbSchema(allTables), "ts:filename/db-source.d.ts");
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeCallableSchema(allCallables), "ts:filename/callable-source.d.ts");
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(composeFetcherSchema(allFetchers), "ts:filename/fetchers-source.d.ts");
 }
 
 const returnTypeDefinition = (returnType: string) => `declare const module:{exports:${returnType}};`
 
-function composeLibrary(allVariables: Array<Variable>, allFetchers: Array<Fetcher>, dependencies: Array<string>) {
+function composeLibrary(allVariables: Array<Variable>, dependencies: Array<string>) {
     const variables = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
         const schema = zodSchemaToJson(i.schemaCode);
         let type = `Signal.State<${schema}>`;
@@ -38,32 +39,7 @@ function composeLibrary(allVariables: Array<Variable>, allFetchers: Array<Fetche
         }
         return `declare const ${i.name}:${type};`
     });
-    const fetchers = allFetchers.filter(i => dependencies.includes(i.id)).map(i => {
-        const schema = zodSchemaToJson(i.returnTypeSchemaCode);
-        let paths = [...i.paths, ...i.headers].reduce((result, path) => {
-            if (!path.isInput) {
-                return result;
-            }
-            if (isEmpty(path.name)) {
-                return result;
-            }
-            result.push(`${path.name}:string`)
-            return result;
-        }, [] as Array<string>)
-        paths = i.data.reduce((result, path) => {
-            if (!path.isInput) {
-                return result;
-            }
-            if (isEmpty(path.name)) {
-                return result;
-            }
-            result.push(`${path.name}:unknown`)
-            return result;
-        }, paths)
-        const type = '{' + paths.join(',') + '}'
-        return `declare function ${i.name}(props:${type}):Promise<{error:string,result:${schema}}>;`
-    })
-    return [...variables, ...fetchers].join('\n');
+    return variables.join('\n');
 }
 
 function composeNavigation(allPages: Array<Page>) {

@@ -105,7 +105,7 @@ export type Container = {
     properties: Record<string, ContainerPropertyType> & { defaultStyle?: CSSProperties },
 }
 
-export default function AppDesigner(props: LayoutBuilderProps) {
+export function useAppInitiator(props: LayoutBuilderProps) {
     const applicationSignal = useSignal(createNewBlankApplication());
 
     const allCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
@@ -153,6 +153,47 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     useSignalEffect(() => {
         onChange(applicationSignal.get());
     })
+    return {
+        applicationSignal,
+        allCallablesSignal,
+        allPagesSignal,
+        allTablesSignal,
+        activePageIdSignal,
+        activeDropZoneIdSignal,
+        selectedDragContainerIdSignal,
+        hoveredDragContainerIdSignal,
+        uiDisplayModeSignal,
+        variableInitialValueSignal,
+        allApplicationVariablesSignalInstance,
+        allVariablesSignalInstance,
+        allErrorsSignal,
+        allApplicationVariablesSignal,
+        allVariablesSignal,
+        allContainersSignal,
+        allFetchersSignal
+    };
+}
+
+export default function AppDesigner(props: LayoutBuilderProps) {
+    const {
+        applicationSignal,
+        allCallablesSignal,
+        allPagesSignal,
+        allTablesSignal,
+        activePageIdSignal,
+        activeDropZoneIdSignal,
+        selectedDragContainerIdSignal,
+        hoveredDragContainerIdSignal,
+        uiDisplayModeSignal,
+        variableInitialValueSignal,
+        allApplicationVariablesSignalInstance,
+        allVariablesSignalInstance,
+        allErrorsSignal,
+        allApplicationVariablesSignal,
+        allVariablesSignal,
+        allContainersSignal,
+        allFetchersSignal
+    } = useAppInitiator(props);
     const context: AppDesignerContext = {
         applicationSignal: applicationSignal,
         allCallablesSignal: allCallablesSignal,
@@ -208,21 +249,21 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         Icon: Icon.Component,
                         position: 'leftBottom',
                         component: ElementsPanel,
-                        visible: (_,selectedPanel) => selectedPanel?.left === 'pages'
+                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     variables: {
                         title: 'Variables',
                         Icon: Icon.Variable,
                         position: 'leftBottom',
                         component: createVariablePanel('page'),
-                        visible: (_,selectedPanel) => selectedPanel?.left === 'pages'
+                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     fetchers: {
                         title: 'Fetchers',
                         Icon: Icon.Fetcher,
                         position: 'leftBottom',
                         component: FetchersPanel,
-                        visible: (_,selectedPanel) => selectedPanel?.left === 'pages'
+                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     errors: {
                         title: 'Errors',

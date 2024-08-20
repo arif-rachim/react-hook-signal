@@ -3,9 +3,7 @@ import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
 import {Button} from "../button/Button.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
-import {Signal} from "signal-polyfill";
 
-const empty = new Signal.Computed(() => []);
 /**
  * A component for selecting dependencies.
  */
@@ -16,10 +14,16 @@ export function DependencySelector(props: {
     scope:'page'|'application'
 }) {
     const {closePanel, signalsToFilterOut,scope} = props;
-    const {allVariablesSignal:allPageVariablesSignal, allFetchersSignal:allPageFetchersSignal,allApplicationVariablesSignal} = useAppContext();
-    const allVariablesSignal = scope === 'page' ? allPageVariablesSignal : allApplicationVariablesSignal;
-    const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
+    const {allVariablesSignal:allPageVariablesSignal,allApplicationVariablesSignal} = useAppContext();
+    const allVariablesSignal = useComputed(() => {
+        const pagesVariableSignal = allPageVariablesSignal.get();
+        const applicationVariableSignal = allApplicationVariablesSignal.get();
+        if(scope === 'page'){
+            return [...pagesVariableSignal,...applicationVariableSignal];
+        }
+        return applicationVariableSignal;
 
+    });
     const selectedSignal = useSignal<Array<string>>(props.value);
     const variablesElements = useComputed(() => {
         const variables = allVariablesSignal.get();
@@ -40,7 +44,6 @@ export function DependencySelector(props: {
                     selectedSignal.set([...selectedSignal.get(), i.id])
                 }
             }}>
-
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -70,52 +73,6 @@ export function DependencySelector(props: {
         })
     })
 
-    const fetchersElements = useComputed(() => {
-        const fetchers = allFetchersSignal.get();
-        const selected = selectedSignal.get();
-        return fetchers.filter(i => {
-            return !signalsToFilterOut.includes(i.id);
-
-        }).map((i) => {
-            const isSelected = selected.indexOf(i.id) >= 0;
-            return <div key={i.id} style={{display: 'flex', alignItems: 'center', width: '33.33%'}} onClick={() => {
-                const selected = selectedSignal.get();
-                const isSelected = selected.indexOf(i.id) >= 0;
-                if (isSelected) {
-                    selectedSignal.set(selectedSignal.get().filter(id => id !== i.id))
-                } else {
-                    selectedSignal.set([...selectedSignal.get(), i.id])
-                }
-            }}>
-
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 20,
-                    fontSize: 18
-                }}>
-                    {isSelected && <Icon.CheckboxChecked/>}
-                    {!isSelected && <Icon.CheckboxBlank/>}
-                </div>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '5px',
-                    fontSize: 18
-                }}>
-                    <Icon.Fetcher/>
-                </div>
-                <div>{i.name}</div>
-            </div>
-        })
-    })
-    const elements = useComputed(() => {
-        return [...variablesElements.get(), ...fetchersElements.get()]
-    })
     return <div style={{display: 'flex', flexDirection: 'column', gap: 10, width: 600, height: 300}}>
         <div style={{
             borderBottom: BORDER,
@@ -131,7 +88,7 @@ export function DependencySelector(props: {
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto'}}>
             <notifiable.div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', padding: '0px 20px'}}>
-                {elements}
+                {variablesElements}
             </notifiable.div>
         </div>
         <div style={{
