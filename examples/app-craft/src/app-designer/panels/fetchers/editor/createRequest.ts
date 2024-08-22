@@ -16,6 +16,11 @@ export function createRequest(fetcher: Fetcher, inputs: Record<string, unknown>)
         return (result: Record<string, string>, parameter: FetcherParameter) => {
             const {name, isInput} = parameter;
             let value = parameter.value;
+            try{
+                value = JSON.parse(value);
+            }catch(err){
+                // ignore this if this cannot be parsed
+            }
             if (isInput && userInput[name]) {
                 value = userInput[name] as string;
             }
@@ -37,6 +42,8 @@ export function createRequest(fetcher: Fetcher, inputs: Record<string, unknown>)
     const address = `${url}/${trimSlashes(path.trim())}`
     const requestInit: RequestInit = {
         method: fetcher.method,
+        cache:'no-cache',
+        credentials: 'include',
         headers: fetcher.headers.reduce(toRecord(true, inputs), {
             'Content-Type': fetcher.contentType
         }),
@@ -45,7 +52,8 @@ export function createRequest(fetcher: Fetcher, inputs: Record<string, unknown>)
     function objectToUrlEncodedString(obj: Record<string, string>) {
         return Object.entries(obj).map(([key, value]) => `${key}=${value}`).join('&')
     }
-    const hasContent = ['post','patch','put'].includes(fetcher.method);
+
+    const hasContent = ['post', 'patch', 'put'].includes(fetcher.method);
     if (hasContent) {
         if (fetcher.contentType === 'application/x-www-form-urlencoded') {
             requestInit.body = objectToUrlEncodedString(fetcher.data.reduce(toRecord(true, inputs), {}))

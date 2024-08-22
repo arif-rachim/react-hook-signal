@@ -186,6 +186,7 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                         return <Editor
                             language="javascript"
                             key={returnTypeSchema}
+                            options={{fontFamily:'Fira code, Consolas, Courier New, monospace'}}
                             beforeMount={onBeforeMountHandler({
                                 dependencies: [],
                                 allVariables: [],

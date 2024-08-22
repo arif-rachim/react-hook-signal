@@ -168,8 +168,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = isEmpty(container?.parent);
-        const styleFromSignal = {
-            background: 'white',
+        const styleFromSignal:CSSProperties = {
             minWidth: container?.properties?.defaultStyle?.minWidth ?? 24,
             minHeight: container?.properties?.defaultStyle?.minHeight ?? 24,
 
@@ -206,7 +205,6 @@ export function DraggableContainerElement(props: { container: Container }) {
         }
         if (mode === 'design' && isContainer) {
             (styleFromSignal as CSSProperties).border = '1px dashed rgba(0,0,0,0.1)';
-            //(styleFromSignal as CSSProperties).transition = ['height','width','padding-left','padding-right','padding-top','padding-bottom','margin-left','margin-right','margin-top','margin-bottom'].map(key => `${key} 100ms linear`).join(', ');
         }
         function toInt(text:unknown){
             if(typeof text === 'string'){

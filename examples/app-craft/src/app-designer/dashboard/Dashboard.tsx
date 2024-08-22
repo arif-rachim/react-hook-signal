@@ -146,7 +146,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                 display: noPanel ? 'none' : 'flex',
                                 flexDirection: 'column',
                                 flexShrink: 0,
-                                width: 200,
+                                width: 350,
                                 overflow: 'auto',
                                 borderRight: BORDER
                             }

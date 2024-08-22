@@ -34,6 +34,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         return forwardRef(component)
     }, [component])
     const [componentProps, setComponentProps] = useState<Record<string, unknown>>({})
+
     useEffect(() => {
         const onDragStart = (event: Event) => propsRef.current.onDragStart(event as DragEvent);
         const onDragOver = (event: Event) => propsRef.current.onDragOver(event as DragEvent);

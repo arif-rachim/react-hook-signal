@@ -226,17 +226,17 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         position: 'left',
                         component: PagesPanel
                     },
-                    functions: {
-                        title: 'Application Callables',
-                        Icon: Icon.Function,
-                        position: 'left',
-                        component: CallablePanel,
-                    },
                     applicationVariables: {
                         title: 'Application Variables',
                         Icon: Icon.ApplicationVariable,
                         position: 'left',
                         component: createVariablePanel('application')
+                    },
+                    functions: {
+                        title: 'Application Callables',
+                        Icon: Icon.Function,
+                        position: 'left',
+                        component: CallablePanel,
                     },
                     database: {
                         title: 'Database',

@@ -211,6 +211,7 @@ export function VariableEditorPanel(props: {
                         return <Editor
                             language="javascript"
                             key={variable.schemaCode + dependencies.join('-')}
+                            options={{fontFamily:'Fira code, Consolas, Courier New, monospace'}}
                             beforeMount={onBeforeMountHandler({
                                 dependencies,
                                 allVariables,

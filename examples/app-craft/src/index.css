@@ -13,12 +13,15 @@
     margin: 0;
 }
 
-div, label, span, input, button, option, select, body {
+label, input, button, option, select, body {
     font-family: "Adobe Clean", Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 21px;
     font-weight: 400;
     font-size: 14px;
+}
 
+.view-lines.monaco-mouse-cursor-text{
+    font-family: Consolas, "Courier New", monospace !important;
 }
 
 html, body, #root {

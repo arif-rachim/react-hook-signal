@@ -135,7 +135,7 @@ function SimpleTable<T extends Record<string, unknown>>(props: {
     keyField: string
 }) {
     const {columns, data, keyField} = props;
-    return <div style={{display: 'table', height: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
+    return <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
         <div style={{display: 'table-row', position: 'sticky', top: 0}}>
             {columns.map(col => {
                 return <div style={{
@@ -153,7 +153,6 @@ function SimpleTable<T extends Record<string, unknown>>(props: {
                 {columns.map((col) => {
                     return <div style={{
                         display: 'table-cell',
-                        fontWeight: 'bold',
                         verticalAlign: 'middle',
                         borderBottom: '1px solid rgba(0,0,0,0.1)',
                         padding: '0px 10px'

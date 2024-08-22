@@ -135,7 +135,6 @@ const LayoutContainer =  forwardRef(function LayoutContainer(props:{container:Co
         for (let i = 0; i < children?.length; i++) {
             const childId = children[i];
             const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-
             if (mode === 'design') {
                 result.push(<DraggableContainerElement container={childContainer} key={childId}/>)
                 result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}

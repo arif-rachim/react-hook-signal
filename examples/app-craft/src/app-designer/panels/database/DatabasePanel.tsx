@@ -77,7 +77,7 @@ export function DatabasePanel() {
                 const tables = tablesSignal.get() ?? [];
                 return tables.map(table => {
                     return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={table.tblName}>
-                        <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{table.tblName}</div>
+                        <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis',fontSize:'small'}}>{table.tblName}</div>
                         <div style={{
                             display: 'flex',
                             flexDirection: 'column',
