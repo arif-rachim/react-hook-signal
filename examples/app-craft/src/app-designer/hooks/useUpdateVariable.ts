@@ -5,11 +5,11 @@ import {useAppContext} from "./useAppContext.ts";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 
 export function useUpdateVariable(scope:'page'|'application') {
-    const {allVariablesSignal,allApplicationVariablesSignal} = useAppContext();
+    const {allPageVariablesSignal,allApplicationVariablesSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     const updateApplication = useUpdateApplication();
     return function updateVariable(variable: Variable) {
-        const variables = scope === 'page' ? [...allVariablesSignal.get()] : [...allApplicationVariablesSignal.get()];
+        const variables = scope === 'page' ? [...allPageVariablesSignal.get()] : [...allApplicationVariablesSignal.get()];
         const indexOfVariable = variables.findIndex(i => i.id === variable.id);
         if (indexOfVariable >= 0) {
             variables.splice(indexOfVariable, 1, {...variable});

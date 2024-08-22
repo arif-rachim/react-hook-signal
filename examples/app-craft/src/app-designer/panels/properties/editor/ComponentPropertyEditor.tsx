@@ -22,7 +22,7 @@ export function ComponentPropertyEditor(props: {
 }) {
     const context = useAppContext();
     const removePanel = useRemoveDashboardPanel();
-    const {allVariablesSignal:allPageVariablesSignal,allApplicationVariablesSignal,allFetchersSignal, elements, allPagesSignal,allTablesSignal,allCallablesSignal} = context;
+    const {allPageVariablesSignal,allApplicationVariablesSignal,allPageFetchersSignal, elements, allPagesSignal,allTablesSignal,allApplicationCallablesSignal} = context;
     const allVariablesSignal = useComputed(() => {
         return [...allPageVariablesSignal.get(),...allApplicationVariablesSignal.get()]
     })
@@ -70,9 +70,9 @@ export function ComponentPropertyEditor(props: {
             {() => {
                 const props = propsSignal.get();
                 const allVariables = allVariablesSignal.get();
-                const allFetchers = allFetchersSignal.get();
+                const allFetchers = allPageFetchersSignal.get();
                 const allTables = allTablesSignal.get()
-                const allCallables = allCallablesSignal.get()
+                const allCallables = allApplicationCallablesSignal.get()
                 const formula = props.formula ?? '';
                 const dependencies = props.dependencies ?? [];
                 const allPages = allPagesSignal.get();

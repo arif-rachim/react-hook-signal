@@ -33,16 +33,16 @@ export function VariableEditorPanel(props: {
 }) {
     const context = useAppContext();
     const {variableId, defaultType, panelId, scope} = props;
-    const variable = [...context.allVariablesSignal.get(), ...context.allApplicationVariablesSignal.get()].find(v => v.id === variableId);
+    const variable = [...context.allPageVariablesSignal.get(), ...context.allApplicationVariablesSignal.get()].find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
     const updateVariable = useUpdateVariable(scope);
     const {
-        allVariablesSignal: allPageVariablesSignal,
+        allPageVariablesSignal,
         allPagesSignal,
-        allFetchersSignal: allPageFetchersSignal,
+        allPageFetchersSignal,
         allTablesSignal,
-        allCallablesSignal,
+        allApplicationCallablesSignal,
         allApplicationVariablesSignal
     } = context;
 
@@ -206,7 +206,7 @@ export function VariableEditorPanel(props: {
                         const allFetchers = allFetchersSignal.get();
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
-                        const allCallables = allCallablesSignal.get();
+                        const allCallables = allApplicationCallablesSignal.get();
                         const formula = variable.functionCode;
                         return <Editor
                             language="javascript"

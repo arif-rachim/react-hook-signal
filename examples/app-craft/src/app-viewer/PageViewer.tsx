@@ -25,13 +25,13 @@ export function PageViewer(props: {
         variableInitialValueSignal.set(properties);
     }, [properties, variableInitialValueSignal]);
 
-    const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
-    const allCallablesSignal = useComputed(() => allCallables);
+    const allPageVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allApplicationCallablesSignal = useComputed(() => allCallables);
     const allTablesSignal = useComputed(() => allTables)
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-    const allVariablesSignal = useComputed(() => page.variables)
+    const allPageVariablesSignal = useComputed(() => page.variables)
     const allContainersSignal = useComputed(() => page.containers);
-    const allFetchersSignal = useComputed(() => page.fetchers);
+    const allPageFetchersSignal = useComputed(() => page.fetchers);
     const allPagesSignal = useComputed<Array<Page>>(() => [page]);
     const applicationSignal = useSignal(createNewBlankApplication());
     const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
@@ -40,16 +40,16 @@ export function PageViewer(props: {
 
     const context: AppViewerContext = {
         applicationSignal,
-        allCallablesSignal,
+        allApplicationCallablesSignal,
         allTablesSignal,
         allPagesSignal,
         activePageIdSignal,
         allContainersSignal,
         variableInitialValueSignal,
-        allVariablesSignal,
-        allVariablesSignalInstance,
+        allPageVariablesSignal,
+        allPageVariablesSignalInstance,
         allErrorsSignal,
-        allFetchersSignal,
+        allPageFetchersSignal,
         allApplicationVariablesSignalInstance,
         allApplicationVariablesSignal,
         elements: elements

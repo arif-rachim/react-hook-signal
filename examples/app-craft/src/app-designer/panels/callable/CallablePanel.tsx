@@ -10,7 +10,7 @@ import CallableEditorPanel from "./editor/CallableEditorPanel.tsx";
 
 export default function CallablePanel(){
 
-    const {allCallablesSignal} = useAppContext();
+    const {allApplicationCallablesSignal} = useAppContext();
     const addPanel = useAddDashboardPanel();
 
     function deleteCallable(callable:Callable){
@@ -45,7 +45,7 @@ export default function CallablePanel(){
         </Button>
         <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
             {() => {
-                return allCallablesSignal.get().map(callable => {
+                return allApplicationCallablesSignal.get().map(callable => {
                     return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={callable.id}>
 
                         <div style={{

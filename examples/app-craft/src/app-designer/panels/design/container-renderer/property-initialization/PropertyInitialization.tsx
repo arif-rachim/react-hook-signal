@@ -22,13 +22,13 @@ export function PropertyInitialization(props: {
 
     const {container, setComponentProps} = props;
     const {
-        allVariablesSignalInstance: allPageVariablesSignalInstance,
+        allPageVariablesSignalInstance,
         allApplicationVariablesSignalInstance,
-        allVariablesSignal: allPageVariablesSignal,
+        allPageVariablesSignal,
         allApplicationVariablesSignal,
         elements: elementsLib,
-        allFetchersSignal,
-        allCallablesSignal,
+        allPageFetchersSignal,
+        allApplicationCallablesSignal,
     } = context;
 
     const allVariablesSignalInstance = useComputed(() => {
@@ -47,8 +47,8 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const fetchers = untrack(() => fetchersInitialization(allFetchersSignal.get() ?? []));
-        const call = untrack(() => callableInitialization(allCallablesSignal.get() ?? []));
+        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? []));
+        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];

@@ -18,13 +18,13 @@ export default function AppViewer(props: LayoutBuilderProps) {
     const allPagesSignal = useComputed<Array<Page>>(() => applicationSignal.get().pages);
     const activePageIdSignal = useSignal<string>('');
     const variableInitialValueSignal = useSignal<Record<string, unknown>>({})
-    const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allPageVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-    const allCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
+    const allApplicationCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
     const allTablesSignal = useComputed(() => applicationSignal.get().tables ?? []);
     const allApplicationVariablesSignal= useComputed(() => applicationSignal.get().variables ?? []);
     const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
-    const allVariablesSignal = useComputed<Array<Variable>>(() => {
+    const allPageVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)?.variables ?? []
@@ -34,7 +34,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)?.containers ?? []
     });
-    const allFetchersSignal = useComputed<Array<Fetcher>>(() => {
+    const allPageFetchersSignal = useComputed<Array<Fetcher>>(() => {
         const activePageId = activePageIdSignal.get();
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)?.fetchers ?? []
@@ -57,16 +57,16 @@ export default function AppViewer(props: LayoutBuilderProps) {
     })
     const context: AppViewerContext = {
         applicationSignal,
-        allCallablesSignal,
+        allApplicationCallablesSignal,
         allTablesSignal,
         allPagesSignal,
         activePageIdSignal,
         allContainersSignal,
         variableInitialValueSignal,
-        allVariablesSignal,
-        allVariablesSignalInstance,
+        allPageVariablesSignal,
+        allPageVariablesSignalInstance,
         allErrorsSignal,
-        allFetchersSignal,
+        allPageFetchersSignal,
         allApplicationVariablesSignal,
         allApplicationVariablesSignalInstance,
         elements: props.elements

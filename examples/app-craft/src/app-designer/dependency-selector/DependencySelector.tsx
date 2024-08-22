@@ -14,7 +14,7 @@ export function DependencySelector(props: {
     scope:'page'|'application'
 }) {
     const {closePanel, signalsToFilterOut,scope} = props;
-    const {allVariablesSignal:allPageVariablesSignal,allApplicationVariablesSignal} = useAppContext();
+    const {allPageVariablesSignal,allApplicationVariablesSignal} = useAppContext();
     const allVariablesSignal = useComputed(() => {
         const pagesVariableSignal = allPageVariablesSignal.get();
         const applicationVariableSignal = allApplicationVariablesSignal.get();

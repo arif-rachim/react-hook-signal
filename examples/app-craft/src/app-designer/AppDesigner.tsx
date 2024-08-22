@@ -108,7 +108,7 @@ export type Container = {
 export function useAppInitiator(props: LayoutBuilderProps) {
     const applicationSignal = useSignal(createNewBlankApplication());
 
-    const allCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
+    const allApplicationCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
     const allPagesSignal = useComputed<Array<Page>>(() => applicationSignal.get().pages ?? []);
     const allTablesSignal = useComputed<Array<Table>>(() => applicationSignal.get().tables ?? []);
 
@@ -121,7 +121,7 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     const variableInitialValueSignal = useSignal<Record<string, unknown>>({});
     const allApplicationVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
 
-    const allVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
+    const allPageVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
 
     const activePageSignal = useComputed(() => {
@@ -131,9 +131,9 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     })
 
     const allApplicationVariablesSignal = useComputed<Array<Variable>>(() => applicationSignal.get().variables ?? []);
-    const allVariablesSignal = useComputed<Array<Variable>>(() => activePageSignal.get()?.variables ?? []);
+    const allPageVariablesSignal = useComputed<Array<Variable>>(() => activePageSignal.get()?.variables ?? []);
     const allContainersSignal = useComputed<Array<Container>>(() => activePageSignal.get()?.containers ?? []);
-    const allFetchersSignal = useComputed<Array<Fetcher>>(() => activePageSignal.get()?.fetchers ?? []);
+    const allPageFetchersSignal = useComputed<Array<Fetcher>>(() => activePageSignal.get()?.fetchers ?? []);
 
     const {value, onChange} = props;
 
@@ -155,7 +155,7 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     })
     return {
         applicationSignal,
-        allCallablesSignal,
+        allApplicationCallablesSignal,
         allPagesSignal,
         allTablesSignal,
         activePageIdSignal,
@@ -165,19 +165,19 @@ export function useAppInitiator(props: LayoutBuilderProps) {
         uiDisplayModeSignal,
         variableInitialValueSignal,
         allApplicationVariablesSignalInstance,
-        allVariablesSignalInstance,
+        allPageVariablesSignalInstance,
         allErrorsSignal,
         allApplicationVariablesSignal,
-        allVariablesSignal,
+        allPageVariablesSignal,
         allContainersSignal,
-        allFetchersSignal
+        allPageFetchersSignal
     };
 }
 
 export default function AppDesigner(props: LayoutBuilderProps) {
     const {
         applicationSignal,
-        allCallablesSignal,
+        allApplicationCallablesSignal,
         allPagesSignal,
         allTablesSignal,
         activePageIdSignal,
@@ -187,32 +187,39 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         uiDisplayModeSignal,
         variableInitialValueSignal,
         allApplicationVariablesSignalInstance,
-        allVariablesSignalInstance,
+        allPageVariablesSignalInstance,
         allErrorsSignal,
         allApplicationVariablesSignal,
-        allVariablesSignal,
+        allPageVariablesSignal,
         allContainersSignal,
-        allFetchersSignal
+        allPageFetchersSignal
     } = useAppInitiator(props);
     const context: AppDesignerContext = {
-        applicationSignal: applicationSignal,
-        allCallablesSignal: allCallablesSignal,
-        allTablesSignal: allTablesSignal,
-        allPagesSignal: allPagesSignal,
-        activePageIdSignal: activePageIdSignal,
+        applicationSignal,
+        allApplicationCallablesSignal,
+        allApplicationVariablesSignal,
+        allApplicationVariablesSignalInstance,
+
+        allTablesSignal,
+        allPagesSignal,
+        allContainersSignal,
+
+        activePageIdSignal,
+
+        allPageFetchersSignal,
+        allPageVariablesSignal,
+        variableInitialValueSignal,
+        allPageVariablesSignalInstance,
+
+        elements: {...DefaultElements, ...props.elements},
+        allErrorsSignal: allErrorsSignal,
+
+        // designer mode
         hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
         selectedDragContainerIdSignal: selectedDragContainerIdSignal,
         activeDropZoneIdSignal: activeDropZoneIdSignal,
         uiDisplayModeSignal: uiDisplayModeSignal,
-        allContainersSignal: allContainersSignal,
-        allVariablesSignal: allVariablesSignal,
-        variableInitialValueSignal: variableInitialValueSignal,
-        allVariablesSignalInstance: allVariablesSignalInstance,
-        allErrorsSignal: allErrorsSignal,
-        allFetchersSignal: allFetchersSignal,
-        allApplicationVariablesSignal: allApplicationVariablesSignal,
-        allApplicationVariablesSignalInstance: allApplicationVariablesSignalInstance,
-        elements: {...DefaultElements, ...props.elements}
+
     }
     return <ErrorBoundary>
         <ModalProvider>

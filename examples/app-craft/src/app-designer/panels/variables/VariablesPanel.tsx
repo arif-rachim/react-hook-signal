@@ -22,8 +22,8 @@ export const createVariablePanel = (scope:'page'|'application') => {
     return function VariablesPanel() {
 
         const context = useAppContext<AppDesignerContext>();
-        const {allVariablesSignal:pageVariablesSignal,allApplicationVariablesSignal:appVariablesSignal} = context;
-        const allVariablesSignal = scope === 'application' ? appVariablesSignal : pageVariablesSignal;
+        const {allPageVariablesSignal,allApplicationVariablesSignal} = context;
+        const allVariablesSignal = scope === 'application' ? allApplicationVariablesSignal : allPageVariablesSignal;
 
         const updatePage = useUpdatePageSignal();
         const showModal = useShowModal();

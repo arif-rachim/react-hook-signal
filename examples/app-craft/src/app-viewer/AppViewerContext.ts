@@ -18,15 +18,15 @@ import {Table} from "../app-designer/panels/database/service/getTables.ts";
  */
 export interface AppViewerContext {
     applicationSignal:Signal.State<Application>;
-    allCallablesSignal:Signal.Computed<Array<Callable>>;
+    allApplicationCallablesSignal:Signal.Computed<Array<Callable>>;
     allTablesSignal: Signal.Computed<Array<Table>>;
     allPagesSignal: Signal.Computed<Array<Page>>;
     activePageIdSignal: Signal.State<string>;
     allContainersSignal: Signal.Computed<Array<Container>>;
-    allVariablesSignal: Signal.Computed<Array<Variable>>;
-    allFetchersSignal: Signal.Computed<Array<Fetcher>>;
+    allPageVariablesSignal: Signal.Computed<Array<Variable>>;
+    allPageFetchersSignal: Signal.Computed<Array<Fetcher>>;
     variableInitialValueSignal: Signal.State<Record<string, unknown>>;
-    allVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
+    allPageVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
     allErrorsSignal: Signal.State<Array<ErrorType>>;
     allApplicationVariablesSignal: Signal.Computed<Array<Variable>>,
     allApplicationVariablesSignalInstance : Signal.State<Array<VariableInstance>>,

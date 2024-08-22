@@ -28,7 +28,7 @@ export default function PackagePanel() {
             context.selectedDragContainerIdSignal.set('');
             context.hoveredDragContainerIdSignal.set('');
             context.variableInitialValueSignal.set({});
-            context.allVariablesSignalInstance.set([]);
+            context.allPageVariablesSignalInstance.set([]);
             context.uiDisplayModeSignal.set('design');
             context.allErrorsSignal.set([]);
         }}>Delete App</Button>

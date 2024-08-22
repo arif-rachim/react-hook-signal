@@ -21,10 +21,10 @@ import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded
 export default function CallableEditorPanel(props: { callableId?: string, panelId: string }) {
     const context = useAppContext();
     const {callableId, panelId} = props;
-    const callable = context.allCallablesSignal.get().find(v => v.id === callableId);
+    const callable = context.allApplicationCallablesSignal.get().find(v => v.id === callableId);
     const showModal = useShowModal();
     const updateApplication = useUpdateApplication();
-    const {allCallablesSignal, allPagesSignal, allTablesSignal} = context;
+    const {allApplicationCallablesSignal, allPagesSignal, allTablesSignal} = context;
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
 
@@ -42,7 +42,7 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
 
     function validateForm(): [boolean, Partial<Record<keyof Variable, Array<string>>>] {
         function nameIsDuplicate(name: string, id: string) {
-            return allCallablesSignal.get().filter(v => v.id !== id).find(v => v.name === name) !== undefined;
+            return allApplicationCallablesSignal.get().filter(v => v.id !== id).find(v => v.name === name) !== undefined;
         }
 
         const errors: Partial<Record<keyof Variable, Array<string>>> = {};
@@ -180,7 +180,7 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                         const callable = callableSignal.get();
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
-                        const allCallables = allCallablesSignal.get();
+                        const allCallables = allApplicationCallablesSignal.get();
                         const formula = callable.functionCode;
                         const returnTypeSchema = `z.function().args(${wrapWithZObjectIfNeeded(callable.inputSchemaCode)}).returns(${wrapWithZObjectIfNeeded(callable.schemaCode)})`
                         return <Editor

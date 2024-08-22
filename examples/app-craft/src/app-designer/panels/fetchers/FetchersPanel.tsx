@@ -14,7 +14,7 @@ import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 
 export function FetchersPanel() {
     const context = useAppContext();
-    const {allFetchersSignal} = context;
+    const {allPageFetchersSignal} = context;
     const updatePage = useUpdatePageSignal();
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
@@ -25,7 +25,7 @@ export function FetchersPanel() {
                                        closePanel={closePanel}/>
         })
         if (deleteVariableConfirm === 'Yes') {
-            const fetchers = allFetchersSignal.get().filter(i => i.id !== fetcher.id);
+            const fetchers = allPageFetchersSignal.get().filter(i => i.id !== fetcher.id);
             updatePage({type: 'fetcher', fetchers: fetchers})
         }
     }
@@ -59,7 +59,7 @@ export function FetchersPanel() {
             </Button>
             <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                 {() => {
-                    return allFetchersSignal.get().map(fetcher => {
+                    return allPageFetchersSignal.get().map(fetcher => {
                         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={fetcher.id}>
                             <notifiable.div>
                                 {() => {

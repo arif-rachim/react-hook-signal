@@ -38,7 +38,7 @@ function DataGroupFC(props: {
         ...propsStyle
     }
 
-    const {allPagesSignal, elements, allTablesSignal,allCallablesSignal} = useAppContext();
+    const {allPagesSignal, elements, allTablesSignal,allApplicationCallablesSignal} = useAppContext();
     const componentIdSignal = useSignal(component);
     useEffect(() => {
         componentIdSignal.set(component)
@@ -66,7 +66,7 @@ function DataGroupFC(props: {
                 page={page!}
                 key={key}
                 allTables={allTablesSignal.get()}
-                allCallables={allCallablesSignal.get()}
+                allCallables={allApplicationCallablesSignal.get()}
                 {...item}/>
         })}
     </div>

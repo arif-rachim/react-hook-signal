@@ -14,7 +14,7 @@ export function DependencyInputSelector(props: {
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
     const {value, onChange, valueToIgnore, scope} = props;
-    const {allVariablesSignal:allPageVariablesSignal,allApplicationVariablesSignal} = context;
+    const {allPageVariablesSignal,allApplicationVariablesSignal} = context;
 
     async function showDependencySelector() {
         const result = await showModal<Array<string> | 'cancel'>(closePanel => {

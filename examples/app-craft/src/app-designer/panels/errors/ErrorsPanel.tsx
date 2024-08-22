@@ -13,13 +13,13 @@ export function ErrorsPanel() {
     const {
         allErrorsSignal,
         allContainersSignal,
-        allVariablesSignal,
+        allPageVariablesSignal,
         selectedDragContainerIdSignal
     } = useAppContext<AppDesignerContext>();
     const errorsComputed = useComputed(() => {
         let errors = allErrorsSignal.get();
         const containers = allContainersSignal.get();
-        const variables = allVariablesSignal.get();
+        const variables = allPageVariablesSignal.get();
         errors = errors.filter(e => {
             if (e.type === 'property') {
                 return containers.findIndex(c => e.containerId === c.id) >= 0
@@ -45,7 +45,7 @@ export function ErrorsPanel() {
         }}>
         {() => {
             const containers = allContainersSignal.get();
-            const variables = allVariablesSignal.get();
+            const variables = allPageVariablesSignal.get();
             return <>
                 {errorsComputed.get().map(e => {
                     let type: string | undefined = undefined;

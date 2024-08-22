@@ -24,10 +24,10 @@ const LABEL_WIDTH = 60;
 
 
 export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string }) {
-    const {allFetchersSignal} = useAppContext();
+    const {allPageFetchersSignal} = useAppContext();
 
     const {fetcherId, panelId} = props;
-    const fetcher = allFetchersSignal.get().find(v => v.id === fetcherId);
+    const fetcher = allPageFetchersSignal.get().find(v => v.id === fetcherId);
     const showModal = useShowModal();
     const updateFetcher = useUpdateFetcher();
     const isModified = useSignal<boolean>(false)
@@ -81,7 +81,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
 
     function validateForm(): [boolean, Partial<Record<keyof Fetcher, Array<string>>>] {
         function nameIsDuplicate(name: string, id: string) {
-            return allFetchersSignal.get().filter(v => v.id !== id).find(v => v.name === name) !== undefined;
+            return allPageFetchersSignal.get().filter(v => v.id !== id).find(v => v.name === name) !== undefined;
         }
 
         const errors: Partial<Record<keyof Fetcher, Array<string>>> = {};
