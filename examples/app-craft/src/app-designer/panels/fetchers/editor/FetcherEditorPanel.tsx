@@ -18,8 +18,7 @@ import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import Visible from "../../../visible/Visible.tsx";
 import {createRequest} from "./createRequest.ts";
-import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
-import {Table} from "../../database/service/getTables.ts";
+import {Query, Table} from "../../database/service/getTables.ts";
 import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
@@ -61,7 +60,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
             data: [],
             returnTypeSchemaCode: '',
             defaultValueFormula: '',
-            dependencies: []
         }
     }
 
@@ -168,10 +166,9 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
 
         const allVariables = allVariablesSignal.get();
         const allVariablesInstance = allVariablesInstanceSignal.get();
-        const dependencies = fetcher.dependencies?.map(variableId => {
-            const name = allVariables.find(variable => variable.id === variableId)?.name;
-            const instance = allVariablesInstance.find(variable => variable.id === variableId)?.instance;
-            return {name, instance}
+        const dependencies = allVariables.map(v => {
+            const instance = allVariablesInstance.find(variable => variable.id === v.id)?.instance;
+            return {name:v.name, instance}
         }) ?? [];
 
         const module: {
@@ -263,26 +260,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
     }}>
         <CollapsibleLabelContainer label={'Default Value'} autoGrowWhenOpen={true} defaultOpen={false}>
             <div style={{display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px'}}>
-                <LabelContainer label={'Dependency :'} style={{
-                    flexGrow: 1,
-                    flexBasis: '50%',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 10
-                }}
-                                styleLabel={{fontStyle: 'italic'}}
-                                styleContent={{display: 'flex', flexDirection: 'column'}}>
-                    <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                        {() => {
-                            const fetcher = fetcherSignal.get();
-                            return <DependencyInputSelector onChange={(result) => {
-                                fetcherSignal.set({...fetcher, dependencies: result});
-                                isModified.set(true);
-                            }} value={fetcher.dependencies ?? []} valueToIgnore={[]} scope={'page'}/>;
-                        }}
-                    </notifiable.div>
-                </LabelContainer>
-
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -291,24 +268,23 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                 }}>
                     {() => {
                         const fetcher = fetcherSignal.get();
-                        const dependencies = fetcher.dependencies ?? []
                         const allVariables = allVariablesSignal.get();
                         const allFetchers: Array<Fetcher> = [];
                         const allPages: Array<Page> = [];
                         const allTables: Array<Table> = [];
                         const allCallables: Array<Callable> = [];
+                        const allQueries:Array<Query> = [];
                         const formula = fetcher.defaultValueFormula;
                         return <Editor
                             language="javascript"
-                            key={dependencies.join('-')}
                             beforeMount={onBeforeMountHandler({
-                                dependencies,
                                 allVariables,
                                 allFetchers,
                                 returnType,
                                 allPages,
                                 allTables,
-                                allCallables
+                                allCallables,
+                                allQueries
                             })}
                             value={formula}
                             onChange={(value?: string) => {
@@ -425,7 +401,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                                       }}/>
                 </LabelContainer>
                 <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'paths'}
-                                  nameReadOnly={true}/>
+                                  nameReadOnly={true} showInputParameterColumn={true}/>
 
                 <div style={{display: 'flex', gap: 20}}>
                     <LabelContainer label={'Method : '} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
@@ -485,7 +461,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                         </div>
                     </Button>
                 </div>
-                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}/>
+                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'} showInputParameterColumn={true}/>
             </CollapsibleLabelContainer>
         </Visible>
 
@@ -498,7 +474,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                     </div>
                 </Button>
             </div>
-            <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}/>
+            <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'} showInputParameterColumn={true}/>
         </CollapsibleLabelContainer>
         <Visible when={() => testMessages.get().length > 0}>
             <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
@@ -596,18 +572,52 @@ function extractParams(url: string): Array<string> {
     return params;
 }
 
-function RenderParameters(props: {
+
+export function RenderParameters<T extends Query|Fetcher>(props: {
     nameReadOnly?: boolean,
-    fetcherSignal: Signal.State<Fetcher>,
+    fetcherSignal: Signal.State<T>,
     isModified: Signal.State<boolean>,
-    type: 'headers' | 'paths' | 'data'
+    type: keyof T,
+    showInputParameterColumn : boolean
 }) {
     const deleteAble = props.type !== 'paths';
     const notDeleteAble = !deleteAble;
-    const {fetcherSignal, isModified, type, nameReadOnly} = props;
+    const {fetcherSignal, isModified, type, nameReadOnly,showInputParameterColumn} = props;
+
+    const parametersSignal = useComputed<Array<FetcherParameter>>(() => {
+        return (fetcherSignal.get()[type] ?? []) as Array<FetcherParameter>
+    });
+
+    function onChangeFactory(paramType:keyof FetcherParameter,param: FetcherParameter,transformValue:(val:string) => unknown){
+        return function extracted(event: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) {
+            let dom = event.target;
+            let cursorPosition:number|null = null;
+            if('selectionStart' in dom){
+                cursorPosition = dom.selectionStart;
+            }
+            const val = dom.value;
+            const newFetcher = {...fetcherSignal.get()};
+            const fetcherTypeValues = newFetcher[type] as Array<FetcherParameter>;
+            const newArray = [...fetcherTypeValues];
+            const paramIndex = newArray.findIndex(p => p.id === param.id)
+            newFetcher[type] = newArray as T[keyof T];
+            ((newFetcher[type] ?? []) as Array<FetcherParameter>).splice(paramIndex, 1, {...param,[paramType]: transformValue(val)})
+            fetcherSignal.set(newFetcher);
+            isModified.set(true);
+            if('setSelectionRange' in dom){
+                setTimeout(() => {
+                    dom = dom as HTMLInputElement;
+                    dom.setSelectionRange(cursorPosition, cursorPosition);
+                }, 0);
+            }
+
+        }
+    }
+
+
     return <notifiable.div style={{display: 'table'}}>
         {() => {
-            const parameters = fetcherSignal.get()[type];
+            const parameters = parametersSignal.get();
             return <>
                 <div style={{display: 'table-row'}}>
                     <div style={{
@@ -624,6 +634,7 @@ function RenderParameters(props: {
                         padding: '0px 10px'
                     }}>Value
                     </div>
+                    {showInputParameterColumn &&
                     <div style={{
                         display: 'table-cell',
                         fontWeight: 'bold',
@@ -633,6 +644,7 @@ function RenderParameters(props: {
                     }}>
                         Input Parameter
                     </div>
+                    }
                     {deleteAble &&
                         <div style={{
                             display: 'table-cell',
@@ -668,20 +680,7 @@ function RenderParameters(props: {
                                            e.stopPropagation();
                                        }
                                    }}
-                                   onChange={(event) => {
-                                       const dom = event.target;
-                                       const cursorPosition = dom.selectionStart;
-                                       const val = dom.value;
-                                       const newFetcher = {...fetcherSignal.get()};
-                                       newFetcher[type] = [...newFetcher[type]];
-                                       const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
-                                       newFetcher[type].splice(paramIndex, 1, {...param, name: val})
-                                       fetcherSignal.set(newFetcher);
-                                       isModified.set(true);
-                                       setTimeout(() => {
-                                           dom.setSelectionRange(cursorPosition, cursorPosition);
-                                       }, 0);
-                                   }}
+                                   onChange={onChangeFactory('name',param,val => val)}
                             />
                         </div>
                         <div style={{display: 'table-cell'}}>
@@ -695,22 +694,10 @@ function RenderParameters(props: {
                                        width: '100%',
                                    }}
                                    value={param.value}
-                                   onChange={(event) => {
-                                       const dom = event.target;
-                                       const cursorPosition = dom.selectionStart;
-                                       const val = dom.value;
-                                       const newFetcher = {...fetcherSignal.get()};
-                                       newFetcher[type] = [...newFetcher[type]];
-                                       const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
-                                       newFetcher[type].splice(paramIndex, 1, {...param, value: val})
-                                       fetcherSignal.set(newFetcher);
-                                       isModified.set(true);
-                                       setTimeout(() => {
-                                           dom.setSelectionRange(cursorPosition, cursorPosition);
-                                       }, 0);
-                                   }}
+                                   onChange={onChangeFactory('value',param,val => val)}
                             />
                         </div>
+                        {showInputParameterColumn &&
                         <div style={{display: 'table-cell', verticalAlign: 'middle'}}>
                             <select style={{
                                 border: BORDER,
@@ -724,21 +711,13 @@ function RenderParameters(props: {
                                 margin: 0,
                             }}
                                     value={param.isInput ? 'true' : 'false'}
-                                    onChange={(event) => {
-                                        const dom = event.target;
-                                        const val = dom.value;
-                                        const newFetcher = {...fetcherSignal.get()};
-                                        newFetcher[type] = [...newFetcher[type]];
-                                        const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
-                                        newFetcher[type].splice(paramIndex, 1, {...param, isInput: val === 'true'})
-                                        fetcherSignal.set(newFetcher);
-                                        isModified.set(true);
-                                    }}
+                                    onChange={onChangeFactory('isInput',param,val => val === 'true')}
                             >
                                 <option value={'false'}>No</option>
                                 <option value={'true'}>Yes</option>
                             </select>
                         </div>
+                        }
                         {deleteAble &&
                             <div style={{display: 'table-cell', verticalAlign: 'middle'}}>
                                 <Button style={{
@@ -756,9 +735,12 @@ function RenderParameters(props: {
                                     justifyContent: 'center'
                                 }} onClick={() => {
                                     const newFetcher = {...fetcherSignal.get()};
-                                    newFetcher[type] = [...newFetcher[type]];
-                                    const paramIndex = newFetcher[type].findIndex(p => p.id === param.id)
-                                    newFetcher[type].splice(paramIndex, 1)
+                                    const newFetcherValue = newFetcher[type] as Array<FetcherParameter>;
+                                    newFetcher[type] = [...newFetcherValue] as T[keyof T];
+                                    const paramIndex = ((newFetcher[type] ?? []) as Array<FetcherParameter>).findIndex(p => p.id === param.id)
+                                    const newArray = (newFetcher[type] ?? []) as Array<FetcherParameter>;
+                                    newArray.splice(paramIndex, 1);
+                                    newFetcher[type] = newArray as T[keyof T];
                                     fetcherSignal.set(newFetcher);
                                     isModified.set(true);
                                 }}>

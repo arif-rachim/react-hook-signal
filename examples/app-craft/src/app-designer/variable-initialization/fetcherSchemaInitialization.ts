@@ -47,10 +47,9 @@ export function fetchersInitialization(allFetchers: Array<Fetcher>,allVariablesS
                 const fetcher = {...fetcherValue};
                 const allVariables = allVariablesSignal.get();
                 const allVariablesInstance = allVariablesSignalInstance.get();
-                const dependencies = fetcher.dependencies?.map(variableId => {
-                    const name = allVariables.find(variable => variable.id === variableId)?.name;
-                    const instance = allVariablesInstance.find(variable => variable.id === variableId)?.instance;
-                    return {name, instance}
+                const dependencies = allVariables.map(v => {
+                    const instance = allVariablesInstance.find(variable => variable.id === v.id)?.instance;
+                    return {name:v.name, instance}
                 }) ?? [];
 
                 const module: {
@@ -87,7 +86,7 @@ export function fetchersInitialization(allFetchers: Array<Fetcher>,allVariablesS
                         return h
                     });
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                 }
 
                 const {address, requestInit} = createRequest(fetcher, inputs);

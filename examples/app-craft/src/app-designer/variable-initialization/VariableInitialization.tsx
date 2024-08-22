@@ -7,9 +7,9 @@ import {useNavigateSignal} from "../hooks/useNavigateSignal.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
 import {callableInitialization} from "./callableSchemaInitialization.ts";
-import {debounce} from "../../utils/debounce.ts";
 import {EMPTY_ARRAY} from "../../utils/EmptyArray.ts";
 import {fetchersInitialization} from "./fetcherSchemaInitialization.ts";
+import {querySchemaInitialization} from "./querySchemaInitialization.ts";
 import untrack = Signal.subtle.untrack;
 
 const db = dbSchemaInitialization()
@@ -52,7 +52,7 @@ function validateVariables(variableInstances: Array<VariableInstance>, variableV
     }
 }
 
-function initializeVariables(
+function initializeVariables(props: {
     fetchers: Record<string, (input: Record<string, unknown>) => unknown>,
     applicationVariables: Array<Variable>,
     applicationVariablesInstance: Array<VariableInstance>,
@@ -61,11 +61,23 @@ function initializeVariables(
     errorMessage: ReturnType<typeof useRecordErrorMessage>,
     navigateSignal: Signal.Computed<Record<string, (param: unknown) => void>>,
     call: Record<string, (...args: unknown[]) => unknown>,
-    allVariablesSignalInstance: Signal.State<Array<VariableInstance>>) {
-    console.log('Error',errorMessage);
+    allVariablesSignalInstance: Signal.State<Array<VariableInstance>>,
+    queries: Record<string, (input: Record<string, unknown>,page:number) => unknown>,
+}) {
+    const {
+        navigateSignal,
+        call,
+        fetchers,
+        applicationVariables,
+        applicationVariablesInstance,
+        variables,
+        variableInitialValue,
+        allVariablesSignalInstance,
+        queries
+    } = props;
     const variablesInstance: Array<VariableInstance> = [];
     const destructorCallbacks: Array<() => void> = [];
-
+    const navigate = navigateSignal.get();
     for (const v of variables) {
         if (v.type === 'state') {
             const module = {exports: {}};
@@ -73,7 +85,6 @@ function initializeVariables(
                 module.exports = variableInitialValue[v.name] as unknown as typeof module.exports;
                 const state = new Signal.State(module.exports);
                 variablesInstance.push({id: v.id, instance: state});
-                //errorMessage.variableValue({variableId: v.id});
             } else {
                 const params = ['module', v.functionCode];
                 try {
@@ -81,71 +92,51 @@ function initializeVariables(
                     init.call(null, module);
                     const state = new Signal.State(module.exports);
                     variablesInstance.push({id: v.id, instance: state});
-                    //errorMessage.variableValue({variableId: v.id});
                 } catch (err) {
-                    //errorMessage.variableValue({variableId: v.id, err})
+                    console.error(err)
                 }
             }
-        }else {
-            const dependencies = (v.dependencies ?? []).map(d => {
-                const allVariables = [...variables, ...applicationVariables];
-                const allVariablesInstance = [...variablesInstance,...applicationVariablesInstance];
-                const name = allVariables.find(i => i.id === d)?.name;
-                const instance = allVariablesInstance.find(i => i.id === d)?.instance;
-                return {name, instance}
+        } else {
+            const dependencies = [...applicationVariables, ...variables].map(v => {
+                const allVariablesInstance = [...variablesInstance, ...applicationVariablesInstance];
+                const instance = allVariablesInstance.find(i => i.id === v.id)?.instance;
+                return {name: v.name, instance}
             }) as Array<{ name: string, instance: AnySignal<unknown> }>;
 
             if (v.type === 'computed') {
                 const params = ['module', ...dependencies.map(d => d.name), v.functionCode];
                 try {
                     const init = new Function(...params);
-
                     const computed = new Signal.Computed(() => {
-                        for (const dep of dependencies) {
-                            if (dep && dep.instance && 'get' in dep.instance) {
-                                dep.instance.get();
-                            }
-                        }
                         const module: { exports: unknown } = {exports: undefined};
                         const instances = [module, ...dependencies.map(d => d.instance)]
                         try {
                             init.call(null, ...instances);
-                            //errorMessage.variableValue({variableId: v.id})
                         } catch (err) {
-                            //errorMessage.variableValue({variableId: v.id, err})
+                            console.error(err);
                         }
                         return module.exports;
                     });
                     variablesInstance.push({id: v.id, instance: computed});
-                    //errorMessage.variableValue({variableId: v.id});
                 } catch (err) {
-                    //errorMessage.variableValue({variableId: v.id, err})
+                    console.error(err);
                 }
             }
             if (v.type === 'effect') {
-                const params = ['navigate', 'db', 'call', 'fetchers', ...dependencies.map(d => d.name), v.functionCode];
+                const params = ['navigate', 'db', 'call', 'fetchers', 'query', ...dependencies.map(d => d.name), v.functionCode];
                 try {
                     const func = new Function(...params) as (...args: unknown[]) => void
-                    const init = debounce(func, 100);
                     const destructor = effect(() => {
-                        const navigate = navigateSignal.get();
-                        for (const dep of dependencies) {
-                            if (dep && dep.instance && 'get' in dep.instance) {
-                                dep.instance.get();
-                            }
-                        }
-                        const instances = [navigate, db, call, fetchers, ...dependencies.map(d => d.instance)]
+                        const instances = [navigate, db, call, fetchers, queries, ...dependencies.map(d => d.instance)]
                         try {
-                            init.call(null, ...instances);
-                            //errorMessage.variableValue({variableId: v.id})
+                            func.call(null, ...instances);
                         } catch (err) {
-                            //errorMessage.variableValue({variableId: v.id, err})
+                            console.error(err);
                         }
                     });
                     destructorCallbacks.push(destructor);
-                    //errorMessage.variableValue({variableId: v.id})
                 } catch (err) {
-                    //errorMessage.variableValue({variableId: v.id, err})
+                    console.error(err);
                 }
             }
         }
@@ -153,7 +144,6 @@ function initializeVariables(
     allVariablesSignalInstance.set(variablesInstance);
     return () => {
         destructorCallbacks.forEach(d => d());
-        console.log('[destructorCallbacks] INVOKED !')
     }
 }
 
@@ -168,7 +158,8 @@ export function VariableInitialization() {
         allApplicationCallablesSignal,
         allApplicationVariablesSignal,
         allApplicationVariablesSignalInstance,
-        allApplicationFetchersSignal
+        allApplicationFetchersSignal,
+        allApplicationQueriesSignal,
     } = useAppContext();
 
     const navigateSignal = useNavigateSignal();
@@ -192,31 +183,58 @@ export function VariableInitialization() {
         const variableValidators = validatorsComputed.get();
         validateVariables(variableInstances, variableValidators, errorMessage);
     });
+
     const allVariablesSignal = useComputed(() => {
-        return [...allPageVariablesSignal.get(),...allApplicationVariablesSignal.get()]
+        return [...allApplicationVariablesSignal.get(), ...allPageVariablesSignal.get()]
     })
 
     const allVariablesSignalInstance = useComputed(() => {
-        return [...allPageVariablesSignalInstance.get(),...allApplicationVariablesSignalInstance.get()]
+        return [...allApplicationVariablesSignalInstance.get(), ...allPageVariablesSignalInstance.get()]
     });
+
     useSignalEffect(() => {
         const variables = allApplicationVariablesSignal.get() ?? EMPTY_ARRAY;
-        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
+        const fetchers = untrack(() => fetchersInitialization(allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
+        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? EMPTY_ARRAY, allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
+        const queries = untrack(() => querySchemaInitialization(allApplicationQueriesSignal.get() ?? EMPTY_ARRAY))
         const variableInitialValue = {};
-        const fetchers = untrack(() => fetchersInitialization(allApplicationFetchersSignal.get() ?? EMPTY_ARRAY,allVariablesSignal,allVariablesSignalInstance));;
-        const applicationVariables:Array<Variable> = [];
-        const applicationVariablesInstance:Array<VariableInstance> = [];
-        return initializeVariables(fetchers, applicationVariables, applicationVariablesInstance, variables, variableInitialValue, errorMessage, navigateSignal, call, allApplicationVariablesSignalInstance);
+        const applicationVariables: Array<Variable> = [];
+        const applicationVariablesInstance: Array<VariableInstance> = [];
+        return initializeVariables({
+            fetchers,
+            applicationVariables,
+            applicationVariablesInstance,
+            variables,
+            variableInitialValue,
+            errorMessage,
+            navigateSignal,
+            call,
+            queries,
+            allVariablesSignalInstance: allApplicationVariablesSignalInstance
+        });
     });
 
     useSignalEffect(() => {
         const variables = allPageVariablesSignal.get() ?? [];
         const applicationVariables = allApplicationVariablesSignal.get() ?? EMPTY_ARRAY;
-        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
-        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? EMPTY_ARRAY,allVariablesSignal,allVariablesSignalInstance));
+        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
+        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? EMPTY_ARRAY, allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
+        const queries = untrack(() => querySchemaInitialization(allApplicationQueriesSignal.get() ?? EMPTY_ARRAY))
         const variableInitialValue = variableInitialValueSignal.get() ?? {};
         const applicationVariablesInstance = allApplicationVariablesSignalInstance.get();
-        return initializeVariables(fetchers, applicationVariables, applicationVariablesInstance, variables, variableInitialValue, errorMessage, navigateSignal, call, allPageVariablesSignalInstance);
+
+        return initializeVariables({
+            fetchers,
+            applicationVariables,
+            applicationVariablesInstance,
+            variables,
+            variableInitialValue,
+            errorMessage,
+            navigateSignal,
+            call,
+            queries,
+            allVariablesSignalInstance: allPageVariablesSignalInstance,
+        });
     });
     return <></>
 }

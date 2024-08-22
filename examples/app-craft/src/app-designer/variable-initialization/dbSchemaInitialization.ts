@@ -12,6 +12,41 @@ export function composeTableSchema(table: Table) {
     return `z.object({\n\t${schema.join(',\n\t')}\n})`
 }
 
+export function composeArraySchema(data:Array<unknown>){
+    const schema:Record<string, string> = {};
+
+    for(const i of data){
+        const item = i as Record<string, string>;
+        Object.keys(item).forEach(key=>{
+            // we loop it first
+            let type = 'any';
+            if(typeof item[key] === 'number'){
+                type = 'number'
+            }else if(typeof item[key] === 'string'){
+                type = 'string'
+            }
+            if(!(key in schema)){
+                schema[key] = type;
+            }else{
+                const prevSchemaIsNull = schema[key] === 'any';
+                const nextTypeIsNotNull = type === 'any';
+                if(prevSchemaIsNull && nextTypeIsNotNull){
+                    schema[key] = type
+                }
+            }
+        })
+    }
+    return `z.object({\n\t${Object.keys(schema).map(k => {
+        const zodType = {
+            'any' : 'z.any()',
+            'number' : 'z.number().optional()',
+            'string' : 'z.string().optional()'
+        }
+        const type = schema[k] as keyof typeof zodType;
+        return `${k}:${zodType[type]}`;
+    }).join(',\n\t')}\n})`;
+}
+
 export function composeDbSchema(allTables: Array<Table>) {
     const dbSchema = [];
     for (const table of allTables) {

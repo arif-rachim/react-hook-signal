@@ -1,6 +1,7 @@
 import {SqlValue} from "sql.js";
 import sqlite from "../sqlite/sqlite.ts";
 import {mapTableInfoTypeToTs} from "./mapTableInfoTypeToTs.ts";
+import {FetcherParameter} from "../../../AppDesigner.tsx";
 
 export interface Table {
     type: string,
@@ -9,6 +10,15 @@ export interface Table {
     rootpage: number,
     sql?: string,
     tableInfo: TableInfo[]
+}
+
+export interface Query{
+    id : string,
+    name:string,
+    query : string,
+    rawQuery : string,
+    parameters : Array<FetcherParameter>
+    schemaCode : string
 }
 
 

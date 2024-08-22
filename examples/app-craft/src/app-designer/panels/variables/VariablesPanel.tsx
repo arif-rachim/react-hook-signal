@@ -48,28 +48,13 @@ export const createVariablePanel = (scope:'page'|'application') => {
         }
 
         async function deleteVariable(variable: Variable) {
-            const signalsDependentOnThisVariable = allVariablesSignal.get().filter(i => (i.dependencies ?? []).includes(variable?.id ?? ''));
-            if (signalsDependentOnThisVariable.length) {
-                await showModal(closePanel => {
-                    const message = <div style={{display: 'flex', flexDirection: 'column'}}>
-                        <div>Unable to delete due to signals referred in :</div>
-                        {signalsDependentOnThisVariable.map(i => <code key={i.id}>{i.name}</code>)}
-                    </div>
-                    return <ConfirmationDialog message={message} closePanel={closePanel} buttons={[{
-                        icon: Icon.Exit,
-                        label: 'Ok',
-                        id: 'Ok'
-                    }]}/>
-                });
-            } else {
-                const deleteVariableConfirm = await showModal<string>(closePanel => {
-                    return <ConfirmationDialog message={'Are you sure you want to delete this variable ?'}
-                                               closePanel={closePanel}/>
-                })
-                if (deleteVariableConfirm === 'Yes') {
-                    const variables = allVariablesSignal.get().filter(i => i.id !== variable?.id);
-                    updatePage({type: 'variable', variables: variables.sort(sortSignal)})
-                }
+            const deleteVariableConfirm = await showModal<string>(closePanel => {
+                return <ConfirmationDialog message={'Are you sure you want to delete this variable ?'}
+                                           closePanel={closePanel}/>
+            })
+            if (deleteVariableConfirm === 'Yes') {
+                const variables = allVariablesSignal.get().filter(i => i.id !== variable?.id);
+                updatePage({type: 'variable', variables: variables.sort(sortSignal)})
             }
         }
 
@@ -86,7 +71,7 @@ export const createVariablePanel = (scope:'page'|'application') => {
         return <>
             <CollapsibleLabelContainer label={'State'}>
                 <Button onClick={() => editVariable('state')}
-                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
+                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
                     {'Add Signal State'}
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <MdAdd style={{fontSize: 20}}/>
@@ -98,7 +83,7 @@ export const createVariablePanel = (scope:'page'|'application') => {
             </CollapsibleLabelContainer>
             <CollapsibleLabelContainer label={'Computed'}>
                 <Button onClick={() => editVariable('computed')}
-                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
+                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
                     {'Add Signal Computed'}
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <MdAdd style={{fontSize: 20}}/>
@@ -110,7 +95,7 @@ export const createVariablePanel = (scope:'page'|'application') => {
             </CollapsibleLabelContainer>
             <CollapsibleLabelContainer label={'Effect'}>
                 <Button onClick={() => editVariable('effect')}
-                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
+                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
                     {'Add Signal Effect'}
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <MdAdd style={{fontSize: 20}}/>

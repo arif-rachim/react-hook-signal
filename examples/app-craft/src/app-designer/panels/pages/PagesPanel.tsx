@@ -43,7 +43,7 @@ export function PagesPanel() {
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
         <Button onClick={() => addPage()}
-                style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}>
+                style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
             {'Add New Page'}
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <MdAdd style={{fontSize: 20}}/>

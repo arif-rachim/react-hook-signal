@@ -10,6 +10,7 @@ export function createNewBlankApplication(): Application {
         tables : [],
         callables : [],
         variables : [],
-        fetchers : []
+        fetchers : [],
+        queries : []
     }
 }

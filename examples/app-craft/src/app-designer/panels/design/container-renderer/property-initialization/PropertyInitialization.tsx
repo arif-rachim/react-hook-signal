@@ -10,6 +10,7 @@ import {dbSchemaInitialization} from "../../../../variable-initialization/dbSche
 import {fetchersInitialization} from "../../../../variable-initialization/fetcherSchemaInitialization.ts";
 import {Signal} from "signal-polyfill";
 import {callableInitialization} from "../../../../variable-initialization/callableSchemaInitialization.ts";
+import {querySchemaInitialization} from "../../../../variable-initialization/querySchemaInitialization.ts";
 import untrack = Signal.subtle.untrack;
 
 const db = dbSchemaInitialization();
@@ -28,7 +29,11 @@ export function PropertyInitialization(props: {
         allApplicationVariablesSignal,
         elements: elementsLib,
         allPageFetchersSignal,
+        allApplicationFetchersSignal,
         allApplicationCallablesSignal,
+        allPageCallablesSignal,
+        allApplicationQueriesSignal,
+        allPageQueriesSignal
     } = context;
 
     const allVariablesSignalInstance = useComputed(() => {
@@ -36,6 +41,15 @@ export function PropertyInitialization(props: {
     })
     const allVariablesSignal = useComputed(() => {
         return [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()]
+    })
+    const allFetchersSignal = useComputed(() => {
+        return [...allPageFetchersSignal.get(),...allApplicationFetchersSignal.get()] ;
+    })
+    const allQueriesSignal = useComputed(() => {
+        return [...allPageQueriesSignal.get(),...allApplicationQueriesSignal.get()] ;
+    })
+    const allCallablesSignal = useComputed(() => {
+        return [...allPageCallablesSignal.get(),...allApplicationCallablesSignal.get()] ;
     })
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
@@ -47,8 +61,9 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
-        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
+        const fetchers = untrack(() => fetchersInitialization(allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
+        const call = untrack(() => callableInitialization(allCallablesSignal.get() ?? [],allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
+        const query = untrack(() => querySchemaInitialization(allQueriesSignal.get() ?? []));
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];
@@ -57,15 +72,14 @@ export function PropertyInitialization(props: {
                 const allVariablesInstance = allVariablesSignalInstance.get();
                 const allVariables = allVariablesSignal.get();
                 const navigate = navigateSignal.get();
-                const propDependencies = (containerProp.dependencies ?? []).map(d => allVariablesInstance.find(v => v.id === d)?.instance).filter(i => i !== undefined) as Array<AnySignal<unknown>>;
-                const propDependenciesName = (containerProp.dependencies ?? []).map(d => allVariables.find(v => v.id === d)?.name).filter(i => i !== undefined) as Array<string>;
+                const propDependencies = allVariables.map(t => allVariablesInstance.find(v => v.id === t.id)?.instance) as Array<AnySignal<unknown>>;
+                const propDependenciesName = allVariables.map(v => v.name);
 
-                const funcParams = ['module', 'navigate', 'db', 'fetchers','call', ...propDependenciesName, containerProp.formula] as Array<string>;
-                propDependencies.forEach(p => p.get());
+                const funcParams = ['module', 'navigate', 'db', 'fetchers','call','query', ...propDependenciesName, containerProp.formula] as Array<string>;
                 const module: { exports: unknown } = {exports: {}};
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, navigate, db, fetchers,call, ...propDependencies];
+                    const funcParamsInstance = [module, navigate, db, fetchers,call,query, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {

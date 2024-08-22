@@ -1,6 +1,6 @@
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {Callable, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
-import {Table} from "../app-designer/panels/database/service/getTables.ts";
+import {Query, Table} from "../app-designer/panels/database/service/getTables.ts";
 import {useComputed, useSignal} from "react-hook-signal";
 import {useEffect} from "react";
 import {Signal} from "signal-polyfill";
@@ -29,14 +29,17 @@ export function PageViewer(props: {
     const allApplicationCallablesSignal = useComputed(() => allCallables);
     const allTablesSignal = useComputed(() => allTables)
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-    const allPageVariablesSignal = useComputed(() => page.variables)
+    const allPageVariablesSignal = useComputed(() => page.variables);
     const allContainersSignal = useComputed(() => page.containers);
     const allPageFetchersSignal = useComputed(() => page.fetchers);
+    const allPageCallablesSignal = useComputed(() => page.callables);
+    const allPageQueriesSignal = useComputed(() => page.queries);
     const allPagesSignal = useComputed<Array<Page>>(() => [page]);
     const applicationSignal = useSignal(createNewBlankApplication());
     const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
     const allApplicationVariablesSignal= useComputed<Array<Variable>>(() => [])
     const allApplicationFetchersSignal= useComputed<Array<Fetcher>>(() => [])
+    const allApplicationQueriesSignal = useComputed<Array<Query>>(() => [])
     const activePageIdSignal = useSignal(page.id)
 
     const context: AppViewerContext = {
@@ -54,6 +57,9 @@ export function PageViewer(props: {
         allApplicationVariablesSignalInstance,
         allApplicationVariablesSignal,
         allApplicationFetchersSignal,
+        allPageCallablesSignal,
+        allApplicationQueriesSignal,
+        allPageQueriesSignal,
         elements: elements
     }
     const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));

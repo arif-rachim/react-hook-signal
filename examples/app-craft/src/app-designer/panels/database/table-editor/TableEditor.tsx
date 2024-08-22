@@ -1,7 +1,7 @@
 import {Table} from "../service/getTables.ts";
-import {useEffect, useState} from "react";
+import {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {queryDb} from "./queryDb.ts";
-import {SqlValue} from "sql.js";
+import {BindParams, SqlValue} from "sql.js";
 import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
@@ -9,21 +9,12 @@ import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLab
 import {composeTableSchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
 import {Editor} from "@monaco-editor/react";
 
-async function queryTable(table: Table, currentPage: number, setTableData: (value: (((prevState: {
-    columns: Column[];
-    data: unknown[];
-    currentPage: number;
-    totalPage: number
-}) => { columns: Column[]; data: unknown[]; currentPage: number; totalPage: number }) | {
-    columns: Column[];
-    data: unknown[];
-    currentPage: number;
-    totalPage: number
-})) => void) {
-    const {columns, values, page} = await queryDb(`select * from ${table.tblName}`, {
-        size: 50,
+
+export async function queryPagination(query:string,params:BindParams,currentPage:number,pageSize:number){
+    const {columns, values, page} = await queryDb(query, {
+        size: pageSize ?? 50,
         number: currentPage
-    })
+    },params)
     const cols = columns.map(c => {
         const col: Column = {
             name: c,
@@ -41,12 +32,17 @@ async function queryTable(table: Table, currentPage: number, setTableData: (valu
         })
         return result;
     });
-    setTableData({
+    return({
         data,
         columns: cols,
         currentPage: page.number,
         totalPage: Math.ceil(page.totalRows / page.size)
-    });
+    })
+}
+
+async function queryTable(table: Table, currentPage: number, setTableData: Dispatch<SetStateAction<{ columns: Column[]; data: unknown[]; currentPage: number; totalPage: number }>>) {
+    const result = await queryPagination(`select * from ${table.tblName}`,[],currentPage,50);
+    setTableData(result);
 }
 
 export default function TableEditor(props: { table: Table }) {
@@ -87,13 +83,13 @@ export default function TableEditor(props: { table: Table }) {
                            }}/>
     </div>
 }
-type Column = {
+export type Column = {
     name: string,
     renderer: (props: { rowIndex: number, item: Record<string,unknown> }) => JSX.Element,
     title: string
 }
 
-function SimpleTableFooter(props: { totalPages: number, value: number, onChange: (value: number) => void }) {
+export function SimpleTableFooter(props: { totalPages: number, value: number, onChange: (value: number) => void }) {
     const {totalPages, value, onChange} = props;
     const maxButtons = 7;
     const halfRange = Math.floor(maxButtons / 2);
@@ -129,7 +125,7 @@ function SimpleTableFooter(props: { totalPages: number, value: number, onChange:
     </div>
 }
 
-function SimpleTable<T extends Record<string, unknown>>(props: {
+export function SimpleTable<T extends Record<string, unknown>>(props: {
     columns: Array<Column>,
     data: Array<T>,
     keyField: string

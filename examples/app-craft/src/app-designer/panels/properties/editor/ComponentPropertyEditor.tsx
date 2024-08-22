@@ -2,11 +2,9 @@ import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import {Button} from "../../../button/Button.tsx";
-import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {ContainerPropertyType} from "../../../AppDesigner.tsx";
 import {zodTypeToJson} from "../../../zodSchemaToJson.ts";
 import {Icon} from "../../../Icon.ts";
-import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import {BORDER} from "../../../Border.ts";
 import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
@@ -22,9 +20,27 @@ export function ComponentPropertyEditor(props: {
 }) {
     const context = useAppContext();
     const removePanel = useRemoveDashboardPanel();
-    const {allPageVariablesSignal,allApplicationVariablesSignal,allPageFetchersSignal, elements, allPagesSignal,allTablesSignal,allApplicationCallablesSignal} = context;
+    const {
+        allPageVariablesSignal,
+        allApplicationVariablesSignal,
+        allPageFetchersSignal,
+        elements,
+        allPagesSignal,
+        allTablesSignal,
+        allApplicationCallablesSignal,
+        allPageQueriesSignal,
+        allApplicationQueriesSignal,
+        allApplicationFetchersSignal
+    } = context;
+
     const allVariablesSignal = useComputed(() => {
-        return [...allPageVariablesSignal.get(),...allApplicationVariablesSignal.get()]
+        return [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()]
+    })
+    const allFetchersSignal = useComputed(() => {
+        return [...allPageFetchersSignal.get(), ...allApplicationFetchersSignal.get()]
+    })
+    const allQueriesSignal = useComputed(() => {
+        return [...allPageQueriesSignal.get(), ...allApplicationQueriesSignal.get()]
     })
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
     const returnType = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
@@ -41,26 +57,6 @@ export function ComponentPropertyEditor(props: {
         overflow: 'auto',
         flexGrow: 1
     }}>
-
-        <LabelContainer label={'Dependency :'} styleLabel={{fontStyle: 'italic'}} style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-            padding: 10,
-            borderBottom: BORDER,
-            backgroundColor: 'rgba(0,0,0,0.02)'
-        }}>
-            <notifiable.div style={{width: '100%', display: 'flex', flexDirection: 'column'}}>{() => {
-                const props = propsSignal.get();
-                return <DependencyInputSelector value={props.dependencies ?? []} valueToIgnore={[]}
-                                                onChange={(result) => {
-                                                    const item = {...props};
-                                                    item.dependencies = result ?? [];
-                                                    propsSignal.set({...item});
-                                                    isModified.set(true);
-                                                }} scope={'page'}/>;
-            }}</notifiable.div>
-        </LabelContainer>
         <notifiable.div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -70,23 +66,22 @@ export function ComponentPropertyEditor(props: {
             {() => {
                 const props = propsSignal.get();
                 const allVariables = allVariablesSignal.get();
-                const allFetchers = allPageFetchersSignal.get();
-                const allTables = allTablesSignal.get()
-                const allCallables = allApplicationCallablesSignal.get()
+                const allFetchers = allFetchersSignal.get();
+                const allQueries = allQueriesSignal.get();
+                const allTables = allTablesSignal.get();
+                const allCallables = allApplicationCallablesSignal.get();
                 const formula = props.formula ?? '';
-                const dependencies = props.dependencies ?? [];
                 const allPages = allPagesSignal.get();
                 return <Editor
                     language="javascript"
-                    key={dependencies.join('-')}
                     beforeMount={onBeforeMountHandler({
-                        dependencies,
                         allVariables,
                         allFetchers,
                         returnType: zodTypeToJson(returnType),
                         allPages,
                         allTables,
-                        allCallables
+                        allCallables,
+                        allQueries
                     })}
                     value={formula}
                     options={{selectOnLineNumbers: true}}
@@ -142,6 +137,5 @@ export function ComponentPropertyEditor(props: {
 function createNewProps(): ContainerPropertyType {
     return {
         formula: '',
-        dependencies: []
     }
 }

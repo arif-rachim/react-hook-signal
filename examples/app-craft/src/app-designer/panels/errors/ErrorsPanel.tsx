@@ -40,6 +40,8 @@ export function ErrorsPanel() {
                 color: colors.red,
                 overflow: 'auto',
                 maxHeight: 100,
+                flexShrink:0,
+                minHeight:100,
                 padding: '10px 0px'
             } as CSSProperties
         }}>

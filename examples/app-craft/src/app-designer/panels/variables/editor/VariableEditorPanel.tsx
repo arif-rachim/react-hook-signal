@@ -12,15 +12,11 @@ import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import {Icon} from "../../../Icon.ts";
-import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
-import {Signal} from "signal-polyfill";
-
-const empty = new Signal.Computed(() => []);
 
 /**
  * Represents a panel for editing variables.
@@ -41,26 +37,37 @@ export function VariableEditorPanel(props: {
         allPageVariablesSignal,
         allPagesSignal,
         allPageFetchersSignal,
+        allPageQueriesSignal,
         allTablesSignal,
         allApplicationCallablesSignal,
-        allApplicationVariablesSignal
+        allApplicationVariablesSignal,
+        allApplicationFetchersSignal,
+        allApplicationQueriesSignal
     } = context;
 
     const allVariablesSignal = useComputed(() => {
         const allPageVariables = allPageVariablesSignal.get();
         const allApplicationVariables = allApplicationVariablesSignal.get();
-        if(scope === "page"){
-            return [...allPageVariables,...allApplicationVariables];
+        if (scope === "page") {
+            return [...allPageVariables, ...allApplicationVariables];
         }
         return allApplicationVariables
     });
 
     const allFetchersSignal = useComputed(() => {
         const allPageFetchers = allPageFetchersSignal.get();
-        //const allApplicationFetchers = allApplicationFetchersSignal.get();
-        const allApplicationFetchers = empty.get();
-        if(scope === "page"){
-            return [...allPageFetchers,...allApplicationFetchers];
+        const allApplicationFetchers = allApplicationFetchersSignal.get();
+        if (scope === "page") {
+            return [...allPageFetchers, ...allApplicationFetchers];
+        }
+        return allApplicationFetchers
+    });
+
+    const allQueriesSignal = useComputed(() => {
+        const allPageFetchers = allPageQueriesSignal.get();
+        const allApplicationFetchers = allApplicationQueriesSignal.get();
+        if (scope === "page") {
+            return [...allPageFetchers, ...allApplicationFetchers];
         }
         return allApplicationFetchers
     });
@@ -73,7 +80,6 @@ export function VariableEditorPanel(props: {
             name: '',
             type: defaultType,
             id: guid(),
-            dependencies: [],
             functionCode: '',
             schemaCode: 'z.any()'
         }
@@ -146,28 +152,6 @@ export function VariableEditorPanel(props: {
                                       }, 0);
                                   }}/>
             </LabelContainer>
-            {type !== 'state' &&
-                <LabelContainer label={'Dependency :'} style={{
-                    flexGrow: 1,
-                    flexBasis: '50%',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 10
-                }}
-                                styleLabel={{fontStyle: 'italic'}}
-                                styleContent={{display: 'flex', flexDirection: 'column'}}>
-                    <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                        {() => {
-                            const variable = variableSignal.get();
-                            return <DependencyInputSelector onChange={(result) => {
-                                variableSignal.set({...variable, dependencies: result});
-                                isModified.set(true);
-                            }} value={variable.dependencies ?? []} valueToIgnore={[variable.id]}
-                                                            scope={scope}/>;
-                        }}
-                    </notifiable.div>
-                </LabelContainer>
-            }
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, overflow: 'unset'}}>
             {type !== 'effect' &&
@@ -209,24 +193,24 @@ export function VariableEditorPanel(props: {
                 }}>
                     {() => {
                         const variable = variableSignal.get();
-                        const dependencies = variable.dependencies ?? []
                         const allVariables = allVariablesSignal.get();
                         const allFetchers = allFetchersSignal.get();
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
                         const allCallables = allApplicationCallablesSignal.get();
+                        const allQueries = allQueriesSignal.get();
                         const formula = variable.functionCode;
                         return <Editor
                             language="javascript"
-                            key={variable.schemaCode + dependencies.join('-')}
+                            key={variable.schemaCode}
                             beforeMount={onBeforeMountHandler({
-                                dependencies,
                                 allVariables,
                                 allFetchers,
                                 returnType: zodSchemaToJson(wrapWithZObjectIfNeeded(variable.schemaCode)),
                                 allPages,
                                 allTables,
-                                allCallables
+                                allCallables,
+                                allQueries
                             })}
                             value={formula}
                             onChange={(value?: string) => {

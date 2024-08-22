@@ -11,7 +11,7 @@ import {
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {createContext} from "react";
-import {Table} from "../app-designer/panels/database/service/getTables.ts";
+import {Query, Table} from "../app-designer/panels/database/service/getTables.ts";
 
 /**
  * Represents the context of an app viewer.
@@ -19,6 +19,7 @@ import {Table} from "../app-designer/panels/database/service/getTables.ts";
 export interface AppViewerContext {
     applicationSignal:Signal.State<Application>;
     allApplicationCallablesSignal:Signal.Computed<Array<Callable>>;
+    allPageCallablesSignal:Signal.Computed<Array<Callable>>;
     allTablesSignal: Signal.Computed<Array<Table>>;
     allPagesSignal: Signal.Computed<Array<Page>>;
     activePageIdSignal: Signal.State<string>;
@@ -31,6 +32,8 @@ export interface AppViewerContext {
     allErrorsSignal: Signal.State<Array<ErrorType>>;
     allApplicationVariablesSignal: Signal.Computed<Array<Variable>>,
     allApplicationVariablesSignalInstance : Signal.State<Array<VariableInstance>>,
+    allApplicationQueriesSignal:Signal.Computed<Array<Query>>,
+    allPageQueriesSignal:Signal.Computed<Array<Query>>,
     elements: LayoutBuilderProps['elements'];
 }
 

@@ -25,7 +25,7 @@ type SelectedPanelType = {
     [k in PanelPosition]?: string
 }
 
-type PanelType = 'CallableEditorPanel' | 'VariableEditorPanel' | 'TableEditor' | 'ComponentPropertyEditor' | 'FetcherEditorPanel' | 'DesignPanel'
+type PanelType = 'CallableEditorPanel' | 'VariableEditorPanel' | 'TableEditor' | 'ComponentPropertyEditor' | 'FetcherEditorPanel' | 'DesignPanel' | 'QueryEditorPanel'
 
 export type PanelInstance = Panel & {
     id: string,
@@ -192,14 +192,14 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        borderLeft: BORDER
+                        borderLeft: BORDER,
+                        flexShrink:0
                     }}>
                     {() => {
                         const allPanels = panelsSignal.get();
                         const selectedPanel = selectedPanelSignal.get();
                         const centerTag = allPanels.find(p => p.id === selectedPanel.mainCenter)?.tag;
-                        return <>
-                            <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
+                        return <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
                                 <RenderIcons panels={allPanels.filter(p => p.position === 'right')}
                                              value={(selectedPanel.right ?? '') as string}
                                              onChange={value => {
@@ -215,7 +215,6 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                                  })
                                              }} centerTag={centerTag} selectedPanel={selectedPanel}/>
                             </div>
-                        </>
                     }}
                 </notifiable.div>
             </div>
@@ -281,7 +280,9 @@ function RenderPanel<T extends SelectedPanelType>(props: {
     const {selectedPanelSignal, position, panelsSignal} = props;
     return <notifiable.div style={{
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow:'auto',
+        flexShrink:0,
     }}>
         {() => {
             const panels = panelsSignal.get();
@@ -289,7 +290,7 @@ function RenderPanel<T extends SelectedPanelType>(props: {
             if (selectedLeftPanelId) {
                 const panel = panels.find(p => p.id === selectedLeftPanelId);
                 const Component = panel?.component ?? EmptyComponent;
-                return <div style={{display: 'flex', flexDirection: 'column'}}>
+                return <div style={{display: 'flex', flexDirection: 'column',overflow:'auto'}}>
                     <div style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.05)',
@@ -308,7 +309,9 @@ function RenderPanel<T extends SelectedPanelType>(props: {
                         </RenderIcon>
 
                     </div>
+                    <div style={{display:'flex',flexDirection:'column',overflow:'auto'}}>
                     <Component/>
+                    </div>
                 </div>
             }
             return <></>

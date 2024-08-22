@@ -42,5 +42,53 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
 monaco.languages.typescript.javascriptDefaults.addExtraLib(signalDefinition, "ts:filename/signal-source.d.ts");
 monaco.languages.typescript.javascriptDefaults.addExtraLib(zodDefinition, "ts:filename/zod-source.d.ts");
 
+monaco.languages.registerCompletionItemProvider('sql',{
+    provideCompletionItems(model, position){
+        const word = model.getWordUntilPosition(position)
+        const range = {
+            startLineNumber : position.lineNumber,
+            endLineNumber : position.lineNumber,
+            startColumn : word.startColumn,
+            endColumn : word.endColumn
+        }
+        return {
+            suggestions : [
+                {
+                    label : 'SELECT',
+                    kind : monaco.languages.CompletionItemKind.Keyword,
+                    insertText : 'SELECT',
+                    range : range
+                },
+                {
+                    label : 'FROM',
+                    kind : monaco.languages.CompletionItemKind.Keyword,
+                    insertText : 'FROM',
+                    range : range
+                },
+                {
+                    label : 'WHERE',
+                    kind : monaco.languages.CompletionItemKind.Keyword,
+                    insertText : 'WHERE',
+                    range : range
+                }
+            ]
+        }
+    }
+})
+monaco.languages.setLanguageConfiguration('sql',{
+    comments : {
+        lineComment : '--',
+        blockComment : ['/*','*/']
+    },
+    brackets : [
+        ['(',')'],
+        ['[',']']
+    ],
+    autoClosingPairs : [
+        { open : '(',close:')'},
+        { open : '[',close:']'}
+    ]
+})
+
 loader.config({monaco});
 loader.init();

@@ -9,7 +9,7 @@ import {
 } from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineApi, AiOutlineFieldString, AiOutlineGroup} from "react-icons/ai";
-import {TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
+import {TbDatabaseSearch, TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
 import {
     MdAdd,
     MdCheck,
@@ -72,6 +72,7 @@ export const Icon = {
     Row: HiViewBoards,
     Title: MdTitle,
     Database: GoDatabase,
+    Query : TbDatabaseSearch,
     Function : SiAzurefunctions,
     Container : AiOutlineGroup
 }

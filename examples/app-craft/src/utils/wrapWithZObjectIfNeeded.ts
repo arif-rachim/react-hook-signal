@@ -1,5 +1,5 @@
 export function wrapWithZObjectIfNeeded(text: string) {
-    text = text.trim();
+    text = (text ?? '').trim();
     if(text.includes('module.exports')){
         text = text.replace('module.exports','').trim();
     }

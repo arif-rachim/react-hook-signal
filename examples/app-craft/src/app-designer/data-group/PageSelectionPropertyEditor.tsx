@@ -43,7 +43,7 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
                     if (value) {
                         selectedContainer.properties = {
                             ...selectedContainer.properties,
-                            [propertyName]: {formula: `module.exports = "${value}"`, dependencies: []}
+                            [propertyName]: {formula: `module.exports = "${value}"`,}
                         }
                         return selectedContainer;
                     } else {
