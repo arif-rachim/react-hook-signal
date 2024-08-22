@@ -25,6 +25,7 @@ export interface AppViewerContext {
     allContainersSignal: Signal.Computed<Array<Container>>;
     allPageVariablesSignal: Signal.Computed<Array<Variable>>;
     allPageFetchersSignal: Signal.Computed<Array<Fetcher>>;
+    allApplicationFetchersSignal: Signal.Computed<Array<Fetcher>>;
     variableInitialValueSignal: Signal.State<Record<string, unknown>>;
     allPageVariablesSignalInstance: Signal.State<Array<VariableInstance>>;
     allErrorsSignal: Signal.State<Array<ErrorType>>;

@@ -9,6 +9,7 @@ export function createNewBlankApplication(): Application {
         pages: [createNewBlankPage()],
         tables : [],
         callables : [],
-        variables : []
+        variables : [],
+        fetchers : []
     }
 }

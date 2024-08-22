@@ -1,7 +1,8 @@
-import {Fetcher} from "../AppDesigner.tsx";
+import {Fetcher, Variable, VariableInstance} from "../AppDesigner.tsx";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {createRequest} from "../panels/fetchers/editor/createRequest.ts";
+import {Signal} from "signal-polyfill";
 
 export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
     const fetchersSchema = allFetchers.map(i => {
@@ -37,11 +38,58 @@ declare const fetchers:{
 `
 }
 
-export function fetchersInitialization(allFetchers: Array<Fetcher>) {
+export function fetchersInitialization(allFetchers: Array<Fetcher>,allVariablesSignal:Signal.Computed<Array<Variable>>,allVariablesSignalInstance:Signal.Computed<Array<VariableInstance>>) {
     const fetchers: Record<string, (inputs: Record<string, unknown>) => unknown> = {};
-    for (const fetcher of allFetchers) {
-        fetchers[fetcher.name] = async (inputs: Record<string, unknown>) => {
+    for (const fetcherValue of allFetchers) {
+
+        fetchers[fetcherValue.name] = async (inputs: Record<string, unknown>) => {
             try {
+                const fetcher = {...fetcherValue};
+                const allVariables = allVariablesSignal.get();
+                const allVariablesInstance = allVariablesSignalInstance.get();
+                const dependencies = fetcher.dependencies?.map(variableId => {
+                    const name = allVariables.find(variable => variable.id === variableId)?.name;
+                    const instance = allVariablesInstance.find(variable => variable.id === variableId)?.instance;
+                    return {name, instance}
+                }) ?? [];
+
+                const module: {
+                    exports: {
+                        protocol?: 'http' | 'https',
+                        domain?: string,
+                        method?: 'post' | 'get' | 'put' | 'patch' | 'delete',
+                        contentType?: 'application/x-www-form-urlencoded' | 'application/json'
+                        path?: string,
+                        headers?: Record<string,string>,
+                        data?: Record<string,unknown>,
+                    }
+                } = {exports: {}};
+
+                try {
+                    const params = ['module', ...dependencies.map(d => d.name ?? ''), fetcher.defaultValueFormula ?? ''];
+                    const fun = new Function(...params)
+                    fun.call(null, ...[module, ...dependencies.map(d => d.instance)]);
+                    fetcher.protocol = module.exports.protocol ?? fetcher.protocol;
+                    fetcher.domain = module.exports.domain ?? fetcher.domain;
+                    fetcher.method = module.exports.method ?? fetcher.method;
+                    fetcher.contentType = module.exports.contentType ?? fetcher.contentType;
+                    fetcher.path = module.exports.path ?? fetcher.path;
+                    fetcher.headers = fetcher.headers.map(h => {
+                        if(module.exports.headers && h.name in  module.exports.headers){
+                            return {...h,value:module.exports.headers[h.name]}
+                        }
+                        return h
+                    });
+                    fetcher.data = fetcher.data.map(h => {
+                        if(module.exports.headers && h.name in  module.exports.headers){
+                            return {...h,value:module.exports.headers[h.name]}
+                        }
+                        return h
+                    });
+                } catch (err) {
+                    console.log(err);
+                }
+
                 const {address, requestInit} = createRequest(fetcher, inputs);
                 const response = await fetch(address, requestInit);
                 if (!response.ok) {

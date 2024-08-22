@@ -11,43 +11,55 @@ import {useAppContext} from "../../hooks/useAppContext.ts";
 import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
 import {useShowModal} from "../../../modal/useShowModal.ts";
 import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
+import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 
-export function FetchersPanel() {
-    const context = useAppContext();
-    const {allPageFetchersSignal} = context;
-    const updatePage = useUpdatePageSignal();
-    const showModal = useShowModal();
-    const addPanel = useAddDashboardPanel();
+export const createFetcherPanel = (scope:'page'|'application') => {
+    return function FetchersPanel() {
+        const context = useAppContext();
+        const {allPageFetchersSignal,allApplicationFetchersSignal} = context;
+        const allFetchersSignal = scope === 'application' ? allApplicationFetchersSignal : allPageFetchersSignal;
 
-    async function deleteFetcher(fetcher: Fetcher) {
-        const deleteVariableConfirm = await showModal<string>(closePanel => {
-            return <ConfirmationDialog message={'Are you sure you want to delete this fetcher ?'}
-                                       closePanel={closePanel}/>
-        })
-        if (deleteVariableConfirm === 'Yes') {
-            const fetchers = allPageFetchersSignal.get().filter(i => i.id !== fetcher.id);
-            updatePage({type: 'fetcher', fetchers: fetchers})
+        const updatePage = useUpdatePageSignal();
+        const updateApplication = useUpdateApplication();
+        const showModal = useShowModal();
+        const addPanel = useAddDashboardPanel();
+
+        async function deleteFetcher(fetcher: Fetcher) {
+            const deleteVariableConfirm = await showModal<string>(closePanel => {
+                return <ConfirmationDialog message={'Are you sure you want to delete this fetcher ?'}
+                                           closePanel={closePanel}/>
+            })
+            if (deleteVariableConfirm === 'Yes') {
+                const fetchers = allFetchersSignal.get().filter(i => i.id !== fetcher.id);
+                if(scope === 'application'){
+                    updateApplication(app => {
+                        app.fetchers = fetchers;
+                    })
+                }else{
+                    updatePage({type: 'fetcher', fetchers: fetchers})
+                }
+
+            }
         }
-    }
 
-    function editFetcher(fetcher?: Fetcher) {
-        const panelId = fetcher?.id ?? guid();
-        addPanel({
-            position: 'mainCenter',
-            component: () => {
-                return <FetcherEditorPanel fetcherId={fetcher?.id} panelId={panelId}/>
-            },
-            title: fetcher ? `Edit ${fetcher.name}` : `Add Fetcher`,
-            Icon: Icon.Component,
-            id: panelId,
-            tag : {
-                type : 'FetcherEditorPanel'
-            },
-            visible: () => true
-        })
-    }
+        function editFetcher(fetcher?: Fetcher) {
+            const panelId = fetcher?.id ?? guid();
+            addPanel({
+                position: 'mainCenter',
+                component: () => {
+                    return <FetcherEditorPanel fetcherId={fetcher?.id} panelId={panelId} scope={scope}/>
+                },
+                title: fetcher ? `Edit ${fetcher.name}` : `Add Fetcher`,
+                Icon: Icon.Component,
+                id: panelId,
+                tag : {
+                    type : 'FetcherEditorPanel'
+                },
+                visible: () => true
+            })
+        }
 
-    return <div style={{display:'flex',flexDirection:'column',padding:10}}>
+        return <div style={{display:'flex',flexDirection:'column',padding:10}}>
             <Button
                 style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 5}}
                 onClick={() => editFetcher()}
@@ -59,7 +71,7 @@ export function FetchersPanel() {
             </Button>
             <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                 {() => {
-                    return allPageFetchersSignal.get().map(fetcher => {
+                    return allFetchersSignal.get().map(fetcher => {
                         return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={fetcher.id}>
                             <notifiable.div>
                                 {() => {
@@ -101,5 +113,7 @@ export function FetchersPanel() {
                     })
                 }}
             </notifiable.div>
-    </div>
+        </div>
+    }
 }
+

@@ -16,12 +16,12 @@ import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
 import PackagePanel from "./panels/package/PackagePanel.tsx";
-import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
 import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
 import {createNewBlankApplication} from "./createNewBlankApplication.ts";
 import {Table} from "./panels/database/service/getTables.ts";
 import CallablePanel from "./panels/callable/CallablePanel.tsx";
+import {createFetcherPanel} from "./panels/fetchers/FetchersPanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -60,7 +60,10 @@ export type Fetcher = {
     headers: Array<FetcherParameter>,
     paths: Array<FetcherParameter>,
     data: Array<FetcherParameter>,
-    returnTypeSchemaCode: string
+    returnTypeSchemaCode: string,
+    // this is to compose the default formula
+    defaultValueFormula : string,
+    dependencies? : Array<string>
 }
 
 export type VariableInstance = {
@@ -93,6 +96,7 @@ export type Application = {
     tables: Array<Table>,
     callables: Array<Callable>,
     variables: Array<Variable>, // application variables, we can use this to store the login state !
+    fetchers: Array<Fetcher>
 }
 
 export type Container = {
@@ -133,6 +137,7 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     const allApplicationVariablesSignal = useComputed<Array<Variable>>(() => applicationSignal.get().variables ?? []);
     const allPageVariablesSignal = useComputed<Array<Variable>>(() => activePageSignal.get()?.variables ?? []);
     const allContainersSignal = useComputed<Array<Container>>(() => activePageSignal.get()?.containers ?? []);
+    const allApplicationFetchersSignal = useComputed<Array<Fetcher>>(() => applicationSignal.get()?.fetchers ?? []);
     const allPageFetchersSignal = useComputed<Array<Fetcher>>(() => activePageSignal.get()?.fetchers ?? []);
 
     const {value, onChange} = props;
@@ -170,7 +175,8 @@ export function useAppInitiator(props: LayoutBuilderProps) {
         allApplicationVariablesSignal,
         allPageVariablesSignal,
         allContainersSignal,
-        allPageFetchersSignal
+        allPageFetchersSignal,
+        allApplicationFetchersSignal
     };
 }
 
@@ -192,13 +198,15 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         allApplicationVariablesSignal,
         allPageVariablesSignal,
         allContainersSignal,
-        allPageFetchersSignal
+        allPageFetchersSignal,
+        allApplicationFetchersSignal
     } = useAppInitiator(props);
     const context: AppDesignerContext = {
         applicationSignal,
         allApplicationCallablesSignal,
         allApplicationVariablesSignal,
         allApplicationVariablesSignalInstance,
+        allApplicationFetchersSignal,
 
         allTablesSignal,
         allPagesSignal,
@@ -239,6 +247,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         position: 'left',
                         component: createVariablePanel('application')
                     },
+                    applicationFetchers: {
+                        title: 'Application Fetchers',
+                        Icon: Icon.Fetcher,
+                        position: 'left',
+                        component: createFetcherPanel('application'),
+                    },
                     functions: {
                         title: 'Application Callables',
                         Icon: Icon.Function,
@@ -269,7 +283,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         title: 'Fetchers',
                         Icon: Icon.Fetcher,
                         position: 'leftBottom',
-                        component: FetchersPanel,
+                        component: createFetcherPanel('page'),
                         visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     errors: {

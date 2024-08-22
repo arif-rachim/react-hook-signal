@@ -1,5 +1,5 @@
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
-import {Callable, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
+import {Callable, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {Table} from "../app-designer/panels/database/service/getTables.ts";
 import {useComputed, useSignal} from "react-hook-signal";
 import {useEffect} from "react";
@@ -36,6 +36,7 @@ export function PageViewer(props: {
     const applicationSignal = useSignal(createNewBlankApplication());
     const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
     const allApplicationVariablesSignal= useComputed<Array<Variable>>(() => [])
+    const allApplicationFetchersSignal= useComputed<Array<Fetcher>>(() => [])
     const activePageIdSignal = useSignal(page.id)
 
     const context: AppViewerContext = {
@@ -52,6 +53,7 @@ export function PageViewer(props: {
         allPageFetchersSignal,
         allApplicationVariablesSignalInstance,
         allApplicationVariablesSignal,
+        allApplicationFetchersSignal,
         elements: elements
     }
     const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));

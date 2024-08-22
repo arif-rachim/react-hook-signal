@@ -168,6 +168,7 @@ export function VariableInitialization() {
         allApplicationCallablesSignal,
         allApplicationVariablesSignal,
         allApplicationVariablesSignalInstance,
+        allApplicationFetchersSignal
     } = useAppContext();
 
     const navigateSignal = useNavigateSignal();
@@ -191,12 +192,18 @@ export function VariableInitialization() {
         const variableValidators = validatorsComputed.get();
         validateVariables(variableInstances, variableValidators, errorMessage);
     });
+    const allVariablesSignal = useComputed(() => {
+        return [...allPageVariablesSignal.get(),...allApplicationVariablesSignal.get()]
+    })
 
+    const allVariablesSignalInstance = useComputed(() => {
+        return [...allPageVariablesSignalInstance.get(),...allApplicationVariablesSignalInstance.get()]
+    });
     useSignalEffect(() => {
         const variables = allApplicationVariablesSignal.get() ?? EMPTY_ARRAY;
         const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
         const variableInitialValue = {};
-        const fetchers = {};
+        const fetchers = untrack(() => fetchersInitialization(allApplicationFetchersSignal.get() ?? EMPTY_ARRAY,allVariablesSignal,allVariablesSignalInstance));;
         const applicationVariables:Array<Variable> = [];
         const applicationVariablesInstance:Array<VariableInstance> = [];
         return initializeVariables(fetchers, applicationVariables, applicationVariablesInstance, variables, variableInitialValue, errorMessage, navigateSignal, call, allApplicationVariablesSignalInstance);
@@ -206,7 +213,7 @@ export function VariableInitialization() {
         const variables = allPageVariablesSignal.get() ?? [];
         const applicationVariables = allApplicationVariablesSignal.get() ?? EMPTY_ARRAY;
         const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
-        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? EMPTY_ARRAY));
+        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? EMPTY_ARRAY,allVariablesSignal,allVariablesSignalInstance));
         const variableInitialValue = variableInitialValueSignal.get() ?? {};
         const applicationVariablesInstance = allApplicationVariablesSignalInstance.get();
         return initializeVariables(fetchers, applicationVariables, applicationVariablesInstance, variables, variableInitialValue, errorMessage, navigateSignal, call, allPageVariablesSignalInstance);

@@ -23,6 +23,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
     const allApplicationCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
     const allTablesSignal = useComputed(() => applicationSignal.get().tables ?? []);
     const allApplicationVariablesSignal= useComputed(() => applicationSignal.get().variables ?? []);
+    const allApplicationFetchersSignal= useComputed(() => applicationSignal.get().fetchers ?? []);
     const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
     const allPageVariablesSignal = useComputed<Array<Variable>>(() => {
         const activePageId = activePageIdSignal.get();
@@ -67,6 +68,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
         allPageVariablesSignalInstance,
         allErrorsSignal,
         allPageFetchersSignal,
+        allApplicationFetchersSignal,
         allApplicationVariablesSignal,
         allApplicationVariablesSignalInstance,
         elements: props.elements

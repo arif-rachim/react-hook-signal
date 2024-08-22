@@ -47,7 +47,7 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? []));
+        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
         const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {

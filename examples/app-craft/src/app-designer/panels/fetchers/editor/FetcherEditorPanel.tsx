@@ -3,7 +3,7 @@ import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPane
 import {BORDER} from "../../../Border.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
-import {Fetcher, FetcherParameter} from "../../../AppDesigner.tsx";
+import {Callable, Fetcher, FetcherParameter, Page} from "../../../AppDesigner.tsx";
 import {useShowModal} from "../../../../modal/useShowModal.ts";
 import {guid} from "../../../../utils/guid.ts";
 import {Icon} from "../../../Icon.ts";
@@ -18,18 +18,26 @@ import {Editor} from "@monaco-editor/react";
 import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import Visible from "../../../visible/Visible.tsx";
 import {createRequest} from "./createRequest.ts";
+import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
+import {Table} from "../../database/service/getTables.ts";
 import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
 
+export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string, scope: 'page' | 'application' }) {
+    const {
+        allPageFetchersSignal,
+        allPageVariablesSignal,
+        allApplicationVariablesSignal,
+        allPageVariablesSignalInstance,
+        allApplicationVariablesSignalInstance,
+        allApplicationFetchersSignal
+    } = useAppContext();
 
-export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string }) {
-    const {allPageFetchersSignal} = useAppContext();
-
-    const {fetcherId, panelId} = props;
-    const fetcher = allPageFetchersSignal.get().find(v => v.id === fetcherId);
+    const {fetcherId, panelId, scope} = props;
+    const fetcher = [...allPageFetchersSignal.get(), ...allApplicationFetchersSignal.get()].find(v => v.id === fetcherId);
     const showModal = useShowModal();
-    const updateFetcher = useUpdateFetcher();
+    const updateFetcher = useUpdateFetcher(scope);
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
     const testMessages = useSignal<Array<{ id: string, date: Date, message: string }>>([]);
@@ -51,9 +59,29 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             headers: [],
             paths: [],
             data: [],
-            returnTypeSchemaCode: ''
+            returnTypeSchemaCode: '',
+            defaultValueFormula: '',
+            dependencies: []
         }
     }
+
+    const allVariablesSignal = useComputed(() => {
+        const allPageVariables = allPageVariablesSignal.get();
+        const allApplicationVariables = allApplicationVariablesSignal.get();
+        if (scope === "page") {
+            return [...allPageVariables, ...allApplicationVariables];
+        }
+        return allApplicationVariables
+    });
+
+    const allVariablesInstanceSignal = useComputed(() => {
+        const allPageVariables = allPageVariablesSignalInstance.get();
+        const allApplicationVariables = allApplicationVariablesSignalInstance.get();
+        if (scope === "page") {
+            return [...allPageVariables, ...allApplicationVariables];
+        }
+        return allApplicationVariables
+    });
 
     const fetcherSignal = useSignal(fetcher ?? createNewFetcher());
 
@@ -130,10 +158,60 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
             setTimeout(() => fetcherSignal.set(newSignal), 0)
         }
     })
-    const hasContent = useComputed(() => ['post','patch','put'].includes(fetcherSignal.get().method))
+    const hasContent = useComputed(() => ['post', 'patch', 'put'].includes(fetcherSignal.get().method))
 
     async function testFetcher() {
-        const fetcher = fetcherSignal.get();
+        const fetcherValue = fetcherSignal.get();
+        // repopulate fetcher
+
+        const fetcher = {...fetcherValue};
+
+        const allVariables = allVariablesSignal.get();
+        const allVariablesInstance = allVariablesInstanceSignal.get();
+        const dependencies = fetcher.dependencies?.map(variableId => {
+            const name = allVariables.find(variable => variable.id === variableId)?.name;
+            const instance = allVariablesInstance.find(variable => variable.id === variableId)?.instance;
+            return {name, instance}
+        }) ?? [];
+
+        const module: {
+            exports: {
+                protocol?: 'http' | 'https',
+                domain?: string,
+                method?: 'post' | 'get' | 'put' | 'patch' | 'delete',
+                contentType?: 'application/x-www-form-urlencoded' | 'application/json'
+                path?: string,
+                headers?: Record<string,string>,
+                data?: Record<string,unknown>,
+            }
+        } = {exports: {}};
+
+        try {
+            const params = ['module', ...dependencies.map(d => d.name ?? ''), fetcher.defaultValueFormula ?? ''];
+            const fun = new Function(...params)
+            fun.call(null, ...[module, ...dependencies.map(d => d.instance)]);
+            fetcher.protocol = module.exports.protocol ?? fetcher.protocol;
+            fetcher.domain = module.exports.domain ?? fetcher.domain;
+            fetcher.method = module.exports.method ?? fetcher.method;
+            fetcher.contentType = module.exports.contentType ?? fetcher.contentType;
+            fetcher.path = module.exports.path ?? fetcher.path;
+            fetcher.headers = fetcher.headers.map(h => {
+                if(module.exports.headers && h.name in  module.exports.headers){
+                    return {...h,value:module.exports.headers[h.name]}
+                }
+                return h
+            });
+            fetcher.data = fetcher.data.map(h => {
+                if(module.exports.headers && h.name in  module.exports.headers){
+                    return {...h,value:module.exports.headers[h.name]}
+                }
+                return h
+            });
+        } catch (err) {
+            console.log(err);
+        }
+
+
         const {address, requestInit} = createRequest(fetcher, {});
         logTestMessage(`[Request] ${address}`);
         logTestMessage(`[Request] ${JSON.stringify(requestInit)}`);
@@ -167,12 +245,83 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
         }
     }
 
+    const returnType = `{
+        protocol?: 'http' | 'https',
+        domain?: string,
+        method?: 'post' | 'get' | 'put' | 'patch' | 'delete',
+        contentType?: 'application/x-www-form-urlencoded' | 'application/json'
+        path?: string,
+        headers?: Record<string,string>,
+        data?: Record<string,unknown>,
+    }`
+
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
         flexGrow: 1,
     }}>
+        <CollapsibleLabelContainer label={'Default Value'} autoGrowWhenOpen={true} defaultOpen={false}>
+            <div style={{display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px'}}>
+                <LabelContainer label={'Dependency :'} style={{
+                    flexGrow: 1,
+                    flexBasis: '50%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10
+                }}
+                                styleLabel={{fontStyle: 'italic'}}
+                                styleContent={{display: 'flex', flexDirection: 'column'}}>
+                    <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+                        {() => {
+                            const fetcher = fetcherSignal.get();
+                            return <DependencyInputSelector onChange={(result) => {
+                                fetcherSignal.set({...fetcher, dependencies: result});
+                                isModified.set(true);
+                            }} value={fetcher.dependencies ?? []} valueToIgnore={[]} scope={'page'}/>;
+                        }}
+                    </notifiable.div>
+                </LabelContainer>
+
+                <notifiable.div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    minHeight: 300
+                }}>
+                    {() => {
+                        const fetcher = fetcherSignal.get();
+                        const dependencies = fetcher.dependencies ?? []
+                        const allVariables = allVariablesSignal.get();
+                        const allFetchers: Array<Fetcher> = [];
+                        const allPages: Array<Page> = [];
+                        const allTables: Array<Table> = [];
+                        const allCallables: Array<Callable> = [];
+                        const formula = fetcher.defaultValueFormula;
+                        return <Editor
+                            language="javascript"
+                            key={dependencies.join('-')}
+                            beforeMount={onBeforeMountHandler({
+                                dependencies,
+                                allVariables,
+                                allFetchers,
+                                returnType,
+                                allPages,
+                                allTables,
+                                allCallables
+                            })}
+                            value={formula}
+                            onChange={(value?: string) => {
+                                const newVariable = {...fetcherSignal.get()};
+                                newVariable.defaultValueFormula = value ?? '';
+                                fetcherSignal.set(newVariable);
+                                isModified.set(true);
+                            }}
+                        />
+                    }}
+                </notifiable.div>
+            </div>
+        </CollapsibleLabelContainer>
         <CollapsibleLabelContainer label={'Info'}>
             <div style={{display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px'}}>
                 <LabelContainer label={'Name : '} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
@@ -393,15 +542,6 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string 
                     return <Editor
                         language="javascript"
                         value={`${fetcherSignal.get().returnTypeSchemaCode}`}
-                        beforeMount={onBeforeMountHandler({
-                            dependencies: [],
-                            allVariables: [],
-                            allFetchers: [],
-                            returnType: 'any',
-                            allPages: [],
-                            allTables:[],
-                            allCallables : []
-                        })}
                         options={{
                             selectOnLineNumbers: false,
                             lineNumbers: 'off',

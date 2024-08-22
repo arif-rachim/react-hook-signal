@@ -55,7 +55,15 @@ export function VariableEditorPanel(props: {
         return allApplicationVariables
     });
 
-    const allFetchersSignal = scope === 'page' ? allPageFetchersSignal : empty;
+    const allFetchersSignal = useComputed(() => {
+        const allPageFetchers = allPageFetchersSignal.get();
+        //const allApplicationFetchers = allApplicationFetchersSignal.get();
+        const allApplicationFetchers = empty.get();
+        if(scope === "page"){
+            return [...allPageFetchers,...allApplicationFetchers];
+        }
+        return allApplicationFetchers
+    });
 
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
@@ -211,7 +219,6 @@ export function VariableEditorPanel(props: {
                         return <Editor
                             language="javascript"
                             key={variable.schemaCode + dependencies.join('-')}
-                            options={{fontFamily:'Fira code, Consolas, Courier New, monospace'}}
                             beforeMount={onBeforeMountHandler({
                                 dependencies,
                                 allVariables,

@@ -28,7 +28,11 @@ export const onBeforeMountHandler = (props: {
     monaco.languages.typescript.javascriptDefaults.addExtraLib(composeFetcherSchema(allFetchers), "ts:filename/fetchers-source.d.ts");
 }
 
-const returnTypeDefinition = (returnType: string) => `declare const module:{exports:${returnType}};`
+const returnTypeDefinition = (returnType: string) => {
+    const result = `declare const module:{exports:${returnType}};`
+    console.log('COMPOSE RETURN TYPE ',returnType);
+    return result;
+}
 
 function composeLibrary(allVariables: Array<Variable>, dependencies: Array<string>) {
     const variables = allVariables.filter(i => dependencies.includes(i.id)).map(i => {
