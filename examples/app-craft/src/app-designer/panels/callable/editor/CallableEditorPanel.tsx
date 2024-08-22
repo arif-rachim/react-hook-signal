@@ -2,7 +2,7 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {useRef} from "react";
 import {Callable, Variable} from "../../../AppDesigner.tsx";
 import {useShowModal} from "../../../../modal/useShowModal.ts";
-import {notifiable, useSignal} from "react-hook-signal";
+import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {guid} from "../../../../utils/guid.ts";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
@@ -15,16 +15,48 @@ import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import {Button} from "../../../button/Button.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {Icon} from "../../../Icon.ts";
-import {useUpdateApplication} from "../../../hooks/useUpdateApplication.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
+import {DependencyInputSelector} from "../../../dependency-selector/DependencyInputSelector.tsx";
+import {useUpdateCallable} from "../../../hooks/useUpdateCallable.ts";
 
-export default function CallableEditorPanel(props: { callableId?: string, panelId: string }) {
+export default function CallableEditorPanel(props: {
+    callableId?: string,
+    panelId: string,
+    scope: 'page' | 'application'
+}) {
     const context = useAppContext();
-    const {callableId, panelId} = props;
-    const callable = context.allApplicationCallablesSignal.get().find(v => v.id === callableId);
+    const {callableId, panelId, scope} = props;
+    const callable = [...context.allPageCallablesSignal.get(), ...context.allApplicationCallablesSignal.get()].find(v => v.id === callableId);
     const showModal = useShowModal();
-    const updateApplication = useUpdateApplication();
-    const {allApplicationCallablesSignal, allPagesSignal, allTablesSignal} = context;
+    const updateCallable = useUpdateCallable(scope);
+    const {
+        allPageVariablesSignal,
+        allPagesSignal,
+        allPageFetchersSignal,
+        allTablesSignal,
+        allApplicationCallablesSignal,
+        allApplicationVariablesSignal,
+        allApplicationFetchersSignal
+    } = context;
+
+    const allVariablesSignal = useComputed(() => {
+        const allPageVariables = allPageVariablesSignal.get();
+        const allApplicationVariables = allApplicationVariablesSignal.get();
+        if (scope === "page") {
+            return [...allPageVariables, ...allApplicationVariables];
+        }
+        return allApplicationVariables
+    });
+
+    const allFetchersSignal = useComputed(() => {
+        const allPageFetchers = allPageFetchersSignal.get();
+        const allApplicationFetchers = allApplicationFetchersSignal.get();
+        if (scope === "page") {
+            return [...allPageFetchers, ...allApplicationFetchers];
+        }
+        return allApplicationFetchers
+    });
+
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
 
@@ -102,6 +134,25 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                                       }, 0);
                                   }}/>
             </LabelContainer>
+            <LabelContainer label={'Dependency :'} style={{
+                flexGrow: 1,
+                flexBasis: '50%',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10
+            }}
+                            styleLabel={{fontStyle: 'italic'}}
+                            styleContent={{display: 'flex', flexDirection: 'column'}}>
+                <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+                    {() => {
+                        const callable = callableSignal.get();
+                        return <DependencyInputSelector onChange={(result) => {
+                            callableSignal.set({...callable, dependencies: result});
+                            isModified.set(true);
+                        }} value={callable.dependencies ?? []} valueToIgnore={[]} scope={scope}/>;
+                    }}
+                </notifiable.div>
+            </LabelContainer>
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, overflow: 'unset'}}>
             <CollapsibleLabelContainer label={'Schema'} style={{overflow: 'unset'}}
@@ -178,6 +229,9 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                 }}>
                     {() => {
                         const callable = callableSignal.get();
+                        const dependencies = callable.dependencies ?? [];
+                        const allVariables = allVariablesSignal.get();
+                        const allFetchers = allFetchersSignal.get();
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
                         const allCallables = allApplicationCallablesSignal.get();
@@ -185,11 +239,11 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                         const returnTypeSchema = `z.function().args(${wrapWithZObjectIfNeeded(callable.inputSchemaCode)}).returns(${wrapWithZObjectIfNeeded(callable.schemaCode)})`
                         return <Editor
                             language="javascript"
-                            key={returnTypeSchema}
+                            key={`${dependencies.join('-')}-${returnTypeSchema}`}
                             beforeMount={onBeforeMountHandler({
-                                dependencies: [],
-                                allVariables: [],
-                                allFetchers: [],
+                                dependencies,
+                                allVariables,
+                                allFetchers,
                                 returnType: zodSchemaToJson(returnTypeSchema),
                                 allPages,
                                 allTables,
@@ -219,12 +273,7 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                     <Button onClick={async () => {
                         const [isValid, errors] = validateForm();
                         if (isValid) {
-                            updateApplication(app => {
-                                const callables = [...app.callables];
-                                const currentCallableIndex = callables.findIndex(c => c.id === callableId);
-                                callables.splice(currentCallableIndex, 1, callableSignal.get())
-                                app.callables = callables;
-                            });
+                            updateCallable(callableSignal.get());
                             removePanel(panelId)
                         } else {
                             await showModal<string>(cp => {
@@ -265,8 +314,6 @@ export default function CallableEditorPanel(props: { callableId?: string, panelI
                     </Button>
                 </>
             }}
-
-
         </notifiable.div>
     </div>
 }

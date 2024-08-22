@@ -28,7 +28,9 @@ export function PropertyInitialization(props: {
         allApplicationVariablesSignal,
         elements: elementsLib,
         allPageFetchersSignal,
+        allApplicationFetchersSignal,
         allApplicationCallablesSignal,
+        allPageCallablesSignal,
     } = context;
 
     const allVariablesSignalInstance = useComputed(() => {
@@ -36,6 +38,12 @@ export function PropertyInitialization(props: {
     })
     const allVariablesSignal = useComputed(() => {
         return [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()]
+    })
+    const allFetchersSignal = useComputed(() => {
+        return [...allPageFetchersSignal.get(),...allApplicationFetchersSignal.get()] ;
+    })
+    const allCallablesSignal = useComputed(() => {
+        return [...allPageCallablesSignal.get(),...allApplicationCallablesSignal.get()] ;
     })
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
@@ -47,8 +55,8 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
-        const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? []));
+        const fetchers = untrack(() => fetchersInitialization(allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
+        const call = untrack(() => callableInitialization(allCallablesSignal.get() ?? [],allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];

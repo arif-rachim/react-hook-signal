@@ -29,9 +29,10 @@ export function PageViewer(props: {
     const allApplicationCallablesSignal = useComputed(() => allCallables);
     const allTablesSignal = useComputed(() => allTables)
     const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-    const allPageVariablesSignal = useComputed(() => page.variables)
+    const allPageVariablesSignal = useComputed(() => page.variables);
     const allContainersSignal = useComputed(() => page.containers);
     const allPageFetchersSignal = useComputed(() => page.fetchers);
+    const allPageCallablesSignal = useComputed(() => page.callables);
     const allPagesSignal = useComputed<Array<Page>>(() => [page]);
     const applicationSignal = useSignal(createNewBlankApplication());
     const allApplicationVariablesSignalInstance = useSignal<Array<VariableInstance>>([]);
@@ -54,6 +55,7 @@ export function PageViewer(props: {
         allApplicationVariablesSignalInstance,
         allApplicationVariablesSignal,
         allApplicationFetchersSignal,
+        allPageCallablesSignal,
         elements: elements
     }
     const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));

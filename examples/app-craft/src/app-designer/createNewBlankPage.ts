@@ -6,6 +6,7 @@ export function createNewBlankPage(): Page {
         id: guid(),
         variables: [],
         fetchers: [],
+        callables: [],
         containers: [{
             id: guid(),
             type: 'container',

@@ -38,7 +38,6 @@ export const createFetcherPanel = (scope:'page'|'application') => {
                 }else{
                     updatePage({type: 'fetcher', fetchers: fetchers})
                 }
-
             }
         }
 

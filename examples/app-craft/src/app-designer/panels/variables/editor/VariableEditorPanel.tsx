@@ -18,9 +18,6 @@ import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
-import {Signal} from "signal-polyfill";
-
-const empty = new Signal.Computed(() => []);
 
 /**
  * Represents a panel for editing variables.
@@ -43,7 +40,8 @@ export function VariableEditorPanel(props: {
         allPageFetchersSignal,
         allTablesSignal,
         allApplicationCallablesSignal,
-        allApplicationVariablesSignal
+        allApplicationVariablesSignal,
+        allApplicationFetchersSignal
     } = context;
 
     const allVariablesSignal = useComputed(() => {
@@ -57,8 +55,7 @@ export function VariableEditorPanel(props: {
 
     const allFetchersSignal = useComputed(() => {
         const allPageFetchers = allPageFetchersSignal.get();
-        //const allApplicationFetchers = allApplicationFetchersSignal.get();
-        const allApplicationFetchers = empty.get();
+        const allApplicationFetchers = allApplicationFetchersSignal.get();
         if(scope === "page"){
             return [...allPageFetchers,...allApplicationFetchers];
         }

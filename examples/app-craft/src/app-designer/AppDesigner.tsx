@@ -20,8 +20,8 @@ import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
 import {createNewBlankApplication} from "./createNewBlankApplication.ts";
 import {Table} from "./panels/database/service/getTables.ts";
-import CallablePanel from "./panels/callable/CallablePanel.tsx";
 import {createFetcherPanel} from "./panels/fetchers/FetchersPanel.tsx";
+import {createCallablePanel} from "./panels/callable/CallablePanel.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -40,6 +40,7 @@ export interface Callable {
     schemaCode: string,
     inputSchemaCode: string,
     functionCode: string,
+    dependencies?: Array<string> // this is only for computed and effect
 }
 
 export type FetcherParameter = {
@@ -85,6 +86,7 @@ export type Page = {
     id: string,
     name: string,
     containers: Array<Container>,
+    callables: Array<Callable>,
     variables: Array<Variable>,
     fetchers: Array<Fetcher>
 }
@@ -139,6 +141,7 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     const allContainersSignal = useComputed<Array<Container>>(() => activePageSignal.get()?.containers ?? []);
     const allApplicationFetchersSignal = useComputed<Array<Fetcher>>(() => applicationSignal.get()?.fetchers ?? []);
     const allPageFetchersSignal = useComputed<Array<Fetcher>>(() => activePageSignal.get()?.fetchers ?? []);
+    const allPageCallablesSignal = useComputed<Array<Callable>>(() => activePageSignal.get()?.callables ?? []);
 
     const {value, onChange} = props;
 
@@ -176,7 +179,8 @@ export function useAppInitiator(props: LayoutBuilderProps) {
         allPageVariablesSignal,
         allContainersSignal,
         allPageFetchersSignal,
-        allApplicationFetchersSignal
+        allApplicationFetchersSignal,
+        allPageCallablesSignal
     };
 }
 
@@ -199,7 +203,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         allPageVariablesSignal,
         allContainersSignal,
         allPageFetchersSignal,
-        allApplicationFetchersSignal
+        allApplicationFetchersSignal,
+        allPageCallablesSignal
     } = useAppInitiator(props);
     const context: AppDesignerContext = {
         applicationSignal,
@@ -215,6 +220,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         activePageIdSignal,
 
         allPageFetchersSignal,
+        allPageCallablesSignal,
         allPageVariablesSignal,
         variableInitialValueSignal,
         allPageVariablesSignalInstance,
@@ -253,11 +259,11 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         position: 'left',
                         component: createFetcherPanel('application'),
                     },
-                    functions: {
+                    applicationFunctions: {
                         title: 'Application Callables',
                         Icon: Icon.Function,
                         position: 'left',
-                        component: CallablePanel,
+                        component: createCallablePanel('application'),
                     },
                     database: {
                         title: 'Database',
@@ -284,6 +290,13 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         Icon: Icon.Fetcher,
                         position: 'leftBottom',
                         component: createFetcherPanel('page'),
+                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                    },
+                    functions: {
+                        title: 'Callables',
+                        Icon: Icon.Function,
+                        position: 'leftBottom',
+                        component: createCallablePanel('page'),
                         visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                     },
                     errors: {

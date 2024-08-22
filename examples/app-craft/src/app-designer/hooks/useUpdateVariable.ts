@@ -23,6 +23,5 @@ export function useUpdateVariable(scope:'page'|'application') {
                 original.variables = variables.sort(sortSignal)
             })
         }
-
     }
 }

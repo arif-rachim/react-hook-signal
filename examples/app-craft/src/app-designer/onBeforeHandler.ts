@@ -30,7 +30,6 @@ export const onBeforeMountHandler = (props: {
 
 const returnTypeDefinition = (returnType: string) => {
     const result = `declare const module:{exports:${returnType}};`
-    console.log('COMPOSE RETURN TYPE ',returnType);
     return result;
 }
 

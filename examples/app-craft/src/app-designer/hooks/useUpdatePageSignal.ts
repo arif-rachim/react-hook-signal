@@ -1,4 +1,4 @@
-import {Container, Fetcher, Page, Variable} from "../AppDesigner.tsx";
+import {Callable, Container, Fetcher, Page, Variable} from "../AppDesigner.tsx";
 import {useAppContext} from "./useAppContext.ts";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 
@@ -33,10 +33,16 @@ type ParamFetcher = {
     pageId?: string
 }
 
+type ParamCallable = {
+    type: 'callable',
+    callables: Array<Callable>,
+    pageId?: string
+}
+
 export function useUpdatePageSignal() {
     const {allPagesSignal, activePageIdSignal} = useAppContext();
     const updateApplication = useUpdateApplication();
-    return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage | ParamFetcher) {
+    return function updatePage(param: ParamVariable | ParamContainer | ParamPageName | ParamDeletePage | ParamAddPage | ParamFetcher | ParamCallable) {
         const allPages = [...allPagesSignal.get()];
         const pageId = param.pageId ?? activePageIdSignal.get();
         const page = allPages.find(i => i.id === pageId);
@@ -48,6 +54,9 @@ export function useUpdatePageSignal() {
         } else if (page) {
             if (param.type === 'fetcher') {
                 allPages.splice(allPages.indexOf(page), 1, {...page, fetchers: param.fetchers});
+            }
+            if (param.type === 'callable') {
+                allPages.splice(allPages.indexOf(page), 1, {...page, callables: param.callables});
             }
             if (param.type === 'variable') {
                 allPages.splice(allPages.indexOf(page), 1, {...page, variables: param.variables});

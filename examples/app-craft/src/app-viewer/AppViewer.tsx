@@ -1,6 +1,6 @@
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
-import {Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
+import {Callable, Container, Fetcher, Page, Variable, VariableInstance} from "../app-designer/AppDesigner.tsx";
 import {Signal} from "signal-polyfill";
 import {ErrorType} from "../app-designer/errors/ErrorType.ts";
 import {useEffect} from "react";
@@ -40,6 +40,12 @@ export default function AppViewer(props: LayoutBuilderProps) {
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)?.fetchers ?? []
     });
+    const allPageCallablesSignal = useComputed<Array<Callable>>(() => {
+        const activePageId = activePageIdSignal.get();
+        const allPages = allPagesSignal.get();
+        return allPages.find(i => i.id === activePageId)?.callables ?? []
+    });
+
     const {value, onChange} = props;
     useEffect(() => {
         applicationSignal.set(value);
@@ -71,6 +77,7 @@ export default function AppViewer(props: LayoutBuilderProps) {
         allApplicationFetchersSignal,
         allApplicationVariablesSignal,
         allApplicationVariablesSignalInstance,
+        allPageCallablesSignal,
         elements: props.elements
     }
 
