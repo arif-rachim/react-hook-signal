@@ -4,7 +4,7 @@ import {BindParams} from "sql.js";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 
 export function queryInitialization(allQueries: Array<Query>) {
-    const queries: Record<string, (inputs: Record<string, unknown>, page: number) => unknown> = {};
+    const queries: Record<string, (inputs: Record<string, unknown>, page?: number) => unknown> = {};
     for (const queryValue of allQueries) {
         queries[queryValue.name] = async (inputs: Record<string, unknown>, page?: number) => {
             try {
@@ -29,7 +29,7 @@ export function composeQuerySchema(allQueries: Array<Query>) {
             return result;
         }, [] as Array<string>)
         const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props:${type},page?:number) => Promise<{error:string,result:${schema}}>`
+        return `${i.name} : (props:${type},page?:number) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
     })
     return `
 declare const query:{

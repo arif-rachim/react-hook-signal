@@ -3,6 +3,7 @@ import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {createRequest} from "../panels/fetchers/editor/createRequest.ts";
 import {Signal} from "signal-polyfill";
+import {AnySignal} from "react-hook-signal";
 
 export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
     const fetchersSchema = allFetchers.map(i => {
@@ -38,7 +39,7 @@ declare const fetchers:{
 `
 }
 
-export function fetcherInitialization(allFetchers: Array<Fetcher>, allVariablesSignal:Signal.Computed<Array<Variable>>, allVariablesSignalInstance:Signal.Computed<Array<VariableInstance>>) {
+export function fetcherInitialization(allFetchers: Array<Fetcher>, allVariablesSignal:Signal.Computed<Array<Variable>>, allVariablesSignalInstance:AnySignal<Array<VariableInstance>>) {
     const fetchers: Record<string, (inputs: Record<string, unknown>) => unknown> = {};
     for (const fetcherValue of allFetchers) {
 
