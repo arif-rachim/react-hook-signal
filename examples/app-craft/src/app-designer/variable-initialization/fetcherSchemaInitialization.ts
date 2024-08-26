@@ -38,7 +38,7 @@ declare const fetchers:{
 `
 }
 
-export function fetchersInitialization(allFetchers: Array<Fetcher>,allVariablesSignal:Signal.Computed<Array<Variable>>,allVariablesSignalInstance:Signal.Computed<Array<VariableInstance>>) {
+export function fetcherInitialization(allFetchers: Array<Fetcher>, allVariablesSignal:Signal.Computed<Array<Variable>>, allVariablesSignalInstance:Signal.Computed<Array<VariableInstance>>) {
     const fetchers: Record<string, (inputs: Record<string, unknown>) => unknown> = {};
     for (const fetcherValue of allFetchers) {
 

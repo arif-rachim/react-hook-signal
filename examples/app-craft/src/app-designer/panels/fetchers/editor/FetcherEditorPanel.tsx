@@ -19,6 +19,7 @@ import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
 import Visible from "../../../visible/Visible.tsx";
 import {createRequest} from "./createRequest.ts";
 import {Query, Table} from "../../database/service/getTables.ts";
+import type {ChangeEvent} from "react";
 import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
@@ -589,7 +590,7 @@ export function RenderParameters<T extends Query|Fetcher>(props: {
     });
 
     function onChangeFactory(paramType:keyof FetcherParameter,param: FetcherParameter,transformValue:(val:string) => unknown){
-        return function extracted(event: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) {
+        return function extracted(event: ChangeEvent<HTMLInputElement|HTMLSelectElement>) {
             let dom = event.target;
             let cursorPosition:number|null = null;
             if('selectionStart' in dom){

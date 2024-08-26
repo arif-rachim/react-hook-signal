@@ -3,7 +3,7 @@ import {queryPagination} from "../panels/database/table-editor/TableEditor.tsx";
 import {BindParams} from "sql.js";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 
-export function querySchemaInitialization(allQueries: Array<Query>) {
+export function queryInitialization(allQueries: Array<Query>) {
     const queries: Record<string, (inputs: Record<string, unknown>, page: number) => unknown> = {};
     for (const queryValue of allQueries) {
         queries[queryValue.name] = async (inputs: Record<string, unknown>, page?: number) => {
@@ -24,7 +24,7 @@ export function querySchemaInitialization(allQueries: Array<Query>) {
 export function composeQuerySchema(allQueries: Array<Query>) {
     const queriesSchema = allQueries.map(i => {
         const schema = zodSchemaToJson(`z.array(${i.schemaCode})`);
-        let paths = [...i.parameters].reduce((result, param) => {
+        const paths = [...i.parameters].reduce((result, param) => {
             result.push(`${param.name}:string`)
             return result;
         }, [] as Array<string>)

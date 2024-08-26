@@ -8,8 +8,8 @@ import {useAppContext} from "../hooks/useAppContext.ts";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
 import {callableInitialization} from "./callableSchemaInitialization.ts";
 import {EMPTY_ARRAY} from "../../utils/EmptyArray.ts";
-import {fetchersInitialization} from "./fetcherSchemaInitialization.ts";
-import {querySchemaInitialization} from "./querySchemaInitialization.ts";
+import {fetcherInitialization} from "./fetcherSchemaInitialization.ts";
+import {queryInitialization} from "./queryInitialization.ts";
 import untrack = Signal.subtle.untrack;
 
 const db = dbSchemaInitialization()
@@ -194,9 +194,9 @@ export function VariableInitialization() {
 
     useSignalEffect(() => {
         const variables = allApplicationVariablesSignal.get() ?? EMPTY_ARRAY;
-        const fetchers = untrack(() => fetchersInitialization(allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
+        const fetchers = untrack(() => fetcherInitialization(allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
         const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? EMPTY_ARRAY, allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
-        const queries = untrack(() => querySchemaInitialization(allApplicationQueriesSignal.get() ?? EMPTY_ARRAY))
+        const queries = untrack(() => queryInitialization(allApplicationQueriesSignal.get() ?? EMPTY_ARRAY))
         const variableInitialValue = {};
         const applicationVariables: Array<Variable> = [];
         const applicationVariablesInstance: Array<VariableInstance> = [];
@@ -217,9 +217,9 @@ export function VariableInitialization() {
     useSignalEffect(() => {
         const variables = allPageVariablesSignal.get() ?? [];
         const applicationVariables = allApplicationVariablesSignal.get() ?? EMPTY_ARRAY;
-        const fetchers = untrack(() => fetchersInitialization(allPageFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
+        const fetchers = untrack(() => fetcherInitialization(allPageFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
         const call = untrack(() => callableInitialization(allApplicationCallablesSignal.get() ?? EMPTY_ARRAY, allApplicationFetchersSignal.get() ?? EMPTY_ARRAY, allVariablesSignal, allVariablesSignalInstance));
-        const queries = untrack(() => querySchemaInitialization(allApplicationQueriesSignal.get() ?? EMPTY_ARRAY))
+        const queries = untrack(() => queryInitialization(allApplicationQueriesSignal.get() ?? EMPTY_ARRAY))
         const variableInitialValue = variableInitialValueSignal.get() ?? {};
         const applicationVariablesInstance = allApplicationVariablesSignalInstance.get();
 

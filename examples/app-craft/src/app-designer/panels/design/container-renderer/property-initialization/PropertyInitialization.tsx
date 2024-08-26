@@ -7,10 +7,10 @@ import {useAppContext} from "../../../../hooks/useAppContext.ts";
 import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
 import {ZodRawShape} from "zod";
 import {dbSchemaInitialization} from "../../../../variable-initialization/dbSchemaInitialization.ts";
-import {fetchersInitialization} from "../../../../variable-initialization/fetcherSchemaInitialization.ts";
+import {fetcherInitialization} from "../../../../variable-initialization/fetcherSchemaInitialization.ts";
 import {Signal} from "signal-polyfill";
 import {callableInitialization} from "../../../../variable-initialization/callableSchemaInitialization.ts";
-import {querySchemaInitialization} from "../../../../variable-initialization/querySchemaInitialization.ts";
+import {queryInitialization} from "../../../../variable-initialization/queryInitialization.ts";
 import untrack = Signal.subtle.untrack;
 
 const db = dbSchemaInitialization();
@@ -61,9 +61,9 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const fetchers = untrack(() => fetchersInitialization(allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
+        const fetchers = untrack(() => fetcherInitialization(allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
         const call = untrack(() => callableInitialization(allCallablesSignal.get() ?? [],allFetchersSignal.get() ?? [],allVariablesSignal,allVariablesSignalInstance));
-        const query = untrack(() => querySchemaInitialization(allQueriesSignal.get() ?? []));
+        const query = untrack(() => queryInitialization(allQueriesSignal.get() ?? []));
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];

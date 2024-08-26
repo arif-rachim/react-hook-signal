@@ -2,7 +2,7 @@ import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {Callable, Fetcher, Variable, VariableInstance} from "../AppDesigner.tsx";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
 import {Signal} from "signal-polyfill";
-import {fetchersInitialization} from "./fetcherSchemaInitialization.ts";
+import {fetcherInitialization} from "./fetcherSchemaInitialization.ts";
 
 export function composeCallableSchema(allCallables: Array<Callable>) {
     const callableSchema = [];
@@ -31,7 +31,7 @@ export function callableInitialization(allCallables: Array<Callable>,allFetchers
         }) ?? [];
         try{
             const fun = new Function('module', 'db','fetchers',...dependencies.map(v => v?.name ?? ''), callable.functionCode);
-            fun.call(null, module, dbSchemaInitialization(),fetchersInitialization(allFetchers,allVariablesSignal,allVariablesSignalInstance),...dependencies.map(v => v.instance))
+            fun.call(null, module, dbSchemaInitialization(),fetcherInitialization(allFetchers,allVariablesSignal,allVariablesSignalInstance),...dependencies.map(v => v.instance))
             call[callable.name] = module.exports
         }catch(err){
             console.error(err);

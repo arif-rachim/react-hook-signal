@@ -5,7 +5,7 @@ import {Query, Table} from "./panels/database/service/getTables.ts";
 import {composeDbSchema} from "./variable-initialization/dbSchemaInitialization.ts";
 import {composeCallableSchema} from "./variable-initialization/callableSchemaInitialization.ts";
 import {composeFetcherSchema} from "./variable-initialization/fetcherSchemaInitialization.ts";
-import {composeQuerySchema} from "./variable-initialization/querySchemaInitialization.ts";
+import {composeQuerySchema} from "./variable-initialization/queryInitialization.ts";
 
 /**
  * Executes the onBeforeMountHandler function.
