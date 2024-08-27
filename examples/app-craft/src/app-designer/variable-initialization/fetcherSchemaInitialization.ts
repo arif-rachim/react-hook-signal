@@ -1,9 +1,8 @@
-import {Fetcher, Variable, VariableInstance} from "../AppDesigner.tsx";
+import {Fetcher} from "../AppDesigner.tsx";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {createRequest} from "../panels/fetchers/editor/createRequest.ts";
-import {Signal} from "signal-polyfill";
-import {AnySignal} from "react-hook-signal";
+import {FormulaDependencyParameter} from "./VariableInitialization.tsx";
 
 export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
     const fetchersSchema = allFetchers.map(i => {
@@ -32,27 +31,27 @@ export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
         return `${i.name} : (props:${type}) => Promise<{error:string,result:${schema}}>`
     })
 
-    return `
-declare const fetchers:{
-    ${fetchersSchema.join(',')}
-};
-`
+    return `{${fetchersSchema.join(',')}}`
 }
 
-export function fetcherInitialization(allFetchers: Array<Fetcher>, allVariablesSignal:Signal.Computed<Array<Variable>>, allVariablesSignalInstance:AnySignal<Array<VariableInstance>>) {
+export function fetcherInitialization(props: {
+    allFetchers: Array<Fetcher>,
+    app : FormulaDependencyParameter,
+    page : FormulaDependencyParameter
+}): Record<string, (inputs: Record<string, unknown>) => unknown> {
+
+    const {
+        allFetchers,
+        app,page
+    } = props;
     const fetchers: Record<string, (inputs: Record<string, unknown>) => unknown> = {};
+
+
     for (const fetcherValue of allFetchers) {
 
         fetchers[fetcherValue.name] = async (inputs: Record<string, unknown>) => {
             try {
                 const fetcher = {...fetcherValue};
-                const allVariables = allVariablesSignal.get();
-                const allVariablesInstance = allVariablesSignalInstance.get();
-                const dependencies = allVariables.map(v => {
-                    const instance = allVariablesInstance.find(variable => variable.id === v.id)?.instance;
-                    return {name:v.name, instance}
-                }) ?? [];
-
                 const module: {
                     exports: {
                         protocol?: 'http' | 'https',
@@ -60,29 +59,29 @@ export function fetcherInitialization(allFetchers: Array<Fetcher>, allVariablesS
                         method?: 'post' | 'get' | 'put' | 'patch' | 'delete',
                         contentType?: 'application/x-www-form-urlencoded' | 'application/json'
                         path?: string,
-                        headers?: Record<string,string>,
-                        data?: Record<string,unknown>,
+                        headers?: Record<string, string>,
+                        data?: Record<string, unknown>,
                     }
                 } = {exports: {}};
 
                 try {
-                    const params = ['module', ...dependencies.map(d => d.name ?? ''), fetcher.defaultValueFormula ?? ''];
+                    const params = ['module', 'app', 'page', fetcher.defaultValueFormula ?? ''];
                     const fun = new Function(...params)
-                    fun.call(null, ...[module, ...dependencies.map(d => d.instance)]);
+                    fun.call(null, ...[module, app, page]);
                     fetcher.protocol = module.exports.protocol ?? fetcher.protocol;
                     fetcher.domain = module.exports.domain ?? fetcher.domain;
                     fetcher.method = module.exports.method ?? fetcher.method;
                     fetcher.contentType = module.exports.contentType ?? fetcher.contentType;
                     fetcher.path = module.exports.path ?? fetcher.path;
                     fetcher.headers = fetcher.headers.map(h => {
-                        if(module.exports.headers && h.name in  module.exports.headers){
-                            return {...h,value:module.exports.headers[h.name]}
+                        if (module.exports.headers && h.name in module.exports.headers) {
+                            return {...h, value: module.exports.headers[h.name]}
                         }
                         return h
                     });
                     fetcher.data = fetcher.data.map(h => {
-                        if(module.exports.headers && h.name in  module.exports.headers){
-                            return {...h,value:module.exports.headers[h.name]}
+                        if (module.exports.headers && h.name in module.exports.headers) {
+                            return {...h, value: module.exports.headers[h.name]}
                         }
                         return h
                     });
@@ -99,7 +98,7 @@ export function fetcherInitialization(allFetchers: Array<Fetcher>, allVariablesS
                 return {
                     result: data
                 }
-            } catch (error:unknown) {
+            } catch (error: unknown) {
                 const err = error as Error;
                 return {error: err.message}
             }

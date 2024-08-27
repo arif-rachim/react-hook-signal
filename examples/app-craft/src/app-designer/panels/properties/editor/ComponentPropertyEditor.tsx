@@ -1,6 +1,6 @@
-import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import {notifiable, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
-import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {Button} from "../../../button/Button.tsx";
 import {ContainerPropertyType} from "../../../AppDesigner.tsx";
 import {zodTypeToJson} from "../../../zodSchemaToJson.ts";
@@ -24,6 +24,7 @@ export function ComponentPropertyEditor(props: {
         allPageVariablesSignal,
         allApplicationVariablesSignal,
         allPageFetchersSignal,
+        allPageCallablesSignal,
         elements,
         allPagesSignal,
         allTablesSignal,
@@ -33,22 +34,13 @@ export function ComponentPropertyEditor(props: {
         allApplicationFetchersSignal
     } = context;
 
-    const allVariablesSignal = useComputed(() => {
-        return [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()]
-    })
-    const allFetchersSignal = useComputed(() => {
-        return [...allPageFetchersSignal.get(), ...allApplicationFetchersSignal.get()]
-    })
-    const allQueriesSignal = useComputed(() => {
-        return [...allPageQueriesSignal.get(), ...allApplicationQueriesSignal.get()]
-    })
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
-    const returnType = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
+    const returnTypeZod = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
     const isModified = useSignal<boolean>(false)
     const update = useUpdateDragContainer();
-    if (returnType === undefined) {
+    if (returnTypeZod === undefined) {
         return <></>
     }
     return <div style={{
@@ -65,24 +57,43 @@ export function ComponentPropertyEditor(props: {
         }}>
             {() => {
                 const props = propsSignal.get();
-                const allVariables = allVariablesSignal.get();
-                const allFetchers = allFetchersSignal.get();
-                const allQueries = allQueriesSignal.get();
-                const allTables = allTablesSignal.get();
-                const allCallables = allApplicationCallablesSignal.get();
-                const formula = props.formula ?? '';
+
                 const allPages = allPagesSignal.get();
+                const allTables = allTablesSignal.get();
+                const formula = props.formula;
+
+                const allApplicationQueries = allApplicationQueriesSignal.get();
+                const allApplicationVariables = allApplicationVariablesSignal.get();
+                const allApplicationCallables = allApplicationCallablesSignal.get();
+                const allApplicationFetchers = allApplicationFetchersSignal.get();
+
+                const allPageQueries = allPageQueriesSignal.get();
+                const allPageVariables = allPageVariablesSignal.get();
+                const allPageFetchers = allPageFetchersSignal.get();
+                const allPageCallables = allPageCallablesSignal.get();
+
+                const returnType = zodTypeToJson(returnTypeZod);
+
                 return <Editor
                     language="javascript"
-                    beforeMount={onBeforeMountHandler({
-                        allVariables,
-                        allFetchers,
-                        returnType: zodTypeToJson(returnType),
-                        allPages,
-                        allTables,
-                        allCallables,
-                        allQueries
-                    })}
+                    beforeMount={(monaco) => {
+                        const dtsContent = initiateSchemaTS({
+                            returnType,
+                            allPages,
+                            allTables,
+
+                            allApplicationQueries,
+                            allApplicationVariables,
+                            allApplicationFetchers,
+                            allApplicationCallables,
+
+                            allPageQueries,
+                            allPageVariables,
+                            allPageFetchers,
+                            allPageCallables,
+                        })
+                        monaco.languages.typescript.javascriptDefaults.addExtraLib(dtsContent, "ts:filename/validation-source.d.ts");
+                    }}
                     value={formula}
                     options={{selectOnLineNumbers: true}}
                     onChange={(value?: string) => {

@@ -55,7 +55,7 @@ export function composeDbSchema(allTables: Array<Table>) {
     }
     const schema = `z.object({ ${dbSchema.join(',')} })`;
     return `
-type DbSchema ${zodSchemaToJson(schema)} 
+type DbSchema = ${zodSchemaToJson(schema)} 
 declare const db:{
     record:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
     remove:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,

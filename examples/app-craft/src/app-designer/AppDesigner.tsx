@@ -139,6 +139,12 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     const allPageCallablesSignal = useComputed<Array<Callable>>(() => activePageSignal.get()?.callables ?? []);
     const allPageQueriesSignal = useComputed<Array<Query>>(() => activePageSignal.get()?.queries ?? []);
 
+    const allVariablesSignalInstance = useComputed(() => [...allPageVariablesSignalInstance.get(), ...allApplicationVariablesSignalInstance.get()])
+    const allVariablesSignal = useComputed(() => [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()])
+    const allFetchersSignal = useComputed(() => [...allPageFetchersSignal.get(),...allApplicationFetchersSignal.get()])
+    const allQueriesSignal = useComputed(() => [...allPageQueriesSignal.get(),...allApplicationQueriesSignal.get()])
+    const allCallablesSignal = useComputed(() => [...allPageCallablesSignal.get(),...allApplicationCallablesSignal.get()])
+
     const {value, onChange} = props;
 
     useEffect(() => {
@@ -178,7 +184,14 @@ export function useAppInitiator(props: LayoutBuilderProps) {
         allApplicationFetchersSignal,
         allPageCallablesSignal,
         allApplicationQueriesSignal,
-        allPageQueriesSignal
+        allPageQueriesSignal,
+
+
+        allVariablesSignalInstance,
+        allVariablesSignal,
+        allFetchersSignal,
+        allQueriesSignal,
+        allCallablesSignal,
     };
 }
 
@@ -204,7 +217,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         allApplicationFetchersSignal,
         allPageCallablesSignal,
         allApplicationQueriesSignal,
-        allPageQueriesSignal
+        allPageQueriesSignal,
+        allCallablesSignal,
+        allVariablesSignalInstance,
+        allVariablesSignal,
+        allFetchersSignal,
+        allQueriesSignal
     } = useAppInitiator(props);
     const context: AppDesignerContext = {
         applicationSignal,
@@ -229,6 +247,11 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 
         elements: {...DefaultElements, ...props.elements},
         allErrorsSignal: allErrorsSignal,
+        allCallablesSignal,
+        allVariablesSignalInstance,
+        allVariablesSignal,
+        allFetchersSignal,
+        allQueriesSignal,
 
         // designer mode
         hoveredDragContainerIdSignal: hoveredDragContainerIdSignal,
@@ -241,7 +264,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         <ModalProvider>
             <AppDesignerContext.Provider
                 value={context}>
-                <VariableInitialization/>
+                <VariableInitialization>
                 <Dashboard panels={{
                     pages: {
                         title: 'Pages',
@@ -348,7 +371,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                right: 'styles',
                            }}>
                 </Dashboard>
-
+                </VariableInitialization>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>

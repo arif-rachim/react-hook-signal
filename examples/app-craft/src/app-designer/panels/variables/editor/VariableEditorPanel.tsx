@@ -9,7 +9,7 @@ import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {BORDER} from "../../../Border.ts";
 import {Variable, VariableType} from "../../../AppDesigner.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
-import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import {Icon} from "../../../Icon.ts";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
@@ -29,6 +29,7 @@ export function VariableEditorPanel(props: {
 }) {
     const context = useAppContext();
     const {variableId, defaultType, panelId, scope} = props;
+
     const variable = [...context.allPageVariablesSignal.get(), ...context.allApplicationVariablesSignal.get()].find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
@@ -38,11 +39,13 @@ export function VariableEditorPanel(props: {
         allPagesSignal,
         allPageFetchersSignal,
         allPageQueriesSignal,
+        allPageCallablesSignal,
+
         allTablesSignal,
         allApplicationCallablesSignal,
         allApplicationVariablesSignal,
         allApplicationFetchersSignal,
-        allApplicationQueriesSignal
+        allApplicationQueriesSignal,
     } = context;
 
     const allVariablesSignal = useComputed(() => {
@@ -52,24 +55,6 @@ export function VariableEditorPanel(props: {
             return [...allPageVariables, ...allApplicationVariables];
         }
         return allApplicationVariables
-    });
-
-    const allFetchersSignal = useComputed(() => {
-        const allPageFetchers = allPageFetchersSignal.get();
-        const allApplicationFetchers = allApplicationFetchersSignal.get();
-        if (scope === "page") {
-            return [...allPageFetchers, ...allApplicationFetchers];
-        }
-        return allApplicationFetchers
-    });
-
-    const allQueriesSignal = useComputed(() => {
-        const allPageFetchers = allPageQueriesSignal.get();
-        const allApplicationFetchers = allApplicationQueriesSignal.get();
-        if (scope === "page") {
-            return [...allPageFetchers, ...allApplicationFetchers];
-        }
-        return allApplicationFetchers
     });
 
     const isModified = useSignal<boolean>(false)
@@ -172,7 +157,6 @@ export function VariableEditorPanel(props: {
                                     selectOnLineNumbers: false,
                                     lineNumbers: 'off',
                                 }}
-
                                 onChange={(value?: string) => {
                                     const newVariable = {...variableSignal.get()};
                                     newVariable.schemaCode = value ?? '';
@@ -190,28 +174,45 @@ export function VariableEditorPanel(props: {
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
-                }}>
+                }} tabIndex={0}>
                     {() => {
                         const variable = variableSignal.get();
-                        const allVariables = allVariablesSignal.get();
-                        const allFetchers = allFetchersSignal.get();
+
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
-                        const allCallables = allApplicationCallablesSignal.get();
-                        const allQueries = allQueriesSignal.get();
                         const formula = variable.functionCode;
+
+                        const allApplicationQueries = allApplicationQueriesSignal.get();
+                        const allApplicationVariables = allApplicationVariablesSignal.get();
+                        const allApplicationFetchers = allApplicationFetchersSignal.get();
+                        const allApplicationCallables = allApplicationCallablesSignal.get();
+
+                        const allPageQueries = allPageQueriesSignal.get();
+                        const allPageVariables = allPageVariablesSignal.get();
+                        const allPageFetchers = allPageFetchersSignal.get();
+                        const allPageCallables = allPageCallablesSignal.get();
+                        const returnType = variable.type !== 'effect' ? zodSchemaToJson(wrapWithZObjectIfNeeded(variable.schemaCode)) : '';
                         return <Editor
                             language="javascript"
                             key={variable.schemaCode}
-                            beforeMount={onBeforeMountHandler({
-                                allVariables,
-                                allFetchers,
-                                returnType: zodSchemaToJson(wrapWithZObjectIfNeeded(variable.schemaCode)),
-                                allPages,
-                                allTables,
-                                allCallables,
-                                allQueries
-                            })}
+                            beforeMount={(monaco) => {
+                                const dtsContent = initiateSchemaTS({
+                                    returnType,
+                                    allPages,
+                                    allTables,
+
+                                    allApplicationQueries,
+                                    allApplicationVariables,
+                                    allApplicationFetchers,
+                                    allApplicationCallables,
+
+                                    allPageQueries,
+                                    allPageVariables,
+                                    allPageFetchers,
+                                    allPageCallables,
+                                })
+                                monaco.languages.typescript.javascriptDefaults.addExtraLib(dtsContent, "ts:filename/validation-source.d.ts");
+                            }}
                             value={formula}
                             onChange={(value?: string) => {
                                 const newVariable = {...variableSignal.get()};
@@ -219,6 +220,8 @@ export function VariableEditorPanel(props: {
                                 variableSignal.set(newVariable);
                                 isModified.set(true);
                             }}
+
+
                         />
                     }}
                 </notifiable.div>

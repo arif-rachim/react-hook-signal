@@ -15,7 +15,7 @@ import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {format_hhmmss} from "../../../../utils/dateFormat.ts";
 import {Editor} from "@monaco-editor/react";
-import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import Visible from "../../../visible/Visible.tsx";
 import {createRequest} from "./createRequest.ts";
 import {Query, Table} from "../../database/service/getTables.ts";
@@ -269,24 +269,42 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                 }}>
                     {() => {
                         const fetcher = fetcherSignal.get();
-                        const allVariables = allVariablesSignal.get();
-                        const allFetchers: Array<Fetcher> = [];
+
                         const allPages: Array<Page> = [];
                         const allTables: Array<Table> = [];
-                        const allCallables: Array<Callable> = [];
-                        const allQueries:Array<Query> = [];
                         const formula = fetcher.defaultValueFormula;
+
+                        const allApplicationQueries = [] as Array<Query>;
+                        const allApplicationVariables = allApplicationVariablesSignal.get();
+                        const allApplicationFetchers = [] as Array<Fetcher>;
+                        const allApplicationCallables = [] as Array<Callable>;
+
+                        const allPageQueries = [] as Array<Query>;
+                        const allPageVariables = allPageVariablesSignal.get();
+                        const allPageFetchers = [] as Array<Fetcher>;
+                        const allPageCallables = [] as Array<Callable>;
+
+
                         return <Editor
                             language="javascript"
-                            beforeMount={onBeforeMountHandler({
-                                allVariables,
-                                allFetchers,
-                                returnType,
-                                allPages,
-                                allTables,
-                                allCallables,
-                                allQueries
-                            })}
+                            beforeMount={(monaco) => {
+                                const dtsContent = initiateSchemaTS({
+                                    returnType,
+                                    allPages,
+                                    allTables,
+
+                                    allApplicationQueries,
+                                    allApplicationVariables,
+                                    allApplicationFetchers,
+                                    allApplicationCallables,
+
+                                    allPageQueries,
+                                    allPageVariables,
+                                    allPageFetchers,
+                                    allPageCallables,
+                                })
+                                monaco.languages.typescript.javascriptDefaults.addExtraLib(dtsContent, "ts:filename/validation-source.d.ts");
+                            }}
                             value={formula}
                             onChange={(value?: string) => {
                                 const newVariable = {...fetcherSignal.get()};

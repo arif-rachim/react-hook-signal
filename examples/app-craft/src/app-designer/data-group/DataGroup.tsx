@@ -29,6 +29,7 @@ function DataGroupFC(props: {
     const max_page = 50;
     const {keyId, direction, style: propsStyle, data, component} = props;
     const [page, setPage] = useState<Page | undefined>(undefined);
+
     const style: CSSProperties = {
         display: 'flex',
         flexDirection: direction === 'horizontal' ? 'row' : 'column',
@@ -38,7 +39,7 @@ function DataGroupFC(props: {
         ...propsStyle
     }
 
-    const {allPagesSignal, elements, allTablesSignal,allApplicationCallablesSignal} = useAppContext();
+    const {allPagesSignal, elements,applicationSignal} = useAppContext();
     const componentIdSignal = useSignal(component);
     useEffect(() => {
         componentIdSignal.set(component)
@@ -65,8 +66,7 @@ function DataGroupFC(props: {
                 elements={elements}
                 page={page!}
                 key={key}
-                allTables={allTablesSignal.get()}
-                allCallables={allApplicationCallablesSignal.get()}
+                appConfig={applicationSignal.get()}
                 {...item}/>
         })}
     </div>

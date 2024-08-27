@@ -2,7 +2,7 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {useRef} from "react";
 import {Callable, Variable} from "../../../AppDesigner.tsx";
 import {useShowModal} from "../../../../modal/useShowModal.ts";
-import {notifiable, useComputed, useSignal} from "react-hook-signal";
+import {notifiable, useSignal} from "react-hook-signal";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {guid} from "../../../../utils/guid.ts";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
@@ -10,7 +10,7 @@ import {Editor, Monaco} from "@monaco-editor/react";
 import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {BORDER} from "../../../Border.ts";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
-import {onBeforeMountHandler} from "../../../onBeforeHandler.ts";
+import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import {Button} from "../../../button/Button.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
@@ -33,39 +33,14 @@ export default function CallableEditorPanel(props: {
         allPagesSignal,
         allPageFetchersSignal,
         allPageQueriesSignal,
+        allPageCallablesSignal,
         allTablesSignal,
         allApplicationCallablesSignal,
         allApplicationVariablesSignal,
         allApplicationFetchersSignal,
-        allApplicationQueriesSignal
+        allApplicationQueriesSignal,
+
     } = context;
-
-    const allVariablesSignal = useComputed(() => {
-        const allPageVariables = allPageVariablesSignal.get();
-        const allApplicationVariables = allApplicationVariablesSignal.get();
-        if (scope === "page") {
-            return [...allPageVariables, ...allApplicationVariables];
-        }
-        return allApplicationVariables
-    });
-
-    const allFetchersSignal = useComputed(() => {
-        const allPageFetchers = allPageFetchersSignal.get();
-        const allApplicationFetchers = allApplicationFetchersSignal.get();
-        if (scope === "page") {
-            return [...allPageFetchers, ...allApplicationFetchers];
-        }
-        return allApplicationFetchers
-    });
-
-    const allQueriesSignal = useComputed(() => {
-        const allPageQueries = allPageQueriesSignal.get();
-        const allApplicationQueries = allApplicationQueriesSignal.get();
-        if (scope === "page") {
-            return [...allPageQueries, ...allApplicationQueries];
-        }
-        return allApplicationQueries
-    })
 
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
@@ -220,26 +195,45 @@ export default function CallableEditorPanel(props: {
                 }}>
                     {() => {
                         const callable = callableSignal.get();
-                        const allVariables = allVariablesSignal.get();
-                        const allFetchers = allFetchersSignal.get();
-                        const allQueries = allQueriesSignal.get();
+
                         const allPages = allPagesSignal.get();
                         const allTables = allTablesSignal.get();
-                        const allCallables = allApplicationCallablesSignal.get();
                         const formula = callable.functionCode;
+
                         const returnTypeSchema = `z.function().args(${wrapWithZObjectIfNeeded(callable.inputSchemaCode)}).returns(${wrapWithZObjectIfNeeded(callable.schemaCode)})`
+                        const returnType = zodSchemaToJson(returnTypeSchema);
+
+                        const allApplicationQueries = allApplicationQueriesSignal.get();
+                        const allApplicationVariables = allApplicationVariablesSignal.get();
+                        const allApplicationFetchers = allApplicationFetchersSignal.get();
+                        const allApplicationCallables = allApplicationCallablesSignal.get();
+
+                        const allPageQueries = allPageQueriesSignal.get();
+                        const allPageVariables = allPageVariablesSignal.get();
+                        const allPageFetchers = allPageFetchersSignal.get();
+                        const allPageCallables = allPageCallablesSignal.get();
+
                         return <Editor
                             language="javascript"
                             key={returnTypeSchema}
-                            beforeMount={onBeforeMountHandler({
-                                allVariables,
-                                allFetchers,
-                                returnType: zodSchemaToJson(returnTypeSchema),
-                                allPages,
-                                allTables,
-                                allCallables,
-                                allQueries
-                            })}
+                            beforeMount={(monaco) => {
+                                const dtsContent = initiateSchemaTS({
+                                    returnType,
+                                    allPages,
+                                    allTables,
+
+                                    allApplicationQueries,
+                                    allApplicationVariables,
+                                    allApplicationFetchers,
+                                    allApplicationCallables,
+
+                                    allPageQueries,
+                                    allPageVariables,
+                                    allPageFetchers,
+                                    allPageCallables,
+                                })
+                                monaco.languages.typescript.javascriptDefaults.addExtraLib(dtsContent, "ts:filename/validation-source.d.ts");
+                            }}
                             value={formula}
                             onChange={(value?: string) => {
                                 const newVariable = {...callableSignal.get()};
