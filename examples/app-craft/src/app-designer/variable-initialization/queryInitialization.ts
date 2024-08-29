@@ -2,20 +2,22 @@ import {Query} from "../panels/database/service/getTables.ts";
 import {queryPagination} from "../panels/database/table-editor/TableEditor.tsx";
 import {BindParams} from "sql.js";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
+import {QueryType} from "./VariableInitialization.tsx";
 
-export function queryInitialization(allQueries: Array<Query>):Record<string, (inputs: Record<string, unknown>, page?: number) => unknown> {
-    const queries: Record<string, (inputs: Record<string, unknown>, page?: number) => unknown> = {};
+export function queryInitialization(allQueries: Array<Query>):Record<string, QueryType> {
+    const queries: Record<string, QueryType> = {};
     for (const queryValue of allQueries) {
-        queries[queryValue.name] = async (inputs: Record<string, unknown>, page?: number) => {
-            try {
-                const result = await queryPagination(queryValue.rawQuery, Object.values(inputs) as BindParams, page ?? 1, 50);
-                return {
-                    ...result
-                }
-            } catch (error: unknown) {
-                const err = error as Error;
-                return {error: err.message}
-            }
+        queries[queryValue.name] = (inputs?: Record<string, unknown>, page?: number) => {
+            return new Promise(resolve => {
+                queryPagination(queryValue.rawQuery, Object.values(inputs ?? {}) as BindParams, page ?? 1, 50).then(result => {
+                    resolve(result);
+                }).catch(error => {
+                    const err = error as Error;
+                    resolve({
+                        error : err.message
+                    })
+                })
+            })
         }
     }
     return queries
@@ -29,7 +31,7 @@ export function composeQuerySchema(allQueries: Array<Query>) {
             return result;
         }, [] as Array<string>)
         const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props:${type},page?:number) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
+        return `${i.name} : (props?:${type},page?:number) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
     })
     return `{${queriesSchema.join(',')}}`
 }

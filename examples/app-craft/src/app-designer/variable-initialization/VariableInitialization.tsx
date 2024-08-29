@@ -66,7 +66,6 @@ function initializeVariables(props: {
         variables,
         variableInitialValue,
         allVariablesSignalInstance,
-        errorMessage,
         app,
         page
     } = props;
@@ -88,9 +87,9 @@ function initializeVariables(props: {
                     init.call(null, module);
                     const state = new Signal.State(module.exports);
                     variablesInstance.push({id: v.id, instance: state});
-                    errorMessage.variableValue({variableId:v.id});
+                    //errorMessage.variableValue({variableId:v.id});
                 } catch (err) {
-                    errorMessage.variableValue({variableId:v.id,err});
+                    //errorMessage.variableValue({variableId:v.id,err});
                 }
             }
         } else {
@@ -104,17 +103,17 @@ function initializeVariables(props: {
                         const instances = [module, app, page]
                         try {
                             init.call(null, ...instances);
-                            errorMessage.variableValue({variableId:v.id});
+                            //errorMessage.variableValue({variableId:v.id});
                         } catch (err) {
-                            errorMessage.variableValue({variableId:v.id,err});
+                            //errorMessage.variableValue({variableId:v.id,err});
                             console.error(err);
                         }
                         return module.exports;
                     });
                     variablesInstance.push({id: v.id, instance: computed});
-                    errorMessage.variableValue({variableId:v.id});
+                    //errorMessage.variableValue({variableId:v.id});
                 } catch (err) {
-                    errorMessage.variableValue({variableId:v.id,err});
+                    //errorMessage.variableValue({variableId:v.id,err});
                     console.error(err);
                 }
             }
@@ -126,16 +125,16 @@ function initializeVariables(props: {
                         const instances = [navigate, db, app, page]
                         try {
                             func.call(null, ...instances);
-                            errorMessage.variableValue({variableId:v.id});
+                            //errorMessage.variableValue({variableId:v.id});
                         } catch (err) {
-                            errorMessage.variableValue({variableId:v.id,err});
+                            //errorMessage.variableValue({variableId:v.id,err});
                             console.error(err);
                         }
                     });
                     destructorCallbacks.push(destructor);
-                    errorMessage.variableValue({variableId:v.id});
+                    //errorMessage.variableValue({variableId:v.id});
                 } catch (err) {
-                    errorMessage.variableValue({variableId:v.id,err});
+                    //errorMessage.variableValue({variableId:v.id,err});
                     console.error(err);
                 }
             }
@@ -147,14 +146,24 @@ function initializeVariables(props: {
     }
 }
 
+
+export type QueryType = (inputs?: Record<string, unknown>, page?: number) => Promise<{
+    error?: string,
+    data: Record<string, number | string | Uint8Array | null>[],
+    columns: string[],
+    totalPage: number,
+    currentPage: number
+}>
+
+export type FetchType = (inputs?: Record<string, unknown>) => Promise<Record<string, unknown> & { error?: string }>
 export type FormulaDependencyParameter = {
     var?: Record<string, AnySignal<unknown>>,
     call?: Record<string, (...args: unknown[]) => unknown>,
-    fetch?: Record<string, (inputs: Record<string, unknown>) => unknown>,
-    query?: Record<string, (inputs: Record<string, unknown>, page?: number) => unknown>,
+    fetch?: Record<string, FetchType>,
+    query?: Record<string, QueryType>,
 }
 
-export function VariableInitialization(props:PropsWithChildren) {
+export function VariableInitialization(props: PropsWithChildren) {
 
     const errorMessage = useRecordErrorMessage();
     const {
@@ -203,17 +212,24 @@ export function VariableInitialization(props:PropsWithChildren) {
         const allPageVariablesInstance = allPageVariablesSignalInstance.get();
 
         const appVar = allApplicationVariables.reduce((res, v) => {
-            if(v.type === 'effect'){
+            if (v.type === 'effect') {
                 return res;
             }
-            res[v.name] = allApplicationVariablesInstance.find(variable => variable.id === v.id)?.instance!
+            const variableInstance = allApplicationVariablesInstance.find(variable => variable.id === v.id);
+            if (variableInstance) {
+                res[v.name] = variableInstance.instance
+            }
             return res;
         }, {} as Record<string, AnySignal<unknown>>);
         const pageVar = allPageVariables.reduce((res, v) => {
-            if(v.type === 'effect'){
+            if (v.type === 'effect') {
                 return res;
             }
-            res[v.name] = allPageVariablesInstance.find(variable => variable.id === v.id)?.instance!
+            const variableInstance = allPageVariablesInstance.find(variable => variable.id === v.id);
+            if (variableInstance) {
+                res[v.name] = variableInstance.instance
+            }
+
             return res;
         }, {} as Record<string, AnySignal<unknown>>);
 
@@ -290,4 +306,7 @@ export function VariableInitialization(props:PropsWithChildren) {
     </VariableInitializationContext.Provider>
 }
 
-export const VariableInitializationContext = createContext<AnySignal<{app:FormulaDependencyParameter,page:FormulaDependencyParameter}>>(new Signal.State({app:{},page:{}}));
+export const VariableInitializationContext = createContext<AnySignal<{
+    app: FormulaDependencyParameter,
+    page: FormulaDependencyParameter
+}>>(new Signal.State({app: {}, page: {}}));

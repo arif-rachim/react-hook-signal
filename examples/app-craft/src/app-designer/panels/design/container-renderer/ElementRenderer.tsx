@@ -4,6 +4,7 @@ import {CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {PropertyInitialization} from "./property-initialization/PropertyInitialization.tsx";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {EmptyComponent} from "../../../empty-component/EmptyComponent.tsx";
+import ErrorBoundary from "../../../ErrorBoundary.tsx";
 
 /**
  * Renders a container component with dynamically generated properties based on container properties and dependencies.
@@ -25,7 +26,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const {container, elementProps} = props;
     const context = useAppContext();
     const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyComponent};
-    const ref = useRef<HTMLElement|null>(null);
+    const ref = useRef<HTMLElement | null>(null);
 
     const propsRef = useRef(elementProps);
     propsRef.current = elementProps;
@@ -72,10 +73,14 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
             }
         }
     }, [Component]);
-    const {style,...componentProperties} = componentProps;
+    const {style, ...componentProperties} = componentProps;
     const defaultStyle = (style ?? {}) as CSSProperties;
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
-        <Component ref={ref} key={container?.id} container={container} data-element-id={elementProps["data-element-id"]} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
+        <ErrorBoundary container={container}>
+            <Component ref={ref} key={container?.id} container={container}
+                       data-element-id={elementProps["data-element-id"]} {...componentProperties}
+                       style={{...elementProps.style, ...defaultStyle}}/>
+        </ErrorBoundary>
     </>
 }

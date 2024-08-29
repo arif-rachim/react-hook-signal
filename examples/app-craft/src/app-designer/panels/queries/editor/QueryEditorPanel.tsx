@@ -17,7 +17,7 @@ import {useUpdateQueries} from "../../../hooks/useUpdateQueries.ts";
 import {Query} from "../../database/service/getTables.ts";
 import {RenderParameters} from "../../fetchers/editor/FetcherEditorPanel.tsx";
 import {SqlValue} from "sql.js";
-import {Column, queryPagination, SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
+import {queryPagination, SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
 import {composeArraySchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
 
 export default function QueryEditorPanel(props: {
@@ -110,7 +110,7 @@ export default function QueryEditorPanel(props: {
     }
 
     const tableDataSignal = useSignal<{
-        columns: Column[],
+        columns: string[],
         currentPage: number,
         totalPage: number,
         data: unknown[]
@@ -168,7 +168,8 @@ export default function QueryEditorPanel(props: {
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: 250
+                    minHeight: 250,
+                    flexGrow:1
                 }}>
                     {() => {
                         const callable = querySignal.get();
@@ -182,7 +183,7 @@ export default function QueryEditorPanel(props: {
                                     selectOnLineNumbers: false,
                                     lineNumbers: 'off',
                                 }}
-                                height={150}
+
                                 onChange={(value?: string) => {
                                     const newCallable = {...querySignal.get()};
                                     newCallable.query = value ?? '';
@@ -197,7 +198,7 @@ export default function QueryEditorPanel(props: {
                                 padding: 10,
                                 borderTop: '1px solid rgba(0,0,0,0.1)',
                                 overflow: 'auto',
-                                height: '100%'
+                                minHeight:100
                             }}>
                                 <RenderParameters fetcherSignal={querySignal} isModified={isModified}
                                                   type={'parameters'}
@@ -235,7 +236,8 @@ export default function QueryEditorPanel(props: {
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: 250
+                    minHeight: 250,
+                    flexGrow:1
                 }}>
                     {() => {
                         const query = querySignal.get();

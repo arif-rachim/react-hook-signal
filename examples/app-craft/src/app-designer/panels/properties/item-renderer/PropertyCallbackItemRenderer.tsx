@@ -17,8 +17,9 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
     const addPanel = useAddDashboardPanel();
 
     return <LabelContainer key={propertyName} label={propertyName}
-                           style={{flexDirection: 'row', alignItems: 'center'}}
-                           styleLabel={{width: 65, fontSize: 13}}
+                           style={{flexDirection: 'row', alignItems: 'center',gap:5}}
+                           styleLabel={{flexGrow:1,fontSize: 14,overflow:'hidden',textOverflow:'ellipsis',width:110}}
+                           styleContent={{flexDirection:'column',width:60,flexGrow:0,flexShrink:0}}
     >
         <notifiable.div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
             {() => {
@@ -52,15 +53,14 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                 }
                 return <div style={{display: 'flex'}}>
                     <Button style={{
-                        width: 80,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderTopRightRadius: 0,
                         borderBottomRightRadius: 0,
                         backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
-                        padding: 0
-                    }} onClick={onClick}><Icon.Formula style={{fontSize: 22}}/></Button>
+                        padding: '0px 5px'
+                    }} onClick={onClick}><Icon.Formula style={{fontSize: 16}}/></Button>
 
                     <div style={{
                         display: 'flex',
@@ -72,8 +72,8 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                         borderTopRightRadius: 20,
                         borderBottomRightRadius: 20
                     }}>
-                        {hasError && <Icon.Error style={{fontSize: 18, color: colors.red}}/>}
-                        {!hasError && <Icon.Checked style={{fontSize: 18, color: colors.green}}/>}
+                        {hasError && <Icon.Error style={{fontSize: 16, color: colors.red}}/>}
+                        {!hasError && <Icon.Checked style={{fontSize: 16, color: colors.green}}/>}
                     </div>
                 </div>
             }}

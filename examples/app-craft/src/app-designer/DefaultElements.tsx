@@ -1,7 +1,7 @@
 import {element, Element} from "./LayoutBuilderProps.ts";
 import {z} from "zod";
 import {BORDER} from "./Border.ts";
-import {CSSProperties, forwardRef, LegacyRef, ReactNode, useEffect, useState} from "react";
+import {CSSProperties, forwardRef, LegacyRef, MutableRefObject, ReactNode, useEffect, useState} from "react";
 import {Icon} from "./Icon.ts";
 import {DataGroup} from "./data-group/DataGroup.tsx";
 import {Button} from "./button/Button.tsx";
@@ -15,14 +15,18 @@ import {DraggableContainerElement} from "./panels/design/container-renderer/Drag
 import {ContainerRendererIdContext} from "./panels/design/container-renderer/ContainerRenderer.tsx";
 import {Signal} from "signal-polyfill";
 import {ContainerElement} from "../app-viewer/ContainerElement.tsx";
+import {QueryGrid} from "./query-grid/QueryGrid.tsx";
+import {faultToIconByStatusId} from "../components/fault-status-icon/FaultStatusIcon.tsx";
+import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
+import {IconType} from "react-icons";
 
 export const DefaultElements: Record<string, Element> = {
-    container : element({
-        icon : Icon.Container,
-        property : {
-            style : z.any()
+    container: element({
+        icon: Icon.Container,
+        property: {
+            style: z.any()
         },
-        component : (props, ref) => {
+        component: (props, ref) => {
             return <LayoutContainer ref={ref} {...props}/>
         }
     }),
@@ -31,11 +35,11 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             value: z.string(),
             onChange: z.function().args(z.string()).returns(z.promise(z.void())),
-            style : z.any(),
-            type : z.enum(['text','number','password'])
+            style: z.any(),
+            type: z.enum(['text', 'number', 'password'])
         },
         component: (props, ref) => {
-            const {value, onChange, style,type} = props;
+            const {value, onChange, style, type} = props;
             if (style?.border === 'unset') {
                 style.border = BORDER
             }
@@ -49,7 +53,7 @@ export const DefaultElements: Record<string, Element> = {
                         await onChange(val);
                     }
                 }}
-                style={{...style,border:BORDER, borderRadius: 20}}
+                style={{...style, border: BORDER, borderRadius: 20}}
             />
         }
     }),
@@ -79,10 +83,11 @@ export const DefaultElements: Record<string, Element> = {
             label: z.string()
         },
         component: (props, ref) => {
-            const {onClick, label,style} = props;
-            return <Button style={{width:style.width,height:style.height}} ref={ref as LegacyRef<HTMLButtonElement>} onClick={() => {
-                onClick()
-            }}>
+            const {onClick, label, style} = props;
+            return <Button style={{width: style.width, height: style.height}} ref={ref as LegacyRef<HTMLButtonElement>}
+                           onClick={() => {
+                               onClick()
+                           }}>
                 {label}
             </Button>
         }
@@ -94,25 +99,84 @@ export const DefaultElements: Record<string, Element> = {
             style: z.object({
                 fontSize: z.number().optional(),
                 color: z.string().optional(),
-                border : z.string().optional(),
-                borderTop : z.string().optional(),
-                borderLeft : z.string().optional(),
-                borderRight : z.string().optional(),
-                borderBottom : z.string().optional(),
+                border: z.string().optional(),
+                borderTop: z.string().optional(),
+                borderLeft: z.string().optional(),
+                borderRight: z.string().optional(),
+                borderBottom: z.string().optional(),
             })
         },
         component: (props, ref) => {
             const {style, title} = props;
-            return <div ref={ref as LegacyRef<HTMLDivElement>} style={{flexShrink:0,...style}}>{title}</div>
+            return <div ref={ref as LegacyRef<HTMLDivElement>} style={{flexShrink: 0, ...style}}>{title}</div>
+        }
+    }),
+    queryGrid: element({
+        icon: Icon.Grid,
+        property: {
+            query: z.function().args(z.record(z.unknown()).optional(), z.number().optional()).returns(z.promise(z.object({
+                error: z.string().optional(),
+                data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))),
+                totalPage: z.number(),
+                currentPage: z.number(),
+                columns: z.array(z.string())
+            }))),
+            config: z.record(z.object({
+                hidden: z.boolean().optional(),
+                width: z.union([z.string(), z.number()]).optional(),
+                rendererPageId: z.string().optional(),
+                title: z.string().optional()
+            })),
+            focusedRow: z.record(z.unknown(z.unknown())),
+            onFocusedRowChange: z.function().args(z.unknown()).optional(),
+            refreshQueryKey: z.string().optional()
+        },
+        component: (props, ref) => {
+            const {query, style, config, focusedRow, onFocusedRowChange, container, refreshQueryKey} = props;
+            return <QueryGrid ref={ref} query={query} style={style} columnsConfig={config}
+                              onFocusedRowChange={onFocusedRowChange} focusedRow={focusedRow} container={container}
+                              refreshQueryKey={refreshQueryKey}/>
+        },
+        propertyEditor: {
+            config: {
+                label: 'config',
+                component: ConfigPropertyEditor
+            }
+        }
+    }),
+    faultStatusIcon: element({
+        icon: Icon.FaultIcon as unknown as IconType,
+        property: {
+            value: z.number()
+        },
+        component: (props, ref) => {
+            return <div ref={ref as MutableRefObject<HTMLDivElement>} style={props.style}>
+                {faultToIconByStatusId(props.value)}
+            </div>
         }
     })
 }
 
+/**
+ *
+ * export type QueryType = (inputs?: Record<string, unknown>, page?: number) => Promise<{
+ *     error?: string,
+ *     data: Record<string, number | string | Uint8Array | null>[],
+ *     columns: Column[],
+ *     totalPage: number,
+ *     currentPage: number
+ * }>
+ */
+
 const viewMode = new Signal.Computed(() => 'view');
 
-const LayoutContainer =  forwardRef(function LayoutContainer(props:{container:Container,style:CSSProperties,["data-element-id"]:string},ref){
+const LayoutContainer = forwardRef(function LayoutContainer(props: {
+    container: Container,
+    style: CSSProperties,
+    ["data-element-id"]: string
+}, ref) {
 
-    const {container,...elementProps} = props;
+    const {container, ...elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
     const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
     const displayMode = uiDisplayModeSignal ?? viewMode;
@@ -139,18 +203,19 @@ const LayoutContainer =  forwardRef(function LayoutContainer(props:{container:Co
                 result.push(<DraggableContainerElement container={childContainer} key={childId}/>)
                 result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
                                       parentContainerId={container?.id ?? ''}/>);
-            }else{
+            } else {
                 result.push(<ContainerElement container={childContainer} key={childId}/>)
             }
         }
         setElements(result);
     });
-    const { style} = elementProps;
+    const {style} = elementProps;
     return <ContainerRendererIdContext.Provider value={elementProps["data-element-id"]}>
         <div ref={ref as LegacyRef<HTMLDivElement>}
-            style={style}
-            data-element-id={elementProps["data-element-id"]}
+             style={style}
+             data-element-id={elementProps["data-element-id"]}
         >
             {elements}
-        </div></ContainerRendererIdContext.Provider>
+        </div>
+    </ContainerRendererIdContext.Provider>
 })

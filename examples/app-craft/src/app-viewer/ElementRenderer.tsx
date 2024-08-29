@@ -7,6 +7,7 @@ import {CSSProperties, forwardRef, useEffect, useMemo, useRef, useState} from "r
 import {
     PropertyInitialization
 } from "../app-designer/panels/design/container-renderer/property-initialization/PropertyInitialization.tsx";
+import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
 
 /**
  * Renders an element inside a container with specified props.
@@ -34,6 +35,8 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     const defaultStyle = (style ?? {}) as CSSProperties;
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
-        <Component ref={ref} key={container?.id} container={container} data-element-id={elementProps["data-element-id"]} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
+        <ErrorBoundary container={container}>
+            <Component ref={ref} key={container?.id} container={container} data-element-id={elementProps["data-element-id"]} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
+        </ErrorBoundary>
     </>
 }

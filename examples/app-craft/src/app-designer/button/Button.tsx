@@ -8,6 +8,7 @@ import {useHoveredOnPress} from "../dashboard/useHoveredOnPress.ts";
 export const Button = forwardRef(function Button(props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, ref) {
     const {style, ...properties} = props;
     const {ref: localRef, isHovered, isOnPress} = useHoveredOnPress(ref as RefObject<HTMLElement>);
+
     const buttonStyle: CSSProperties = useMemo(() => {
         const defaultStyle: CSSProperties = {
             border: BORDER_NONE,

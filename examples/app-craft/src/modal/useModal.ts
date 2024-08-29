@@ -20,9 +20,7 @@ export function useModal() {
             const id = guid();
             const element = factory((params?: P) => {
                 modalPanels.set(modalPanels.get().filter(p => p.id !== id));
-                if (params) {
-                    resolve(params);
-                }
+                resolve(params);
             });
             modalPanels.set([...modalPanels.get(), {id, element, config}]);
         })

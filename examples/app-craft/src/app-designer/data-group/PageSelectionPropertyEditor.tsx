@@ -23,7 +23,7 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
     }
     const update = useUpdateDragContainer();
     const style: CSSProperties = {
-        width: 80,
+        width: 28,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -35,7 +35,6 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         padding: 0
     };
     return <div style={{display: 'flex'}}>
-
         <PageInputSelector value={''} style={style} onChange={(value) => {
             const containerId = containerSignal.get()?.id;
             if (containerId) {
@@ -57,16 +56,17 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         }}/>
         <div style={{
             display: 'flex',
-            padding: '0px 5px',
+            padding: '0px 2px',
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: 'rgba(0,0,0,0.05)',
             border: BORDER,
+            width:28,
             borderTopRightRadius: 20,
             borderBottomRightRadius: 20
         }}>
-            {hasError && <Icon.Error style={{fontSize: 18, color: colors.red}}/>}
-            {!hasError && <Icon.Checked style={{fontSize: 18, color: colors.green}}/>}
+            {hasError && <Icon.Error style={{fontSize: 16, color: colors.red}}/>}
+            {!hasError && <Icon.Checked style={{fontSize: 16, color: colors.green}}/>}
         </div>
     </div>
 }

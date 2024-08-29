@@ -50,9 +50,9 @@ export function PropertiesPanel() {
             const editor = callbacksAndAttributes.propertyEditor[propKey]!;
             const Component = editor.component!;
             return <LabelContainer key={propKey} label={editor.label}
-                                   style={{flexDirection: 'row', alignItems: 'center'}}
-                                   styleLabel={{width: 65, fontSize: 13}}
-                                   styleContent={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
+                                   style={{flexDirection: 'row', alignItems: 'center',gap:5}}
+                                   styleLabel={{flexGrow:1,fontSize: 14,overflow:'hidden',textOverflow:'ellipsis',width:110}}
+                                   styleContent={{flexDirection:'column',width:60,flexGrow:0,flexShrink:0}}>
                 <Component propertyName={propKey}/>
             </LabelContainer>
         }
@@ -60,10 +60,10 @@ export function PropertiesPanel() {
     }
 
     return <>
-        <CollapsibleLabelContainer label={'Properties'} key={'properties'} styleContent={{gap: 10}}>
+        <CollapsibleLabelContainer label={'Properties'} key={'properties'} styleContent={{gap: 5}}>
             {callbacksAndAttributes.attributes.map(propertyCallbackItemRenderer)}
         </CollapsibleLabelContainer>
-        <CollapsibleLabelContainer label={'Callbacks'} key={'callbacks'} styleContent={{gap: 10}}>
+        <CollapsibleLabelContainer label={'Callbacks'} key={'callbacks'} styleContent={{gap: 5}}>
             {callbacksAndAttributes.callbacks.map(propertyCallbackItemRenderer)}
         </CollapsibleLabelContainer>
     </>

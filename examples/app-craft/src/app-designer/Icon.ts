@@ -2,6 +2,7 @@ import {PiPackage, PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuFormInput, LuSigmaSquare} from "react-icons/lu";
 import {
     IoCodeSlashOutline,
+    IoGrid,
     IoInformationCircleOutline,
     IoOpenOutline,
     IoSquareOutline,
@@ -31,6 +32,7 @@ import {HiCollection, HiViewBoards} from "react-icons/hi";
 import {GoDatabase} from "react-icons/go";
 import {SiAzurefunctions} from "react-icons/si";
 import {FaCubes, FaHollyBerry} from "react-icons/fa6";
+import {RedX} from "../components/fault-status-icon/FaultStatusIcon.tsx";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -74,5 +76,7 @@ export const Icon = {
     Database: GoDatabase,
     Query : TbDatabaseSearch,
     Function : SiAzurefunctions,
-    Container : AiOutlineGroup
+    Container : AiOutlineGroup,
+    Grid : IoGrid,
+    FaultIcon : RedX
 }

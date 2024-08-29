@@ -72,7 +72,10 @@ export function PageSelector(props: {
             padding: 20,
             backgroundColor: 'rgba(0,0,0,0.05)'
         }}>
-            <Button onClick={() => closePanel(selectedPage.get())} style={{
+            <Button onClick={() => {
+                const nextPage = selectedPage.get();
+                closePanel(nextPage);
+            }} style={{
                 display: 'flex',
                 gap: 5,
                 alignItems: 'center'

@@ -8,7 +8,8 @@ import {CSSProperties} from "react";
 export function PageInputSelector(props: {
     value?: string,
     onChange: (value?: string) => void,
-    style?: CSSProperties
+    style?: CSSProperties,
+    chipColor?: CSSProperties['backgroundColor']
 }) {
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
@@ -32,11 +33,11 @@ export function PageInputSelector(props: {
     }
 
     return <div
+
         style={{
             border: BORDER,
             display: 'flex',
             borderRadius: 5,
-            minHeight: 25,
             justifyContent: 'space-evenly',
             alignItems: 'center',
             flexWrap: 'wrap',
@@ -47,7 +48,7 @@ export function PageInputSelector(props: {
         onClick={showPageSelector}>
         {page &&
             <div style={{
-                backgroundColor: 'rgba(0,0,0,0.1)',
+                backgroundColor: props.chipColor ? props.chipColor : 'rgba(0,0,0,0.1)',
                 borderRadius: 5,
                 borderBottom: 'unset',
                 flexGrow: 1,

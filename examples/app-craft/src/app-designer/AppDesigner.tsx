@@ -62,7 +62,7 @@ export type Fetcher = {
     data: Array<FetcherParameter>,
     returnTypeSchemaCode: string,
     // this is to compose the default formula
-    defaultValueFormula : string,
+    defaultValueFormula: string,
 }
 
 export type VariableInstance = {
@@ -81,7 +81,7 @@ export type Page = {
     callables: Array<Callable>,
     variables: Array<Variable>,
     fetchers: Array<Fetcher>,
-    queries : Array<Query>
+    queries: Array<Query>
 }
 
 export type Application = {
@@ -89,7 +89,7 @@ export type Application = {
     name: string,
     pages: Array<Page>,
     tables: Array<Table>,
-    queries : Array<Query>,
+    queries: Array<Query>,
     callables: Array<Callable>,
     variables: Array<Variable>, // application variables, we can use this to store the login state !
     fetchers: Array<Fetcher>
@@ -141,10 +141,9 @@ export function useAppInitiator(props: LayoutBuilderProps) {
 
     const allVariablesSignalInstance = useComputed(() => [...allPageVariablesSignalInstance.get(), ...allApplicationVariablesSignalInstance.get()])
     const allVariablesSignal = useComputed(() => [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()])
-    const allFetchersSignal = useComputed(() => [...allPageFetchersSignal.get(),...allApplicationFetchersSignal.get()])
-    const allQueriesSignal = useComputed(() => [...allPageQueriesSignal.get(),...allApplicationQueriesSignal.get()])
-    const allCallablesSignal = useComputed(() => [...allPageCallablesSignal.get(),...allApplicationCallablesSignal.get()])
-
+    const allFetchersSignal = useComputed(() => [...allPageFetchersSignal.get(), ...allApplicationFetchersSignal.get()])
+    const allQueriesSignal = useComputed(() => [...allPageQueriesSignal.get(), ...allApplicationQueriesSignal.get()])
+    const allCallablesSignal = useComputed(() => [...allPageCallablesSignal.get(), ...allApplicationCallablesSignal.get()])
     const {value, onChange} = props;
 
     useEffect(() => {
@@ -265,112 +264,112 @@ export default function AppDesigner(props: LayoutBuilderProps) {
             <AppDesignerContext.Provider
                 value={context}>
                 <VariableInitialization>
-                <Dashboard panels={{
-                    pages: {
-                        title: 'Pages',
-                        Icon: Icon.Page,
-                        position: 'left',
-                        component: PagesPanel
-                    },
-                    applicationVariables: {
-                        title: 'Application Variables',
-                        Icon: Icon.ApplicationVariable,
-                        position: 'left',
-                        component: createVariablePanel('application')
-                    },
-                    applicationFetchers: {
-                        title: 'Application Fetchers',
-                        Icon: Icon.Fetcher,
-                        position: 'left',
-                        component: createFetcherPanel('application'),
-                    },
-                    applicationFunctions: {
-                        title: 'Application Callables',
-                        Icon: Icon.Function,
-                        position: 'left',
-                        component: createCallablePanel('application'),
-                    },
-                    database: {
-                        title: 'Database',
-                        Icon: Icon.Database,
-                        position: 'left',
-                        component: DatabasePanel
-                    },
-                    applicationQueries: {
-                        title: 'Application Queries',
-                        Icon: Icon.Query,
-                        position: 'left',
-                        component: createQueriesPanel('application'),
-                    },
-                    components: {
-                        title: 'Components',
-                        Icon: Icon.Component,
-                        position: 'leftBottom',
-                        component: ElementsPanel,
-                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
-                    },
-                    variables: {
-                        title: 'Variables',
-                        Icon: Icon.Variable,
-                        position: 'leftBottom',
-                        component: createVariablePanel('page'),
-                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
-                    },
-                    fetchers: {
-                        title: 'Fetchers',
-                        Icon: Icon.Fetcher,
-                        position: 'leftBottom',
-                        component: createFetcherPanel('page'),
-                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
-                    },
-                    functions: {
-                        title: 'Callables',
-                        Icon: Icon.Function,
-                        position: 'leftBottom',
-                        component: createCallablePanel('page'),
-                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
-                    },
-                    queries: {
-                        title: 'Queries',
-                        Icon: Icon.Query,
-                        position: 'leftBottom',
-                        component: createQueriesPanel('page'),
-                        visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
-                    },
-                    errors: {
-                        title: 'Errors',
-                        Icon: Icon.Error,
-                        position: 'bottom',
-                        component: ErrorsPanel
-                    },
-                    styles: {
-                        title: 'Styles',
-                        Icon: Icon.Style,
-                        position: 'right',
-                        component: StylePanel,
-                        visible: (tag) => tag?.type === 'DesignPanel'
-                    },
-                    properties: {
-                        title: 'Properties',
-                        Icon: Icon.Property,
-                        position: 'right',
-                        component: PropertiesPanel,
-                        visible: (tag) => tag?.type === 'DesignPanel'
-                    },
-                    bundle: {
-                        title: 'Package',
-                        Icon: Icon.Package,
-                        position: 'bottom',
-                        component: PackagePanel
-                    }
-                }}
-                           defaultSelectedPanel={{
-                               left: 'pages',
-                               leftBottom: 'components',
-                               bottom: 'errors',
-                               right: 'styles',
-                           }}>
-                </Dashboard>
+                    <Dashboard panels={{
+                        pages: {
+                            title: 'Pages',
+                            Icon: Icon.Page,
+                            position: 'left',
+                            component: PagesPanel
+                        },
+                        applicationVariables: {
+                            title: 'Application Variables',
+                            Icon: Icon.ApplicationVariable,
+                            position: 'left',
+                            component: createVariablePanel('application')
+                        },
+                        applicationFetchers: {
+                            title: 'Application Fetchers',
+                            Icon: Icon.Fetcher,
+                            position: 'left',
+                            component: createFetcherPanel('application'),
+                        },
+                        applicationFunctions: {
+                            title: 'Application Callables',
+                            Icon: Icon.Function,
+                            position: 'left',
+                            component: createCallablePanel('application'),
+                        },
+                        database: {
+                            title: 'Database',
+                            Icon: Icon.Database,
+                            position: 'left',
+                            component: DatabasePanel
+                        },
+                        applicationQueries: {
+                            title: 'Application Queries',
+                            Icon: Icon.Query,
+                            position: 'left',
+                            component: createQueriesPanel('application'),
+                        },
+                        components: {
+                            title: 'Components',
+                            Icon: Icon.Component,
+                            position: 'leftBottom',
+                            component: ElementsPanel,
+                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        variables: {
+                            title: 'Variables',
+                            Icon: Icon.Variable,
+                            position: 'leftBottom',
+                            component: createVariablePanel('page'),
+                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        fetchers: {
+                            title: 'Fetchers',
+                            Icon: Icon.Fetcher,
+                            position: 'leftBottom',
+                            component: createFetcherPanel('page'),
+                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        functions: {
+                            title: 'Callables',
+                            Icon: Icon.Function,
+                            position: 'leftBottom',
+                            component: createCallablePanel('page'),
+                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        queries: {
+                            title: 'Queries',
+                            Icon: Icon.Query,
+                            position: 'leftBottom',
+                            component: createQueriesPanel('page'),
+                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        errors: {
+                            title: 'Errors',
+                            Icon: Icon.Error,
+                            position: 'bottom',
+                            component: ErrorsPanel
+                        },
+                        styles: {
+                            title: 'Styles',
+                            Icon: Icon.Style,
+                            position: 'right',
+                            component: StylePanel,
+                            visible: (tag) => tag?.type === 'DesignPanel'
+                        },
+                        properties: {
+                            title: 'Properties',
+                            Icon: Icon.Property,
+                            position: 'right',
+                            component: PropertiesPanel,
+                            visible: (tag) => tag?.type === 'DesignPanel'
+                        },
+                        bundle: {
+                            title: 'Package',
+                            Icon: Icon.Package,
+                            position: 'bottom',
+                            component: PackagePanel
+                        }
+                    }}
+                               defaultSelectedPanel={{
+                                   left: 'pages',
+                                   leftBottom: 'components',
+                                   bottom: 'errors',
+                                   right: 'styles',
+                               }}>
+                    </Dashboard>
                 </VariableInitialization>
             </AppDesignerContext.Provider>
         </ModalProvider>

@@ -2,7 +2,7 @@ import {Fetcher} from "../AppDesigner.tsx";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {createRequest} from "../panels/fetchers/editor/createRequest.ts";
-import {FormulaDependencyParameter} from "./VariableInitialization.tsx";
+import {FetchType, FormulaDependencyParameter} from "./VariableInitialization.tsx";
 
 export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
     const fetchersSchema = allFetchers.map(i => {
@@ -28,7 +28,7 @@ export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
             return result;
         }, paths)
         const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props:${type}) => Promise<{error:string,result:${schema}}>`
+        return `${i.name} : (props?:${type}) => Promise<{error:string,result:${schema}}>`
     })
 
     return `{${fetchersSchema.join(',')}}`
@@ -38,18 +38,17 @@ export function fetcherInitialization(props: {
     allFetchers: Array<Fetcher>,
     app : FormulaDependencyParameter,
     page : FormulaDependencyParameter
-}): Record<string, (inputs: Record<string, unknown>) => unknown> {
+}): Record<string, FetchType> {
 
     const {
         allFetchers,
         app,page
     } = props;
-    const fetchers: Record<string, (inputs: Record<string, unknown>) => unknown> = {};
+    const fetchers: Record<string, FetchType> = {};
 
 
     for (const fetcherValue of allFetchers) {
-
-        fetchers[fetcherValue.name] = async (inputs: Record<string, unknown>) => {
+        fetchers[fetcherValue.name] = async (inputs?: Record<string, unknown>) => {
             try {
                 const fetcher = {...fetcherValue};
                 const module: {
@@ -89,15 +88,12 @@ export function fetcherInitialization(props: {
                     console.error(err);
                 }
 
-                const {address, requestInit} = createRequest(fetcher, inputs);
+                const {address, requestInit} = createRequest(fetcher, inputs ?? {});
                 const response = await fetch(address, requestInit);
                 if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
+                    return {error: 'Network response was not ok: ' + response.statusText}
                 }
-                const data = await response.json();
-                return {
-                    result: data
-                }
+                return await response.json();
             } catch (error: unknown) {
                 const err = error as Error;
                 return {error: err.message}

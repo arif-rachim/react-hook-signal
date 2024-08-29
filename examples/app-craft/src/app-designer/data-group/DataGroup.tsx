@@ -3,6 +3,7 @@ import {Page} from "../AppDesigner.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {PageViewer} from "../../app-viewer/PageViewer.tsx";
+import {isEmpty} from "../../utils/isEmpty.ts";
 
 export const DataGroup = memo(forwardRef(DataGroupFC), (prevProps, nextProps) => {
     if (prevProps.component !== nextProps.component) {
@@ -26,9 +27,17 @@ function DataGroupFC(props: {
     direction: 'vertical' | 'horizontal',
     keyId: string
 }, ref: unknown) {
+
     const max_page = 50;
     const {keyId, direction, style: propsStyle, data, component} = props;
-    const [page, setPage] = useState<Page | undefined>(undefined);
+    const componentIdSignal = useSignal(component);
+    const {allPagesSignal, elements,applicationSignal} = useAppContext();
+
+    const [page, setPage] = useState<Page | undefined>(() => {
+        const allPages = allPagesSignal.get();
+        const componentId = componentIdSignal.get();
+        return allPages.find(p => p.id === componentId);
+    });
 
     const style: CSSProperties = {
         display: 'flex',
@@ -39,8 +48,6 @@ function DataGroupFC(props: {
         ...propsStyle
     }
 
-    const {allPagesSignal, elements,applicationSignal} = useAppContext();
-    const componentIdSignal = useSignal(component);
     useEffect(() => {
         componentIdSignal.set(component)
     }, [component, componentIdSignal]);
@@ -56,10 +63,8 @@ function DataGroupFC(props: {
     });
     return <div ref={ref as ForwardedRef<HTMLDivElement>} style={style}>
         {page && dataPerPage.map((item, index) => {
-
-            // here we need to render page
             let key: string = index.toString();
-            if (item !== undefined && item !== null && typeof item === 'object' && keyId in item) {
+            if (!isEmpty(keyId) && !isEmpty(item) && typeof item === 'object' && keyId in item && !isEmpty(item[keyId])) {
                 key = (item[keyId] as string).toString();
             }
             return <PageViewer
@@ -67,7 +72,7 @@ function DataGroupFC(props: {
                 page={page!}
                 key={key}
                 appConfig={applicationSignal.get()}
-                {...item}/>
+                value={item}/>
         })}
     </div>
 }
