@@ -4,7 +4,7 @@ import {BindParams} from "sql.js";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {QueryType} from "./VariableInitialization.tsx";
 
-export function queryInitialization(allQueries: Array<Query>):Record<string, QueryType> {
+export function queryInitialization(allQueries: Array<Query>): Record<string, QueryType> {
     const queries: Record<string, QueryType> = {};
     for (const queryValue of allQueries) {
         queries[queryValue.name] = (inputs?: Record<string, unknown>, page?: number) => {
@@ -14,7 +14,11 @@ export function queryInitialization(allQueries: Array<Query>):Record<string, Que
                 }).catch(error => {
                     const err = error as Error;
                     resolve({
-                        error : err.message
+                        error: err.message,
+                        data: [],
+                        columns: [],
+                        currentPage: 1,
+                        totalPage: 0
                     })
                 })
             })
