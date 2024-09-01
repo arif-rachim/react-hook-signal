@@ -72,13 +72,27 @@ function composeLibrary(allVariables: Array<Variable>) {
     });
     return `{${variables.join(';\n')}}`;
 }
+//
+// function composeNavigation(allPages: Array<Page>) {
+//     const type = allPages.map(p => {
+//         const param = p.variables.filter(v => v.type === 'state').map(v => {
+//             return `${v.name}?:${zodSchemaToJson(v.schemaCode)}`
+//         }).join(',')
+//         return `${p.name}:(param?:{${param}}) => void`;
+//     }).join(',');
+//     return `declare const navigate:{${type}};`
+// }
 
 function composeNavigation(allPages: Array<Page>) {
     const type = allPages.map(p => {
         const param = p.variables.filter(v => v.type === 'state').map(v => {
             return `${v.name}?:${zodSchemaToJson(v.schemaCode)}`
         }).join(',')
-        return `${p.name}:(param:{${param}}) => void`;
-    }).join(',')
-    return `declare const navigate:{${type}};`
+        return `'${p.name}':{${param}}`;
+    }).join(',');
+    return `
+    type Navigate = {${type}};
+    declare const navigate = <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
+    `
 }
+

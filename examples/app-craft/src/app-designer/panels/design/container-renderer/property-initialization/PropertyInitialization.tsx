@@ -27,7 +27,7 @@ export function PropertyInitialization(props: {
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
-    const navigateSignal = useNavigateSignal();
+    const navigate = useNavigateSignal();
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);
@@ -42,7 +42,6 @@ export function PropertyInitialization(props: {
             const destroyer = effect(() => {
                 const allVariablesInstance = allVariablesSignalInstance.get();
                 const allVariables = allVariablesSignal.get();
-                const navigate = navigateSignal.get();
                 const propDependencies = allVariables.map(t => allVariablesInstance.find(v => v.id === t.id)?.instance) as Array<AnySignal<unknown>>;
 
                 const funcParams = ['module', 'navigate', 'db', 'app', 'page', containerProp.formula] as Array<string>;

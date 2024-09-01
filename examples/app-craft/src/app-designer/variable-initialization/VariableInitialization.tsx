@@ -53,7 +53,7 @@ function validateVariables(variableInstances: Array<VariableInstance>, variableV
 }
 
 function initializeVariables(props: {
-    navigateSignal: Signal.Computed<Record<string, (param: unknown) => void>>,
+    navigate: (path:string,param?:unknown) => Promise<void>,
     variables: Array<Variable>,
     variableInitialValue: Record<string, unknown>,
     allVariablesSignalInstance: Signal.State<Array<VariableInstance>>,
@@ -62,7 +62,7 @@ function initializeVariables(props: {
     page: FormulaDependencyParameter
 }) {
     const {
-        navigateSignal,
+        navigate,
         variables,
         variableInitialValue,
         allVariablesSignalInstance,
@@ -72,7 +72,6 @@ function initializeVariables(props: {
 
     const variablesInstance: Array<VariableInstance> = [];
     const destructorCallbacks: Array<() => void> = [];
-    const navigate = navigateSignal.get();
     for (const v of variables) {
         if (v.type === 'state') {
             const module = {exports: {}};
@@ -180,7 +179,7 @@ export function VariableInitialization(props: PropsWithChildren) {
         allApplicationQueriesSignal,
     } = useAppContext();
 
-    const navigateSignal = useNavigateSignal();
+    const navigate = useNavigateSignal();
 
     const validatorsApplicationComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
         return createValidator(allApplicationVariablesSignal.get(), errorMessage);
@@ -283,7 +282,7 @@ export function VariableInitialization(props: PropsWithChildren) {
             variables,
             variableInitialValue,
             errorMessage,
-            navigateSignal
+            navigate
         });
     });
 
@@ -298,7 +297,7 @@ export function VariableInitialization(props: PropsWithChildren) {
             variables,
             variableInitialValue,
             errorMessage,
-            navigateSignal
+            navigate
         });
     });
     return <VariableInitializationContext.Provider value={appScopesSignal}>
