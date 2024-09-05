@@ -40,8 +40,8 @@ export function ErrorsPanel() {
                 color: colors.red,
                 overflow: 'auto',
                 maxHeight: 100,
-                flexShrink:0,
-                minHeight:100,
+                flexShrink: 0,
+                minHeight: 100,
                 padding: '10px 0px'
             } as CSSProperties
         }}>
@@ -109,7 +109,7 @@ export function ErrorsPanel() {
                                     tag: {
                                         containerId: e.containerId,
                                         propertyName: e.propertyName,
-                                        type : 'ComponentPropertyEditor'
+                                        type: 'ComponentPropertyEditor'
                                     },
                                     visible: () => true
                                 })
@@ -127,7 +127,7 @@ export function ErrorsPanel() {
                                     id: e.variableId,
                                     tag: {
                                         variableId: e.variableId,
-                                        type : 'VariableEditorPanel'
+                                        type: 'VariableEditorPanel'
                                     }
                                 })
 

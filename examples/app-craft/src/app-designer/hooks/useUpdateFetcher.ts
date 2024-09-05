@@ -3,8 +3,8 @@ import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
 import {useAppContext} from "./useAppContext.ts";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 
-export function useUpdateFetcher(scope:'page'|'application') {
-    const {allPageFetchersSignal,allApplicationFetchersSignal} = useAppContext();
+export function useUpdateFetcher(scope: 'page' | 'application') {
+    const {allPageFetchersSignal, allApplicationFetchersSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     const updateApplication = useUpdateApplication();
     return function updateFetcher(fetcher: Fetcher) {
@@ -15,9 +15,9 @@ export function useUpdateFetcher(scope:'page'|'application') {
         } else {
             fetchers.push({...fetcher});
         }
-        if(scope === 'page'){
+        if (scope === 'page') {
             updatePage({type: 'fetcher', fetchers: fetchers});
-        }else{
+        } else {
             updateApplication(original => {
                 original.fetchers = fetchers
             })

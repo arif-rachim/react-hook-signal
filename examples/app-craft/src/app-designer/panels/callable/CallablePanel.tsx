@@ -1,7 +1,7 @@
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
-import {notifiable} from "react-hook-signal";
+import {notifiable, useSignal} from "react-hook-signal";
 import {Callable} from "../../AppDesigner.tsx";
 import {guid} from "../../../utils/guid.ts";
 import {Icon} from "../../Icon.ts";
@@ -15,6 +15,7 @@ import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 
 export const createCallablePanel = (scope: 'page' | 'application') => {
     return function CallablePanel() {
+        const focusedItemSignal = useSignal<string>('');
         const context = useAppContext<AppDesignerContext>();
         const {allApplicationCallablesSignal, allPageCallablesSignal} = context;
         const allCallablesSignal = scope === 'application' ? allApplicationCallablesSignal : allPageCallablesSignal;
@@ -31,11 +32,11 @@ export const createCallablePanel = (scope: 'page' | 'application') => {
             })
             if (deleteVariableConfirm === 'Yes') {
                 const callables = allCallablesSignal.get().filter(i => i.id !== callable.id);
-                if(scope === 'application'){
+                if (scope === 'application') {
                     updateApplication(app => {
                         app.callables = callables;
                     })
-                }else{
+                } else {
                     updatePage({type: 'callable', callables: callables})
                 }
             }
@@ -58,20 +59,42 @@ export const createCallablePanel = (scope: 'page' | 'application') => {
             })
         }
 
-        return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
-            <Button
-                style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}
-                onClick={() => editCallable()}
-            >
-                {'Add Callable'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <MdAdd style={{fontSize: 20}}/>
-                </div>
-            </Button>
+        return <div style={{display: 'flex', flexDirection: 'column'}}>
+            <div style={{display: 'flex', padding: 10}}>
+                <Button
+                    style={{
+                        display: 'flex',
+                        flexGrow: 1,
+                        alignItems: 'center',
+                        gap: 5,
+                        justifyContent: 'center',
+                        padding: '0px 10px 2px 10px',
+                        background: 'rgba(0,0,0,0.0)',
+                        border: '1px solid rgba(0,0,0,0.2)',
+                        color: '#333',
+                    }}
+                    onClick={() => editCallable()}
+                >
+                    {'Add Callable'}
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <MdAdd style={{fontSize: 20}}/>
+                    </div>
+                </Button>
+            </div>
             <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                 {() => {
+                    const focusedItem = focusedItemSignal.get();
                     return allCallablesSignal.get().map(callable => {
-                        return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={callable.id}>
+                        const isFocused = focusedItem === callable.id;
+                        return <div style={{
+                            display: 'flex',
+                            gap: 5,
+                            padding: '0px 10px 2px 10px',
+                            backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                        }} key={callable.id} onClick={() => {
+                            focusedItemSignal.set(callable.id);
+                            editCallable(callable)
+                        }}>
 
                             <div style={{
                                 flexGrow: 1,
@@ -85,14 +108,6 @@ export const createCallablePanel = (scope: 'page' | 'application') => {
                                 justifyContent: 'center',
                             }} onClick={() => deleteCallable(callable)}>
                                 <Icon.Delete style={{fontSize: 18}}/>
-                            </div>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }} onClick={() => editCallable(callable)}>
-                                <Icon.Detail style={{fontSize: 18}}/>
                             </div>
                         </div>
                     })

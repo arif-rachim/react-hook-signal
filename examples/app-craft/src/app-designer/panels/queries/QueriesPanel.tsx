@@ -1,7 +1,7 @@
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
-import {notifiable} from "react-hook-signal";
+import {notifiable, useSignal} from "react-hook-signal";
 import {guid} from "../../../utils/guid.ts";
 import {Icon} from "../../Icon.ts";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
@@ -15,6 +15,7 @@ import QueryEditorPanel from "./editor/QueryEditorPanel.tsx";
 
 export const createQueriesPanel = (scope: 'page' | 'application') => {
     return function CallablePanel() {
+        const focusedItemSignal = useSignal<string>('');
         const context = useAppContext<AppDesignerContext>();
         const {allApplicationQueriesSignal, allPageQueriesSignal} = context;
         const allQueriesSignal = scope === 'application' ? allApplicationQueriesSignal : allPageQueriesSignal;
@@ -31,11 +32,11 @@ export const createQueriesPanel = (scope: 'page' | 'application') => {
             })
             if (deleteVariableConfirm === 'Yes') {
                 const queries = allQueriesSignal.get().filter(i => i.id !== query.id);
-                if(scope === 'application'){
+                if (scope === 'application') {
                     updateApplication(app => {
                         app.queries = queries;
                     })
-                }else{
+                } else {
                     updatePage({type: 'query', queries: queries})
                 }
             }
@@ -46,7 +47,7 @@ export const createQueriesPanel = (scope: 'page' | 'application') => {
             addPanel({
                 position: 'mainCenter',
                 component: () => {
-                    return <QueryEditorPanel queryId={query?.id} panelId={panelId} scope={scope} />
+                    return <QueryEditorPanel queryId={query?.id} panelId={panelId} scope={scope}/>
                 },
                 title: query ? `Edit ${query?.name}` : `Add Query`,
                 Icon: Icon.Component,
@@ -58,9 +59,19 @@ export const createQueriesPanel = (scope: 'page' | 'application') => {
             })
         }
 
-        return <div style={{display: 'flex', flexDirection: 'column', padding: 10}}>
+        return <div style={{display: 'flex', flexDirection: 'column'}}>
             <Button
-                style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    margin: 10,
+                    gap: 5,
+                    justifyContent: 'center',
+                    padding: '0px 10px 2px 10px',
+                    background: 'rgba(0,0,0,0.0)',
+                    border: '1px solid rgba(0,0,0,0.2)',
+                    color: '#333',
+                }}
                 onClick={() => editQuery()}
             >
                 {'Add Query'}
@@ -70,8 +81,18 @@ export const createQueriesPanel = (scope: 'page' | 'application') => {
             </Button>
             <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                 {() => {
+                    const focusedItem = focusedItemSignal.get();
                     return allQueriesSignal.get().map(query => {
-                        return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={query.id}>
+                        const isFocused = focusedItem === query.id;
+                        return <div style={{
+                            display: 'flex',
+                            gap: 5,
+                            padding: '0px 10px 2px 10px',
+                            backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                        }} key={query.id} onClick={() => {
+                            focusedItemSignal.set(query.id);
+                            editQuery(query);
+                        }}>
 
                             <div style={{
                                 flexGrow: 1,
@@ -85,14 +106,6 @@ export const createQueriesPanel = (scope: 'page' | 'application') => {
                                 justifyContent: 'center',
                             }} onClick={() => deleteQuery(query)}>
                                 <Icon.Delete style={{fontSize: 18}}/>
-                            </div>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }} onClick={() => editQuery(query)}>
-                                <Icon.Detail style={{fontSize: 18}}/>
                             </div>
                         </div>
                     })

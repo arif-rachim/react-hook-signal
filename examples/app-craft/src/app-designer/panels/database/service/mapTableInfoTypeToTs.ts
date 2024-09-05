@@ -1,54 +1,54 @@
-export function mapTableInfoTypeToTs(param:string){
+export function mapTableInfoTypeToTs(param: string) {
     const type = param.toLowerCase();
-    if(type.includes('char')){
+    if (type.includes('char')) {
         return 'z.string().nullable()';
     }
-    if(type.includes('binary')){
+    if (type.includes('binary')) {
         return 'z.any()';
     }
-    if(type.includes('int')){
+    if (type.includes('int')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('float')){
+    if (type.includes('float')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('double')){
+    if (type.includes('double')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('decimal')){
+    if (type.includes('decimal')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('numeric')){
+    if (type.includes('numeric')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('date')){
+    if (type.includes('date')) {
         return 'z.string().nullable()';
     }
-    if(type.includes('time')){
+    if (type.includes('time')) {
         return 'z.string().nullable()';
     }
-    if(type.includes('year')){
+    if (type.includes('year')) {
         return 'z.string().nullable()';
     }
-    if(type.includes('bool')){
+    if (type.includes('bool')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('real')){
+    if (type.includes('real')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('bit')){
+    if (type.includes('bit')) {
         return 'z.number().nullable()';
     }
-    if(type.includes('blob')){
+    if (type.includes('blob')) {
         return 'z.any()';
     }
-    if(type.includes('text')){
+    if (type.includes('text')) {
         return 'z.string().nullable()';
     }
-    if(type.includes('uniqueidentifier')){
+    if (type.includes('uniqueidentifier')) {
         return 'z.string().nullable()';
     }
-    if(type === ""){
+    if (type === "") {
         return 'z.string().nullable()';
     }
 

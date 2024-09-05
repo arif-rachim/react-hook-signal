@@ -15,8 +15,8 @@ export const Button = forwardRef(function Button(props: DetailedHTMLProps<Button
             backgroundColor: 'rgba(0,0,0,0.5)',
             color: 'rgba(255,255,255,0.9)',
             borderRadius: 20,
-            boxShadow: isOnPress ? '0px 5px 5px -3px rgba(0,0,0,0.5) inset' : isHovered ? '0px 5px 8px -3px rgba(255,255,255,0.2) inset' :  'unset',
-            transition : 'box-shadow 100ms ease-in-out',
+            boxShadow: isOnPress ? '0px 5px 5px -3px rgba(0,0,0,0.5) inset' : isHovered ? '0px 5px 8px -3px rgba(255,255,255,0.2) inset' : 'unset',
+            transition: 'box-shadow 100ms ease-in-out',
             padding: '5px 10px'
         };
         return {...defaultStyle, ...style}

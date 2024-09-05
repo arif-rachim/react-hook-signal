@@ -1,10 +1,9 @@
-
 /**
  * Image to display fault RedX
  * @return {*}
  * @constructor
  */
-export function RedX({size = 13}:{size?:number}) {
+export function RedX({size = 13}: { size?: number }) {
     return <svg viewBox="0 0 19 19" width={size} height={size}>
         <rect x="-0.394" y="8.087" transform="matrix(0.6753 -0.7375 0.7375 0.6753 -3.9226 10.0912)" fill="#FF0000"
               width="19.788" height="2.827"/>
@@ -18,7 +17,7 @@ export function RedX({size = 13}:{size?:number}) {
  * @return {*}
  * @constructor
  */
-export function Dash({size = 13}:{size:number}) {
+export function Dash({size = 13}: { size: number }) {
     return <svg viewBox="0 0 19 19" width={size} height={size}>
         <rect x="1" y="8" fill="#FF0000" width="17" height="3"/>
     </svg>
@@ -30,7 +29,7 @@ export function Dash({size = 13}:{size:number}) {
  * @return {*}
  * @constructor
  */
-export function Diagonal({size = 13}:{size:number}) {
+export function Diagonal({size = 13}: { size: number }) {
     return <svg width={size} height={size} viewBox="0 0 19 19">
         <rect x="-0.394" y="8.087" transform="matrix(0.6753 -0.7375 0.7375 0.6753 -3.9226 10.0912)" fill="#FF0000"
               width="19.788" height="2.827"/>
@@ -42,7 +41,7 @@ export function Diagonal({size = 13}:{size:number}) {
  * @return {*}
  * @constructor
  */
-export function CircleX({size = 13}:{size:number}) {
+export function CircleX({size = 13}: { size: number }) {
     return <svg width={size} height={size} viewBox="0 0 19 19">
         <rect x="2.818" y="8.545" transform="matrix(0.6753 -0.7375 0.7375 0.6753 -3.9223 10.0913)" fill="#FF0000"
               width="13.364" height="1.91"/>
@@ -62,7 +61,7 @@ export function CircleX({size = 13}:{size:number}) {
  * @return {*}
  * @constructor
  */
-export function CircleN({size = 13}:{size:number}) {
+export function CircleN({size = 13}: { size: number }) {
     return <svg width={size} height={size} viewBox="0 0 19 19">
         <g>
             <path fill="#FF0000" d="M9.499,0.241c-5.114,0-9.258,4.144-9.258,9.259c0,5.115,4.144,9.259,9.258,9.259
@@ -80,7 +79,7 @@ export function CircleN({size = 13}:{size:number}) {
  * @return {*}
  * @constructor
  */
-export function CircleC({size = 13}:{size:number}) {
+export function CircleC({size = 13}: { size: number }) {
     return <svg width={size} height={size} viewBox="0 0 19 19">
         <g>
             <path fill="#FF0000" d="M9.499,0.241c-5.114,0-9.258,4.144-9.258,9.259c0,5.115,4.144,9.259,9.258,9.259
@@ -105,7 +104,7 @@ export function CircleC({size = 13}:{size:number}) {
  * @return {*}
  * @constructor
  */
-export function CircleB({size = 13}:{size:number}) {
+export function CircleB({size = 13}: { size: number }) {
     return <svg width={size} height={size} viewBox="0 0 19 19">
         <g>
             <path fill="#FF0000" d="M9.499,0.241c-5.114,0-9.258,4.144-9.258,9.259c0,5.115,4.144,9.259,9.258,9.259
@@ -130,7 +129,7 @@ export function CircleB({size = 13}:{size:number}) {
 }
 
 
-export function faultToIcon(status:string, size:number = 17) {
+export function faultToIcon(status: string, size: number = 17) {
     status = status.toUpperCase();
     switch (status) {
         case '-' :
@@ -152,7 +151,7 @@ export function faultToIcon(status:string, size:number = 17) {
     }
 }
 
-export function faultToIconByStatusId(statusId:number, size:number = 17) {
+export function faultToIconByStatusId(statusId: number, size: number = 17) {
     switch (statusId) {
         case 30:
             return <Diagonal size={size}/>;

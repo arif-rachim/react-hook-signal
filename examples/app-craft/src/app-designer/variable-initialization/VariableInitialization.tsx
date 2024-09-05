@@ -10,6 +10,7 @@ import {callableInitialization} from "./callableSchemaInitialization.ts";
 import {fetcherInitialization} from "./fetcherSchemaInitialization.ts";
 import {queryInitialization} from "./queryInitialization.ts";
 import {createContext, PropsWithChildren} from "react";
+import {QueryTypeResult} from "../query-grid/QueryGrid.tsx";
 import untrack = Signal.subtle.untrack;
 
 const db = dbSchemaInitialization()
@@ -53,7 +54,7 @@ function validateVariables(variableInstances: Array<VariableInstance>, variableV
 }
 
 function initializeVariables(props: {
-    navigate: (path:string,param?:unknown) => Promise<void>,
+    navigate: (path: string, param?: unknown) => Promise<void>,
     variables: Array<Variable>,
     variableInitialValue: Record<string, unknown>,
     allVariablesSignalInstance: Signal.State<Array<VariableInstance>>,
@@ -146,13 +147,7 @@ function initializeVariables(props: {
 }
 
 
-export type QueryType = (inputs?: Record<string, unknown>, page?: number) => Promise<{
-    error?: string,
-    data: Record<string, number | string | Uint8Array | null>[],
-    columns: string[],
-    totalPage: number,
-    currentPage: number
-}>
+export type QueryType = (inputs?: Record<string, unknown>, page?: number) => Promise<QueryTypeResult>
 
 export type FetchType = (inputs?: Record<string, unknown>) => Promise<Record<string, unknown> & { error?: string }>
 export type FormulaDependencyParameter = {
@@ -260,13 +255,15 @@ export function VariableInitialization(props: PropsWithChildren) {
         app.call = callableInitialization({
             allCallables: allApplicationCallablesSignal.get(),
             app,
-            page
+            page,
+            navigate
         })
 
         page.call = callableInitialization({
             allCallables: allPageCallablesSignal.get(),
             app,
-            page
+            page,
+            navigate
         })
         return {app, page};
     });

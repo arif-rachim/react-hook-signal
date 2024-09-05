@@ -7,7 +7,7 @@ export function StylePanel() {
     return <>
         <CollapsibleLabelContainer label={'Alignment'} styleContent={{overflowX: 'hidden'}}>
             <div style={{display: 'flex', gap: 10}}>
-                <VerticalHorizonPropertyEditor label={'Direction'} style={{width:85}}/>
+                <VerticalHorizonPropertyEditor label={'Direction'} style={{width: 85}}/>
                 <NumericalPercentagePropertyEditor property={'gap'} label={'Gap'} style={{width: 85}}/>
             </div>
             <div style={{display: 'flex', gap: 10}}>
@@ -63,7 +63,6 @@ export function StylePanel() {
                                                    styleLabel={{display: 'none'}}/>
             </div>
         </CollapsibleLabelContainer>
-
 
 
     </>

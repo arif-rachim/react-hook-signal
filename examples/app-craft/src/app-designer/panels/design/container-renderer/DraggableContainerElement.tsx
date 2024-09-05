@@ -168,7 +168,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = isEmpty(container?.parent);
-        const styleFromSignal:CSSProperties = {
+        const styleFromSignal: CSSProperties = {
             minWidth: container?.properties?.defaultStyle?.minWidth ?? 24,
             minHeight: container?.properties?.defaultStyle?.minHeight ?? 24,
 
@@ -206,12 +206,14 @@ export function DraggableContainerElement(props: { container: Container }) {
         if (mode === 'design' && isContainer) {
             (styleFromSignal as CSSProperties).border = '1px dashed rgba(0,0,0,0.1)';
         }
-        function toInt(text:unknown){
-            if(typeof text === 'string'){
+
+        function toInt(text: unknown) {
+            if (typeof text === 'string') {
                 return parseInt(text)
             }
             return -1;
         }
+
         const MIN_SPACE = 1;
         if (mode === 'design' && isContainer) {
             styleFromSignal.minHeight = 24;
@@ -240,7 +242,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         onDragEnd,
         onMouseOver,
         onClick: onSelected,
-        container : props.container,
+        container: props.container,
         ['data-element-id']: props.container?.id
     };
     if (elementsLib && elementsLib[containerProp?.type]) {

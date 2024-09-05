@@ -31,12 +31,14 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
             element.setAttribute('data-element-id', propsRef.current["data-element-id"]);
         }
     }, [Component]);
-    const {style,...componentProperties} = componentProps;
+    const {style, ...componentProperties} = componentProps;
     const defaultStyle = (style ?? {}) as CSSProperties;
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <ErrorBoundary container={container}>
-            <Component ref={ref} key={container?.id} container={container} data-element-id={elementProps["data-element-id"]} {...componentProperties} style={{...elementProps.style,...defaultStyle}}/>
+            <Component ref={ref} key={container?.id} container={container}
+                       data-element-id={elementProps["data-element-id"]} {...componentProperties}
+                       style={{...elementProps.style, ...defaultStyle}}/>
         </ErrorBoundary>
     </>
 }

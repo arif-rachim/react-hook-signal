@@ -27,7 +27,7 @@ export function ToolBar() {
         allPagesSignal
     } = useAppContext<AppDesignerContext>();
     const {selectedPanelSignal, panelsSignal} = useContext(DashboardContext);
-    const toolbarRef = useRef<HTMLDivElement|null>(null);
+    const toolbarRef = useRef<HTMLDivElement | null>(null);
     const containerSignal = useSelectedDragContainer();
     const updatePage = useUpdatePageSignal();
 
@@ -47,7 +47,7 @@ export function ToolBar() {
         const displayMode = uiDisplayModeSignal.get();
         const isDesignPanel = centerPanelComputed.get()?.tag?.type === 'DesignPanel';
         const element = toolbarRef.current;
-        if(element === undefined || element === null){
+        if (element === undefined || element === null) {
             return;
         }
         if (!isDesignPanel) {
@@ -67,7 +67,7 @@ export function ToolBar() {
             element.style.display = 'none';
             return;
         }
-        const pageRootId = (allPagesSignal.get().find(p => p.id === activePageIdSignal.get())?.containers??[]).find(c => isEmpty(c.parent))?.id
+        const pageRootId = (allPagesSignal.get().find(p => p.id === activePageIdSignal.get())?.containers ?? []).find(c => isEmpty(c.parent))?.id
         const anchorElement = document.querySelector(`[data-element-id="${container.id}"]`);
         const pageRootElement = document.querySelector(`[data-element-id="${pageRootId}"]`);
         if (anchorElement === null) {
@@ -76,25 +76,25 @@ export function ToolBar() {
         }
         const resizeObserver = new ResizeObserver(() => {
             const contentRect = anchorElement.getBoundingClientRect();
-            if(contentRect){
+            if (contentRect) {
                 element.style.display = 'flex';
                 element.style.top = `${contentRect.top - 15}px`;
                 element.style.left = `${contentRect.left + contentRect.width - 70}px`;
             }
         })
         resizeObserver.observe(anchorElement);
-        if(pageRootElement){
+        if (pageRootElement) {
             resizeObserver.observe(pageRootElement);
         }
 
         return () => {
-            if(resizeObserver && anchorElement){
+            if (resizeObserver && anchorElement) {
                 resizeObserver.unobserve(anchorElement)
             }
-            if(resizeObserver && pageRootElement){
+            if (resizeObserver && pageRootElement) {
                 resizeObserver.unobserve(pageRootElement)
             }
-            if(resizeObserver){
+            if (resizeObserver) {
                 resizeObserver.disconnect();
             }
         }
@@ -174,7 +174,8 @@ export function ToolBar() {
         padding: '3px 5px',
         borderRadius: 5,
         color: 'white',
-        fontSize: 18}} onClick={preventClick} {...elementProps}>
+        fontSize: 18
+    }} onClick={preventClick} {...elementProps}>
         <MdArrowUpward onClick={onFocusUp}/>
         <MdDragIndicator/>
         <MdCancel onClick={onDelete}/>

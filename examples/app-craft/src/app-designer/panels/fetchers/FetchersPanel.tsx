@@ -1,6 +1,6 @@
 import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
-import {notifiable} from "react-hook-signal";
+import {notifiable, useSignal} from "react-hook-signal";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
 import {Fetcher} from "../../AppDesigner.tsx";
@@ -13,10 +13,11 @@ import {useShowModal} from "../../../modal/useShowModal.ts";
 import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 
-export const createFetcherPanel = (scope:'page'|'application') => {
+export const createFetcherPanel = (scope: 'page' | 'application') => {
     return function FetchersPanel() {
+        const focusedItemSignal = useSignal<string>('');
         const context = useAppContext();
-        const {allPageFetchersSignal,allApplicationFetchersSignal} = context;
+        const {allPageFetchersSignal, allApplicationFetchersSignal} = context;
         const allFetchersSignal = scope === 'application' ? allApplicationFetchersSignal : allPageFetchersSignal;
 
         const updatePage = useUpdatePageSignal();
@@ -31,11 +32,11 @@ export const createFetcherPanel = (scope:'page'|'application') => {
             })
             if (deleteVariableConfirm === 'Yes') {
                 const fetchers = allFetchersSignal.get().filter(i => i.id !== fetcher.id);
-                if(scope === 'application'){
+                if (scope === 'application') {
                     updateApplication(app => {
                         app.fetchers = fetchers;
                     })
-                }else{
+                } else {
                     updatePage({type: 'fetcher', fetchers: fetchers})
                 }
             }
@@ -51,27 +52,49 @@ export const createFetcherPanel = (scope:'page'|'application') => {
                 title: fetcher ? `Edit ${fetcher.name}` : `Add Fetcher`,
                 Icon: Icon.Component,
                 id: panelId,
-                tag : {
-                    type : 'FetcherEditorPanel'
+                tag: {
+                    type: 'FetcherEditorPanel'
                 },
                 visible: () => true
             })
         }
 
-        return <div style={{display:'flex',flexDirection:'column',padding:10}}>
-            <Button
-                style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}
-                onClick={() => editFetcher()}
-            >
-                {'Add Fetcher'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <MdAdd style={{fontSize: 20}}/>
-                </div>
-            </Button>
+        return <div style={{display: 'flex', flexDirection: 'column'}}>
+            <div style={{display: 'flex', padding: 10}}>
+                <Button
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexGrow: 1,
+                        gap: 5,
+                        justifyContent: 'center',
+                        padding: '0px 10px 2px 10px',
+                        background: 'rgba(0,0,0,0.0)',
+                        border: '1px solid rgba(0,0,0,0.2)',
+                        color: '#333',
+                    }}
+                    onClick={() => editFetcher()}
+                >
+                    {'Add Fetcher'}
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <MdAdd style={{fontSize: 20}}/>
+                    </div>
+                </Button>
+            </div>
             <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                 {() => {
+                    const focusedItem = focusedItemSignal.get();
                     return allFetchersSignal.get().map(fetcher => {
-                        return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={fetcher.id}>
+                        const isFocused = fetcher.id === focusedItem;
+                        return <div style={{
+                            display: 'flex',
+                            gap: 5,
+                            padding: '0px 10px 2px 10px',
+                            backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                        }} key={fetcher.id} onClick={() => {
+                            focusedItemSignal.set(fetcher.id);
+                            editFetcher(fetcher)
+                        }}>
                             <notifiable.div>
                                 {() => {
                                     const allErrors = context.allErrorsSignal.get();
@@ -99,14 +122,6 @@ export const createFetcherPanel = (scope:'page'|'application') => {
                                 justifyContent: 'center',
                             }} onClick={() => deleteFetcher(fetcher)}>
                                 <Icon.Delete style={{fontSize: 18}}/>
-                            </div>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }} onClick={() => editFetcher(fetcher)}>
-                                <Icon.Detail style={{fontSize: 18}}/>
                             </div>
                         </div>
                     })

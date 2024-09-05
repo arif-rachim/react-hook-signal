@@ -12,25 +12,25 @@ export function composeTableSchema(table: Table) {
     return `z.object({\n\t${schema.join(',\n\t')}\n})`
 }
 
-export function composeArraySchema(data:Array<unknown>){
-    const schema:Record<string, string> = {};
+export function composeArraySchema(data: Array<unknown>) {
+    const schema: Record<string, string> = {};
 
-    for(const i of data){
+    for (const i of data) {
         const item = i as Record<string, string>;
-        Object.keys(item).forEach(key=>{
+        Object.keys(item).forEach(key => {
             // we loop it first
             let type = 'any';
-            if(typeof item[key] === 'number'){
+            if (typeof item[key] === 'number') {
                 type = 'number'
-            }else if(typeof item[key] === 'string'){
+            } else if (typeof item[key] === 'string') {
                 type = 'string'
             }
-            if(!(key in schema)){
+            if (!(key in schema)) {
                 schema[key] = type;
-            }else{
+            } else {
                 const prevSchemaIsNull = schema[key] === 'any';
                 const nextTypeIsNotNull = type === 'any';
-                if(prevSchemaIsNull && nextTypeIsNotNull){
+                if (prevSchemaIsNull && nextTypeIsNotNull) {
                     schema[key] = type
                 }
             }
@@ -38,9 +38,9 @@ export function composeArraySchema(data:Array<unknown>){
     }
     return `z.object({\n\t${Object.keys(schema).map(k => {
         const zodType = {
-            'any' : 'z.any()',
-            'number' : 'z.number().optional()',
-            'string' : 'z.string().optional()'
+            'any': 'z.any()',
+            'number': 'z.number().optional()',
+            'string': 'z.string().optional()'
         }
         const type = schema[k] as keyof typeof zodType;
         return `${k}:${zodType[type]}`;
@@ -89,7 +89,7 @@ export function dbSchemaInitialization() {
 
     async function read(tableName: string, item: Record<string, SqlValue>): Promise<Array<Record<string, SqlValue>>> {
         const whereCondition = Object.keys(item).map(k => `${k} = ?`).join(' AND ').trim();
-        const query = `SELECT * FROM ${tableName} ${whereCondition ? `WHERE ${whereCondition}` :'' }`
+        const query = `SELECT * FROM ${tableName} ${whereCondition ? `WHERE ${whereCondition}` : ''}`
         const queryResult = await sqlite({type: 'executeQuery', query: query, params: Object.values(item)});
         if (queryResult.errors) {
             console.error(queryResult.errors);

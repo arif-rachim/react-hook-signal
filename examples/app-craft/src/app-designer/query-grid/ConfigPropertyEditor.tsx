@@ -13,6 +13,8 @@ import {Container} from "../AppDesigner.tsx";
 import {queryGridColumnsTemporalColumns} from "./QueryGrid.tsx";
 import {PageInputSelector} from "../page-selector/PageInputSelector.tsx";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
+import {MdOutlineCheckBox, MdOutlineCheckBoxOutlineBlank} from "react-icons/md";
+import {IoMdCheckbox} from "react-icons/io";
 
 function getFormula(container: Container | undefined, propertyName: string) {
     if (container && container.properties[propertyName]) {
@@ -88,32 +90,76 @@ function EditColumnConfigFormula(props: {
 }) {
     const {columns, formula, closePanel} = props;
     const [config, setConfig] = useState<ColumnsConfig>({});
-
+    const [allHiddenStatus, setAllHiddenStatus] = useState<ThreeState>('no');
     useEffect(() => {
         if (formula) {
-            try {
-                const module = {exports: {}};
-                const fun = new Function('module', formula);
-                fun.call(null, module)
-                setConfig(module.exports);
-            } catch (err) {
-                console.error(err);
-            }
+            setTimeout(() => {
+                try {
+                    const module = {exports: {}};
+                    const fun = new Function('module', formula);
+                    fun.call(null, module)
+                    setConfig(module.exports);
+                } catch (err) {
+                    console.error(err);
+                }
+            }, 100)
+
         }
     }, [formula]);
+    useEffect(() => {
+        if (allHiddenStatus === 'yes') {
+            setConfig(oldConfig => {
+                if (columns) {
+                    const clone = {...oldConfig};
+                    for (const col of columns) {
+                        clone[col] = {...clone[col]};
+                        clone[col].hidden = true;
+                    }
+                    return clone;
+                }
 
-    return <div style={{display: 'flex', flexDirection: 'column', padding: 10, gap: 10}}>
-        <div style={{display: 'table'}}>
-            <div style={{display: 'table-row'}}>
+                return oldConfig;
+            })
+        }
+        if (allHiddenStatus === 'no') {
+            setConfig(oldConfig => {
+                if (columns) {
+                    const clone = {...oldConfig};
+                    for (const col of columns) {
+                        clone[col] = {...clone[col]};
+                        clone[col].hidden = false;
+                    }
+                    return clone;
+                }
+                return oldConfig;
+            })
+        }
+    }, [allHiddenStatus, columns]);
+    return <div
+        style={{
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '0px 10px',
+            gap: 10,
+            overflow: 'auto',
+            maxHeight: '100%'
+        }}>
+
+        <div style={{display: 'table', overflowY: 'auto', height: '100%'}}>
+            <div style={{display: 'table-row', position: 'sticky', top: 0, backgroundColor: 'white'}}>
                 <div style={{display: 'table-cell', padding: '0px 5px'}}>
                 </div>
-                <div style={{display: 'table-cell', padding: '0px 5px'}}>
-                    Is Hidden
+                <div style={{display: 'table-cell', padding: '10px 5px'}}>
+                    <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', paddingRight: 1}}>
+                        <div style={{paddingBottom: 2}}>Is Hidden</div>
+                        <InputThreeStateCheckbox value={allHiddenStatus} onChange={setAllHiddenStatus}
+                                                 style={{fontSize: 17, color: 'rgba(0,0,0,0.6)'}}/>
+                    </div>
                 </div>
                 <div style={{display: 'table-cell', padding: '0px 5px'}}>
                     Width
                 </div>
-                <div style={{display: 'table-cell', padding: '0px 5px'}}>
+                <div style={{display: 'table-cell', padding: '0px 5px', width: 300}}>
                     Renderer
                 </div>
                 <div style={{display: 'table-cell', padding: '0px 5px'}}>
@@ -128,7 +174,6 @@ function EditColumnConfigFormula(props: {
                     title: undefined,
                     rendererPageId: undefined
                 };
-
                 return <div key={col} style={{display: 'table-row'}}>
                     <div style={{display: 'table-cell', padding: '0px 5px'}}>
                         {col}
@@ -136,10 +181,10 @@ function EditColumnConfigFormula(props: {
                     <div style={{
                         display: 'table-cell',
                         padding: '0px 5px',
-                        textAlign: 'center',
+                        textAlign: 'right',
                         verticalAlign: 'center'
                     }}>
-                        <input type={"checkbox"} style={{transform: 'scale(1.2)'}} checked={conf.hidden}
+                        <input type={"checkbox"} checked={conf.hidden}
                                onChange={(e) => {
                                    const value = e.target.checked;
                                    setConfig(old => {
@@ -186,7 +231,6 @@ function EditColumnConfigFormula(props: {
                             padding: '0px 5px',
                             borderRight: 'unset',
                             borderBottom: isLastIndex ? BORDER : 'unset',
-                            width: 120
                         }}
                                            chipColor={'rgba(0,0,0,0)'}
                                            onChange={(value) => {
@@ -221,7 +265,16 @@ function EditColumnConfigFormula(props: {
             })}
 
         </div>
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 5}}>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            gap: 5,
+            position: 'sticky',
+            bottom: 0,
+            background: 'white',
+            padding: 10
+        }}>
             <Button onClick={() => {
                 // here we need to save this convert to formula
                 const formula = `module.exports = ${JSON.stringify(config, null, 2)};`;
@@ -229,5 +282,48 @@ function EditColumnConfigFormula(props: {
             }}>Save</Button>
             <Button onClick={() => props.closePanel()}>Cancel</Button>
         </div>
+    </div>
+}
+
+type ThreeState = 'yes' | 'no' | 'partial';
+
+function InputThreeStateCheckbox(props: {
+    value: ThreeState,
+    onChange: (param: ThreeState) => void,
+    style: CSSProperties
+}) {
+    const {value, onChange, style} = props;
+    const [val, setVal] = useState<ThreeState>(value);
+
+    function onClick() {
+        if (val === 'yes') {
+            setVal('no');
+            onChange('no');
+        }
+        if (val === 'no') {
+            setVal('yes');
+            onChange('yes');
+        }
+        if (val === 'partial') {
+            setVal('no');
+            onChange('no');
+        }
+    }
+
+    useEffect(() => {
+        setVal(value);
+    }, [value]);
+    let Component = IoMdCheckbox;
+    if (val === 'yes') {
+        Component = IoMdCheckbox
+    }
+    if (val === 'no') {
+        Component = MdOutlineCheckBoxOutlineBlank
+    }
+    if (val === 'partial') {
+        Component = MdOutlineCheckBox;
+    }
+    return <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', ...style}} onClick={onClick}>
+        <Component/>
     </div>
 }

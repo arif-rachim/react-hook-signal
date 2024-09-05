@@ -27,11 +27,11 @@ import {
 } from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
 import {RiPagesLine} from "react-icons/ri";
-import {BiReset} from "react-icons/bi";
+import {BiChevronDown, BiChevronRight, BiReset} from "react-icons/bi";
 import {HiCollection, HiViewBoards} from "react-icons/hi";
 import {GoDatabase} from "react-icons/go";
 import {SiAzurefunctions} from "react-icons/si";
-import {FaCubes, FaHollyBerry} from "react-icons/fa6";
+import {FaCubes, FaFile, FaFolder, FaHollyBerry} from "react-icons/fa6";
 import {RedX} from "../components/fault-status-icon/FaultStatusIcon.tsx";
 
 export const Icon = {
@@ -56,7 +56,7 @@ export const Icon = {
     Page: RiPagesLine,
     Component: FaCubes,
     Variable: FaHollyBerry,
-    ApplicationVariable : FaHollyBerry,
+    ApplicationVariable: FaHollyBerry,
     Style: MdOutlineStyle,
     Property: TbJumpRope,
     Close: MdClose,
@@ -74,9 +74,13 @@ export const Icon = {
     Row: HiViewBoards,
     Title: MdTitle,
     Database: GoDatabase,
-    Query : TbDatabaseSearch,
-    Function : SiAzurefunctions,
-    Container : AiOutlineGroup,
-    Grid : IoGrid,
-    FaultIcon : RedX
+    Query: TbDatabaseSearch,
+    Function: SiAzurefunctions,
+    Container: AiOutlineGroup,
+    Grid: IoGrid,
+    FaultIcon: RedX,
+    Folder: FaFolder,
+    File: FaFile,
+    ChevronRight: BiChevronRight,
+    ChevronDown: BiChevronDown
 }

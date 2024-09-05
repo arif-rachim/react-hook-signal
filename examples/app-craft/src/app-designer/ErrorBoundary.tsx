@@ -15,7 +15,8 @@ interface State {
 
 class ErrorBoundary extends Component<Props, State> {
     container?: Container;
-    allContainers? : Array<Container>;
+    allContainers?: Array<Container>;
+
     constructor(props: Props) {
         super(props);
         this.container = props.container;
@@ -31,12 +32,12 @@ class ErrorBoundary extends Component<Props, State> {
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         // You can also log the error to an error reporting service
         // this.setState({hasError: true, errorInfo: errorInfo, error: error});
-        console.log(error,errorInfo);
+        console.log(error, errorInfo);
     }
 
     render() {
         if (this.state.hasError) {
-            const text = getPath(this.container,this.allContainers);
+            const text = getPath(this.container, this.allContainers);
             return (
                 <div style={{padding: '20px 50px'}}>
                     <h1>Something went wrong.</h1>
@@ -53,10 +54,10 @@ class ErrorBoundary extends Component<Props, State> {
 
 }
 
-function getPath(container?: Container,allContainers?:Array<Container>):string {
-    const parent  = (allContainers ?? []).find(i => i.id === container?.parent);
-    if(parent) {
-        return getPath(parent,allContainers) + '/'+container?.type
+function getPath(container?: Container, allContainers?: Array<Container>): string {
+    const parent = (allContainers ?? []).find(i => i.id === container?.parent);
+    if (parent) {
+        return getPath(parent, allContainers) + '/' + container?.type
     }
     return container?.type ?? '';
 }

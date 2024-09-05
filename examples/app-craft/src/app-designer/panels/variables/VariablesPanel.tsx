@@ -5,8 +5,7 @@ import {Variable, VariableType} from "../../AppDesigner.tsx";
 import {VariableEditorPanel} from "./editor/VariableEditorPanel.tsx";
 import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
 import {sortSignal} from "../../sortSignal.ts";
-import {notifiable, useComputed} from "react-hook-signal";
-import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
+import {notifiable, useSignal} from "react-hook-signal";
 import {Button} from "../../button/Button.tsx";
 import {MdAdd} from "react-icons/md";
 import {colors} from "stock-watch/src/utils/colors.ts";
@@ -18,11 +17,11 @@ import {useAppContext} from "../../hooks/useAppContext.ts";
 /**
  * Represents a panel for managing variables.
  */
-export const createVariablePanel = (scope:'page'|'application') => {
+export const createVariablePanel = (scope: 'page' | 'application') => {
     return function VariablesPanel() {
-
+        const focusedItemSignal = useSignal<string>('');
         const context = useAppContext<AppDesignerContext>();
-        const {allPageVariablesSignal,allApplicationVariablesSignal} = context;
+        const {allPageVariablesSignal, allApplicationVariablesSignal} = context;
         const allVariablesSignal = scope === 'application' ? allApplicationVariablesSignal : allPageVariablesSignal;
 
         const updatePage = useUpdatePageSignal();
@@ -34,14 +33,15 @@ export const createVariablePanel = (scope:'page'|'application') => {
             addPanel({
                 position: 'mainCenter',
                 component: () => {
-                    return <VariableEditorPanel variableId={variable?.id} defaultType={forType} panelId={panelId} scope={scope}/>
+                    return <VariableEditorPanel variableId={variable?.id} defaultType={forType} panelId={panelId}
+                                                scope={scope}/>
                 },
                 title: `${variable?.name ? variable?.name : `Add ${forType}`}`,
                 Icon: Icon.Component,
                 id: panelId,
                 tag: {
                     variableId: panelId,
-                    type : 'VariableEditorPanel'
+                    type: 'VariableEditorPanel'
                 },
                 visible: () => true
             })
@@ -58,94 +58,115 @@ export const createVariablePanel = (scope:'page'|'application') => {
             }
         }
 
-        const stateVariableList = useComputed(() => {
-            return allVariablesSignal.get().filter(i => i.type === 'state').map(renderVariableItem(deleteVariable, editVariable, 'state', context));
-        })
-        const computedVariableList = useComputed(() => {
-            return allVariablesSignal.get().filter(i => i.type === 'computed').map(renderVariableItem(deleteVariable, editVariable, 'computed', context));
-        })
-        const effectVariableList = useComputed(() => {
-            return allVariablesSignal.get().filter(i => i.type === 'effect').map(renderVariableItem(deleteVariable, editVariable, 'effect', context));
-        })
-
-        return <>
-            <CollapsibleLabelContainer label={'State'}>
+        return <div style={{display: 'flex', flexDirection: 'column'}}>
+            <div style={{display: 'flex', padding: 10}}>
                 <Button onClick={() => editVariable('state')}
-                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
-                    {'Add Signal State'}
+                        style={{
+                            display: 'flex',
+                            flexGrow: 1,
+                            alignItems: 'center',
+                            gap: 5,
+                            justifyContent: 'center',
+                            padding: '0px 5px 2px 5px',
+                            background: 'rgba(0,0,0,0.0)',
+                            border: '1px solid rgba(0,0,0,0.2)',
+                            color: '#333',
+                            borderTopRightRadius: 0,
+                            borderBottomRightRadius: 0
+                        }}>
+                    {'Add State'}
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <MdAdd style={{fontSize: 20}}/>
                     </div>
                 </Button>
-                <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                    {stateVariableList}
-                </notifiable.div>
-            </CollapsibleLabelContainer>
-            <CollapsibleLabelContainer label={'Computed'}>
                 <Button onClick={() => editVariable('computed')}
-                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
-                    {'Add Signal Computed'}
+                        style={{
+                            display: 'flex',
+                            flexGrow: 1,
+                            alignItems: 'center',
+                            gap: 5,
+                            justifyContent: 'center',
+                            padding: '0px 5px 2px 5px',
+                            background: 'rgba(0,0,0,0.0)',
+                            border: '1px solid rgba(0,0,0,0.2)',
+                            color: '#333',
+                            borderRadius: 0,
+                            borderLeft: 'unset',
+                            borderRight: 'unset'
+                        }}>
+                    {'Add Computed'}
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <MdAdd style={{fontSize: 20}}/>
                     </div>
                 </Button>
-                <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                    {computedVariableList}
-                </notifiable.div>
-            </CollapsibleLabelContainer>
-            <CollapsibleLabelContainer label={'Effect'}>
                 <Button onClick={() => editVariable('effect')}
-                        style={{display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', padding:'0px 10px 2px 10px',background:'rgba(0,0,0,0.0)',border:'1px solid rgba(0,0,0,0.2)',color:'#333',marginBottom:5}}>
-                    {'Add Signal Effect'}
+                        style={{
+                            display: 'flex',
+                            flexGrow: 1,
+                            alignItems: 'center',
+                            gap: 5,
+                            justifyContent: 'center',
+                            padding: '0px 5px 2px 5px',
+                            background: 'rgba(0,0,0,0.0)',
+                            border: '1px solid rgba(0,0,0,0.2)',
+                            color: '#333',
+                            borderTopLeftRadius: 0,
+                            borderBottomLeftRadius: 0
+                        }}>
+                    {'Add Effect'}
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <MdAdd style={{fontSize: 20}}/>
                     </div>
                 </Button>
-                <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                    {effectVariableList}
-                </notifiable.div>
-            </CollapsibleLabelContainer>
-        </>
+            </div>
+            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+                {() => {
+                    const variables = allVariablesSignal.get();
+                    const focusedVariable = focusedItemSignal.get();
+                    return variables.map(variable => {
+                        const isFocused = focusedVariable === variable.id;
+                        return <div style={{
+                            display: 'flex',
+                            gap: 5,
+                            padding: '0px 10px 2px 10px',
+                            backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                        }} key={variable.id} onClick={() => {
+                            focusedItemSignal.set(variable.id);
+                            editVariable('state', variable).then()
+                        }}>
+                            <notifiable.div>
+                                {() => {
+                                    const allErrors = context.allErrorsSignal.get();
+                                    const error = allErrors.find(e => e.type === 'variable' && e.variableId === variable.id);
+                                    if (error) {
+                                        return <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: colors.red
+                                        }}><Icon.Error/></div>
+                                    }
+                                    return <></>
+                                }}
+                            </notifiable.div>
+                            <div style={{
+                                flexGrow: 1,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}>{variable.name}</div>
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }} onClick={() => deleteVariable(variable)}>
+                                <Icon.Delete style={{fontSize: 18}}/>
+                            </div>
+                        </div>
+                    })
+                }}
+            </notifiable.div>
+        </div>
     }
 }
 
-
-function renderVariableItem(deleteVariable: (variable: Variable) => Promise<void>, editVariable: (forType: VariableType, variable?: Variable) => Promise<void>, forType: VariableType, context: AppDesignerContext) {
-
-    return (variable: Variable) => {
-        return <div style={{display: 'flex', gap: 10, padding: '5px 5px'}} key={variable.id}>
-            <notifiable.div>
-                {() => {
-                    const allErrors = context.allErrorsSignal.get();
-                    const error = allErrors.find(e => e.type === 'variable' && e.variableId === variable.id);
-                    if (error) {
-                        return <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: colors.red
-                        }}><Icon.Error/></div>
-                    }
-                    return <></>
-                }}
-            </notifiable.div>
-            <div style={{flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>{variable.name}</div>
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }} onClick={() => deleteVariable(variable)}>
-                <Icon.Delete style={{fontSize: 18}}/>
-            </div>
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }} onClick={() => editVariable(forType, variable)}>
-                <Icon.Detail style={{fontSize: 18}}/>
-            </div>
-        </div>
-    };
-}

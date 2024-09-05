@@ -20,7 +20,7 @@ label, input, button, option, select, body {
     font-size: 14px;
 }
 
-.view-lines.monaco-mouse-cursor-text{
+.view-lines.monaco-mouse-cursor-text {
     font-family: Consolas, "Courier New", monospace !important;
 }
 
@@ -65,5 +65,5 @@ select:focus {
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
-    padding : 5px 10px 5px 5px
+    padding: 5px 10px 5px 5px
 }

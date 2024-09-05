@@ -3,8 +3,8 @@ import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 import {Query} from "../panels/database/service/getTables.ts";
 
-export function useUpdateQueries(scope:'page'|'application') {
-    const {allPageQueriesSignal,allApplicationQueriesSignal} = useAppContext();
+export function useUpdateQueries(scope: 'page' | 'application') {
+    const {allPageQueriesSignal, allApplicationQueriesSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     const updateApplication = useUpdateApplication();
     return function updateQuery(query: Query) {
@@ -15,9 +15,9 @@ export function useUpdateQueries(scope:'page'|'application') {
         } else {
             queries.push({...query});
         }
-        if(scope === 'page'){
+        if (scope === 'page') {
             updatePage({type: 'query', queries: queries});
-        }else{
+        } else {
             updateApplication(original => {
                 original.queries = queries
             })

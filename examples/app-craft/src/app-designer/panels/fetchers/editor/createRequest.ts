@@ -16,9 +16,9 @@ export function createRequest(fetcher: Fetcher, inputs: Record<string, unknown>)
         return (result: Record<string, string>, parameter: FetcherParameter) => {
             const {name, isInput} = parameter;
             let value = parameter.value;
-            try{
+            try {
                 value = JSON.parse(value);
-            }catch(err){
+            } catch (err) {
                 // ignore this if this cannot be parsed
             }
             if (isInput && userInput[name]) {
@@ -42,7 +42,7 @@ export function createRequest(fetcher: Fetcher, inputs: Record<string, unknown>)
     const address = `${url}/${trimSlashes(path.trim())}`
     const requestInit: RequestInit = {
         method: fetcher.method,
-        cache:'no-cache',
+        cache: 'no-cache',
         credentials: 'include',
         headers: fetcher.headers.reduce(toRecord(true, inputs), {
             'Content-Type': fetcher.contentType

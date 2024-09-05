@@ -3,8 +3,8 @@ import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 import {Callable} from "../AppDesigner.tsx";
 
-export function useUpdateCallable(scope:'page'|'application') {
-    const {allPageCallablesSignal,allApplicationCallablesSignal} = useAppContext();
+export function useUpdateCallable(scope: 'page' | 'application') {
+    const {allPageCallablesSignal, allApplicationCallablesSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     const updateApplication = useUpdateApplication();
     return function updateVariable(callable: Callable) {
@@ -15,9 +15,9 @@ export function useUpdateCallable(scope:'page'|'application') {
         } else {
             callables.push({...callable});
         }
-        if(scope === 'page'){
+        if (scope === 'page') {
             updatePage({type: 'callable', callables: callables});
-        }else{
+        } else {
             updateApplication(original => {
                 original.callables = callables
             })

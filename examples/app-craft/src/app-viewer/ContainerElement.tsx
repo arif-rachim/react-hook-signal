@@ -22,8 +22,8 @@ export function ContainerElement(props: { container: Container }) {
     useSignalEffect(() => {
         const container: Container | undefined = containerSignal.get();
         const isRoot = container?.parent === '';
-        const styleFromSignal = {display: 'flex',position: 'relative',...container?.properties?.defaultStyle}
-        if(isRoot){
+        const styleFromSignal = {display: 'flex', position: 'relative', ...container?.properties?.defaultStyle}
+        if (isRoot) {
             styleFromSignal['width'] = styleFromSignal['width'] ?? '100%';
             styleFromSignal['height'] = styleFromSignal['height'] ?? '100%';
         }
@@ -34,7 +34,7 @@ export function ContainerElement(props: { container: Container }) {
     const elementProps: ElementStyleProps = {
         style: computedStyle,
         ['data-element-id']: container?.id ?? '',
-        container : container
+        container: container
     };
     if (elements && elements[container?.type]) {
         return <ElementRenderer container={container} elementProps={elementProps}/>

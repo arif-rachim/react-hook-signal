@@ -10,15 +10,15 @@ export default function CollapsibleLabelContainer(props: PropsWithChildren<{
     styleContent?: CSSProperties,
     defaultOpen?: boolean,
     autoGrowWhenOpen?: boolean,
-    onOpenChange?:(isOpen:boolean) => void
+    onOpenChange?: (isOpen: boolean) => void
 }>) {
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? true);
     const onOpenChange = props.onOpenChange;
     useEffect(() => {
-        if(onOpenChange){
+        if (onOpenChange) {
             onOpenChange(isOpen);
         }
-    }, [isOpen,onOpenChange]);
+    }, [isOpen, onOpenChange]);
     return <LabelContainer label={<>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             {isOpen && <Icon.ArrowDown/>}

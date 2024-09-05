@@ -31,7 +31,7 @@ function DataGroupFC(props: {
     const max_page = 50;
     const {keyId, direction, style: propsStyle, data, component} = props;
     const componentIdSignal = useSignal(component);
-    const {allPagesSignal, elements,applicationSignal} = useAppContext();
+    const {allPagesSignal, elements, applicationSignal} = useAppContext();
 
     const [page, setPage] = useState<Page | undefined>(() => {
         const allPages = allPagesSignal.get();
@@ -58,7 +58,7 @@ function DataGroupFC(props: {
         const page = allPages.find(p => p.id === componentId);
         setPage(page);
     });
-    const dataPerPage = (data ?? []).filter((_,index) => {
+    const dataPerPage = (data ?? []).filter((_, index) => {
         return index < max_page;
     });
     return <div ref={ref as ForwardedRef<HTMLDivElement>} style={style}>

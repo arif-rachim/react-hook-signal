@@ -19,13 +19,20 @@ export type Panel = {
     Icon: IconType,
     component: React.FC,
     position: PanelPosition,
-    visible?: (centerPanelTag?: Record<string, unknown>,selectedPanel?:SelectedPanelType) => boolean
+    visible?: (centerPanelTag?: Record<string, unknown>, selectedPanel?: SelectedPanelType) => boolean
 }
 type SelectedPanelType = {
     [k in PanelPosition]?: string
 }
 
-type PanelType = 'CallableEditorPanel' | 'VariableEditorPanel' | 'TableEditor' | 'ComponentPropertyEditor' | 'FetcherEditorPanel' | 'DesignPanel' | 'QueryEditorPanel'
+type PanelType =
+    'CallableEditorPanel'
+    | 'VariableEditorPanel'
+    | 'TableEditor'
+    | 'ComponentPropertyEditor'
+    | 'FetcherEditorPanel'
+    | 'DesignPanel'
+    | 'QueryEditorPanel'
 
 export type PanelInstance = Panel & {
     id: string,
@@ -71,26 +78,26 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
         const leftPanel = panels.find(p => p.id === selectedPanel.left);
         const leftBottomPanel = panels.find(p => p.id === selectedPanel.leftBottom);
 
-        if (rightPanel && rightPanel.visible && !rightPanel.visible(centerTag,selectedPanel)) {
+        if (rightPanel && rightPanel.visible && !rightPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.right
             isChanged = true;
         }
 
-        if (rightBottomPanel && rightBottomPanel.visible && !rightBottomPanel.visible(centerTag,selectedPanel)) {
+        if (rightBottomPanel && rightBottomPanel.visible && !rightBottomPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.rightBottom
             isChanged = true;
         }
 
-        if (leftPanel && leftPanel.visible && !leftPanel.visible(centerTag,selectedPanel)) {
+        if (leftPanel && leftPanel.visible && !leftPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.left
             isChanged = true;
         }
 
-        if (leftBottomPanel && leftBottomPanel.visible && !leftBottomPanel.visible(centerTag,selectedPanel)) {
+        if (leftBottomPanel && leftBottomPanel.visible && !leftBottomPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.leftBottom
             isChanged = true;
         }
-        if(isChanged){
+        if (isChanged) {
             selectedPanelSignal.set({...selectedPanel});
         }
     })
@@ -158,7 +165,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                          selectedPanelSignal={castSignal(selectedPanelSignal)}
                                          position={'leftBottom'}/>
                         </notifiable.div>
-                        <div style={{display: 'flex', flexGrow: 1,overflow:'auto'}}>
+                        <div style={{display: 'flex', flexGrow: 1, overflow: 'auto'}}>
                             <RenderTabPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
                                             position={'mainCenter'}/>
                         </div>
@@ -193,28 +200,28 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         borderLeft: BORDER,
-                        flexShrink:0
+                        flexShrink: 0
                     }}>
                     {() => {
                         const allPanels = panelsSignal.get();
                         const selectedPanel = selectedPanelSignal.get();
                         const centerTag = allPanels.find(p => p.id === selectedPanel.mainCenter)?.tag;
                         return <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
-                                <RenderIcons panels={allPanels.filter(p => p.position === 'right')}
-                                             value={(selectedPanel.right ?? '') as string}
-                                             onChange={value => {
-                                                 selectedPanelSignal.set({...selectedPanelSignal.get(), right: value})
-                                             }} centerTag={centerTag} selectedPanel={selectedPanel}/>
-                                <div style={{borderTop: BORDER, height: 1}}/>
-                                <RenderIcons panels={allPanels.filter(p => p.position === 'rightBottom')}
-                                             value={(selectedPanel.rightBottom ?? '') as string}
-                                             onChange={value => {
-                                                 selectedPanelSignal.set({
-                                                     ...selectedPanelSignal.get(),
-                                                     rightBottom: value
-                                                 })
-                                             }} centerTag={centerTag} selectedPanel={selectedPanel}/>
-                            </div>
+                            <RenderIcons panels={allPanels.filter(p => p.position === 'right')}
+                                         value={(selectedPanel.right ?? '') as string}
+                                         onChange={value => {
+                                             selectedPanelSignal.set({...selectedPanelSignal.get(), right: value})
+                                         }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                            <div style={{borderTop: BORDER, height: 1}}/>
+                            <RenderIcons panels={allPanels.filter(p => p.position === 'rightBottom')}
+                                         value={(selectedPanel.rightBottom ?? '') as string}
+                                         onChange={value => {
+                                             selectedPanelSignal.set({
+                                                 ...selectedPanelSignal.get(),
+                                                 rightBottom: value
+                                             })
+                                         }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                        </div>
                     }}
                 </notifiable.div>
             </div>
@@ -228,15 +235,15 @@ function RenderIcons(props: {
     value: string,
     onChange: (key?: string) => void,
     centerTag?: Record<string, unknown>,
-    selectedPanel?:SelectedPanelType
+    selectedPanel?: SelectedPanelType
 }) {
-    const {panels, onChange, value, centerTag,selectedPanel} = props;
+    const {panels, onChange, value, centerTag, selectedPanel} = props;
 
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: '10px 5px', gap: 5}}>
         {panels.filter(p => {
             if (p && p.visible) {
-                return p.visible(centerTag,selectedPanel)
+                return p.visible(centerTag, selectedPanel)
             } else {
                 return true;
             }
@@ -281,8 +288,8 @@ function RenderPanel<T extends SelectedPanelType>(props: {
     return <notifiable.div style={{
         display: 'flex',
         flexDirection: 'column',
-        overflow:'auto',
-        flexShrink:0,
+        overflow: 'auto',
+        flexShrink: 0,
     }}>
         {() => {
             const panels = panelsSignal.get();
@@ -290,13 +297,14 @@ function RenderPanel<T extends SelectedPanelType>(props: {
             if (selectedLeftPanelId) {
                 const panel = panels.find(p => p.id === selectedLeftPanelId);
                 const Component = panel?.component ?? EmptyComponent;
-                return <div style={{display: 'flex', flexDirection: 'column',overflow:'auto'}}>
+                return <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', borderTop: BORDER}}>
                     <div style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.05)',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         borderBottom: BORDER
+
                     }}>
                         <div style={{padding: '5px 10px'}}>
                             {panel?.title}
@@ -309,8 +317,8 @@ function RenderPanel<T extends SelectedPanelType>(props: {
                         </RenderIcon>
 
                     </div>
-                    <div style={{display:'flex',flexDirection:'column',overflow:'auto'}}>
-                    <Component/>
+                    <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
+                        <Component/>
                     </div>
                 </div>
             }
@@ -380,7 +388,12 @@ function RenderTabPanel(props: {
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
                 // if its design panel, we need to ensure only one component mounted at a time, so here we use EmptyComponent to replace it
                 const Component = isDesignPanel && !isSelected ? EmptyComponent : panel.component ?? EmptyComponent;
-                return <div style={{display:isSelected ? 'flex':'none',flexDirection:'column',overflow:'auto',flexGrow:1}} key={panel.id} >
+                return <div style={{
+                    display: isSelected ? 'flex' : 'none',
+                    flexDirection: 'column',
+                    overflow: 'auto',
+                    flexGrow: 1
+                }} key={panel.id}>
                     <Component/>
                 </div>
             })}

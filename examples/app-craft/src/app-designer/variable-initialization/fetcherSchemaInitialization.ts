@@ -28,7 +28,7 @@ export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
             return result;
         }, paths)
         const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props?:${type}) => Promise<{error:string,result:${schema}}>`
+        return `${i.name} : (props?:${type}) => Promise<${schema} & {error?:string}>`
     })
 
     return `{${fetchersSchema.join(',')}}`
@@ -36,13 +36,13 @@ export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
 
 export function fetcherInitialization(props: {
     allFetchers: Array<Fetcher>,
-    app : FormulaDependencyParameter,
-    page : FormulaDependencyParameter
+    app: FormulaDependencyParameter,
+    page: FormulaDependencyParameter
 }): Record<string, FetchType> {
 
     const {
         allFetchers,
-        app,page
+        app, page
     } = props;
     const fetchers: Record<string, FetchType> = {};
 

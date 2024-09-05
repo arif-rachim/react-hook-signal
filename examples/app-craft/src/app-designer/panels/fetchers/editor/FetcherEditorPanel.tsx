@@ -169,7 +169,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
         const allVariablesInstance = allVariablesInstanceSignal.get();
         const dependencies = allVariables.map(v => {
             const instance = allVariablesInstance.find(variable => variable.id === v.id)?.instance;
-            return {name:v.name, instance}
+            return {name: v.name, instance}
         }) ?? [];
 
         const module: {
@@ -179,8 +179,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                 method?: 'post' | 'get' | 'put' | 'patch' | 'delete',
                 contentType?: 'application/x-www-form-urlencoded' | 'application/json'
                 path?: string,
-                headers?: Record<string,string>,
-                data?: Record<string,unknown>,
+                headers?: Record<string, string>,
+                data?: Record<string, unknown>,
             }
         } = {exports: {}};
 
@@ -194,14 +194,14 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
             fetcher.contentType = module.exports.contentType ?? fetcher.contentType;
             fetcher.path = module.exports.path ?? fetcher.path;
             fetcher.headers = fetcher.headers.map(h => {
-                if(module.exports.headers && h.name in  module.exports.headers){
-                    return {...h,value:module.exports.headers[h.name]}
+                if (module.exports.headers && h.name in module.exports.headers) {
+                    return {...h, value: module.exports.headers[h.name]}
                 }
                 return h
             });
             fetcher.data = fetcher.data.map(h => {
-                if(module.exports.headers && h.name in  module.exports.headers){
-                    return {...h,value:module.exports.headers[h.name]}
+                if (module.exports.headers && h.name in module.exports.headers) {
+                    return {...h, value: module.exports.headers[h.name]}
                 }
                 return h
             });
@@ -480,7 +480,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                         </div>
                     </Button>
                 </div>
-                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'} showInputParameterColumn={true}/>
+                <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}
+                                  showInputParameterColumn={true}/>
             </CollapsibleLabelContainer>
         </Visible>
 
@@ -493,7 +494,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                     </div>
                 </Button>
             </div>
-            <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'} showInputParameterColumn={true}/>
+            <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}
+                              showInputParameterColumn={true}/>
         </CollapsibleLabelContainer>
         <Visible when={() => testMessages.get().length > 0}>
             <CollapsibleLabelContainer label={'Test Result Log'} autoGrowWhenOpen={true}>
@@ -592,26 +594,26 @@ function extractParams(url: string): Array<string> {
 }
 
 
-export function RenderParameters<T extends Query|Fetcher>(props: {
+export function RenderParameters<T extends Query | Fetcher>(props: {
     nameReadOnly?: boolean,
     fetcherSignal: Signal.State<T>,
     isModified: Signal.State<boolean>,
     type: keyof T,
-    showInputParameterColumn : boolean
+    showInputParameterColumn: boolean
 }) {
     const deleteAble = props.type !== 'paths';
     const notDeleteAble = !deleteAble;
-    const {fetcherSignal, isModified, type, nameReadOnly,showInputParameterColumn} = props;
+    const {fetcherSignal, isModified, type, nameReadOnly, showInputParameterColumn} = props;
 
     const parametersSignal = useComputed<Array<FetcherParameter>>(() => {
         return (fetcherSignal.get()[type] ?? []) as Array<FetcherParameter>
     });
 
-    function onChangeFactory(paramType:keyof FetcherParameter,param: FetcherParameter,transformValue:(val:string) => unknown){
-        return function extracted(event: ChangeEvent<HTMLInputElement|HTMLSelectElement>) {
+    function onChangeFactory(paramType: keyof FetcherParameter, param: FetcherParameter, transformValue: (val: string) => unknown) {
+        return function extracted(event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
             let dom = event.target;
-            let cursorPosition:number|null = null;
-            if('selectionStart' in dom){
+            let cursorPosition: number | null = null;
+            if ('selectionStart' in dom) {
                 cursorPosition = dom.selectionStart;
             }
             const val = dom.value;
@@ -620,10 +622,13 @@ export function RenderParameters<T extends Query|Fetcher>(props: {
             const newArray = [...fetcherTypeValues];
             const paramIndex = newArray.findIndex(p => p.id === param.id)
             newFetcher[type] = newArray as T[keyof T];
-            ((newFetcher[type] ?? []) as Array<FetcherParameter>).splice(paramIndex, 1, {...param,[paramType]: transformValue(val)})
+            ((newFetcher[type] ?? []) as Array<FetcherParameter>).splice(paramIndex, 1, {
+                ...param,
+                [paramType]: transformValue(val)
+            })
             fetcherSignal.set(newFetcher);
             isModified.set(true);
-            if('setSelectionRange' in dom){
+            if ('setSelectionRange' in dom) {
                 setTimeout(() => {
                     dom = dom as HTMLInputElement;
                     dom.setSelectionRange(cursorPosition, cursorPosition);
@@ -654,15 +659,15 @@ export function RenderParameters<T extends Query|Fetcher>(props: {
                     }}>Value
                     </div>
                     {showInputParameterColumn &&
-                    <div style={{
-                        display: 'table-cell',
-                        fontWeight: 'bold',
-                        fontStyle: 'italic',
-                        padding: '0px 10px',
-                        whiteSpace: 'nowrap'
-                    }}>
-                        Input Parameter
-                    </div>
+                        <div style={{
+                            display: 'table-cell',
+                            fontWeight: 'bold',
+                            fontStyle: 'italic',
+                            padding: '0px 10px',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            Input Parameter
+                        </div>
                     }
                     {deleteAble &&
                         <div style={{
@@ -699,7 +704,7 @@ export function RenderParameters<T extends Query|Fetcher>(props: {
                                            e.stopPropagation();
                                        }
                                    }}
-                                   onChange={onChangeFactory('name',param,val => val)}
+                                   onChange={onChangeFactory('name', param, val => val)}
                             />
                         </div>
                         <div style={{display: 'table-cell'}}>
@@ -713,29 +718,29 @@ export function RenderParameters<T extends Query|Fetcher>(props: {
                                        width: '100%',
                                    }}
                                    value={param.value}
-                                   onChange={onChangeFactory('value',param,val => val)}
+                                   onChange={onChangeFactory('value', param, val => val)}
                             />
                         </div>
                         {showInputParameterColumn &&
-                        <div style={{display: 'table-cell', verticalAlign: 'middle'}}>
-                            <select style={{
-                                border: BORDER,
-                                borderTop: isFirstIndex ? BORDER : 'unset',
-                                borderTopRightRadius: notDeleteAble && isFirstIndex ? 20 : 'unset',
-                                borderBottomRightRadius: notDeleteAble && isLastIndex ? 20 : 'unset',
-                                borderRight: notDeleteAble ? BORDER : 'unset',
-                                flexGrow: 1,
-                                padding: '5px 10px 5px 10px',
-                                width: '100%',
-                                margin: 0,
-                            }}
-                                    value={param.isInput ? 'true' : 'false'}
-                                    onChange={onChangeFactory('isInput',param,val => val === 'true')}
-                            >
-                                <option value={'false'}>No</option>
-                                <option value={'true'}>Yes</option>
-                            </select>
-                        </div>
+                            <div style={{display: 'table-cell', verticalAlign: 'middle'}}>
+                                <select style={{
+                                    border: BORDER,
+                                    borderTop: isFirstIndex ? BORDER : 'unset',
+                                    borderTopRightRadius: notDeleteAble && isFirstIndex ? 20 : 'unset',
+                                    borderBottomRightRadius: notDeleteAble && isLastIndex ? 20 : 'unset',
+                                    borderRight: notDeleteAble ? BORDER : 'unset',
+                                    flexGrow: 1,
+                                    padding: '5px 10px 5px 10px',
+                                    width: '100%',
+                                    margin: 0,
+                                }}
+                                        value={param.isInput ? 'true' : 'false'}
+                                        onChange={onChangeFactory('isInput', param, val => val === 'true')}
+                                >
+                                    <option value={'false'}>No</option>
+                                    <option value={'true'}>Yes</option>
+                                </select>
+                            </div>
                         }
                         {deleteAble &&
                             <div style={{display: 'table-cell', verticalAlign: 'middle'}}>

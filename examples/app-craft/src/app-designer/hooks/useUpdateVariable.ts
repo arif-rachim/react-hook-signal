@@ -4,8 +4,8 @@ import {useUpdatePageSignal} from "./useUpdatePageSignal.ts";
 import {useAppContext} from "./useAppContext.ts";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 
-export function useUpdateVariable(scope:'page'|'application') {
-    const {allPageVariablesSignal,allApplicationVariablesSignal} = useAppContext();
+export function useUpdateVariable(scope: 'page' | 'application') {
+    const {allPageVariablesSignal, allApplicationVariablesSignal} = useAppContext();
     const updatePage = useUpdatePageSignal();
     const updateApplication = useUpdateApplication();
     return function updateVariable(variable: Variable) {
@@ -16,9 +16,9 @@ export function useUpdateVariable(scope:'page'|'application') {
         } else {
             variables.push({...variable});
         }
-        if(scope === 'page'){
+        if (scope === 'page') {
             updatePage({type: 'variable', variables: variables.sort(sortSignal)});
-        }else{
+        } else {
             updateApplication(original => {
                 original.variables = variables.sort(sortSignal)
             })

@@ -163,13 +163,13 @@ export default function QueryEditorPanel(props: {
             </LabelContainer>
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, flexShrink: 1, overflow: 'auto'}}>
-            <CollapsibleLabelContainer label={'Query'} style={{overflow: 'unset', flexShrink: 0}}
+            <CollapsibleLabelContainer label={'Query'} style={{overflow: 'auto'}}
                                        styleContent={{padding: '5px 0px', overflow: 'unset'}} autoGrowWhenOpen={true}>
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     minHeight: 250,
-                    flexGrow:1
+                    flexGrow: 1
                 }}>
                     {() => {
                         const callable = querySignal.get();
@@ -198,7 +198,7 @@ export default function QueryEditorPanel(props: {
                                 padding: 10,
                                 borderTop: '1px solid rgba(0,0,0,0.1)',
                                 overflow: 'auto',
-                                minHeight:100
+                                minHeight: 100
                             }}>
                                 <RenderParameters fetcherSignal={querySignal} isModified={isModified}
                                                   type={'parameters'}
@@ -210,7 +210,7 @@ export default function QueryEditorPanel(props: {
                 </notifiable.div>
             </CollapsibleLabelContainer>
 
-            <CollapsibleLabelContainer label={'Result'} style={{overflow: 'auto'}}
+            <CollapsibleLabelContainer label={'Result'} style={{overflow: 'auto', minHeight: '30%'}}
                                        styleContent={{padding: 0, overflow: 'auto'}} autoGrowWhenOpen={true}>
                 <notifiable.div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
                     {() => {
@@ -237,7 +237,7 @@ export default function QueryEditorPanel(props: {
                     display: 'flex',
                     flexDirection: 'column',
                     minHeight: 250,
-                    flexGrow:1
+                    flexGrow: 1
                 }}>
                     {() => {
                         const query = querySignal.get();

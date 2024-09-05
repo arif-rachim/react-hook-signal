@@ -12,7 +12,7 @@ import {
 } from "../../../../utils/justifyContentAlignItems.ts";
 
 
-export function VerticalHorizontalAlignmentPropertyEditor<T extends 'verticalAlign'|'horizontalAlign'>(props: {
+export function VerticalHorizontalAlignmentPropertyEditor<T extends 'verticalAlign' | 'horizontalAlign'>(props: {
     property: T,
     label: string,
     style?: CSSProperties,
@@ -33,11 +33,19 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends 'verticalAli
         }
         const defaultStyle = container.properties.defaultStyle ?? {};
         const type = defaultStyle.flexDirection === 'row' ? 'horizontal' : 'vertical';
-        if(property === 'verticalAlign'){
-            const value = verticalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent});
+        if (property === 'verticalAlign') {
+            const value = verticalAlign({
+                type,
+                alignItems: defaultStyle.alignItems,
+                justifyContent: defaultStyle.justifyContent
+            });
             setValue(value);
-        }else{
-            const value = horizontalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent});
+        } else {
+            const value = horizontalAlign({
+                type,
+                alignItems: defaultStyle.alignItems,
+                justifyContent: defaultStyle.justifyContent
+            });
             setValue(value);
         }
     })
@@ -58,10 +66,28 @@ export function VerticalHorizontalAlignmentPropertyEditor<T extends 'verticalAli
                     selectedContainer.properties.defaultStyle = {...selectedContainer.properties.defaultStyle};
                     const type = selectedContainer.properties.defaultStyle.flexDirection === 'row' ? 'horizontal' : 'vertical';
                     const defaultStyle = selectedContainer.properties.defaultStyle;
-                    const currentVerticalAlign = verticalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent})
-                    const currentHorizontalAlign = horizontalAlign({type,alignItems:defaultStyle.alignItems,justifyContent:defaultStyle.justifyContent});
-                    defaultStyle.alignItems = alignItems({type,verticalAlign:currentVerticalAlign,horizontalAlign:currentHorizontalAlign,[property]:value});
-                    defaultStyle.justifyContent = justifyContent({type,verticalAlign:currentVerticalAlign,horizontalAlign:currentHorizontalAlign,[property]:value});
+                    const currentVerticalAlign = verticalAlign({
+                        type,
+                        alignItems: defaultStyle.alignItems,
+                        justifyContent: defaultStyle.justifyContent
+                    })
+                    const currentHorizontalAlign = horizontalAlign({
+                        type,
+                        alignItems: defaultStyle.alignItems,
+                        justifyContent: defaultStyle.justifyContent
+                    });
+                    defaultStyle.alignItems = alignItems({
+                        type,
+                        verticalAlign: currentVerticalAlign,
+                        horizontalAlign: currentHorizontalAlign,
+                        [property]: value
+                    });
+                    defaultStyle.justifyContent = justifyContent({
+                        type,
+                        verticalAlign: currentVerticalAlign,
+                        horizontalAlign: currentHorizontalAlign,
+                        [property]: value
+                    });
                 })
             }}>
             {dataSource.map(key => {

@@ -61,7 +61,7 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
             justifyContent: 'center',
             backgroundColor: 'rgba(0,0,0,0.05)',
             border: BORDER,
-            width:28,
+            width: 28,
             borderTopRightRadius: 20,
             borderBottomRightRadius: 20
         }}>

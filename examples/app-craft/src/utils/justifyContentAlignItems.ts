@@ -1,6 +1,10 @@
 import {CSSProperties} from "react";
 
-export function justifyContent(container?: {type:'vertical'|'horizontal',verticalAlign:'top'|'center'|'bottom'|'',horizontalAlign:'left'|'center'|'right'|''}): CSSProperties["justifyContent"] {
+export function justifyContent(container?: {
+    type: 'vertical' | 'horizontal',
+    verticalAlign: 'top' | 'center' | 'bottom' | '',
+    horizontalAlign: 'left' | 'center' | 'right' | ''
+}): CSSProperties["justifyContent"] {
     if (container && container.type === 'vertical') {
         if (container.verticalAlign === 'top') {
             return 'flex-start';
@@ -32,7 +36,11 @@ export function justifyContent(container?: {type:'vertical'|'horizontal',vertica
     return ''
 }
 
-export function alignItems(container?: {type:'vertical'|'horizontal',verticalAlign:'top'|'center'|'bottom'|'',horizontalAlign:'left'|'center'|'right'|''}): CSSProperties["alignItems"] {
+export function alignItems(container?: {
+    type: 'vertical' | 'horizontal',
+    verticalAlign: 'top' | 'center' | 'bottom' | '',
+    horizontalAlign: 'left' | 'center' | 'right' | ''
+}): CSSProperties["alignItems"] {
     if (container && container.type === 'vertical') {
         if (container.horizontalAlign === 'left') {
             return 'flex-start';
@@ -65,7 +73,11 @@ export function alignItems(container?: {type:'vertical'|'horizontal',verticalAli
 }
 
 
-export function verticalAlign(container?: {type:'vertical'|'horizontal',justifyContent:CSSProperties['justifyContent'],alignItems:CSSProperties['alignItems']}):'top' | 'center' | 'bottom' | '' {
+export function verticalAlign(container?: {
+    type: 'vertical' | 'horizontal',
+    justifyContent: CSSProperties['justifyContent'],
+    alignItems: CSSProperties['alignItems']
+}): 'top' | 'center' | 'bottom' | '' {
     if (container && container.type === 'vertical') {
         if (container.justifyContent === 'flex-start') {
             return 'top';
@@ -98,7 +110,11 @@ export function verticalAlign(container?: {type:'vertical'|'horizontal',justifyC
 }
 
 
-export function horizontalAlign(container?: {type:'vertical'|'horizontal',justifyContent:CSSProperties['justifyContent'],alignItems:CSSProperties['alignItems']}):'left' | 'center' | 'right' | '' {
+export function horizontalAlign(container?: {
+    type: 'vertical' | 'horizontal',
+    justifyContent: CSSProperties['justifyContent'],
+    alignItems: CSSProperties['alignItems']
+}): 'left' | 'center' | 'right' | '' {
     if (container && container.type === 'vertical') {
         if (container.alignItems === 'flex-start') {
             return 'left';

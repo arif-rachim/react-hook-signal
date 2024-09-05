@@ -34,7 +34,7 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Input,
         property: {
             value: z.string(),
-            onChange: z.function().args(z.string()).returns(z.promise(z.void())),
+            onChange: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
             style: z.any(),
             type: z.enum(['text', 'number', 'password'])
         },
@@ -83,7 +83,9 @@ export const DefaultElements: Record<string, Element> = {
             label: z.string()
         },
         component: (props, ref) => {
-            const {onClick, label, style} = props;
+            const {onClick, style} = props;
+            let {label} = props;
+            label = label ?? 'Add label here';
             return <Button style={{width: style.width, height: style.height}} ref={ref as LegacyRef<HTMLButtonElement>}
                            onClick={() => {
                                onClick()
@@ -107,7 +109,9 @@ export const DefaultElements: Record<string, Element> = {
             })
         },
         component: (props, ref) => {
-            const {style, title} = props;
+            const {style} = props;
+            let {title} = props;
+            title = title ?? 'Add text here'
             return <div ref={ref as LegacyRef<HTMLDivElement>} style={{flexShrink: 0, ...style}}>{title}</div>
         }
     }),
@@ -116,10 +120,10 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             query: z.function().args(z.record(z.unknown()).optional(), z.number().optional()).returns(z.promise(z.object({
                 error: z.string().optional(),
-                data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))),
-                totalPage: z.number(),
-                currentPage: z.number(),
-                columns: z.array(z.string())
+                data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))).optional(),
+                totalPage: z.number().optional(),
+                currentPage: z.number().optional(),
+                columns: z.array(z.string()).optional()
             }))),
             config: z.record(z.object({
                 hidden: z.boolean().optional(),
@@ -133,6 +137,7 @@ export const DefaultElements: Record<string, Element> = {
         },
         component: (props, ref) => {
             const {query, style, config, focusedRow, onFocusedRowChange, container, refreshQueryKey} = props;
+
             return <QueryGrid ref={ref} query={query} style={style} columnsConfig={config}
                               onFocusedRowChange={onFocusedRowChange} focusedRow={focusedRow} container={container}
                               refreshQueryKey={refreshQueryKey}/>

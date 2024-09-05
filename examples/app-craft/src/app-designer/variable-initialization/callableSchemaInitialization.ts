@@ -15,9 +15,10 @@ export function composeCallableSchema(allCallables: Array<Callable>) {
 export function callableInitialization(props: {
     allCallables: Array<Callable>,
     app: FormulaDependencyParameter,
-    page: FormulaDependencyParameter
+    page: FormulaDependencyParameter,
+    navigate: (path: string, param?: unknown) => Promise<void>
 }) {
-    const {allCallables, app, page} = props;
+    const {allCallables, app, page, navigate} = props;
     const call: Record<string, (...args: unknown[]) => unknown> = {};
     for (const callable of allCallables) {
         const module: { exports: () => void } = {
@@ -25,8 +26,8 @@ export function callableInitialization(props: {
             }
         };
         try {
-            const fun = new Function('module', 'db', 'app', 'page', callable.functionCode);
-            fun.call(null, module, dbSchemaInitialization(), app, page)
+            const fun = new Function('module', 'navigate', 'db', 'app', 'page', callable.functionCode);
+            fun.call(null, module, navigate, dbSchemaInitialization(), app, page)
             call[callable.name] = module.exports
         } catch (err) {
             console.error(err);

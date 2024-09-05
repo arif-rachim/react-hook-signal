@@ -25,8 +25,8 @@ export function PropertiesPanel() {
         }
         const elementName = selectedDragContainer?.type;
         const isCustomElement = elements && elementName && elementName in elements;
-        let property:Record<string, unknown> = {};
-        let propertyEditor : Element['propertyEditor'] = {};
+        let property: Record<string, unknown> = {};
+        let propertyEditor: Element['propertyEditor'] = {};
 
         if (isCustomElement) {
             const element = elements[elementName];
@@ -50,9 +50,15 @@ export function PropertiesPanel() {
             const editor = callbacksAndAttributes.propertyEditor[propKey]!;
             const Component = editor.component!;
             return <LabelContainer key={propKey} label={editor.label}
-                                   style={{flexDirection: 'row', alignItems: 'center',gap:5}}
-                                   styleLabel={{flexGrow:1,fontSize: 14,overflow:'hidden',textOverflow:'ellipsis',width:110}}
-                                   styleContent={{flexDirection:'column',width:60,flexGrow:0,flexShrink:0}}>
+                                   style={{flexDirection: 'row', alignItems: 'center', gap: 5}}
+                                   styleLabel={{
+                                       flexGrow: 1,
+                                       fontSize: 14,
+                                       overflow: 'hidden',
+                                       textOverflow: 'ellipsis',
+                                       width: 110
+                                   }}
+                                   styleContent={{flexDirection: 'column', width: 60, flexGrow: 0, flexShrink: 0}}>
                 <Component propertyName={propKey}/>
             </LabelContainer>
         }

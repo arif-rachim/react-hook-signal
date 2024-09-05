@@ -5,7 +5,11 @@ import {useSelectedDragContainer} from "../../../hooks/useSelectedDragContainer.
 import {useUpdateSelectedDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useSignalEffect} from "react-hook-signal";
 
-export function VerticalHorizonPropertyEditor(props:{label:string,style?:CSSProperties,styleLabel?:CSSProperties}){
+export function VerticalHorizonPropertyEditor(props: {
+    label: string,
+    style?: CSSProperties,
+    styleLabel?: CSSProperties
+}) {
     const selectedDragContainer = useSelectedDragContainer();
     const updateSelectedDragContainer = useUpdateSelectedDragContainer();
     const [value, setValue] = useState<string | undefined>();
@@ -16,7 +20,7 @@ export function VerticalHorizonPropertyEditor(props:{label:string,style?:CSSProp
             return;
         }
         const defaultStyle = container.properties.defaultStyle ?? {};
-        setValue(defaultStyle.flexDirection === 'row' ? 'horizontal':'vertical');
+        setValue(defaultStyle.flexDirection === 'row' ? 'horizontal' : 'vertical');
     })
 
 
@@ -37,7 +41,7 @@ export function VerticalHorizonPropertyEditor(props:{label:string,style?:CSSProp
                     selectedContainer.properties.defaultStyle.flexDirection = value === 'horizontal' ? 'row' : 'column'
                 })
             }}>
-            {[{label:'Vertical',value:'vertical'},{label:'Horizontal',value:'horizontal'}].map(item => {
+            {[{label: 'Vertical', value: 'vertical'}, {label: 'Horizontal', value: 'horizontal'}].map(item => {
                 return <option value={item.value} key={item.value}>{item.label}</option>
             })}
         </select>

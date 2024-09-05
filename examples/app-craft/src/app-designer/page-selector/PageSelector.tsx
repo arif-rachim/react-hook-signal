@@ -41,7 +41,7 @@ export function PageSelector(props: {
                     {isSelected && <Icon.CheckboxChecked/>}
                     {!isSelected && <Icon.CheckboxBlank/>}
                 </div>
-                <div>{i.name}</div>
+                <div style={{textOverflow: 'ellipsis', overflow: 'hidden'}}>{i.name}</div>
             </div>
         })
     })
