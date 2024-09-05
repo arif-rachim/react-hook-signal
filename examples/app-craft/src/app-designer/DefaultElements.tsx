@@ -19,12 +19,12 @@ import {QueryGrid} from "./query-grid/QueryGrid.tsx";
 import {faultToIconByStatusId} from "../components/fault-status-icon/FaultStatusIcon.tsx";
 import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
-
+import {cssPropertiesSchema} from "./zod-schema/cssPropertiesSchema.ts";
 export const DefaultElements: Record<string, Element> = {
     container: element({
         icon: Icon.Container,
         property: {
-            style: z.any()
+            style: cssPropertiesSchema
         },
         component: (props, ref) => {
             return <LayoutContainer ref={ref} {...props}/>
@@ -35,7 +35,7 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             value: z.string(),
             onChange: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
-            style: z.any(),
+            style: cssPropertiesSchema,
             type: z.enum(['text', 'number', 'password'])
         },
         component: (props, ref) => {
@@ -98,15 +98,7 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Title,
         property: {
             title: z.string(),
-            style: z.object({
-                fontSize: z.number().optional(),
-                color: z.string().optional(),
-                border: z.string().optional(),
-                borderTop: z.string().optional(),
-                borderLeft: z.string().optional(),
-                borderRight: z.string().optional(),
-                borderBottom: z.string().optional(),
-            })
+            style: cssPropertiesSchema
         },
         component: (props, ref) => {
             const {style} = props;
