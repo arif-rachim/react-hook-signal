@@ -11,7 +11,7 @@ import {fetcherInitialization} from "./fetcherSchemaInitialization.ts";
 import {queryInitialization} from "./queryInitialization.ts";
 import {createContext, PropsWithChildren} from "react";
 import {QueryTypeResult} from "../query-grid/QueryGrid.tsx";
-import untrack = Signal.subtle.untrack;
+
 
 const db = dbSchemaInitialization()
 
@@ -53,94 +53,88 @@ function validateVariables(variableInstances: Array<VariableInstance>, variableV
     }
 }
 
-function initializeVariables(props: {
+const initiateComputed = (app: FormulaDependencyParameter, page: FormulaDependencyParameter) => (v: Variable) => {
+    const params = ['module', 'app', 'page', v.functionCode];
+    try {
+        const init = new Function(...params);
+        const computed = new Signal.Computed(() => {
+            const module: { exports: unknown } = {exports: undefined};
+            const instances = [module, app, page]
+            try {
+                init.call(null, ...instances);
+            } catch (err) {
+                console.error(err);
+            }
+            return module.exports;
+        });
+        return {id: v.id, instance: computed};
+    } catch (err) {
+        console.error(err);
+    }
+    return {
+        id: v.id,
+        instance: new Signal.Computed(() => {
+        })
+    }
+}
+
+const initiateState = (variableInitialValue: Record<string, unknown>) => (v: Variable) => {
+    const module = {exports: {}};
+    if (v.name in variableInitialValue && variableInitialValue[v.name] !== undefined && variableInitialValue[v.name] !== null) {
+        module.exports = variableInitialValue[v.name] as unknown as typeof module.exports;
+        const state = new Signal.State(module.exports);
+        return {id: v.id, instance: state}
+    } else {
+        const params = ['module', v.functionCode];
+        try {
+            const init = new Function(...params);
+            init.call(null, module);
+            const state = new Signal.State(module.exports);
+            return {id: v.id, instance: state}
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    return {
+        instance: new Signal.State(undefined),
+        id: v.id
+    }
+}
+
+function initiateEffect(props: {
     navigate: (path: string, param?: unknown) => Promise<void>,
     variables: Array<Variable>,
-    variableInitialValue: Record<string, unknown>,
-    allVariablesSignalInstance: Signal.State<Array<VariableInstance>>,
-    errorMessage: ReturnType<typeof useRecordErrorMessage>,
     app: FormulaDependencyParameter,
     page: FormulaDependencyParameter
 }) {
     const {
         navigate,
         variables,
-        variableInitialValue,
-        allVariablesSignalInstance,
         app,
         page
     } = props;
 
-    const variablesInstance: Array<VariableInstance> = [];
     const destructorCallbacks: Array<() => void> = [];
     for (const v of variables) {
-        if (v.type === 'state') {
-            const module = {exports: {}};
-            if (v.name in variableInitialValue && variableInitialValue[v.name] !== undefined && variableInitialValue[v.name] !== null) {
-                module.exports = variableInitialValue[v.name] as unknown as typeof module.exports;
-                const state = new Signal.State(module.exports);
-                variablesInstance.push({id: v.id, instance: state});
-            } else {
-                const params = ['module', v.functionCode];
+        if (v.type !== 'effect') {
+            continue;
+        }
+        const params = ['navigate', 'db', 'app', 'page', v.functionCode];
+        try {
+            const func = new Function(...params) as (...args: unknown[]) => void
+            const destructor = effect(() => {
+                const instances = [navigate, db, app, page]
                 try {
-                    const init = new Function(...params);
-                    init.call(null, module);
-                    const state = new Signal.State(module.exports);
-                    variablesInstance.push({id: v.id, instance: state});
-                    //errorMessage.variableValue({variableId:v.id});
+                    func.call(null, ...instances);
                 } catch (err) {
-                    //errorMessage.variableValue({variableId:v.id,err});
-                }
-            }
-        } else {
-
-            if (v.type === 'computed') {
-                const params = ['module', 'app', 'page', v.functionCode];
-                try {
-                    const init = new Function(...params);
-                    const computed = new Signal.Computed(() => {
-                        const module: { exports: unknown } = {exports: undefined};
-                        const instances = [module, app, page]
-                        try {
-                            init.call(null, ...instances);
-                            //errorMessage.variableValue({variableId:v.id});
-                        } catch (err) {
-                            //errorMessage.variableValue({variableId:v.id,err});
-                            console.error(err);
-                        }
-                        return module.exports;
-                    });
-                    variablesInstance.push({id: v.id, instance: computed});
-                    //errorMessage.variableValue({variableId:v.id});
-                } catch (err) {
-                    //errorMessage.variableValue({variableId:v.id,err});
                     console.error(err);
                 }
-            }
-            if (v.type === 'effect') {
-                const params = ['navigate', 'db', 'app', 'page', v.functionCode];
-                try {
-                    const func = new Function(...params) as (...args: unknown[]) => void
-                    const destructor = effect(() => {
-                        const instances = [navigate, db, app, page]
-                        try {
-                            func.call(null, ...instances);
-                            //errorMessage.variableValue({variableId:v.id});
-                        } catch (err) {
-                            //errorMessage.variableValue({variableId:v.id,err});
-                            console.error(err);
-                        }
-                    });
-                    destructorCallbacks.push(destructor);
-                    //errorMessage.variableValue({variableId:v.id});
-                } catch (err) {
-                    //errorMessage.variableValue({variableId:v.id,err});
-                    console.error(err);
-                }
-            }
+            });
+            destructorCallbacks.push(destructor);
+        } catch (err) {
+            console.error(err);
         }
     }
-    allVariablesSignalInstance.set(variablesInstance);
     return () => {
         destructorCallbacks.forEach(d => d());
     }
@@ -199,105 +193,105 @@ export function VariableInitialization(props: PropsWithChildren) {
 
     const appScopesSignal = useComputed(() => {
 
-        const allApplicationVariables = allApplicationVariablesSignal.get();
         const allApplicationVariablesInstance = allApplicationVariablesSignalInstance.get();
-
-        const allPageVariables = allPageVariablesSignal.get();
-        const allPageVariablesInstance = allPageVariablesSignalInstance.get();
-
-        const appVar = allApplicationVariables.reduce((res, v) => {
-            if (v.type === 'effect') {
-                return res;
-            }
-            const variableInstance = allApplicationVariablesInstance.find(variable => variable.id === v.id);
-            if (variableInstance) {
-                res[v.name] = variableInstance.instance
-            }
-            return res;
-        }, {} as Record<string, AnySignal<unknown>>);
-        const pageVar = allPageVariables.reduce((res, v) => {
-            if (v.type === 'effect') {
-                return res;
-            }
-            const variableInstance = allPageVariablesInstance.find(variable => variable.id === v.id);
-            if (variableInstance) {
-                res[v.name] = variableInstance.instance
-            }
-
-            return res;
-        }, {} as Record<string, AnySignal<unknown>>);
-
+        const appVar = variablesInstanceToDictionary(allApplicationVariablesInstance, allApplicationVariablesSignal.get());
         const appQueries = queryInitialization(allApplicationQueriesSignal.get());
-        const pageQueries = queryInitialization(allPageQueriesSignal.get());
 
         const app: FormulaDependencyParameter = {
             var: appVar,
             query: appQueries,
         }
 
+        app.fetch = fetcherInitialization({
+            allFetchers: allApplicationFetchersSignal.get(),
+            app,
+            page: {}
+        })
+
+        app.call = callableInitialization({
+            allCallables: allApplicationCallablesSignal.get(),
+            app,
+            page: {},
+            navigate
+        })
+        return {app};
+    });
+
+    const pageScopesSignal = useComputed(() => {
+        const {app} = appScopesSignal.get();
+        const allPageVariablesInstance = allPageVariablesSignalInstance.get();
+        const pageVar = variablesInstanceToDictionary(allPageVariablesInstance, allPageVariablesSignal.get());
+        const pageQueries = queryInitialization(allPageQueriesSignal.get());
         const page: FormulaDependencyParameter = {
             var: pageVar,
             query: pageQueries
         }
-
-        app.fetch = fetcherInitialization({
-            allFetchers: allApplicationFetchersSignal.get(),
-            app,
-            page
-        })
-
         page.fetch = fetcherInitialization({
             allFetchers: allPageFetchersSignal.get(),
             app,
             page
         });
-
-        app.call = callableInitialization({
-            allCallables: allApplicationCallablesSignal.get(),
-            app,
-            page,
-            navigate
-        })
-
         page.call = callableInitialization({
             allCallables: allPageCallablesSignal.get(),
             app,
             page,
             navigate
         })
-        return {app, page};
+        return {page};
     });
 
     useSignalEffect(() => {
         const variables = allApplicationVariablesSignal.get() ?? [];
-        const variableInitialValue = {};
-        const appScope = untrack(() => appScopesSignal.get());
-        return initializeVariables({
-            allVariablesSignalInstance: allApplicationVariablesSignalInstance,
-            app: appScope.app,
-            page: appScope.page,
-            variables,
-            variableInitialValue,
-            errorMessage,
-            navigate
-        });
+        const stateInstances: Array<VariableInstance> = variables.filter(v => v.type === 'state').map(initiateState({}));
+        const computedInstance = variables.filter(v => v.type === 'computed').map(initiateComputed({
+            var: variablesInstanceToDictionary(stateInstances, variables)
+        }, {}))
+        allApplicationVariablesSignalInstance.set([...stateInstances, ...computedInstance]);
     });
 
     useSignalEffect(() => {
-        const variables = allPageVariablesSignal.get() ?? [];
+        const applicationVariables = allApplicationVariablesSignal.get() ?? [];
+        const applicationVariablesInstance = allApplicationVariablesSignalInstance.get();
         const variableInitialValue = variableInitialValueSignal.get() ?? {};
-        const appScope = untrack(() => appScopesSignal.get());
-        return initializeVariables({
-            allVariablesSignalInstance: allPageVariablesSignalInstance,
-            app: appScope.app,
-            page: appScope.page,
-            variables,
-            variableInitialValue,
-            errorMessage,
-            navigate
-        });
+        const variables = allPageVariablesSignal.get() ?? [];
+        const stateInstances: Array<VariableInstance> = variables.filter(v => v.type === 'state').map(initiateState(variableInitialValue));
+        const computedInstance = variables.filter(v => v.type === 'computed').map(initiateComputed({
+            var: variablesInstanceToDictionary(applicationVariablesInstance, applicationVariables),
+        }, {
+            var: variablesInstanceToDictionary(stateInstances, variables),
+        }))
+        allPageVariablesSignalInstance.set([...stateInstances, ...computedInstance]);
     });
-    return <VariableInitializationContext.Provider value={appScopesSignal}>
+
+    useSignalEffect(() => {
+        const {app} = appScopesSignal.get();
+        const variables = allApplicationVariablesSignal.get();
+        return initiateEffect({
+            app,
+            page: {},
+            navigate,
+            variables
+        })
+    })
+    useSignalEffect(() => {
+        const {app} = appScopesSignal.get();
+        const {page} = pageScopesSignal.get();
+
+        const variables = allPageVariablesSignal.get();
+        return initiateEffect({
+            app,
+            page,
+            navigate,
+            variables
+        })
+    })
+    const scopeSignals = useComputed(() => {
+        return {
+            app: appScopesSignal.get().app,
+            page: pageScopesSignal.get().page
+        }
+    })
+    return <VariableInitializationContext.Provider value={scopeSignals}>
         {props.children}
     </VariableInitializationContext.Provider>
 }
@@ -306,3 +300,13 @@ export const VariableInitializationContext = createContext<AnySignal<{
     app: FormulaDependencyParameter,
     page: FormulaDependencyParameter
 }>>(new Signal.State({app: {}, page: {}}));
+
+function variablesInstanceToDictionary(variableInstances: Array<VariableInstance>, variables: Array<Variable>): Record<string, AnySignal<unknown>> {
+    return variableInstances.reduce((res, variableInstance) => {
+        const v = variables.find(v => variableInstance.id === v.id);
+        if (v) {
+            res[v.name] = variableInstance.instance
+        }
+        return res;
+    }, {} as Record<string, AnySignal<unknown>>);
+}
