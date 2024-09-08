@@ -16,7 +16,7 @@ import {Icon} from "../../../Icon.ts";
 import {useUpdateQueries} from "../../../hooks/useUpdateQueries.ts";
 import {Query} from "../../database/service/getTables.ts";
 import {RenderParameters} from "../../fetchers/editor/FetcherEditorPanel.tsx";
-import {SqlValue} from "sql.js";
+import {ParamsObject} from "sql.js";
 import {queryPagination, SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
 import {composeArraySchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
 
@@ -55,7 +55,6 @@ export default function QueryEditorPanel(props: {
             query: '',
             parameters: [],
             schemaCode: '',
-            rawQuery: ''
         }
     }
 
@@ -91,7 +90,7 @@ export default function QueryEditorPanel(props: {
     // this is the function to repopulate the parameters
     const updateParameters = () => {
         const queryValue = querySignal.get();
-        const {query: rawQuery, parameters} = extractParametersAndReplace(queryValue.query);
+        const parameters = extractParametersAndReplace(queryValue.query);
         const params = queryValue.parameters;
         const newParams = parameters.map(p => {
             const existingParam = params.find(par => par.name === p);
@@ -106,7 +105,7 @@ export default function QueryEditorPanel(props: {
             };
             return result;
         });
-        querySignal.set({...queryValue, parameters: newParams, rawQuery})
+        querySignal.set({...queryValue, parameters: newParams})
     }
 
     const tableDataSignal = useSignal<{
@@ -118,11 +117,16 @@ export default function QueryEditorPanel(props: {
 
     async function testQuery(page: number) {
         const query = querySignal.get();
-        const params = query.parameters.map(p => p.value as SqlValue) as Array<SqlValue>;
-        const result = await queryPagination(query.rawQuery, params, page ?? 1, 50);
+        //const params = query.parameters.map(p => p.value as SqlValue) as Array<SqlValue>;
+        let params: ParamsObject = {};
+        params = query.parameters.reduce((params, val) => {
+            params[':' + val.name] = val.value
+            return params;
+        }, params)
+        const result = await queryPagination(query.query, params, page ?? 1, 50);
         tableDataSignal.set(result);
         if (page === 1) {
-            const allData = await queryPagination(query.rawQuery, params, page ?? 1, Number.MAX_SAFE_INTEGER);
+            const allData = await queryPagination(query.query, params, page ?? 1, Number.MAX_SAFE_INTEGER);
             querySignal.set({...query, schemaCode: composeArraySchema(allData.data)})
         }
     }
@@ -336,15 +340,7 @@ export default function QueryEditorPanel(props: {
 
 function extractParametersAndReplace(sqlQuery: string) {
     const parameterRegex = /:(\w+)/g;
-    const parameters = [] as string[];
-    const modifiedQuery = sqlQuery.replace(parameterRegex, (_, p1) => {
-        parameters.push(p1);
-        return '?'
-    })
-    return {
-        query: modifiedQuery,
-        parameters: parameters
-    }
+    return (sqlQuery.match(parameterRegex) ?? []).map(t => t.toString());
 }
 
 export function buildQuery(modifiedQuery: string, values: Array<unknown>) {

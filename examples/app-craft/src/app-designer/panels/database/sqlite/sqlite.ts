@@ -138,7 +138,7 @@ async function executeQuery({query, params, fileName}: {
     log('[ExecuteQuery]', query)
     const db = await getDatabase(fileName);
     if (db !== undefined) {
-        log('[ExecuteQuery] invoking ', query)
+        log('[ExecuteQuery] invoking ', query,params)
         try {
             const result = db.exec(query, params);
             if (result.length > 0) {
@@ -148,6 +148,8 @@ async function executeQuery({query, params, fileName}: {
                     columns,
                     values
                 }
+            }else{
+                log('[ExecuteQuery] result ', result.length, 'records')
             }
             return {
                 columns: [],

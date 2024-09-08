@@ -16,7 +16,6 @@ export interface Query {
     id: string,
     name: string,
     query: string,
-    rawQuery: string,
     parameters: Array<FetcherParameter>
     schemaCode: string
 }

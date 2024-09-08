@@ -1,7 +1,7 @@
 import {Table} from "../service/getTables.ts";
 import {CSSProperties, Dispatch, ReactNode, SetStateAction, useEffect, useState} from "react";
 import {queryDb} from "./queryDb.ts";
-import {BindParams, SqlValue} from "sql.js";
+import {ParamsObject, SqlValue} from "sql.js";
 import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
@@ -15,7 +15,7 @@ import {QueryTypeResult} from "../../../query-grid/QueryGrid.tsx";
 import {MdArrowDownward, MdArrowUpward} from "react-icons/md";
 
 
-export async function queryPagination(query: string, params: BindParams, currentPage: number, pageSize: number) {
+export async function queryPagination(query: string, params: ParamsObject, currentPage: number, pageSize: number) {
     const {columns, values, page} = await queryDb(query, {
         size: pageSize ?? 50,
         number: currentPage
@@ -40,7 +40,7 @@ async function queryTable(props: {
     table: Table,
     currentPage: number,
     setTableData: Dispatch<SetStateAction<QueryTypeResult>>,
-    filter: Record<string, string>,
+    filter: Record<string, SqlValue>,
     sort :Array<{ column: string, direction: 'asc' | 'desc' }>
 }) {
     const {setTableData, table, currentPage, filter,sort} = props;
@@ -53,7 +53,7 @@ async function queryTable(props: {
     sort.forEach(s => {
         sortStrings.push(`${s.column} ${s.direction}`);
     })
-    const result = await queryPagination(`SELECT * FROM ${table.tblName} ${paramsString.length > 0 ?' WHERE ':''} ${paramsString.join(' AND ')} ${sortStrings.length > 0 ? 'ORDER BY':''} ${sortStrings.join(', ')}`, [], currentPage, 50);
+    const result = await queryPagination(`SELECT * FROM ${table.tblName} ${paramsString.length > 0 ?' WHERE ':''} ${paramsString.join(' AND ')} ${sortStrings.length > 0 ? 'ORDER BY':''} ${sortStrings.join(', ')}`, {}, currentPage, 50);
     setTableData(oldValue => {
         if (result.data.length > 0) {
             return result;

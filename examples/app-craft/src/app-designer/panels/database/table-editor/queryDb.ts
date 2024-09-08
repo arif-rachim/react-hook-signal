@@ -1,7 +1,7 @@
 import sqlite from "../sqlite/sqlite.ts";
-import {BindParams, SqlValue} from "sql.js";
+import {ParamsObject, SqlValue} from "sql.js";
 
-export async function queryDb(sql: string, page?: { size: number, number: number }, params?: BindParams) {
+export async function queryDb(sql: string, page?: { size: number, number: number }, params?: ParamsObject) {
     const {size, number} = page ?? {size: 50, number: 0};
     const count = `SELECT COUNT(*) AS total_rows FROM (${sql}) AS sub`
     const countResponse = await sqlite({type: 'executeQuery', query: count, params});

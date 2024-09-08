@@ -11,6 +11,7 @@ import {fetcherInitialization} from "./fetcherSchemaInitialization.ts";
 import {queryInitialization} from "./queryInitialization.ts";
 import {createContext, PropsWithChildren} from "react";
 import {QueryTypeResult} from "../query-grid/QueryGrid.tsx";
+import {SqlValue} from "sql.js";
 
 
 const db = dbSchemaInitialization()
@@ -141,7 +142,7 @@ function initiateEffect(props: {
 }
 
 
-export type QueryType = (inputs?: Record<string, unknown>, page?: number) => Promise<QueryTypeResult>
+export type QueryType = (inputs?: Record<string, SqlValue>, page?: number) => Promise<QueryTypeResult>
 
 export type FetchType = (inputs?: Record<string, unknown>) => Promise<Record<string, unknown> & { error?: string }>
 export type FormulaDependencyParameter = {
