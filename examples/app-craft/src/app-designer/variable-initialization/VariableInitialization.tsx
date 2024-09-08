@@ -142,7 +142,11 @@ function initiateEffect(props: {
 }
 
 
-export type QueryType = (inputs?: Record<string, SqlValue>, page?: number) => Promise<QueryTypeResult>
+export type QueryType = (props: {
+    inputs?: Record<string, SqlValue>,
+    page?: number,
+    dynamicFilter?: Record<string, SqlValue>
+}) => Promise<QueryTypeResult>
 
 export type FetchType = (inputs?: Record<string, unknown>) => Promise<Record<string, unknown> & { error?: string }>
 export type FormulaDependencyParameter = {

@@ -1,8 +1,23 @@
 import sqlite from "../sqlite/sqlite.ts";
 import {ParamsObject, SqlValue} from "sql.js";
 
-export async function queryDb(sql: string, page?: { size: number, number: number }, params?: ParamsObject) {
+export async function queryDb(sql: string, page?: { size: number, number: number }, params?: ParamsObject,dynamicFilter?:ParamsObject) {
     const {size, number} = page ?? {size: 50, number: 0};
+
+    dynamicFilter = dynamicFilter ?? {};
+    params = params ?? {};
+    const dynamicFilterQuery:string[] = [];
+    Object.keys(dynamicFilter).map(key => {
+        if(dynamicFilter[key]){
+            dynamicFilterQuery.push(`T.${key} LIKE @${key}`)
+            params[`@${key}`] = dynamicFilter[key];
+        }
+    })
+
+    if(dynamicFilterQuery.length > 0){
+        sql = `SELECT * FROM (${sql}) AS T WHERE ${dynamicFilterQuery.join(' AND ')}`;
+    }
+
     const count = `SELECT COUNT(*) AS total_rows FROM (${sql}) AS sub`
     const countResponse = await sqlite({type: 'executeQuery', query: count, params});
     let totalRows = 0;

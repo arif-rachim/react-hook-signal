@@ -2,6 +2,7 @@ import {QueryType} from "../variable-initialization/VariableInitialization.tsx";
 import {CSSProperties, forwardRef, LegacyRef, useEffect, useState} from "react";
 import {ColumnsConfig, SimpleTable, SimpleTableFooter} from "../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../AppDesigner.tsx";
+import {SqlValue} from "sql.js";
 
 export type QueryTypeResult = {
     error?: string,
@@ -30,14 +31,15 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         error: '',
         totalPage: 1
     });
+    const [filter, setFilter] = useState<Record<string, SqlValue>>({});
     useEffect(() => {
         if (query) {
             (async () => {
-                const result = await query();
+                const result = await query({inputs: {}, page: 0, dynamicFilter: filter});
                 setQueryResult(result);
             })();
         }
-    }, [query, refreshQueryKey]);
+    }, [query, refreshQueryKey, filter]);
 
     // this is to just store them in the temporal state to be used by editor
     queryGridColumnsTemporalColumns[container.id] = queryResult.columns ?? [];
@@ -49,11 +51,21 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                          keyField={'ID_'}
                          columnsConfig={columnsConfig}
                          focusedRow={focusedRow}
-                         onFocusedRowChange={onFocusedRowChange}/>
+                         onFocusedRowChange={onFocusedRowChange}
+                         filterable={true}
+                         filter={filter}
+                         onFilterChange={({column, value}) => {
+                             setFilter(oldValue => {
+                                 const newValue = {...oldValue};
+                                 newValue[column] = value as SqlValue
+                                 return newValue;
+                             })
+                         }}
+            />
         </div>
         <SimpleTableFooter totalPages={queryResult.totalPage ?? 1} value={queryResult.currentPage ?? 1}
                            onChange={async (newPage) => {
-                               const result = await query({}, newPage);
+                               const result = await query({dynamicFilter: filter, page: newPage, inputs: {}});
                                setQueryResult(result);
                            }}/>
     </div>

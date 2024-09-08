@@ -2,14 +2,20 @@ import {Query} from "../panels/database/service/getTables.ts";
 import {queryPagination} from "../panels/database/table-editor/TableEditor.tsx";
 import {zodSchemaToJson} from "../zodSchemaToJson.ts";
 import {QueryType} from "./VariableInitialization.tsx";
-import {SqlValue} from "sql.js";
 
 export function queryInitialization(allQueries: Array<Query>): Record<string, QueryType> {
     const queries: Record<string, QueryType> = {};
     for (const queryValue of allQueries) {
-        queries[queryValue.name] = (inputs?: Record<string, SqlValue>, page?: number) => {
+        queries[queryValue.name] = (props) => {
+            const {inputs, page, dynamicFilter} = props;
             return new Promise(resolve => {
-                queryPagination(queryValue.query,inputs ?? {}, page ?? 1, 50).then(result => {
+                queryPagination({
+                    query: queryValue.query,
+                    dynamicFilter: dynamicFilter ?? {},
+                    params: inputs ?? {},
+                    pageSize: 50,
+                    currentPage: page ?? 1
+                }).then(result => {
                     resolve(result);
                 }).catch(error => {
                     const err = error as Error;

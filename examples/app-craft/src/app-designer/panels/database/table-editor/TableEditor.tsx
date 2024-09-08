@@ -15,11 +15,18 @@ import {QueryTypeResult} from "../../../query-grid/QueryGrid.tsx";
 import {MdArrowDownward, MdArrowUpward} from "react-icons/md";
 
 
-export async function queryPagination(query: string, params: ParamsObject, currentPage: number, pageSize: number) {
+export async function queryPagination(props: {
+    query: string,
+    params: ParamsObject,
+    currentPage: number,
+    pageSize: number,
+    dynamicFilter: ParamsObject
+}) {
+    const {query, params, currentPage, pageSize, dynamicFilter} = props;
     const {columns, values, page} = await queryDb(query, {
         size: pageSize ?? 50,
         number: currentPage
-    }, params)
+    }, params, dynamicFilter)
 
     const data = values.map(val => {
         const result: Record<string, SqlValue> = {};
@@ -41,19 +48,20 @@ async function queryTable(props: {
     currentPage: number,
     setTableData: Dispatch<SetStateAction<QueryTypeResult>>,
     filter: Record<string, SqlValue>,
-    sort :Array<{ column: string, direction: 'asc' | 'desc' }>
+    sort: Array<{ column: string, direction: 'asc' | 'desc' }>
 }) {
-    const {setTableData, table, currentPage, filter,sort} = props;
-
-    const paramsString: string[] = [];
-    Object.keys(filter).forEach(key => {
-        paramsString.push(`${key} LIKE '%${filter[key]}%'`);
-    });
-    const sortStrings:string[] = [];
+    const {setTableData, table, currentPage, filter, sort} = props;
+    const sortStrings: string[] = [];
     sort.forEach(s => {
         sortStrings.push(`${s.column} ${s.direction}`);
     })
-    const result = await queryPagination(`SELECT * FROM ${table.tblName} ${paramsString.length > 0 ?' WHERE ':''} ${paramsString.join(' AND ')} ${sortStrings.length > 0 ? 'ORDER BY':''} ${sortStrings.join(', ')}`, {}, currentPage, 50);
+    const result = await queryPagination({
+        currentPage,
+        pageSize: 50,
+        query: `SELECT * FROM ${table.tblName} ${sortStrings.length > 0 ? 'ORDER BY':''} ${sortStrings.join(', ')}`,
+        params: {},
+        dynamicFilter: filter
+    });
     setTableData(oldValue => {
         if (result.data.length > 0) {
             return result;
@@ -69,7 +77,7 @@ export default function TableEditor(props: { table: Table }) {
     const {table} = props;
     const [tableData, setTableData] = useState<QueryTypeResult>({columns: [], data: [], currentPage: 0, totalPage: 0});
     const [filter, setFilter] = useState<Record<string, string>>({})
-    const [sort,setSort] = useState<Array<{ column: string, direction: 'asc' | 'desc' }>>([])
+    const [sort, setSort] = useState<Array<{ column: string, direction: 'asc' | 'desc' }>>([])
     useEffect(() => {
         (async () => {
             await queryTable({
@@ -80,7 +88,7 @@ export default function TableEditor(props: { table: Table }) {
                 sort
             });
         })();
-    }, [table, filter,sort]);
+    }, [table, filter, sort]);
     const [isOpen, setOpen] = useState(false);
     return <div
         style={{display: 'flex', flexDirection: 'column', overflow: 'auto', height: '100%'}}>
@@ -113,17 +121,17 @@ export default function TableEditor(props: { table: Table }) {
                          }}
                          sortable={true}
                          sort={sort}
-                         onSortChange={({column,value}) => {
+                         onSortChange={({column, value}) => {
                              setSort(oldValue => {
                                  const newValue = [...oldValue];
-                                 if(value === 'remove'){
+                                 if (value === 'remove') {
                                      return newValue.filter(c => c.column !== column)
                                  }
                                  const itemIndex = newValue.findIndex(c => c.column === column);
-                                 if(itemIndex < 0) {
+                                 if (itemIndex < 0) {
                                      newValue.push({column, direction: value});
-                                 }else{
-                                     newValue.splice(itemIndex,1,{column: column, direction: value});
+                                 } else {
+                                     newValue.splice(itemIndex, 1, {column: column, direction: value});
                                  }
                                  return newValue;
                              })
@@ -312,7 +320,7 @@ export function SimpleTable<T extends Record<string, unknown>>(props: {
                         <div style={{width: '100%'}}>
                             {title}
                         </div>
-                        {sortable && sortIndex >=0 &&
+                        {sortable && sortIndex >= 0 &&
                             <div>{(sortIndex + 1).toString()}</div>
                         }
                         {sortable &&

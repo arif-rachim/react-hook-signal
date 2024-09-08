@@ -110,7 +110,11 @@ export const DefaultElements: Record<string, Element> = {
     queryGrid: element({
         icon: Icon.Grid,
         property: {
-            query: z.function().args(z.record(z.unknown()).optional(), z.number().optional()).returns(z.promise(z.object({
+            query: z.function().args(z.object({
+                inputs:z.record(z.unknown()).optional(),
+                page:z.number().optional(),
+                dynamicFilter:z.record(z.unknown()).optional()
+            })).returns(z.promise(z.object({
                 error: z.string().optional(),
                 data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))).optional(),
                 totalPage: z.number().optional(),
