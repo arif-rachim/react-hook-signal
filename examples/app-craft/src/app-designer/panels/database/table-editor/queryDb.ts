@@ -10,7 +10,7 @@ export async function queryDb(sql: string, page?: { size: number, number: number
     Object.keys(dynamicFilter).map(key => {
         if(dynamicFilter[key]){
             dynamicFilterQuery.push(`T.${key} LIKE @${key}`)
-            params[`@${key}`] = dynamicFilter[key];
+            params[`@${key}`] = `%${dynamicFilter[key]}%`;
         }
     })
 

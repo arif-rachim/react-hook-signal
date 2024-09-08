@@ -315,7 +315,7 @@ export function SimpleTable<T extends Record<string, unknown>>(props: {
                     } else {
                         onSortChange({value: 'asc', column: col});
                     }
-                }}>
+                }} key={col}>
                     <div style={{display: 'flex', justifyContent: 'center', gap: 5}}>
                         <div style={{width: '100%'}}>
                             {title}
@@ -357,7 +357,7 @@ export function SimpleTable<T extends Record<string, unknown>>(props: {
                         backgroundColor: '#F2F2F2',
                         color: "black",
                         width,
-                    }}><input style={{
+                    }} key={`filter-${col}`}><input style={{
                         border: 'unset',
                         borderRight: lastIndex ? 'unset' : BORDER,
                         width: '100%',
