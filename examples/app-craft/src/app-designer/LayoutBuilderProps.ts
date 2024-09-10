@@ -44,7 +44,8 @@ export interface Element<T extends ZodRawShape = ZodRawShape> {
             label: string,
             component: FunctionComponent<{ propertyName: string }>
         }
-    }
+    },
+    shortName: string
 }
 
 export function element<T extends ZodRawShape>(props: {
@@ -57,6 +58,7 @@ export function element<T extends ZodRawShape>(props: {
     }
     icon: IconType,
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & ElementStyleProps)>,
+    shortName: string
 }): Element<ZodRawShape> {
     return props as unknown as Element<ZodRawShape>;
 }

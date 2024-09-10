@@ -141,11 +141,11 @@ function initiateEffect(props: {
     }
 }
 
-
 export type QueryType = (props: {
-    inputs?: Record<string, SqlValue>,
+    params?: Record<string, SqlValue>,
     page?: number,
-    dynamicFilter?: Record<string, SqlValue>
+    filter?: Record<string, SqlValue>,
+    sort?:Array<{ column: string, direction: 'asc' | 'desc' }>
 }) => Promise<QueryTypeResult>
 
 export type FetchType = (inputs?: Record<string, unknown>) => Promise<Record<string, unknown> & { error?: string }>

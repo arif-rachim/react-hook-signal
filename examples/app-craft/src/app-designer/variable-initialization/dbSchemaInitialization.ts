@@ -39,8 +39,8 @@ export function composeArraySchema(data: Array<unknown>) {
     return `z.object({\n\t${Object.keys(schema).map(k => {
         const zodType = {
             'any': 'z.any()',
-            'number': 'z.number().optional()',
-            'string': 'z.string().optional()'
+            'number': 'z.number().nullable().optional()',
+            'string': 'z.string().nullable().optional()'
         }
         const type = schema[k] as keyof typeof zodType;
         return `${k}:${zodType[type]}`;

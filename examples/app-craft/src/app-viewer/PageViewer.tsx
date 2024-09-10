@@ -11,7 +11,7 @@ import {ContainerElement} from "./ContainerElement.tsx";
 export function PageViewer(props: {
     elements: LayoutBuilderProps['elements'],
     page: Page,
-    appConfig: Omit<Application, 'pages' | 'id' | 'name'>
+    appConfig: Omit<Application, 'id' | 'name'>
     value: Record<string, unknown>
 }) {
     const {elements, page, appConfig, value} = props;
@@ -21,7 +21,7 @@ export function PageViewer(props: {
     }, [value, variableInitialValueSignal]);
     const appContext = useAppInitiator({
         value: {
-            pages: [page],
+            pages: appConfig.pages,
             queries: appConfig.queries,
             name: `viewer-${page.name}`,
             id: `viewer-${page.id}`,
@@ -33,7 +33,8 @@ export function PageViewer(props: {
         elements: elements,
         onChange: () => {
             // do nothing, we are not accepting changes
-        }
+        },
+        activePageId: page.id
     })
     const context: AppViewerContext = {
         applicationSignal: appContext.applicationSignal,

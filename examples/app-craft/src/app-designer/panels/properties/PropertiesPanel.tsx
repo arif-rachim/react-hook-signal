@@ -1,6 +1,6 @@
 import CollapsibleLabelContainer from "../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {PropertyCallbackItemRenderer} from "./item-renderer/PropertyCallbackItemRenderer.tsx";
-import {ZodFunction} from "zod";
+import {ZodFunction, ZodOptional} from "zod";
 import {useState} from "react";
 import {useSelectedDragContainer} from "../../hooks/useSelectedDragContainer.ts";
 import {useSignalEffect} from "react-hook-signal";
@@ -35,7 +35,7 @@ export function PropertiesPanel() {
         }
         for (const propKey of Object.keys(property)) {
             const type = property[propKey];
-            const isZodFunction = type instanceof ZodFunction;
+            const isZodFunction = (type instanceof ZodFunction) || (type instanceof ZodOptional && type._def.innerType instanceof ZodFunction);
             if (isZodFunction) {
                 callbacks.push(propKey)
             } else {

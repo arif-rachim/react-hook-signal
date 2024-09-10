@@ -1,4 +1,4 @@
-import {CSSProperties, useEffect} from "react";
+import {CSSProperties, useEffect, useState} from "react";
 import {AnySignal, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
@@ -23,6 +23,9 @@ import {Query, Table} from "./panels/database/service/getTables.ts";
 import {createFetcherPanel} from "./panels/fetchers/FetchersPanel.tsx";
 import {createCallablePanel} from "./panels/callable/CallablePanel.tsx";
 import {createQueriesPanel} from "./panels/queries/QueriesPanel.tsx";
+import {useAppContext} from "./hooks/useAppContext.ts";
+import {isEmpty} from "../utils/isEmpty.ts";
+import {notifiable} from "react-hook-signal";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -105,7 +108,7 @@ export type Container = {
     properties: Record<string, ContainerPropertyType> & { defaultStyle?: CSSProperties },
 }
 
-export function useAppInitiator(props: LayoutBuilderProps) {
+export function useAppInitiator(props: LayoutBuilderProps & {activePageId?:string}) {
     const applicationSignal = useSignal(createNewBlankApplication());
 
     const allApplicationCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
@@ -113,7 +116,7 @@ export function useAppInitiator(props: LayoutBuilderProps) {
     const allTablesSignal = useComputed<Array<Table>>(() => applicationSignal.get().tables ?? []);
     const allApplicationQueriesSignal = useComputed(() => applicationSignal.get().queries ?? []);
 
-    const activePageIdSignal = useSignal<string>('');
+    const activePageIdSignal = useSignal<string>(props.activePageId ?? '');
     const activeDropZoneIdSignal = useSignal('');
     const selectedDragContainerIdSignal = useSignal('');
     const hoveredDragContainerIdSignal = useSignal('');
@@ -308,6 +311,13 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             component: ElementsPanel,
                             visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
+                        layoutTree: {
+                            title: 'Layout Tree',
+                            Icon: Icon.Tree,
+                            position: 'right',
+                            component: ComponentTree,
+                            visible: (tag) => tag?.type === 'DesignPanel'
+                        },
                         variables: {
                             title: 'Variables',
                             Icon: Icon.Variable,
@@ -345,14 +355,14 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                         styles: {
                             title: 'Styles',
                             Icon: Icon.Style,
-                            position: 'right',
+                            position: 'rightBottom',
                             component: StylePanel,
                             visible: (tag) => tag?.type === 'DesignPanel'
                         },
                         properties: {
                             title: 'Properties',
                             Icon: Icon.Property,
-                            position: 'right',
+                            position: 'rightBottom',
                             component: PropertiesPanel,
                             visible: (tag) => tag?.type === 'DesignPanel'
                         },
@@ -376,4 +386,57 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     </ErrorBoundary>
 }
 
+
+function ComponentTree() {
+    const {activePageIdSignal, allPagesSignal} = useAppContext();
+    // first we need to get the page
+    const activePageSignal = useComputed(() => {
+        const activePageId = activePageIdSignal.get();
+        return allPagesSignal.get().find(p => p.id === activePageId);
+    })
+    const [container, setContainer] = useState<Container | undefined>();
+    useSignalEffect(() => {
+        const containers = activePageSignal.get()?.containers ?? [];
+        const parentContainer = containers.find((c: Container) => isEmpty(c.parent)) as Container;
+        setContainer(parentContainer);
+    })
+
+    return <ComponentTreeNode container={container}/>
+}
+
+function ComponentTreeNode(props: { container?: Container, paddingLeft?: number }) {
+    const {container} = props;
+    let {paddingLeft} = props;
+    const {allContainersSignal, selectedDragContainerIdSignal} = useAppContext<AppDesignerContext>();
+    const containerSignal = useSignal(container);
+    useEffect(() => {
+        containerSignal.set(container);
+    }, [container]);
+    paddingLeft = paddingLeft ?? 0;
+
+    if (container === undefined) {
+        return <></>
+    }
+
+    return <div style={{display: 'flex', flexDirection: 'column'}}>
+        <notifiable.div style={() => {
+            const id = selectedDragContainerIdSignal.get();
+            const container = containerSignal.get();
+            const isSelected = id === container?.id;
+            return {
+                paddingLeft: paddingLeft + 10,
+                paddingRight: 10,
+                background: isSelected ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0)'
+            }
+        }} onClick={() => {
+            selectedDragContainerIdSignal.set(container?.id);
+        }}>{container.type}</notifiable.div>
+        {container.children.map(c => {
+            const subContainer = allContainersSignal.get().find(p => p.id === c);
+            return <ComponentTreeNode container={subContainer} key={subContainer?.id ?? ''}
+                                      paddingLeft={paddingLeft + 10}/>
+        })}
+        <ComponentTreeNode/>
+    </div>
+}
 

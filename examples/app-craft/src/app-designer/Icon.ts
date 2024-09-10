@@ -10,7 +10,7 @@ import {
 } from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
 import {AiOutlineApi, AiOutlineFieldString, AiOutlineGroup} from "react-icons/ai";
-import {TbDatabaseSearch, TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
+import {TbBinaryTree, TbDatabaseSearch, TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
 import {
     MdAdd,
     MdCheck,
@@ -82,5 +82,6 @@ export const Icon = {
     Folder: FaFolder,
     File: FaFile,
     ChevronRight: BiChevronRight,
-    ChevronDown: BiChevronDown
+    ChevronDown: BiChevronDown,
+    Tree : TbBinaryTree
 }

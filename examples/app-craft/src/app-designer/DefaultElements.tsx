@@ -20,8 +20,11 @@ import {faultToIconByStatusId} from "../components/fault-status-icon/FaultStatus
 import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
 import {cssPropertiesSchema} from "./zod-schema/cssPropertiesSchema.ts";
+import {DataRenderer} from "./data-renderer/DataRenderer.tsx";
+
 export const DefaultElements: Record<string, Element> = {
     container: element({
+        shortName: 'Container',
         icon: Icon.Container,
         property: {
             style: cssPropertiesSchema
@@ -31,6 +34,7 @@ export const DefaultElements: Record<string, Element> = {
         }
     }),
     input: element({
+        shortName: 'Input',
         icon: Icon.Input,
         property: {
             value: z.string(),
@@ -57,7 +61,26 @@ export const DefaultElements: Record<string, Element> = {
             />
         }
     }),
+    element: element({
+        shortName: 'Component',
+        icon: Icon.Component,
+        property: {
+            properties: z.record(z.unknown()).optional(),
+            component: z.string()
+        },
+        component: (props, ref) => {
+            const {properties, component, style} = props;
+            return <DataRenderer style={style} component={component} ref={ref} {...properties}/>
+        },
+        propertyEditor: {
+            component: {
+                label: 'component',
+                component: PageSelectionPropertyEditor
+            }
+        }
+    }),
     dataGroup: element({
+        shortName: 'Group',
         icon: Icon.Table,
         property: {
             data: z.array(z.record(z.unknown())),
@@ -77,6 +100,7 @@ export const DefaultElements: Record<string, Element> = {
         }
     }),
     button: element({
+        shortName: 'Button',
         icon: Icon.Button,
         property: {
             onClick: z.function().returns(z.void()),
@@ -95,6 +119,7 @@ export const DefaultElements: Record<string, Element> = {
         }
     }),
     title: element({
+        shortName: 'Text',
         icon: Icon.Title,
         property: {
             title: z.string(),
@@ -104,16 +129,19 @@ export const DefaultElements: Record<string, Element> = {
             const {style} = props;
             let {title} = props;
             title = title ?? 'Add text here'
-            return <div ref={ref as LegacyRef<HTMLDivElement>} style={{flexShrink: 0, ...style}}>{title}</div>
+            return <div ref={ref as LegacyRef<HTMLDivElement>}
+                        style={{flexShrink: 0, lineHeight: 1.1, ...style, minHeight: 12}}>{title}</div>
         }
     }),
     queryGrid: element({
+        shortName: 'Table',
         icon: Icon.Grid,
         property: {
             query: z.function().args(z.object({
-                inputs:z.record(z.unknown()).optional(),
-                page:z.number().optional(),
-                dynamicFilter:z.record(z.unknown()).optional()
+                params: z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()])).optional(),
+                page: z.number().optional(),
+                filter: z.record(z.unknown()).optional(),
+                sort: z.array(z.object({column:z.string(),direction:z.enum(['asc','desc'])}).optional()).optional(),
             })).returns(z.promise(z.object({
                 error: z.string().optional(),
                 data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))).optional(),
@@ -127,16 +155,39 @@ export const DefaultElements: Record<string, Element> = {
                 rendererPageId: z.string().optional(),
                 title: z.string().optional()
             })),
-            focusedRow: z.record(z.unknown(z.unknown())),
-            onFocusedRowChange: z.function().args(z.unknown()).optional(),
-            refreshQueryKey: z.string().optional()
+            focusedRow: z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()])),
+            onFocusedRowChange: z.function().args(z.object({
+                value: z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()])),
+                data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))),
+                totalPage: z.number(),
+                currentPage: z.number(),
+                index: z.number()
+            })).returns(z.promise(z.void())).optional(),
+            refreshQueryKey: z.string().optional(),
+            onRowDoubleClick: z.function().args(z.object({
+                value: z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()])),
+                data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))),
+                totalPage: z.number(),
+                currentPage: z.number(),
+                index: z.number()
+            })).returns(z.union([z.promise(z.void()), z.void()])).optional()
         },
-        component: (props, ref) => {
-            const {query, style, config, focusedRow, onFocusedRowChange, container, refreshQueryKey} = props;
 
+        component: (props, ref) => {
+            const {
+                query,
+                style,
+                config,
+                focusedRow,
+                onFocusedRowChange,
+                container,
+                refreshQueryKey,
+                onRowDoubleClick
+            } = props;
             return <QueryGrid ref={ref} query={query} style={style} columnsConfig={config}
-                              onFocusedRowChange={onFocusedRowChange} focusedRow={focusedRow} container={container}
-                              refreshQueryKey={refreshQueryKey}/>
+                              onFocusedRowChange={onFocusedRowChange}
+                              focusedRow={focusedRow} container={container}
+                              refreshQueryKey={refreshQueryKey} onRowDoubleClick={onRowDoubleClick}/>
         },
         propertyEditor: {
             config: {
@@ -146,13 +197,15 @@ export const DefaultElements: Record<string, Element> = {
         }
     }),
     faultStatusIcon: element({
+        shortName: 'Status',
         icon: Icon.FaultIcon as unknown as IconType,
         property: {
             value: z.number()
         },
         component: (props, ref) => {
+            const {value} = props;
             return <div ref={ref as MutableRefObject<HTMLDivElement>} style={props.style}>
-                {faultToIconByStatusId(props.value)}
+                {faultToIconByStatusId(value)}
             </div>
         }
     })

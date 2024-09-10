@@ -20,7 +20,7 @@ export function PageSelector(props: {
         const selected = selectedPage.get();
         return pages.filter(i => i.id !== pageToFilterOut).map((i) => {
             const isSelected = i.id === selected;
-            return <div key={i.id} style={{display: 'flex', alignItems: 'center', gap: 5, width: '33.33%'}}
+            return <div key={i.id} style={{display: 'flex', alignItems: 'center', gap: 5}}
                         onClick={() => {
                             const selected = selectedPage.get();
                             const isSelected = selected === i.id;
@@ -35,7 +35,6 @@ export function PageSelector(props: {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 20,
                     fontSize: 18
                 }}>
                     {isSelected && <Icon.CheckboxChecked/>}
@@ -59,7 +58,8 @@ export function PageSelector(props: {
             <div style={{fontSize: 16}}>Page that will be referenced by :</div>
         </div>
         <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto', padding: '0px 20px'}}>
-            <notifiable.div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
+
+            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
                 {elements}
             </notifiable.div>
         </div>

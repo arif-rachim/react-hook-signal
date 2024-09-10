@@ -68,7 +68,6 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
         return selectedPanelSignal.get().mainCenter
     })
     useSignalEffect(() => {
-        let isChanged = false;
         const selectedPanel = {...selectedPanelSignal.get()};
         const panels = panelsSignal.get();
         const centerTag = panels.find(p => p.id === selectedCenterPanel.get())?.tag;
@@ -80,26 +79,24 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
 
         if (rightPanel && rightPanel.visible && !rightPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.right
-            isChanged = true;
         }
 
         if (rightBottomPanel && rightBottomPanel.visible && !rightBottomPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.rightBottom
-            isChanged = true;
         }
 
         if (leftPanel && leftPanel.visible && !leftPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.left
-            isChanged = true;
         }
 
         if (leftBottomPanel && leftBottomPanel.visible && !leftBottomPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.leftBottom
-            isChanged = true;
         }
-        if (isChanged) {
-            selectedPanelSignal.set({...selectedPanel});
+        if(JSON.stringify(selectedPanelSignal.get()) !== JSON.stringify(selectedPanel)){
+            setTimeout(() => {selectedPanelSignal.set({...selectedPanel})},0)
         }
+
+
     })
     return (
         <DashboardContext.Provider value={{panelsSignal, selectedPanelSignal}}>
@@ -285,6 +282,7 @@ function RenderPanel<T extends SelectedPanelType>(props: {
     panelsSignal: Signal.State<Array<PanelInstance>>
 }) {
     const {selectedPanelSignal, position, panelsSignal} = props;
+
     return <notifiable.div style={{
         display: 'flex',
         flexDirection: 'column',

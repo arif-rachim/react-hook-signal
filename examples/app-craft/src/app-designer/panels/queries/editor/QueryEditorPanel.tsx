@@ -121,31 +121,31 @@ export default function QueryEditorPanel(props: {
         //const params = query.parameters.map(p => p.value as SqlValue) as Array<SqlValue>;
         let params: ParamsObject = {};
         params = query.parameters.reduce((params, val) => {
-            params[':' + val.name] = val.value
+            params[val.name] = val.value
             return params;
         }, params)
-
         const result = await queryPagination({
             query:query.query,
             params,
-            dynamicFilter:filterSignal.get(),
+            filter:filterSignal.get(),
             currentPage:page ?? 1,
-            pageSize:50
+            pageSize:50,
+            sort : []
         });
         const prevTableData = tableDataSignal.get();
         if(prevTableData.columns.length > 0 && result.columns.length === 0) {
             tableDataSignal.set({...result, columns: prevTableData.columns});
         }else{
-            tableDataSignal.set(result);
+        tableDataSignal.set(result);
         }
-
         if (page === 1) {
             const allData = await queryPagination({
                 query:query.query,
                 params,
-                dynamicFilter : filterSignal.get(),
+                filter : filterSignal.get(),
                 currentPage : page ?? 1,
-                pageSize : 50
+                pageSize : 50,
+                sort : []
             });
             querySignal.set({...query, schemaCode: composeArraySchema(allData.data)})
         }
@@ -241,7 +241,7 @@ export default function QueryEditorPanel(props: {
                         const tableData = tableDataSignal.get();
                         const filter = filterSignal.get();
                         return <SimpleTable columns={tableData.columns}
-                                            data={tableData.data as Array<Record<string, unknown>>}
+                                            data={tableData.data as Array<Record<string, SqlValue>>}
                                             keyField={'id'}
                                             filter={filter}
                                             onFilterChange={async ({column,value}) =>{
@@ -276,9 +276,7 @@ export default function QueryEditorPanel(props: {
                         const query = querySignal.get();
                         const schemaCode = query.schemaCode;
                         return <>
-                            <div style={{borderBottom: BORDER, padding: 5, fontStyle: 'italic'}}>Query Return
-                                Type
-                            </div>
+                            <div style={{borderBottom: BORDER, padding: 5, fontStyle: 'italic'}}>Query Return Type</div>
                             <Editor
                                 language="javascript"
                                 value={schemaCode}
@@ -368,20 +366,9 @@ export default function QueryEditorPanel(props: {
 }
 
 function extractParametersAndReplace(sqlQuery: string) {
-    const parameterRegex = /:(\w+)/g;
-    return (sqlQuery.match(parameterRegex) ?? []).map(t => t.toString());
-}
-
-export function buildQuery(modifiedQuery: string, values: Array<unknown>) {
-    let index = 0;
-    return modifiedQuery.replace(/\?/g, () => {
-        const value = values[index++];
-        if (value === null || value === undefined) {
-            return ''
-        }
-        if (typeof value === 'string') {
-            return `'${value}'`
-        }
-        return value.toString();
-    })
+    const parameterColon = /:(\w+)/g;
+    return (sqlQuery.match(parameterColon) ?? []).map(t => {
+        const text = t.toString();
+        return text.substring(1)
+    });
 }

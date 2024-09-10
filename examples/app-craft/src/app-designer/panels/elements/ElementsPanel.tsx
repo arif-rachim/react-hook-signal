@@ -15,7 +15,8 @@ export function ElementsPanel() {
             Object.keys(elements ?? {}).map((key) => {
                 if (elements && key in elements) {
                     const Icon = elements[key].icon;
-                    return <DraggableItem icon={Icon} draggableDataType={key} key={key}/>
+                    const shortName = elements[key].shortName;
+                    return <DraggableItem icon={Icon} draggableDataType={key} key={key} shortName={shortName}/>
                 }
                 return <></>
             })

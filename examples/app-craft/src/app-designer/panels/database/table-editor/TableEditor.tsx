@@ -20,13 +20,14 @@ export async function queryPagination(props: {
     params: ParamsObject,
     currentPage: number,
     pageSize: number,
-    dynamicFilter: ParamsObject
+    filter: ParamsObject,
+    sort: Array<{ column: string, direction: 'asc' | 'desc' }>
 }) {
-    const {query, params, currentPage, pageSize, dynamicFilter} = props;
+    const {query, params, currentPage, pageSize, filter, sort} = props;
     const {columns, values, page} = await queryDb(query, {
         size: pageSize ?? 50,
         number: currentPage
-    }, params, dynamicFilter)
+    }, params, filter, sort)
 
     const data = values.map(val => {
         const result: Record<string, SqlValue> = {};
@@ -51,16 +52,25 @@ async function queryTable(props: {
     sort: Array<{ column: string, direction: 'asc' | 'desc' }>
 }) {
     const {setTableData, table, currentPage, filter, sort} = props;
-    const sortStrings: string[] = [];
-    sort.forEach(s => {
-        sortStrings.push(`${s.column} ${s.direction}`);
-    })
+    // const sortStrings: string[] = [];
+    // sort.forEach(s => {
+    //     sortStrings.push(`${s.column} ${s.direction}`);
+    // })
+    // const result = await queryPagination({
+    //     currentPage,
+    //     pageSize: 50,
+    //     query: `SELECT * FROM ${table.tblName} ${sortStrings.length > 0 ? 'ORDER BY':''} ${sortStrings.join(', ')}`,
+    //     params: {},
+    //     filter: filter,
+    //     sort
+    // });
     const result = await queryPagination({
         currentPage,
         pageSize: 50,
-        query: `SELECT * FROM ${table.tblName} ${sortStrings.length > 0 ? 'ORDER BY':''} ${sortStrings.join(', ')}`,
+        query: `SELECT * FROM ${table.tblName}`,
         params: {},
-        dynamicFilter: filter
+        filter,
+        sort
     });
     setTableData(oldValue => {
         if (result.data.length > 0) {
@@ -106,7 +116,7 @@ export default function TableEditor(props: { table: Table }) {
             </div>
         </CollapsibleLabelContainer>
         <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
-            <SimpleTable columns={tableData.columns ?? []} data={tableData.data as Array<Record<string, unknown>>}
+            <SimpleTable columns={tableData.columns ?? []} data={tableData.data as Array<Record<string, SqlValue>>}
                          keyField={'ID_'} filterable={true} filter={filter}
                          onFilterChange={({column, value}) => {
                              setFilter(oldValue => {
@@ -228,6 +238,8 @@ export type ColumnsConfig = Record<string, {
 
 
 function extractWidthAndHiddenField(columnsConfig: ColumnsConfig | undefined, col: string) {
+
+
     let width: CSSProperties['width'] | undefined = undefined;
     let hide: boolean | undefined = false;
     if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
@@ -244,7 +256,7 @@ function extractWidthAndHiddenField(columnsConfig: ColumnsConfig | undefined, co
     return {width, hide};
 }
 
-export function SimpleTable<T extends Record<string, unknown>>(props: {
+export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     columns: Array<string>,
     data: Array<T>,
     keyField: string,
@@ -252,11 +264,12 @@ export function SimpleTable<T extends Record<string, unknown>>(props: {
     focusedRow?: T,
     columnsConfig?: ColumnsConfig,
     filterable?: boolean,
-    filter?: Record<string, unknown>,
+    filter?: Record<string, SqlValue>,
     onFilterChange?: (props: { column: string, value: unknown, oldValue: unknown }) => void,
     sortable?: boolean,
     sort?: Array<{ column: string, direction: 'asc' | 'desc' }>,
-    onSortChange?: (props: { column: string, value: 'asc' | 'desc' | 'remove' }) => void
+    onSortChange?: (props: { column: string, value: 'asc' | 'desc' | 'remove' }) => void,
+    onRowDoubleClick?: (value: Record<string, SqlValue>) => void
 }) {
     const {
         columns,
@@ -270,14 +283,12 @@ export function SimpleTable<T extends Record<string, unknown>>(props: {
         onFilterChange,
         sort,
         onSortChange,
-        sortable
+        sortable,
+        onRowDoubleClick
     } = props;
-
     const [focusedRow, setFocusedRow] = useState<T | undefined>(focusedRowProps);
     useEffect(() => setFocusedRow(focusedRowProps), [focusedRowProps]);
-
     const {allPagesSignal, elements, applicationSignal} = useAppContext();
-
     return <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
         <div style={{display: 'table-row', position: 'sticky', top: 0}}>
             {columns.map(col => {
@@ -384,6 +395,10 @@ export function SimpleTable<T extends Record<string, unknown>>(props: {
                     onFocusedRowChange(item)
                 } else {
                     setFocusedRow(item)
+                }
+            }} onDoubleClick={() => {
+                if (onRowDoubleClick) {
+                    onRowDoubleClick(item)
                 }
             }}>
                 {columns.map((col) => {
