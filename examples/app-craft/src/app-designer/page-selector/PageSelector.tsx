@@ -12,9 +12,10 @@ export function PageSelector(props: {
     value?: string,
     pageToFilterOut: string
 }) {
-    const {closePanel, pageToFilterOut} = props;
+
+    const {closePanel, pageToFilterOut, value} = props;
     const {allPagesSignal} = useAppContext();
-    const selectedPage = useSignal<string | undefined>(props.value);
+    const selectedPage = useSignal<string | undefined>(value);
     const elements = useComputed(() => {
         const pages = allPagesSignal.get();
         const selected = selectedPage.get();

@@ -21,6 +21,7 @@ import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
 import {cssPropertiesSchema} from "./zod-schema/cssPropertiesSchema.ts";
 import {DataRenderer} from "./data-renderer/DataRenderer.tsx";
+import {PropertiesPropertyEditor} from "./data-renderer/PropertiesPropertyEditor.tsx";
 
 export const DefaultElements: Record<string, Element> = {
     container: element({
@@ -66,7 +67,8 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Component,
         property: {
             properties: z.record(z.unknown()).optional(),
-            component: z.string()
+            component: z.string(),
+            style : cssPropertiesSchema
         },
         component: (props, ref) => {
             const {properties, component, style} = props;
@@ -76,6 +78,10 @@ export const DefaultElements: Record<string, Element> = {
             component: {
                 label: 'component',
                 component: PageSelectionPropertyEditor
+            },
+            properties : {
+                label : 'properties',
+                component: PropertiesPropertyEditor
             }
         }
     }),
@@ -104,13 +110,16 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Button,
         property: {
             onClick: z.function().returns(z.void()),
-            label: z.string()
+            label: z.string(),
+            style: cssPropertiesSchema
         },
         component: (props, ref) => {
             const {onClick, style} = props;
             let {label} = props;
             label = label ?? 'Add label here';
-            return <Button style={{width: style.width, height: style.height}} ref={ref as LegacyRef<HTMLButtonElement>}
+            delete style.background;
+            delete style.backgroundColor;
+            return <Button style={style} ref={ref as LegacyRef<HTMLButtonElement>}
                            onClick={() => {
                                onClick()
                            }}>
@@ -141,7 +150,8 @@ export const DefaultElements: Record<string, Element> = {
                 params: z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()])).optional(),
                 page: z.number().optional(),
                 filter: z.record(z.unknown()).optional(),
-                sort: z.array(z.object({column:z.string(),direction:z.enum(['asc','desc'])}).optional()).optional(),
+                rowPerPage : z.number().optional(),
+                sort: z.array(z.object({column: z.string(), direction: z.enum(['asc', 'desc'])}).optional()).optional(),
             })).returns(z.promise(z.object({
                 error: z.string().optional(),
                 data: z.array(z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]))).optional(),
@@ -170,7 +180,10 @@ export const DefaultElements: Record<string, Element> = {
                 totalPage: z.number(),
                 currentPage: z.number(),
                 index: z.number()
-            })).returns(z.union([z.promise(z.void()), z.void()])).optional()
+            })).returns(z.union([z.promise(z.void()), z.void()])).optional(),
+            filterable: z.boolean().optional(),
+            sortable: z.boolean().optional(),
+            pageable: z.boolean().optional(),
         },
 
         component: (props, ref) => {
@@ -182,12 +195,16 @@ export const DefaultElements: Record<string, Element> = {
                 onFocusedRowChange,
                 container,
                 refreshQueryKey,
-                onRowDoubleClick
+                onRowDoubleClick,
+                filterable,
+                sortable,
+                pageable
             } = props;
             return <QueryGrid ref={ref} query={query} style={style} columnsConfig={config}
                               onFocusedRowChange={onFocusedRowChange}
                               focusedRow={focusedRow} container={container}
-                              refreshQueryKey={refreshQueryKey} onRowDoubleClick={onRowDoubleClick}/>
+                              refreshQueryKey={refreshQueryKey} onRowDoubleClick={onRowDoubleClick}
+                              filterable={filterable} sortable={sortable} pageable={pageable}/>
         },
         propertyEditor: {
             config: {

@@ -1,5 +1,5 @@
 import {CSSProperties, useEffect, useState} from "react";
-import {AnySignal, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
+import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
@@ -25,7 +25,6 @@ import {createCallablePanel} from "./panels/callable/CallablePanel.tsx";
 import {createQueriesPanel} from "./panels/queries/QueriesPanel.tsx";
 import {useAppContext} from "./hooks/useAppContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
-import {notifiable} from "react-hook-signal";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -411,7 +410,7 @@ function ComponentTreeNode(props: { container?: Container, paddingLeft?: number 
     const containerSignal = useSignal(container);
     useEffect(() => {
         containerSignal.set(container);
-    }, [container]);
+    }, [container, containerSignal]);
     paddingLeft = paddingLeft ?? 0;
 
     if (container === undefined) {

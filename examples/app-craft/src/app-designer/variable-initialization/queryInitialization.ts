@@ -7,14 +7,14 @@ export function queryInitialization(allQueries: Array<Query>): Record<string, Qu
     const queries: Record<string, QueryType> = {};
     for (const queryValue of allQueries) {
         queries[queryValue.name] = (props) => {
-            const {params, page, filter, sort} = props;
+            const {params, page, filter, sort, rowPerPage} = props;
             return new Promise(resolve => {
                 queryPagination({
                     query: queryValue.query,
                     filter: filter ?? {},
                     sort: sort ?? [],
                     params: params ?? {},
-                    pageSize: 50,
+                    pageSize: rowPerPage ?? 50,
                     currentPage: page ?? 1,
                 }).then(result => {
                     resolve(result);
@@ -42,7 +42,7 @@ export function composeQuerySchema(allQueries: Array<Query>) {
             return result;
         }, [] as Array<string>)
         const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props:{params?:${type},page?:number,filter?:Record<string,SqlValue>,sort?:Record<string,SqlValue>}) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
+        return `${i.name} : (props:{params?:${type},page?:number,filter?:Record<string,SqlValue>,sort?:Record<string,SqlValue>,rowPerPage?:number}) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
     })
     return `{${queriesSchema.join(',')}}`
 }

@@ -129,27 +129,6 @@ export function CircleB({size = 13}: { size: number }) {
 }
 
 
-export function faultToIcon(status: string, size: number = 17) {
-    status = status.toUpperCase();
-    switch (status) {
-        case '-' :
-            return <Dash size={size}/>;
-        case 'X':
-            return <RedX size={size}/>;
-        case '/':
-            return <Diagonal size={size}/>;
-        case '(X)':
-            return <CircleX size={size}/>;
-        case '(B)':
-            return <CircleB size={size}/>;
-        case '(C)':
-            return <CircleC size={size}/>;
-        case '(N)':
-            return <CircleN size={size}/>;
-        default :
-            return ''
-    }
-}
 
 export function faultToIconByStatusId(statusId: number, size: number = 17) {
     switch (statusId) {

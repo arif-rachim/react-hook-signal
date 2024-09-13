@@ -9,7 +9,8 @@ export function PageInputSelector(props: {
     value?: string,
     onChange: (value?: string) => void,
     style?: CSSProperties,
-    chipColor?: CSSProperties['backgroundColor']
+    chipColor?: CSSProperties['backgroundColor'],
+    hidePageName?: boolean,
 }) {
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
@@ -31,9 +32,7 @@ export function PageInputSelector(props: {
             onChange(result);
         }
     }
-
     return <div
-
         style={{
             border: BORDER,
             display: 'flex',
@@ -46,7 +45,7 @@ export function PageInputSelector(props: {
             ...props.style
         }}
         onClick={showPageSelector}>
-        {page &&
+        {page && props.hidePageName !== true &&
             <div style={{
                 backgroundColor: props.chipColor ? props.chipColor : 'rgba(0,0,0,0.1)',
                 borderRadius: 5,

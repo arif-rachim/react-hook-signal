@@ -9,6 +9,7 @@ import {BORDER} from "../../../Border.ts";
 import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
+import {ZodTypeAny} from "zod";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -16,7 +17,8 @@ import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPane
 export function ComponentPropertyEditor(props: {
     name: string,
     containerId: string,
-    panelId: string
+    panelId: string,
+    returnTypeZod?: ZodTypeAny,
 }) {
     const context = useAppContext();
     const removePanel = useRemoveDashboardPanel();
@@ -35,7 +37,7 @@ export function ComponentPropertyEditor(props: {
     } = context;
 
     const selectedDragContainer = context.allContainersSignal.get().find(c => c.id === props.containerId)!;
-    const returnTypeZod = elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
+    const returnTypeZod = props.returnTypeZod ? props.returnTypeZod : elements ? elements[selectedDragContainer?.type]?.property[props.name] : undefined;
     const initialValue = (selectedDragContainer?.properties[props.name]) ?? createNewProps();
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
     const isModified = useSignal<boolean>(false)
@@ -73,7 +75,6 @@ export function ComponentPropertyEditor(props: {
                 const allPageCallables = allPageCallablesSignal.get();
 
                 const returnType = zodTypeToJson(returnTypeZod);
-
                 return <Editor
                     language="javascript"
                     beforeMount={(monaco) => {

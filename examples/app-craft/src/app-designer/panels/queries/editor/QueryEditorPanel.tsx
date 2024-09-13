@@ -192,8 +192,10 @@ export default function QueryEditorPanel(props: {
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: 250,
-                    flexGrow: 1
+                    maxHeight:400,
+                    minHeight: 400,
+                    flexGrow: 1,
+                    overflow:'auto'
                 }}>
                     {() => {
                         const callable = querySignal.get();

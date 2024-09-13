@@ -214,7 +214,7 @@ export function DraggableContainerElement(props: { container: Container }) {
             return -1;
         }
 
-        const MIN_SPACE = 1;
+        const MIN_SPACE = 5;
         if (mode === 'design' && isContainer) {
             styleFromSignal.minHeight = 24;
             styleFromSignal.minWidth = 24;

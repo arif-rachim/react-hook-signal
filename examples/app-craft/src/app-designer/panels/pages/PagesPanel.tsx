@@ -26,7 +26,7 @@ type TreeNode = {
 function convertToTree(allPages: Array<Page>, folders: string[]): TreeNode {
     const treeNode = {} as TreeNode;
     allPages.forEach(page => {
-        const paths = page.name.split('/');
+        const paths = page?.name?.split('/') ?? [];
         const parentPaths = [...paths];
         parentPaths.splice(parentPaths.length - 1, 1);
         paths.reduce((treeNode, path) => {
@@ -112,7 +112,7 @@ export function PagesPanel() {
         <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
             {() => {
                 const activePageId = activePageIdSignal.get()
-                const allPages = allPagesSignal.get().sort((a, b) => a.name.localeCompare(b.name));
+                const allPages = allPagesSignal.get().sort((a, b) => a?.name?.localeCompare(b?.name));
                 const folders = openedFoldersSignal.get();
                 const pages = convertToTree(allPages, folders);
                 const focusedPath = allPages.find(p => p.id === activePageId)?.name ?? '';

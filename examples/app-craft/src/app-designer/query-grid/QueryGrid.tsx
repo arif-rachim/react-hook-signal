@@ -6,7 +6,7 @@ import {SqlValue} from "sql.js";
 
 export type QueryTypeResult = {
     error?: string,
-    data?: Record<string,SqlValue>[],
+    data?: Record<string, SqlValue>[],
     columns?: string[],
     totalPage?: number,
     currentPage?: number
@@ -34,7 +34,10 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         totalPage: number,
         currentPage: number,
         index: number
-    }) => (Promise<void> | void)
+    }) => (Promise<void> | void),
+    filterable?: boolean,
+    sortable?: boolean,
+    pageable?: boolean,
 }, ref) {
     const {
         query,
@@ -44,7 +47,10 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         onFocusedRowChange,
         container,
         refreshQueryKey,
-        onRowDoubleClick
+        onRowDoubleClick,
+        filterable,
+        sortable,
+        pageable
     } = props;
     const [queryResult, setQueryResult] = useState<QueryTypeResult>({
         columns: [],
@@ -58,8 +64,13 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
     useEffect(() => {
         if (query) {
             (async () => {
-
-                const result = await query({params: {}, page: 0, filter: filter, sort: sort});
+                const result = await query({
+                    params: {},
+                    page: 0,
+                    filter: filter,
+                    sort: sort,
+                    rowPerPage: pageable ? 20 : Number.MAX_SAFE_INTEGER
+                });
                 setQueryResult(oldVal => {
                     if (result.columns?.length === 0 && oldVal.columns?.length && oldVal.columns?.length > 0) {
                         result.columns = oldVal.columns;
@@ -68,7 +79,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                 });
             })();
         }
-    }, [query, refreshQueryKey, filter, sort]);
+    }, [query, refreshQueryKey, filter, sort, pageable]);
 
     // this is to just store them in the temporal state to be used by editor
     queryGridColumnsTemporalColumns[container.id] = queryResult.columns ?? [];
@@ -81,19 +92,19 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                          keyField={'ID_'}
                          columnsConfig={columnsConfig}
                          focusedRow={focusedRow}
-                         onFocusedRowChange={(value:Record<string, SqlValue>) => {
+                         onFocusedRowChange={(value: Record<string, SqlValue>) => {
                              const data = queryResult.data ?? [];
                              if (onFocusedRowChange) {
                                  onFocusedRowChange({
                                      value,
-                                     index : data.indexOf(value),
-                                     totalPage : queryResult.totalPage ?? 0,
+                                     index: data.indexOf(value),
+                                     totalPage: queryResult.totalPage ?? 0,
                                      data,
-                                     currentPage : queryResult.currentPage ?? 0
+                                     currentPage: queryResult.currentPage ?? 0
                                  })
                              }
                          }}
-                         filterable={true}
+                         filterable={filterable}
                          filter={filter}
                          onFilterChange={({column, value}) => {
                              setFilter(oldValue => {
@@ -102,7 +113,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                                  return newValue;
                              })
                          }}
-                         sortable={true}
+                         sortable={sortable}
                          sort={sort}
                          onSortChange={({column, value}) => {
                              setSort(oldValue => {
@@ -131,17 +142,20 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                                  });
                              }
                          }}
+
             />
         </div>
-        <SimpleTableFooter totalPages={queryResult.totalPage ?? 1} value={queryResult.currentPage ?? 1}
-                           onChange={async (newPage) => {
-                               const result = await query({filter: filter, page: newPage, params: {}, sort});
-                               setQueryResult(oldVal => {
-                                   if (result.columns?.length === 0 && oldVal.columns?.length && oldVal.columns?.length > 0) {
-                                       result.columns = oldVal.columns;
-                                   }
-                                   return result
-                               });
-                           }}/>
+        {pageable &&
+            <SimpleTableFooter totalPages={queryResult.totalPage ?? 1} value={queryResult.currentPage ?? 1}
+                               onChange={async (newPage) => {
+                                   const result = await query({filter: filter, page: newPage, params: {}, sort,rowPerPage:pageable ? 20 : Number.MAX_SAFE_INTEGER});
+                                   setQueryResult(oldVal => {
+                                       if (result.columns?.length === 0 && oldVal.columns?.length && oldVal.columns?.length > 0) {
+                                           result.columns = oldVal.columns;
+                                       }
+                                       return result
+                                   });
+                               }}/>
+        }
     </div>
 })

@@ -2,12 +2,13 @@ import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {useUpdateDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
-import {CSSProperties} from "react";
+import {CSSProperties, useState} from "react";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {PageInputSelector} from "../page-selector/PageInputSelector.tsx";
 import {Container} from "../AppDesigner.tsx";
 import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
+import {useSignalEffect} from "react-hook-signal";
 
 export function PageSelectionPropertyEditor(props: { propertyName: string }) {
     const containerSignal = useSelectedDragContainer();
@@ -22,6 +23,23 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         isFormulaEmpty = isEmpty(formula);
     }
     const update = useUpdateDragContainer();
+    const selectedDragContainerSignal = useSelectedDragContainer();
+    const [value,setValue] = useState<string>('');
+    useSignalEffect(() => {
+        const selectedDragContainer = selectedDragContainerSignal.get();
+        if(selectedDragContainer && selectedDragContainer.properties && propertyName in selectedDragContainer.properties) {
+            const formula = selectedDragContainer.properties[propertyName].formula;
+            try{
+                const fun = new Function('module',formula);
+                const module = {exports:''};
+                fun.call(null,module)
+                const pageId = module.exports
+                setValue(pageId);
+            }catch(err){
+                console.error(err);
+            }
+        }
+    })
     const style: CSSProperties = {
         width: 28,
         display: 'flex',
@@ -35,7 +53,7 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         padding: 0
     };
     return <div style={{display: 'flex'}}>
-        <PageInputSelector value={''} style={style} onChange={(value) => {
+        <PageInputSelector value={value} style={style} onChange={(value) => {
             const containerId = containerSignal.get()?.id;
             if (containerId) {
                 update(containerId, (selectedContainer: Container) => {
@@ -50,10 +68,9 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
                         delete selectedContainer.properties[propertyName];
                         return selectedContainer;
                     }
-
                 });
             }
-        }}/>
+        }} hidePageName={true}/>
         <div style={{
             display: 'flex',
             padding: '0px 2px',

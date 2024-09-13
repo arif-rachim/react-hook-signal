@@ -195,6 +195,7 @@ export const cssPropertiesSchema = z.object({
     opacity: z.union([z.string(), z.number()]).optional(),
     order: z.union([z.string(), z.number()]).optional(),
     outline: z.string().optional(),
+    overflow: z.string().optional(),
     padding: cssLength.optional(),
     paddingBottom: cssLength.optional(),
     paddingLeft: cssLength.optional(),

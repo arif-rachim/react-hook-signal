@@ -1,17 +1,16 @@
 import {Button} from "./Button.tsx";
-import {useState} from "react";
 import {BORDER} from "../Border.ts";
 
 export default function ButtonGroup(props: {
-    buttons: Record<string, { onClick: () => void }>,
-    defaultButton: string
+    buttons: Record<string, { onClick: () => void,title:string }>,
+    value: string
 }) {
-    const [selectedButton, setSelectedButton] = useState<string>(props.defaultButton);
+    const {value} = props;
     return <>
         {Object.keys(props.buttons).map((key, index, array) => {
             const isFirstElement = index === 0;
             const isLastElement = index === array.length - 1;
-            const isSelected = selectedButton === key;
+            const isSelected = value === key;
             return <Button key={key}
                            style={{
                                borderRadius: 0,
@@ -21,12 +20,12 @@ export default function ButtonGroup(props: {
                                borderTopRightRadius: isLastElement ? 20 : 0,
                                borderBottomRightRadius: isLastElement ? 20 : 0,
                                backgroundColor: isSelected ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)',
-                               color: isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.9)'
+                               color: isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.9)',
+                               padding:'0px 10px 2px 10px'
                            }}
                            onClick={() => {
-                               setSelectedButton(key)
                                props.buttons[key].onClick()
-                           }}>{key}</Button>
+                           }}>{props.buttons[key].title}</Button>
         })}
     </>
 }

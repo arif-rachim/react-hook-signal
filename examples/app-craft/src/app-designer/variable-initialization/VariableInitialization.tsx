@@ -145,7 +145,8 @@ export type QueryType = (props: {
     params?: Record<string, SqlValue>,
     page?: number,
     filter?: Record<string, SqlValue>,
-    sort?:Array<{ column: string, direction: 'asc' | 'desc' }>
+    sort?: Array<{ column: string, direction: 'asc' | 'desc' }>,
+    rowPerPage?: number
 }) => Promise<QueryTypeResult>
 
 export type FetchType = (inputs?: Record<string, unknown>) => Promise<Record<string, unknown> & { error?: string }>
