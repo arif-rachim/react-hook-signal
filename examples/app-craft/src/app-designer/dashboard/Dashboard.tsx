@@ -356,7 +356,7 @@ function RenderTabPanel(props: {
         flexGrow: 1,
         overflow: 'auto',
     }}>
-        <div style={{display: isEmpty ? 'none' : 'flex', flexDirection: 'row', borderBottom: BORDER}}>
+        <div style={{display: isEmpty ? 'none' : 'flex', flexDirection: 'row', borderBottom: BORDER,overflow:'hidden'}}>
             {panelsComputed.map(panel => {
 
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
@@ -366,8 +366,8 @@ function RenderTabPanel(props: {
                     if (position === 'mainCenter') {
                         activePageIdSignal.set(panel.pageId);
                     }
-                }} key={panel.id} isSelected={isSelected}>
-                    <div>{panel.title}</div>
+                }} key={panel.id} isSelected={isSelected} style={{overflow:'hidden'}}>
+                    <div style={{textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap',width:'100%'}}>{panel.title}</div>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
