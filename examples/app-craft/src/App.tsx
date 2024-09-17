@@ -5,9 +5,15 @@ export function App() {
     const [value, setValue] = useState<Application>(() => {
         const val = localStorage.getItem('app-designer');
         if (val && val.length > 0) {
-            return JSON.parse(val);
+            const app = JSON.parse(val) as Application;
+            app.pages.forEach(p => {
+                if(!p.name){
+                    p.name = 'anonymous'
+                }
+            })
+            return app as Application;
         }
-        return [];
+        return {} as Application;
     });
     return <AppDesigner value={value} onChange={(val) => {
         localStorage.setItem('app-designer', JSON.stringify(val));

@@ -4,6 +4,10 @@ import {printNode, zodToTs} from "zod-to-ts";
 export function zodSchemaToZodType(schemaCode: string): ZodType {
     let returnType = z.any();
     try {
+        schemaCode = schemaCode.trim();
+        if(schemaCode.endsWith(';')){
+            schemaCode = schemaCode.substring(0,schemaCode.length - 1);
+        }
         const fun = new Function('z', `return (${schemaCode})`);
         returnType = fun.call(null, z);
     } catch (err) {

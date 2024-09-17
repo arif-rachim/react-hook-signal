@@ -233,6 +233,7 @@ export type ColumnsConfig = Record<string, {
     hidden?: boolean,
     width?: CSSProperties["width"],
     rendererPageId?: string,
+    rendererPageDataMapperFormula?: string,
     title?: string
 }>
 
@@ -288,7 +289,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     } = props;
     const [focusedRow, setFocusedRow] = useState<T | undefined>(focusedRowProps);
     useEffect(() => setFocusedRow(focusedRowProps), [focusedRowProps]);
-    const {allPagesSignal, elements, applicationSignal} = useAppContext();
+    const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
     return <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
         <div style={{display: 'table-row', position: 'sticky', top: 0}}>
             {columns.map(col => {
@@ -405,6 +406,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                     let width: CSSProperties['width'] | undefined = undefined;
                     let hide: boolean | undefined = false;
                     let rendererPageId: string | undefined = undefined;
+                    const value = item[col] as ReactNode;
+                    let valueParams = {value};
                     if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
                         const config = columnsConfig[col];
                         if (!isEmpty(config.width)) {
@@ -418,8 +421,23 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         if (config.rendererPageId) {
                             rendererPageId = config.rendererPageId;
                         }
+                        if (config.rendererPageDataMapperFormula) {
+                            try {
+                                const fun = new Function('module', config.rendererPageDataMapperFormula)
+                                const module:{exports:(props:unknown) => unknown} = {exports: (props: unknown) => console.log(props)};
+                                fun.call(null, module)
+                                valueParams = module.exports({
+                                    cellValue: value,
+                                    rowIndex,
+                                    rowData: item,
+                                    columnName: col,
+                                    gridData: data
+                                }) as unknown as typeof valueParams;
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }
                     }
-                    const value = item[col] as ReactNode;
                     let renderer = <div>{value}</div>;
                     if (rendererPageId) {
                         const page = allPagesSignal.get().find(p => p.id === rendererPageId);
@@ -429,7 +447,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                                 page={page!}
                                 key={`${col}:${rowIndex}`}
                                 appConfig={applicationSignal.get()}
-                                value={{item, index: rowIndex, value}}
+                                value={valueParams}
+                                navigate={navigate}
                             />
                         }
                     }

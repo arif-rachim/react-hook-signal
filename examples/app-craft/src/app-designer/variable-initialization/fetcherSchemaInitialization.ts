@@ -64,7 +64,7 @@ export function fetcherInitialization(props: {
                 } = {exports: {}};
 
                 try {
-                    const params = ['module', 'app', 'page', fetcher.defaultValueFormula ?? ''];
+                    const params = ['module', 'app', 'page', fetcher.functionCode ?? ''];
                     const fun = new Function(...params)
                     fun.call(null, ...[module, app, page]);
                     fetcher.protocol = module.exports.protocol ?? fetcher.protocol;

@@ -12,9 +12,10 @@ export function PageViewer(props: {
     elements: LayoutBuilderProps['elements'],
     page: Page,
     appConfig: Omit<Application, 'id' | 'name'>
-    value: Record<string, unknown>
+    value: Record<string, unknown>,
+    navigate: AppViewerContext['navigate'],
 }) {
-    const {elements, page, appConfig, value} = props;
+    const {elements, page, appConfig, value, navigate} = props;
     const variableInitialValueSignal = useSignal<Record<string, unknown>>(value);
     useEffect(() => {
         variableInitialValueSignal.set(value);
@@ -28,7 +29,7 @@ export function PageViewer(props: {
             fetchers: appConfig.fetchers,
             callables: appConfig.callables,
             tables: appConfig.tables,
-            variables: appConfig.variables
+            variables: appConfig.variables,
         },
         elements: elements,
         onChange: () => {
@@ -60,6 +61,7 @@ export function PageViewer(props: {
         allQueriesSignal: appContext.allQueriesSignal,
         allCallablesSignal: appContext.allCallablesSignal,
         elements,
+        navigate
     } as AppViewerContext;
 
     const [container, setContainer] = useState<Container | undefined>();

@@ -12,107 +12,164 @@ import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 import {useShowModal} from "../../../modal/useShowModal.ts";
 import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
+import {BORDER} from "../../Border.ts";
 
-export const createCallablePanel = (scope: 'page' | 'application') => {
-    return function CallablePanel() {
-        const focusedItemSignal = useSignal<string>('');
-        const context = useAppContext<AppDesignerContext>();
-        const {allApplicationCallablesSignal, allPageCallablesSignal} = context;
-        const allCallablesSignal = scope === 'application' ? allApplicationCallablesSignal : allPageCallablesSignal;
 
-        const updatePage = useUpdatePageSignal();
-        const showModal = useShowModal();
-        const addPanel = useAddDashboardPanel();
-        const updateApplication = useUpdateApplication();
+function AddButton(props:{editCallable: () => void}) {
+    return <div style={{display: 'flex', padding: 10}}>
+        <Button
+            style={{
+                display: 'flex',
+                flexGrow: 1,
+                alignItems: 'center',
+                gap: 5,
+                justifyContent: 'center',
+                padding: '0px 10px 2px 10px',
+                background: 'rgba(0,0,0,0.0)',
+                border: '1px solid rgba(0,0,0,0.2)',
+                color: '#333',
+            }}
+            onClick={() => props.editCallable()}
+        >
+            {'Add Callable'}
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <MdAdd style={{fontSize: 20}}/>
+            </div>
+        </Button>
+    </div>;
+}
 
-        async function deleteCallable(callable: Callable) {
-            const deleteVariableConfirm = await showModal<string>(closePanel => {
-                return <ConfirmationDialog message={'Are you sure you want to delete this callable ?'}
-                                           closePanel={closePanel}/>
-            })
-            if (deleteVariableConfirm === 'Yes') {
-                const callables = allCallablesSignal.get().filter(i => i.id !== callable.id);
-                if (scope === 'application') {
-                    updateApplication(app => {
-                        app.callables = callables;
-                    })
-                } else {
-                    updatePage({type: 'callable', callables: callables})
-                }
+export function CallablePanel() {
+    const focusedItemSignal = useSignal<string>('');
+    const context = useAppContext<AppDesignerContext>();
+    const {allApplicationCallablesSignal, allPageCallablesSignal} = context;
+
+    const updatePage = useUpdatePageSignal();
+    const showModal = useShowModal();
+    const addPanel = useAddDashboardPanel();
+    const updateApplication = useUpdateApplication();
+
+    async function deleteCallable(callable: Callable, scope: 'application' | 'page') {
+        const deleteVariableConfirm = await showModal<string>(closePanel => {
+            return <ConfirmationDialog message={'Are you sure you want to delete this callable ?'}
+                                       closePanel={closePanel}/>
+        })
+        if (deleteVariableConfirm === 'Yes') {
+            if (scope === 'application') {
+                const callables = allApplicationCallablesSignal.get().filter(i => i.id !== callable.id);
+                updateApplication(app => {
+                    app.callables = callables;
+                })
+            } else {
+                const callables = allPageCallablesSignal.get().filter(i => i.id !== callable.id);
+                updatePage({type: 'callable', callables: callables})
             }
         }
-
-        function editCallable(callable?: Callable) {
-            const panelId = callable?.id ?? guid();
-            addPanel({
-                position: 'mainCenter',
-                component: () => {
-                    return <CallableEditorPanel callableId={callable?.id} panelId={panelId} scope={scope}/>
-                },
-                title: callable ? `Edit ${callable.name}` : `Add Callable`,
-                Icon: Icon.Component,
-                id: panelId,
-                tag: {
-                    type: 'CallableEditorPanel'
-                },
-                visible: () => true,
-            })
-        }
-
-        return <div style={{display: 'flex', flexDirection: 'column'}}>
-            <div style={{display: 'flex', padding: 10}}>
-                <Button
-                    style={{
-                        display: 'flex',
-                        flexGrow: 1,
-                        alignItems: 'center',
-                        gap: 5,
-                        justifyContent: 'center',
-                        padding: '0px 10px 2px 10px',
-                        background: 'rgba(0,0,0,0.0)',
-                        border: '1px solid rgba(0,0,0,0.2)',
-                        color: '#333',
-                    }}
-                    onClick={() => editCallable()}
-                >
-                    {'Add Callable'}
-                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        <MdAdd style={{fontSize: 20}}/>
-                    </div>
-                </Button>
-            </div>
-            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                {() => {
-                    const focusedItem = focusedItemSignal.get();
-                    return allCallablesSignal.get().map(callable => {
-                        const isFocused = focusedItem === callable.id;
-                        return <div style={{
-                            display: 'flex',
-                            gap: 5,
-                            padding: '0px 10px 2px 10px',
-                            backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
-                        }} key={callable.id} onClick={() => {
-                            focusedItemSignal.set(callable.id);
-                            editCallable(callable)
-                        }}>
-
-                            <div style={{
-                                flexGrow: 1,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                            }}>{callable.name}</div>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }} onClick={() => deleteCallable(callable)}>
-                                <Icon.Delete style={{fontSize: 18}}/>
-                            </div>
-                        </div>
-                    })
-                }}
-            </notifiable.div>
-        </div>
     }
+
+    function editCallable(callable?: Callable,scope?:'application'|'page') {
+        const panelId = callable?.id ?? guid();
+        addPanel({
+            position: 'mainCenter',
+            component: () => {
+                return <CallableEditorPanel callableId={callable?.id} panelId={panelId} scope={scope ?? 'page'}/>
+            },
+            title: callable ? `Edit ${callable.name}` : `Add Callable`,
+            Icon: Icon.Component,
+            id: panelId,
+            tag: {
+                type: 'CallableEditorPanel'
+            },
+            visible: () => true,
+        })
+    }
+
+    return <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div style={{display: 'flex', borderBottom: BORDER}}>
+            <div style={{paddingBottom: 2, paddingLeft: 15, fontWeight: 'bold', marginTop: 10, flexGrow: 1}}>Page
+            </div>
+            <AddButton editCallable={() => {
+                editCallable(undefined, 'page')
+            }}/>
+        </div>
+
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+            {() => {
+                const focusedItem = focusedItemSignal.get();
+                if (allPageCallablesSignal.get().length === 0) {
+                    return <div style={{textAlign: 'center', fontStyle: 'italic'}}>No Page Callable</div>
+                }
+                return allPageCallablesSignal.get().map(callable => {
+                    const isFocused = focusedItem === callable.id;
+                    return <div style={{
+                        display: 'flex',
+                        gap: 5,
+                        padding: '0px 10px 2px 15px',
+                        backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                    }} key={callable.id} onClick={() => {
+                        focusedItemSignal.set(callable.id);
+                        editCallable(callable,'page')
+                    }}>
+
+                        <div style={{
+                            flexGrow: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>{callable.name}</div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }} onClick={() => deleteCallable(callable, 'page')}>
+                            <Icon.Delete style={{fontSize: 18}}/>
+                        </div>
+                    </div>
+                })
+            }}
+        </notifiable.div>
+        <div style={{display: 'flex', borderBottom: BORDER}}>
+            <div style={{paddingBottom: 2, paddingLeft: 15, fontWeight: 'bold', marginTop: 10, flexGrow: 1}}>App
+            </div>
+            <AddButton editCallable={() => {
+                editCallable(undefined, 'application')
+            }}/>
+        </div>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+            {() => {
+                const focusedItem = focusedItemSignal.get();
+                if (allApplicationCallablesSignal.get().length === 0) {
+                    return <div style={{textAlign: 'center', fontStyle: 'italic'}}>No Application Callable</div>
+                }
+                return allApplicationCallablesSignal.get().map(callable => {
+                    const isFocused = focusedItem === callable.id;
+                    return <div style={{
+                        display: 'flex',
+                        gap: 5,
+                        padding: '0px 10px 2px 15px',
+                        backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                    }} key={callable.id} onClick={() => {
+                        focusedItemSignal.set(callable.id);
+                        editCallable(callable,'application')
+                    }}>
+
+                        <div style={{
+                            flexGrow: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>{callable.name}</div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }} onClick={() => deleteCallable(callable, 'application')}>
+                            <Icon.Delete style={{fontSize: 18}}/>
+                        </div>
+                    </div>
+                })
+            }}
+        </notifiable.div>
+    </div>
 }
+

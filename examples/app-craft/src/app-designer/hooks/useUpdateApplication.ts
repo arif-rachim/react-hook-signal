@@ -5,7 +5,7 @@ export function useUpdateApplication() {
     const {applicationSignal} = useAppContext();
     return function updateApplication(callback: (original: Application) => void) {
         const application = {...applicationSignal.get()};
-        callback(application)
+        callback(application);
         applicationSignal.set(application);
     }
 }

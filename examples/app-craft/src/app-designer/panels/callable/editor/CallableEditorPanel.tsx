@@ -17,6 +17,7 @@ import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {Icon} from "../../../Icon.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
 import {useUpdateCallable} from "../../../hooks/useUpdateCallable.ts";
+import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 
 export default function CallableEditorPanel(props: {
     callableId?: string,
@@ -84,7 +85,7 @@ export default function CallableEditorPanel(props: {
     }
 
     const monacoRef = useRef<Monaco | undefined>();
-
+    const refactorName = useNameRefactor();
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -259,6 +260,12 @@ export default function CallableEditorPanel(props: {
                         const [isValid, errors] = validateForm();
                         if (isValid) {
                             updateCallable(callableSignal.get());
+
+                            const currentName = callable?.name ?? '';
+                            const newName = callableSignal.get().name ?? '';
+                            if(currentName !== newName && !isEmpty(currentName)) {
+                                refactorName({currentName,newName,scope:scope === 'page' ? 'page' : 'app',type:'call'});
+                            }
                             removePanel(panelId)
                         } else {
                             await showModal<string>(cp => {

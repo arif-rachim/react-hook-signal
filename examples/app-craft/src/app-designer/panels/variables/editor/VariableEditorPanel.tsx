@@ -17,6 +17,7 @@ import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
+import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 
 /**
  * Represents a panel for editing variables.
@@ -34,6 +35,7 @@ export function VariableEditorPanel(props: {
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
     const showModal = useShowModal();
     const updateVariable = useUpdateVariable(scope);
+    const refactorVariableName = useNameRefactor();
     const {
         allPageVariablesSignal,
         allPagesSignal,
@@ -240,6 +242,11 @@ export function VariableEditorPanel(props: {
                         const [isValid, errors] = validateForm();
                         if (isValid) {
                             updateVariable(variableSignal.get());
+                            const currentName = variable?.name ?? '';
+                            const newName = variableSignal.get().name ?? '';
+                            if (currentName !== newName && !isEmpty(currentName)) {
+                                refactorVariableName({currentName, newName, scope: scope !== 'page' ? 'app' : 'page',type:'var'})
+                            }
                             removePanel(panelId)
                         } else {
                             await showModal<string>(cp => {

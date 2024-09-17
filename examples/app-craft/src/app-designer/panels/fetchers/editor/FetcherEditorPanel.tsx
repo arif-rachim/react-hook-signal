@@ -20,6 +20,7 @@ import Visible from "../../../visible/Visible.tsx";
 import {createRequest} from "./createRequest.ts";
 import {Query, Table} from "../../database/service/getTables.ts";
 import type {ChangeEvent} from "react";
+import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 import untrack = Signal.subtle.untrack;
 
 const LABEL_WIDTH = 60;
@@ -60,7 +61,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
             paths: [],
             data: [],
             returnTypeSchemaCode: '',
-            defaultValueFormula: '',
+            functionCode: '',
         }
     }
 
@@ -185,7 +186,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
         } = {exports: {}};
 
         try {
-            const params = ['module', ...dependencies.map(d => d.name ?? ''), fetcher.defaultValueFormula ?? ''];
+            const params = ['module', ...dependencies.map(d => d.name ?? ''), fetcher.functionCode ?? ''];
             const fun = new Function(...params)
             fun.call(null, ...[module, ...dependencies.map(d => d.instance)]);
             fetcher.protocol = module.exports.protocol ?? fetcher.protocol;
@@ -252,7 +253,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
         headers?: Record<string,string>,
         data?: Record<string,unknown>,
     }`
-
+    const refactorName = useNameRefactor();
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -272,7 +273,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
 
                         const allPages: Array<Page> = [];
                         const allTables: Array<Table> = [];
-                        const formula = fetcher.defaultValueFormula;
+                        const formula = fetcher.functionCode;
 
                         const allApplicationQueries = [] as Array<Query>;
                         const allApplicationVariables = allApplicationVariablesSignal.get();
@@ -308,7 +309,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                             value={formula}
                             onChange={(value?: string) => {
                                 const newVariable = {...fetcherSignal.get()};
-                                newVariable.defaultValueFormula = value ?? '';
+                                newVariable.functionCode = value ?? '';
                                 fetcherSignal.set(newVariable);
                                 isModified.set(true);
                             }}
@@ -559,6 +560,12 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                 const [isValid, errors] = validateForm();
                 if (isValid) {
                     updateFetcher(fetcherSignal.get());
+
+                    const currentName = fetcher?.name ?? '';
+                    const newName = fetcherSignal.get().name ?? '';
+                    if(currentName !== newName && !isEmpty(currentName)) {
+                        refactorName({currentName,newName,scope:scope === 'page' ? 'page' : 'app',type:'fetch'});
+                    }
                     removePanel(panelId)
                 } else {
                     await showModal<string>(cp => {

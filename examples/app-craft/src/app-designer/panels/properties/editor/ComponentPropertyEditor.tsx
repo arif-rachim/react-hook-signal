@@ -73,7 +73,6 @@ export function ComponentPropertyEditor(props: {
                 const allPageVariables = allPageVariablesSignal.get();
                 const allPageFetchers = allPageFetchersSignal.get();
                 const allPageCallables = allPageCallablesSignal.get();
-
                 const returnType = zodTypeToJson(returnTypeZod);
                 return <Editor
                     language="javascript"

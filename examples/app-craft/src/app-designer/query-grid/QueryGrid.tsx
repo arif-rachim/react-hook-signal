@@ -43,7 +43,6 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         query,
         style,
         columnsConfig,
-        focusedRow,
         onFocusedRowChange,
         container,
         refreshQueryKey,
@@ -59,6 +58,10 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         error: '',
         totalPage: 1
     });
+    const [focusedRow,setFocusedRow] = useState(props.focusedRow);
+    useEffect(() => {
+        setFocusedRow(props.focusedRow);
+    }, [props.focusedRow]);
     const [filter, setFilter] = useState<Record<string, SqlValue>>({});
     const [sort, setSort] = useState<Array<{ column: string, direction: 'asc' | 'desc' }>>([]);
     useEffect(() => {
@@ -102,6 +105,8 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                                      data,
                                      currentPage: queryResult.currentPage ?? 0
                                  })
+                             }else {
+                                 setFocusedRow(value);
                              }
                          }}
                          filterable={filterable}

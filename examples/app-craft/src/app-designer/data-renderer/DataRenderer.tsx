@@ -13,7 +13,7 @@ function DataRendererFC(props: {
 
     const {style: propsStyle, component, ...properties} = props;
     const componentIdSignal = useSignal(component);
-    const {allPagesSignal, elements, applicationSignal} = useAppContext();
+    const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
 
     const [page, setPage] = useState<Page | undefined>(() => {
         const allPages = allPagesSignal.get();
@@ -27,7 +27,7 @@ function DataRendererFC(props: {
         minWidth: 20,
         ...propsStyle
     }
-    if(page === undefined){
+    if (page === undefined) {
         style.border = '1px dashed rgba(0,0,0,0.1)'
     }
     useEffect(() => {
@@ -45,6 +45,6 @@ function DataRendererFC(props: {
             elements={elements}
             page={page!}
             appConfig={applicationSignal.get()}
-            value={properties}/>}
+            value={properties} navigate={navigate}/>}
     </div>
 }

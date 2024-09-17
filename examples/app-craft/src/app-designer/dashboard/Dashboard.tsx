@@ -292,10 +292,10 @@ function RenderPanel<T extends SelectedPanelType>(props: {
         {() => {
             const panels = panelsSignal.get();
             const selectedLeftPanelId = selectedPanelSignal.get()[position] as string;
-            if (selectedLeftPanelId) {
-                const panel = panels.find(p => p.id === selectedLeftPanelId);
+            return panels.filter(p => p.position === position).map(panel => {
                 const Component = panel?.component ?? EmptyComponent;
-                return <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', borderTop: BORDER}}>
+                const isFocused = selectedLeftPanelId === panel.id;
+                return <div style={{display: isFocused ? 'flex':'none', flexDirection: 'column', overflow: 'auto', borderTop: BORDER}} key={panel.id}>
                     <div style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.05)',
@@ -319,8 +319,38 @@ function RenderPanel<T extends SelectedPanelType>(props: {
                         <Component/>
                     </div>
                 </div>
-            }
-            return <></>
+            })
+
+            //
+            // if (selectedLeftPanelId) {
+            //     const panel = panels.find(p => p.id === selectedLeftPanelId);
+            //     const Component = panel?.component ?? EmptyComponent;
+            //     return <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', borderTop: BORDER}}>
+            //         <div style={{
+            //             display: 'flex',
+            //             background: 'rgba(0,0,0,0.05)',
+            //             justifyContent: 'space-between',
+            //             alignItems: 'center',
+            //             borderBottom: BORDER
+            //
+            //         }}>
+            //             <div style={{padding: '5px 10px'}}>
+            //                 {panel?.title}
+            //             </div>
+            //
+            //             <RenderIcon onClick={() => {
+            //                 selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: ''});
+            //             }} isFocused={false} style={{margin: '5px 5px'}}>
+            //                 <Icon.Minimize/>
+            //             </RenderIcon>
+            //
+            //         </div>
+            //         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
+            //             <Component/>
+            //         </div>
+            //     </div>
+            // }
+            // return <></>
         }}
     </notifiable.div>
 }
@@ -356,7 +386,7 @@ function RenderTabPanel(props: {
         flexGrow: 1,
         overflow: 'auto',
     }}>
-        <div style={{display: isEmpty ? 'none' : 'flex', flexDirection: 'row', borderBottom: BORDER,overflow:'hidden'}}>
+        <div style={{display: isEmpty ? 'none' : 'flex', flexDirection: 'row', borderBottom: BORDER}}>
             {panelsComputed.map(panel => {
 
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
@@ -366,8 +396,8 @@ function RenderTabPanel(props: {
                     if (position === 'mainCenter') {
                         activePageIdSignal.set(panel.pageId);
                     }
-                }} key={panel.id} isSelected={isSelected} style={{overflow:'hidden'}}>
-                    <div style={{textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap',width:'100%'}}>{panel.title}</div>
+                }} key={panel.id} isSelected={isSelected}>
+                    <div style={{textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}}>{panel.title}</div>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -409,6 +439,8 @@ function TabButton(props: HTMLProps<HTMLDivElement> & { isSelected: boolean }) {
         display: 'flex',
         gap: 5,
         alignItems: 'center',
+        overflow:"hidden",
+        whiteSpace:'nowrap',
         ...style
     }
 

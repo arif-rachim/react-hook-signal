@@ -3,7 +3,6 @@ import {AnySignal, effect, useComputed, useSignalEffect} from "react-hook-signal
 import {Signal} from "signal-polyfill";
 import {Variable, VariableInstance} from "../AppDesigner.tsx";
 import {undefined, z, ZodType} from "zod";
-import {useNavigateSignal} from "../hooks/useNavigateSignal.tsx";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
 import {callableInitialization} from "./callableSchemaInitialization.ts";
@@ -120,7 +119,7 @@ function initiateEffect(props: {
         if (v.type !== 'effect') {
             continue;
         }
-        const params = ['navigate', 'db', 'app', 'page', v.functionCode];
+        const params = ['navigate', 'db', 'app', 'page', `try{${v.functionCode}}catch(e){console.log(e)}`];
         try {
             const func = new Function(...params) as (...args: unknown[]) => void
             const destructor = effect(() => {
@@ -129,11 +128,13 @@ function initiateEffect(props: {
                     func.call(null, ...instances);
                 } catch (err) {
                     console.error(err);
+                    console.log(v.functionCode);
                 }
             });
             destructorCallbacks.push(destructor);
         } catch (err) {
             console.error(err);
+            console.log(v.functionCode);
         }
     }
     return () => {
@@ -172,9 +173,9 @@ export function VariableInitialization(props: PropsWithChildren) {
         allApplicationVariablesSignalInstance,
         allApplicationFetchersSignal,
         allApplicationQueriesSignal,
+        navigate
     } = useAppContext();
 
-    const navigate = useNavigateSignal();
 
     const validatorsApplicationComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
         return createValidator(allApplicationVariablesSignal.get(), errorMessage);

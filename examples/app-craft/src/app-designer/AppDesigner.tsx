@@ -1,4 +1,4 @@
-import {CSSProperties, useEffect, useState} from "react";
+import {CSSProperties, useEffect, useMemo, useState} from "react";
 import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
@@ -11,7 +11,7 @@ import {Dashboard} from "./dashboard/Dashboard.tsx";
 import {Icon} from "./Icon.ts";
 import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
 import {ElementsPanel} from "./panels/elements/ElementsPanel.tsx";
-import {createVariablePanel} from "./panels/variables/VariablesPanel.tsx";
+import {VariablesPanel} from "./panels/variables/VariablesPanel.tsx";
 import {StylePanel} from "./panels/style/StylePanel.tsx";
 import {PropertiesPanel} from "./panels/properties/PropertiesPanel.tsx";
 import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
@@ -20,9 +20,9 @@ import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
 import {createNewBlankApplication} from "./createNewBlankApplication.ts";
 import {Query, Table} from "./panels/database/service/getTables.ts";
-import {createFetcherPanel} from "./panels/fetchers/FetchersPanel.tsx";
-import {createCallablePanel} from "./panels/callable/CallablePanel.tsx";
-import {createQueriesPanel} from "./panels/queries/QueriesPanel.tsx";
+import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
+import {CallablePanel} from "./panels/callable/CallablePanel.tsx";
+import {QueriesPanel} from "./panels/queries/QueriesPanel.tsx";
 import {useAppContext} from "./hooks/useAppContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 
@@ -64,7 +64,7 @@ export type Fetcher = {
     data: Array<FetcherParameter>,
     returnTypeSchemaCode: string,
     // this is to compose the default formula
-    defaultValueFormula: string,
+    functionCode: string,
 }
 
 export type VariableInstance = {
@@ -107,7 +107,7 @@ export type Container = {
     properties: Record<string, ContainerPropertyType> & { defaultStyle?: CSSProperties },
 }
 
-export function useAppInitiator(props: LayoutBuilderProps & {activePageId?:string}) {
+export function useAppInitiator(props: LayoutBuilderProps & { activePageId?: string }) {
     const applicationSignal = useSignal(createNewBlankApplication());
 
     const allApplicationCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
@@ -164,6 +164,22 @@ export function useAppInitiator(props: LayoutBuilderProps & {activePageId?:strin
     useSignalEffect(() => {
         onChange(applicationSignal.get());
     })
+
+    const navigate = useMemo(() => {
+        return async function navigate(path: string, param?: unknown) {
+            const page = allPagesSignal.get().find(p => p.name === path);
+            if (page === undefined) {
+                return;
+            }
+            if (uiDisplayModeSignal && uiDisplayModeSignal.get() === 'design') {
+                alert('Please switch to view mode to navigate');
+                return;
+            }
+            allErrorsSignal.set([]);
+            variableInitialValueSignal.set(param as Record<string, unknown> ?? {});
+            activePageIdSignal.set(page.id);
+        }
+    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, uiDisplayModeSignal, variableInitialValueSignal])
     return {
         applicationSignal,
         allApplicationCallablesSignal,
@@ -193,6 +209,8 @@ export function useAppInitiator(props: LayoutBuilderProps & {activePageId?:strin
         allFetchersSignal,
         allQueriesSignal,
         allCallablesSignal,
+
+        navigate
     };
 }
 
@@ -223,7 +241,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         allVariablesSignalInstance,
         allVariablesSignal,
         allFetchersSignal,
-        allQueriesSignal
+        allQueriesSignal,
+        navigate
     } = useAppInitiator(props);
     const context: AppDesignerContext = {
         applicationSignal,
@@ -259,8 +278,9 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         selectedDragContainerIdSignal: selectedDragContainerIdSignal,
         activeDropZoneIdSignal: activeDropZoneIdSignal,
         uiDisplayModeSignal: uiDisplayModeSignal,
-
+        navigate
     }
+
     return <ErrorBoundary>
         <ModalProvider>
             <AppDesignerContext.Provider
@@ -273,77 +293,53 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             position: 'left',
                             component: PagesPanel
                         },
-                        applicationVariables: {
-                            title: 'Application Variables',
-                            Icon: Icon.ApplicationVariable,
-                            position: 'left',
-                            component: createVariablePanel('application')
-                        },
-                        applicationFetchers: {
-                            title: 'Application Fetchers',
-                            Icon: Icon.Fetcher,
-                            position: 'left',
-                            component: createFetcherPanel('application'),
-                        },
-                        applicationFunctions: {
-                            title: 'Application Callables',
-                            Icon: Icon.Function,
-                            position: 'left',
-                            component: createCallablePanel('application'),
-                        },
                         database: {
                             title: 'Database',
                             Icon: Icon.Database,
                             position: 'left',
                             component: DatabasePanel
                         },
-                        applicationQueries: {
-                            title: 'Application Queries',
-                            Icon: Icon.Query,
-                            position: 'left',
-                            component: createQueriesPanel('application'),
-                        },
                         components: {
                             title: 'Components',
                             Icon: Icon.Component,
                             position: 'leftBottom',
                             component: ElementsPanel,
-                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         layoutTree: {
                             title: 'Layout Tree',
                             Icon: Icon.Tree,
                             position: 'right',
                             component: ComponentTree,
-                            visible: (tag) => tag?.type === 'DesignPanel'
+                            //visible: (tag) => tag?.type === 'DesignPanel'
                         },
                         variables: {
                             title: 'Variables',
                             Icon: Icon.Variable,
                             position: 'leftBottom',
-                            component: createVariablePanel('page'),
-                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                            component: VariablesPanel,
+                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         fetchers: {
                             title: 'Fetchers',
                             Icon: Icon.Fetcher,
                             position: 'leftBottom',
-                            component: createFetcherPanel('page'),
-                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                            component: FetchersPanel,
+                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         functions: {
                             title: 'Callables',
                             Icon: Icon.Function,
                             position: 'leftBottom',
-                            component: createCallablePanel('page'),
-                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                            component: CallablePanel,
+                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         queries: {
                             title: 'Queries',
                             Icon: Icon.Query,
                             position: 'leftBottom',
-                            component: createQueriesPanel('page'),
-                            visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                            component: QueriesPanel,
+                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         errors: {
                             title: 'Errors',
@@ -356,7 +352,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             Icon: Icon.Style,
                             position: 'rightBottom',
                             component: StylePanel,
-                            visible: (tag) => tag?.type === 'DesignPanel'
+                            //visible: (tag) => tag?.type === 'DesignPanel'
                         },
                         properties: {
                             title: 'Properties',
@@ -428,7 +424,7 @@ function ComponentTreeNode(props: { container?: Container, paddingLeft?: number 
                 background: isSelected ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0)'
             }
         }} onClick={() => {
-            selectedDragContainerIdSignal.set(container?.id);
+            selectedDragContainerIdSignal.set(container?.id ?? '');
         }}>{container.type}</notifiable.div>
         {container.children.map(c => {
             const subContainer = allContainersSignal.get().find(p => p.id === c);

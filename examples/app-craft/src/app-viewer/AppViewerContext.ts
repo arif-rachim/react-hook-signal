@@ -41,8 +41,11 @@ export interface AppViewerContext {
     allQueriesSignal: Signal.Computed<Array<Query>>,
     allCallablesSignal: Signal.Computed<Array<Callable>>,
 
-    elements: LayoutBuilderProps['elements']
+    elements: LayoutBuilderProps['elements'],
+    navigate : (path: string, param?: unknown) => Promise<void>
 }
+
+
 
 /**
  * Context object for the App Viewer.

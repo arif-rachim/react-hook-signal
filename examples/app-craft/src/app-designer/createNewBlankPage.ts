@@ -9,7 +9,7 @@ export function createNewBlankPage(): Page {
         fetchers: [],
         callables: [],
         containers: [{
-            id: guid(),
+            id: '',
             type: 'container',
             children: [],
             properties: {},

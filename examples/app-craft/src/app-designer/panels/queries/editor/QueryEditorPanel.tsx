@@ -19,6 +19,7 @@ import {RenderParameters} from "../../fetchers/editor/FetcherEditorPanel.tsx";
 import {ParamsObject, SqlValue} from "sql.js";
 import {queryPagination, SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
 import {composeArraySchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
+import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 
 export default function QueryEditorPanel(props: {
     queryId?: string,
@@ -150,7 +151,7 @@ export default function QueryEditorPanel(props: {
             querySignal.set({...query, schemaCode: composeArraySchema(allData.data)})
         }
     }
-
+    const refactorName = useNameRefactor();
     return <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -319,6 +320,12 @@ export default function QueryEditorPanel(props: {
                             const [isValid, errors] = validateForm();
                             if (isValid) {
                                 updateQuery(querySignal.get());
+
+                                const currentName = query?.name ?? '';
+                                const newName = querySignal.get().name ?? '';
+                                if(currentName !== newName && !isEmpty(currentName)) {
+                                    refactorName({currentName,newName,scope:scope === 'page' ? 'page' : 'app',type:'query'});
+                                }
                                 removePanel(panelId)
                             } else {
                                 await showModal<string>(cp => {

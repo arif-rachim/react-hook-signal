@@ -51,7 +51,8 @@ export function ConfigPropertyEditor(props: { propertyName: string }) {
         const updatedFormula = await showModal(closePanel => {
             return <AppDesignerContext.Provider value={context}>
                 <EditColumnConfigFormula closePanel={closePanel} formula={formula}
-                                         columns={queryGridColumnsTemporalColumns[container?.id ?? '']}/>
+                                         columns={queryGridColumnsTemporalColumns[container?.id ?? '']}
+                />
             </AppDesignerContext.Provider>
         });
         if (updatedFormula && typeof updatedFormula === 'string' && container?.id) {
@@ -86,7 +87,7 @@ export function ConfigPropertyEditor(props: { propertyName: string }) {
 function EditColumnConfigFormula(props: {
     closePanel: (formula?: string) => void,
     formula?: string,
-    columns?: string[]
+    columns?: string[],
 }) {
     const {columns, formula, closePanel} = props;
     const [config, setConfig] = useState<ColumnsConfig>({});
@@ -240,8 +241,22 @@ function EditColumnConfigFormula(props: {
                                                    clone[col].rendererPageId = value
                                                    return clone;
                                                })
-                                           }} value={conf.rendererPageId}/>
+                                           }}
+                                           value={conf.rendererPageId}
+                                           bindWithMapper={true}
+                                           mapperInputSchema={composeMapperInputSchema(columns)}
+                                           mapperValue={conf.rendererPageDataMapperFormula}
+                                           mapperValueChange={(value) => {
+                                               setConfig(old => {
+                                                   const clone = {...old};
+                                                   clone[col] = {...clone[col]}
+                                                   clone[col].rendererPageDataMapperFormula = value
+                                                   return clone;
+                                               })
+                                           }}
+                        />
                     </div>
+
                     <div style={{display: 'table-cell'}}>
                         <input style={{
                             border: BORDER,
@@ -326,4 +341,9 @@ function InputThreeStateCheckbox(props: {
     return <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', ...style}} onClick={onClick}>
         <Component/>
     </div>
+}
+
+function composeMapperInputSchema(columns?: string[]) {
+    columns = columns ?? [];
+    return `{${columns.map(c => `${c} ?: number | string | Uint8Array | null `).join(',')}}`
 }

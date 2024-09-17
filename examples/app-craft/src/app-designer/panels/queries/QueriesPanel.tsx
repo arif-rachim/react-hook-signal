@@ -12,105 +12,164 @@ import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 import {Query} from "../database/service/getTables.ts";
 import QueryEditorPanel from "./editor/QueryEditorPanel.tsx";
+import {BORDER} from "../../Border.ts";
 
-export const createQueriesPanel = (scope: 'page' | 'application') => {
-    return function CallablePanel() {
-        const focusedItemSignal = useSignal<string>('');
-        const context = useAppContext<AppDesignerContext>();
-        const {allApplicationQueriesSignal, allPageQueriesSignal} = context;
-        const allQueriesSignal = scope === 'application' ? allApplicationQueriesSignal : allPageQueriesSignal;
 
-        const updatePage = useUpdatePageSignal();
-        const showModal = useShowModal();
-        const addPanel = useAddDashboardPanel();
-        const updateApplication = useUpdateApplication();
+function AddButtons(props: { editQueries: () => void }) {
+    const {editQueries} = props;
+    return <div style={{display: 'flex', padding: 10}}>
+        <Button
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexGrow: 1,
+                gap: 5,
+                justifyContent: 'center',
+                padding: '0px 10px 2px 10px',
+                background: 'rgba(0,0,0,0.0)',
+                border: '1px solid rgba(0,0,0,0.2)',
+                color: '#333',
+            }}
+            onClick={() => editQueries()}
+        >
+            {'Queries'}
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <MdAdd style={{fontSize: 20}}/>
+            </div>
+        </Button>
+    </div>
+}
 
-        async function deleteQuery(query: Query) {
-            const deleteVariableConfirm = await showModal<string>(closePanel => {
-                return <ConfirmationDialog message={'Are you sure you want to delete this query ?'}
-                                           closePanel={closePanel}/>
-            })
-            if (deleteVariableConfirm === 'Yes') {
-                const queries = allQueriesSignal.get().filter(i => i.id !== query.id);
-                if (scope === 'application') {
-                    updateApplication(app => {
-                        app.queries = queries;
-                    })
-                } else {
-                    updatePage({type: 'query', queries: queries})
-                }
+export function QueriesPanel() {
+    const focusedItemSignal = useSignal<string>('');
+    const context = useAppContext<AppDesignerContext>();
+    const {allApplicationQueriesSignal, allPageQueriesSignal} = context;
+
+    const updatePage = useUpdatePageSignal();
+    const showModal = useShowModal();
+    const addPanel = useAddDashboardPanel();
+    const updateApplication = useUpdateApplication();
+
+    async function deleteQuery(query: Query, scope: 'application' | 'page') {
+        const deleteVariableConfirm = await showModal<string>(closePanel => {
+            return <ConfirmationDialog message={'Are you sure you want to delete this query ?'}
+                                       closePanel={closePanel}/>
+        })
+        if (deleteVariableConfirm === 'Yes') {
+
+            if (scope === 'application') {
+                const queries = allApplicationQueriesSignal.get().filter(i => i.id !== query.id);
+                updateApplication(app => {
+                    app.queries = queries;
+                })
+            } else {
+                const queries = allPageQueriesSignal.get().filter(i => i.id !== query.id);
+                updatePage({type: 'query', queries: queries})
             }
         }
-
-        function editQuery(query?: Query) {
-            const panelId = query?.id ?? guid();
-            addPanel({
-                position: 'mainCenter',
-                component: () => {
-                    return <QueryEditorPanel queryId={query?.id} panelId={panelId} scope={scope}/>
-                },
-                title: query ? `Edit ${query?.name}` : `Add Query`,
-                Icon: Icon.Component,
-                id: panelId,
-                tag: {
-                    type: 'QueryEditorPanel'
-                },
-                visible: () => true,
-            })
-        }
-
-        return <div style={{display: 'flex', flexDirection: 'column'}}>
-            <Button
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    margin: 10,
-                    gap: 5,
-                    justifyContent: 'center',
-                    padding: '0px 10px 2px 10px',
-                    background: 'rgba(0,0,0,0.0)',
-                    border: '1px solid rgba(0,0,0,0.2)',
-                    color: '#333',
-                }}
-                onClick={() => editQuery()}
-            >
-                {'Add Query'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <MdAdd style={{fontSize: 20}}/>
-                </div>
-            </Button>
-            <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
-                {() => {
-                    const focusedItem = focusedItemSignal.get();
-                    return allQueriesSignal.get().map(query => {
-                        const isFocused = focusedItem === query.id;
-                        return <div style={{
-                            display: 'flex',
-                            gap: 5,
-                            padding: '0px 10px 2px 10px',
-                            backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
-                        }} key={query.id} onClick={() => {
-                            focusedItemSignal.set(query.id);
-                            editQuery(query);
-                        }}>
-
-                            <div style={{
-                                flexGrow: 1,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                            }}>{query.name}</div>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }} onClick={() => deleteQuery(query)}>
-                                <Icon.Delete style={{fontSize: 18}}/>
-                            </div>
-                        </div>
-                    })
-                }}
-            </notifiable.div>
-        </div>
     }
+
+    function editQuery(query?: Query, scope?: 'application' | 'page') {
+        const panelId = query?.id ?? guid();
+        addPanel({
+            position: 'mainCenter',
+            component: () => {
+                return <QueryEditorPanel queryId={query?.id} panelId={panelId} scope={scope ?? 'page'}/>
+            },
+            title: query ? `Edit ${query?.name}` : `Add Query`,
+            Icon: Icon.Component,
+            id: panelId,
+            tag: {
+                type: 'QueryEditorPanel'
+            },
+            visible: () => true,
+        })
+    }
+
+    return <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div style={{display: 'flex', borderBottom: BORDER}}>
+            <div style={{paddingBottom: 2, paddingLeft: 15, fontWeight: 'bold', marginTop: 10, flexGrow: 1}}>Page
+            </div>
+            <AddButtons editQueries={() => {
+                editQuery(undefined, 'page')
+            }}/>
+        </div>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+            {() => {
+                const focusedItem = focusedItemSignal.get();
+                if (allPageQueriesSignal.get().length === 0) {
+                    return <div style={{textAlign: 'center', fontStyle: 'italic'}}>No Page Queries</div>
+                }
+                return allPageQueriesSignal.get().map(query => {
+                    const isFocused = focusedItem === query.id;
+                    return <div style={{
+                        display: 'flex',
+                        gap: 5,
+                        padding: '0px 10px 2px 10px',
+                        backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                    }} key={query.id} onClick={() => {
+                        focusedItemSignal.set(query.id);
+                        editQuery(query, 'page');
+                    }}>
+
+                        <div style={{
+                            flexGrow: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>{query.name}</div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }} onClick={() => deleteQuery(query, 'page')}>
+                            <Icon.Delete style={{fontSize: 18}}/>
+                        </div>
+                    </div>
+                })
+            }}
+        </notifiable.div>
+        <div style={{display: 'flex', borderBottom: BORDER}}>
+            <div style={{paddingBottom: 2, paddingLeft: 15, fontWeight: 'bold', marginTop: 10, flexGrow: 1}}>App
+            </div>
+            <AddButtons editQueries={() => {
+                editQuery(undefined, 'page')
+            }}/>
+        </div>
+        <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
+            {() => {
+                const focusedItem = focusedItemSignal.get();
+                if (allApplicationQueriesSignal.get().length === 0) {
+                    return <div style={{textAlign: 'center', fontStyle: 'italic'}}>No Application Queries</div>
+                }
+                return allApplicationQueriesSignal.get().map(query => {
+                    const isFocused = focusedItem === query.id;
+                    return <div style={{
+                        display: 'flex',
+                        gap: 5,
+                        padding: '0px 10px 2px 10px',
+                        backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
+                    }} key={query.id} onClick={() => {
+                        focusedItemSignal.set(query.id);
+                        editQuery(query, 'application');
+                    }}>
+
+                        <div style={{
+                            flexGrow: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>{query.name}</div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }} onClick={() => deleteQuery(query, 'application')}>
+                            <Icon.Delete style={{fontSize: 18}}/>
+                        </div>
+                    </div>
+                })
+            }}
+        </notifiable.div>
+    </div>
 }

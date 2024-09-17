@@ -31,7 +31,7 @@ function DataGroupFC(props: {
     const max_page = 50;
     const {keyId, direction, style: propsStyle, data, component} = props;
     const componentIdSignal = useSignal(component);
-    const {allPagesSignal, elements, applicationSignal} = useAppContext();
+    const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
 
     const [page, setPage] = useState<Page | undefined>(() => {
         const allPages = allPagesSignal.get();
@@ -72,7 +72,9 @@ function DataGroupFC(props: {
                 page={page!}
                 key={key}
                 appConfig={applicationSignal.get()}
-                value={item}/>
+                value={item}
+                navigate={navigate}
+            />
         })}
     </div>
 }

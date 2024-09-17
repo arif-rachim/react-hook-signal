@@ -2,7 +2,6 @@ import {AnySignal, effect, useSignal, useSignalEffect} from "react-hook-signal";
 import {Dispatch, SetStateAction, useContext, useEffect} from "react";
 import {Container} from "../../../../AppDesigner.tsx";
 import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts";
-import {useNavigateSignal} from "../../../../hooks/useNavigateSignal.tsx";
 import {useAppContext} from "../../../../hooks/useAppContext.ts";
 import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
 import {ZodRawShape} from "zod";
@@ -22,12 +21,12 @@ export function PropertyInitialization(props: {
         elements: elementsLib,
         allVariablesSignal,
         allVariablesSignalInstance,
+        navigate
     } = context;
 
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
-    const navigate = useNavigateSignal();
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);

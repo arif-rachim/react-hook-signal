@@ -4,6 +4,7 @@ import {BORDER} from "../Border.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {PageSelector} from "./PageSelector.tsx";
 import {CSSProperties} from "react";
+import {PageSchemaMapper} from "./PageSchemaMapper.tsx";
 
 export function PageInputSelector(props: {
     value?: string,
@@ -11,11 +12,16 @@ export function PageInputSelector(props: {
     style?: CSSProperties,
     chipColor?: CSSProperties['backgroundColor'],
     hidePageName?: boolean,
+    bindWithMapper?: boolean,
+    mapperInputSchema?: string,
+    mapperValue?: string,
+    mapperValueChange?: (value?: string) => void,
 }) {
+    // if bind with mapper is set true then we need to introduce function to map the old code to new code
     const showModal = useShowModal();
     const context = useAppContext<AppDesignerContext>();
     const {allPagesSignal} = context;
-    const {value, onChange} = props;
+    const {value, onChange, bindWithMapper, mapperInputSchema, mapperValue, mapperValueChange} = props;
     const page = allPagesSignal.get().find(p => p.id === value);
 
     async function showPageSelector() {
@@ -28,10 +34,27 @@ export function PageInputSelector(props: {
                 />
             </AppDesignerContext.Provider>
         });
+
+        if (result !== "cancel" && bindWithMapper === true && mapperInputSchema) {
+            const mapperFunction = await showModal<string | undefined | 'cancel'>(closePanel => {
+                return <AppDesignerContext.Provider value={context}>
+                    <PageSchemaMapper
+                        closePanel={closePanel}
+                        value={mapperValue}
+                        pageId={result}
+                        mapperInputSchema={mapperInputSchema}
+                    />
+                </AppDesignerContext.Provider>
+            });
+            if (mapperFunction !== 'cancel' && mapperValueChange) {
+                mapperValueChange(mapperFunction);
+            }
+        }
         if (result !== 'cancel') {
             onChange(result);
         }
     }
+
     return <div
         style={{
             border: BORDER,

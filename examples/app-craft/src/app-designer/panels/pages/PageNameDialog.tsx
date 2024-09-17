@@ -22,8 +22,10 @@ export function PageNameDialog(props: { closePanel: (param?: string) => void, al
         return '';
     }
 
+    const isNewPage = isEmpty(props.page.name);
+
     return <div style={{display: 'flex', flexDirection: "column", gap: 10, width: 300}}>
-        <div style={{fontSize: 22, padding: '10px 20px', borderBottom: BORDER}}>Add Page</div>
+        <div style={{fontSize: 22, padding: '10px 20px', borderBottom: BORDER}}>{isNewPage ? 'Add' : 'Edit'} Page</div>
         <div style={{display: 'flex', flexDirection: 'column', padding: '0px 20px'}}>
             <label style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{marginLeft: 10}}>Page Name :</div>
