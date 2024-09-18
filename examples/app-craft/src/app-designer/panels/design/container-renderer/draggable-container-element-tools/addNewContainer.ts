@@ -18,7 +18,6 @@ export function addNewContainer(allContainersSignal: Signal.Computed<Array<Conta
         parent: parentContainerId,
         properties: {}
     }
-
     const newAllContainers = [...allContainersSignal.get().map(n => {
         if (n.id === parentContainerId) {
             if (insertionIndex >= 0) {

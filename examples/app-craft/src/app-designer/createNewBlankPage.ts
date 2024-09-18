@@ -1,19 +1,20 @@
 import {guid} from "../utils/guid.ts";
 import {Page} from "./AppDesigner.tsx";
 
-export function createNewBlankPage(): Page {
+export function createNewBlankPage(props:{name:string}): Page {
+    const id = guid()
     return {
         queries: [],
-        id: guid(),
+        id: id,
         variables: [],
         fetchers: [],
         callables: [],
         containers: [{
-            id: '',
+            id: id,
             type: 'container',
             children: [],
             properties: {},
         }],
-        name: 'home'
+        name: props.name
     }
 }

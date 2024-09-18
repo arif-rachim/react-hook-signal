@@ -68,7 +68,7 @@ export function PagesPanel() {
     const addPanel = useAddDashboardPanel();
 
     async function addPage() {
-        const page = createNewBlankPage();
+        const page = createNewBlankPage({name:''});
         page.name = await showModal<string>(closePanel => {
             return <PageNameDialog closePanel={closePanel} allPages={allPagesSignal.get()} page={page}/>
         });
@@ -91,7 +91,6 @@ export function PagesPanel() {
         });
         if(newName){
             updatePage({type: 'page-name', name: newName, pageId: page.id})
-            console.log('refactoring-page',newName,currentName);
             refactorPage({newName:newName,currentName:currentName});
         }
     }

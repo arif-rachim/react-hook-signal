@@ -15,7 +15,7 @@ export function DraggableItem(props: { draggableDataType: string, icon: IconType
                     flexDirection:'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 50,
+                    width: '20%',
                     height: 50,
                     flexShrink: 0,
                     flexGrow: 0

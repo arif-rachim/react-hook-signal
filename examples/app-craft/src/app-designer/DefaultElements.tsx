@@ -67,7 +67,7 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             properties: z.record(z.unknown()).optional(),
             component: z.string(),
-            style : cssPropertiesSchema
+            style: cssPropertiesSchema
         },
         component: (props, ref) => {
             const {properties, component, style} = props;
@@ -78,8 +78,8 @@ export const DefaultElements: Record<string, Element> = {
                 label: 'component',
                 component: PageSelectionPropertyEditor
             },
-            properties : {
-                label : 'properties',
+            properties: {
+                label: 'properties',
                 component: PropertiesPropertyEditor
             }
         }
@@ -98,6 +98,7 @@ export const DefaultElements: Record<string, Element> = {
             label = label ?? 'Add label here';
             delete style.background;
             delete style.backgroundColor;
+
             return <Button style={style} ref={ref as LegacyRef<HTMLButtonElement>}
                            onClick={() => {
                                onClick()
@@ -129,7 +130,7 @@ export const DefaultElements: Record<string, Element> = {
                 params: z.record(z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()])).optional(),
                 page: z.number().optional(),
                 filter: z.record(z.unknown()).optional(),
-                rowPerPage : z.number().optional(),
+                rowPerPage: z.number().optional(),
                 sort: z.array(z.object({column: z.string(), direction: z.enum(['asc', 'desc'])}).optional()).optional(),
             })).returns(z.promise(z.object({
                 error: z.string().optional(),
