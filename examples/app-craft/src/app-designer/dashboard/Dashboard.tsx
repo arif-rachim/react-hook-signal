@@ -366,10 +366,8 @@ function RenderTabPanel(props: {
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const nextPanelId = removePanel(panel.id);
-                        if (nextPanelId && position === 'mainCenter') {
-                            activePageIdSignal.set(nextPanelId);
-                        }
+                        removePanel(panel.id);
+
                     }}><Icon.Close/>
                     </div>
                 </TabButton>

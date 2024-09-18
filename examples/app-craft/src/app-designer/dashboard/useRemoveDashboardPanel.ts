@@ -1,8 +1,10 @@
 import {useContext} from "react";
 import {DashboardContext} from "./Dashboard.tsx";
+import {useAppContext} from "../hooks/useAppContext.ts";
 
 export function useRemoveDashboardPanel() {
     const {panelsSignal, selectedPanelSignal} = useContext(DashboardContext);
+    const {activePageIdSignal,allPagesSignal} = useAppContext();
     return function removePanel(panelId: string) {
         const panels = panelsSignal.get();
         const panelToRemove = panels.find(p => p.id === panelId)!;
@@ -21,6 +23,8 @@ export function useRemoveDashboardPanel() {
             selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: nextPanelId});
         }
         panelsSignal.set(panels.filter(i => i.id !== panelId));
-        return nextPanelId;
+        if (nextPanelId && position === 'mainCenter' && allPagesSignal.get().findIndex(p => p.id === nextPanelId) > -1) {
+            activePageIdSignal.set(nextPanelId);
+        }
     }
 }

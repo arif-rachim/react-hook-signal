@@ -293,12 +293,6 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             position: 'left',
                             component: PagesPanel
                         },
-                        database: {
-                            title: 'Database',
-                            Icon: Icon.Database,
-                            position: 'left',
-                            component: DatabasePanel
-                        },
                         components: {
                             title: 'Components',
                             Icon: Icon.Component,
@@ -340,6 +334,12 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             position: 'leftBottom',
                             component: QueriesPanel,
                             //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        database: {
+                            title: 'Database',
+                            Icon: Icon.Database,
+                            position: 'leftBottom',
+                            component: DatabasePanel
                         },
                         errors: {
                             title: 'Errors',
