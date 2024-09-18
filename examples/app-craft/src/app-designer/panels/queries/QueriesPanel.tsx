@@ -82,8 +82,7 @@ export function QueriesPanel() {
             id: panelId,
             tag: {
                 type: 'QueryEditorPanel'
-            },
-            visible: () => true,
+            }
         })
     }
 

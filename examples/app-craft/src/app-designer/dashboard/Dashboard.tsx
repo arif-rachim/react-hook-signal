@@ -18,8 +18,7 @@ export type Panel = {
     title: ReactNode,
     Icon: IconType,
     component: React.FC,
-    position: PanelPosition,
-    visible?: (centerPanelTag?: Record<string, unknown>, selectedPanel?: SelectedPanelType) => boolean
+    position: PanelPosition
 }
 type SelectedPanelType = {
     [k in PanelPosition]?: string
@@ -49,7 +48,8 @@ export const DashboardContext = createContext<{
 
 export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChildren<{
     panels: T,
-    defaultSelectedPanel: { [k in PanelPosition]?: keyof T }
+    defaultSelectedPanel: { [k in PanelPosition]?: keyof T },
+    onMainCenterClicked:(panel:PanelInstance,selectedPanelSignal:Signal.State<SelectedPanelType>) => void
 }>) {
     const panelsSignal = useSignal<Array<PanelInstance>>([]);
     useEffect(() => {
@@ -64,42 +64,17 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
     }, [panelsSignal, props.panels]);
 
     const selectedPanelSignal = useSignal<SelectedPanelType>(props.defaultSelectedPanel as SelectedPanelType);
-    const selectedCenterPanel = useComputed(() => {
-        return selectedPanelSignal.get().mainCenter
-    })
+
     useSignalEffect(() => {
         const selectedPanel = {...selectedPanelSignal.get()};
-        const panels = panelsSignal.get();
-        const centerTag = panels.find(p => p.id === selectedCenterPanel.get())?.tag;
 
-        const rightPanel = panels.find(p => p.id === selectedPanel.right);
-        const rightBottomPanel = panels.find(p => p.id === selectedPanel.rightBottom);
-        const leftPanel = panels.find(p => p.id === selectedPanel.left);
-        const leftBottomPanel = panels.find(p => p.id === selectedPanel.leftBottom);
-
-        if (rightPanel && rightPanel.visible && !rightPanel.visible(centerTag, selectedPanel)) {
-            delete selectedPanel.right
-        }
-
-        if (rightBottomPanel && rightBottomPanel.visible && !rightBottomPanel.visible(centerTag, selectedPanel)) {
-            delete selectedPanel.rightBottom
-        }
-
-        if (leftPanel && leftPanel.visible && !leftPanel.visible(centerTag, selectedPanel)) {
-            delete selectedPanel.left
-        }
-
-        if (leftBottomPanel && leftBottomPanel.visible && !leftBottomPanel.visible(centerTag, selectedPanel)) {
-            delete selectedPanel.leftBottom
-        }
         if (JSON.stringify(selectedPanelSignal.get()) !== JSON.stringify(selectedPanel)) {
             setTimeout(() => {
                 selectedPanelSignal.set({...selectedPanel})
             }, 0)
         }
-
-
     })
+
     return (
         <DashboardContext.Provider value={{panelsSignal, selectedPanelSignal}}>
             <div style={{display: 'flex', flexDirection: 'row', height: '100%', overflow: 'auto'}}>
@@ -112,14 +87,14 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                     {() => {
                         const selectedPanel = selectedPanelSignal.get();
                         const allPanels = panelsSignal.get();
-                        const centerTag = allPanels.find(p => p.id === selectedPanel.mainCenter)?.tag;
                         return <>
                             <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
                                 <RenderIcons panels={allPanels.filter(p => p.position === 'left')}
                                              value={(selectedPanel.left ?? '') as string}
                                              onChange={value => {
                                                  selectedPanelSignal.set({...selectedPanelSignal.get(), left: value})
-                                             }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                                             }}
+                                />
                                 <div style={{borderTop: BORDER, height: 1}}/>
                                 <RenderIcons panels={allPanels.filter(p => p.position === 'leftBottom')}
                                              value={(selectedPanel.leftBottom ?? '') as string}
@@ -128,13 +103,15 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                                      ...selectedPanelSignal.get(),
                                                      leftBottom: value
                                                  })
-                                             }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                                             }}
+                                />
                             </div>
                             <RenderIcons panels={allPanels.filter(p => p.position === 'bottom')}
                                          value={(selectedPanel.bottom ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), bottom: value})
-                                         }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                                         }}
+                            />
                         </>
                     }}
                 </notifiable.div>
@@ -166,7 +143,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                         </notifiable.div>
                         <div style={{display: 'flex', flexGrow: 1, overflow: 'auto'}}>
                             <RenderTabPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
-                                            position={'mainCenter'}/>
+                                            position={'mainCenter'} onMainCenterClicked={(panel) => props.onMainCenterClicked(panel,selectedPanelSignal)}/>
                         </div>
                         <notifiable.div style={() => {
                             const selectedPanel = selectedPanelSignal.get();
@@ -203,13 +180,13 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                     {() => {
                         const allPanels = panelsSignal.get();
                         const selectedPanel = selectedPanelSignal.get();
-                        const centerTag = allPanels.find(p => p.id === selectedPanel.mainCenter)?.tag;
                         return <div style={{display: 'flex', flexDirection: 'column', gap: 5}}>
                             <RenderIcons panels={allPanels.filter(p => p.position === 'right')}
                                          value={(selectedPanel.right ?? '') as string}
                                          onChange={value => {
                                              selectedPanelSignal.set({...selectedPanelSignal.get(), right: value})
-                                         }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                                         }}
+                            />
                             <div style={{borderTop: BORDER, height: 1}}/>
                             <RenderIcons panels={allPanels.filter(p => p.position === 'rightBottom')}
                                          value={(selectedPanel.rightBottom ?? '') as string}
@@ -218,7 +195,8 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                                                  ...selectedPanelSignal.get(),
                                                  rightBottom: value
                                              })
-                                         }} centerTag={centerTag} selectedPanel={selectedPanel}/>
+                                         }}
+                            />
                         </div>
                     }}
                 </notifiable.div>
@@ -232,20 +210,12 @@ function RenderIcons(props: {
     panels: Array<PanelInstance>,
     value: string,
     onChange: (key?: string) => void,
-    centerTag?: Record<string, unknown>,
-    selectedPanel?: SelectedPanelType
 }) {
-    const {panels, onChange, value, centerTag, selectedPanel} = props;
+    const {panels, onChange, value} = props;
 
 
     return <div style={{display: 'flex', flexDirection: 'column', padding: '10px 5px', gap: 5}}>
-        {panels.filter(p => {
-            if (p && p.visible) {
-                return p.visible(centerTag, selectedPanel)
-            } else {
-                return true;
-            }
-        }).map(p => {
+        {panels.map(p => {
             const {Icon} = p
             const isFocused = p.id === value;
             return <RenderIcon key={p.id} isFocused={isFocused} onClick={() => {
@@ -342,7 +312,8 @@ function RenderPanel<T extends SelectedPanelType>(props: {
 function RenderTabPanel(props: {
     panelsSignal: Signal.State<Array<PanelInstance>>,
     selectedPanelSignal: Signal.State<SelectedPanelType>,
-    position: PanelPosition
+    position: PanelPosition,
+    onMainCenterClicked:(panel:PanelInstance) => void
 }) {
     const {panelsSignal, selectedPanelSignal, position} = props;
     const {activePageIdSignal} = useAppContext<AppDesignerContext>();
@@ -370,11 +341,15 @@ function RenderTabPanel(props: {
 
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
                 return <TabButton onClick={() => {
-                    selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: panel.id});
+                    const cloneSelectedPanel = structuredClone(selectedPanelSignal.get());
+                    cloneSelectedPanel[position] = panel.id;
                     // if this is the main panel then we need to activate the signal id
                     if (position === 'mainCenter') {
                         activePageIdSignal.set(panel.pageId);
+                        props.onMainCenterClicked(panel)
                     }
+                    selectedPanelSignal.set(cloneSelectedPanel);
+
                 }} key={panel.id} isSelected={isSelected}>
                     <div
                         style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>{panel.title}</div>

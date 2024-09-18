@@ -132,8 +132,7 @@ export function FetchersPanel() {
             id: panelId,
             tag: {
                 type: 'FetcherEditorPanel'
-            },
-            visible: () => true
+            }
         })
     }
 

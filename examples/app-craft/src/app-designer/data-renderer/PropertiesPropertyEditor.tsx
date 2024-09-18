@@ -50,8 +50,7 @@ export function PropertiesPropertyEditor(props: { propertyName: string }) {
                         containerId: container?.id,
                         propertyName: propertyName,
                         type: 'ComponentPropertyEditor'
-                    },
-                    visible: () => true
+                    }
                 })
             }
         }

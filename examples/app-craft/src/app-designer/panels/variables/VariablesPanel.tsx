@@ -159,8 +159,7 @@ export function VariablesPanel() {
             tag: {
                 variableId: panelId,
                 type: 'VariableEditorPanel'
-            },
-            visible: () => true
+            }
         })
     }
 

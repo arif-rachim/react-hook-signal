@@ -147,7 +147,6 @@ export function useAppInitiator(props: LayoutBuilderProps & { activePageId?: str
     const allQueriesSignal = useComputed(() => [...allPageQueriesSignal.get(), ...allApplicationQueriesSignal.get()])
     const allCallablesSignal = useComputed(() => [...allPageCallablesSignal.get(), ...allApplicationCallablesSignal.get()])
     const {value, onChange} = props;
-
     useEffect(() => {
         applicationSignal.set(value);
         if (value && value.pages && value.pages.length > 0) {
@@ -156,7 +155,7 @@ export function useAppInitiator(props: LayoutBuilderProps & { activePageId?: str
             if (!hasSelection) {
                 allErrorsSignal.set([]);
                 variableInitialValueSignal.set({});
-                activePageIdSignal.set(value.pages[0].id)
+                activePageIdSignal.set(value.pages[0].id);
             }
         }
     }, [activePageIdSignal, allErrorsSignal, applicationSignal, value, variableInitialValueSignal]);
@@ -298,56 +297,48 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             Icon: Icon.Component,
                             position: 'leftBottom',
                             component: ElementsPanel,
-                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         layoutTree: {
                             title: 'Layout Tree',
                             Icon: Icon.Tree,
                             position: 'right',
                             component: ComponentTree,
-                            //visible: (tag) => tag?.type === 'DesignPanel'
-                        },
-                        styles: {
-                            title: 'Styles',
-                            Icon: Icon.Style,
-                            position: 'right',
-                            component: StylePanel,
-                            //visible: (tag) => tag?.type === 'DesignPanel'
                         },
                         properties: {
                             title: 'Properties',
                             Icon: Icon.Property,
-                            position: 'right',
+                            position: 'rightBottom',
                             component: PropertiesPanel,
-                            //visible: (tag) => tag?.type === 'DesignPanel'
+                        },
+                        styles: {
+                            title: 'Styles',
+                            Icon: Icon.Style,
+                            position: 'rightBottom',
+                            component: StylePanel,
                         },
                         variables: {
                             title: 'Variables',
                             Icon: Icon.Variable,
                             position: 'leftBottom',
                             component: VariablesPanel,
-                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         functions: {
                             title: 'Callables',
                             Icon: Icon.Function,
                             position: 'leftBottom',
                             component: CallablePanel,
-                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         fetchers: {
                             title: 'Fetchers',
                             Icon: Icon.Fetcher,
                             position: 'leftBottom',
                             component: FetchersPanel,
-                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         queries: {
                             title: 'Queries',
                             Icon: Icon.Query,
                             position: 'leftBottom',
                             component: QueriesPanel,
-                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         database: {
                             title: 'Database',
@@ -373,15 +364,38 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                    left: 'pages',
                                    leftBottom: 'components',
                                    bottom: 'errors',
-                                   right: 'styles',
-                               }}>
+                                   right: 'layoutTree',
+                                   rightBottom: 'properties',
+                               }}
+                    onMainCenterClicked={(panel,selectedPanelSignal) => {
+                        setTimeout(() => {
+                            if(panel.tag?.type === 'VariableEditorPanel') {
+                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'variables',right:'',rightBottom:''})
+                            }
+                            if(panel.tag?.type === 'ComponentPropertyEditor') {
+                                selectedPanelSignal.set({...selectedPanelSignal.get(),right:'layoutTree',rightBottom:'properties'})
+                            }
+                            if(panel.tag?.type === 'CallableEditorPanel') {
+                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'callable',right:'',rightBottom:''})
+                            }
+                            if(panel.tag?.type === 'FetcherEditorPanel') {
+                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'fetcher',right:'',rightBottom:''})
+                            }
+                            if(panel.tag?.type === 'QueryEditorPanel') {
+                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'queries',right:'',rightBottom:''})
+                            }
+                            if(panel.tag?.type === 'DesignPanel') {
+                                selectedPanelSignal.set({...selectedPanelSignal.get(),left:'pages',right:'',rightBottom:''})
+                            }
+                        },0);
+                    }}
+                    >
                     </Dashboard>
                 </VariableInitialization>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>
 }
-
 
 function ComponentTree() {
     const {activePageIdSignal, allPagesSignal} = useAppContext();

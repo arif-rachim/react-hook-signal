@@ -110,8 +110,7 @@ export function ErrorsPanel() {
                                         containerId: e.containerId,
                                         propertyName: e.propertyName,
                                         type: 'ComponentPropertyEditor'
-                                    },
-                                    visible: () => true
+                                    }
                                 })
                             }
 

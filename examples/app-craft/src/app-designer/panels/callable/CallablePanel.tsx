@@ -81,8 +81,7 @@ export function CallablePanel() {
             id: panelId,
             tag: {
                 type: 'CallableEditorPanel'
-            },
-            visible: () => true,
+            }
         })
     }
 

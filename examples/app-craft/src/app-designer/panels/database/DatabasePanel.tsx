@@ -45,7 +45,6 @@ export function DatabasePanel() {
 
     function openDetail(table: Table) {
         addPanel({
-            visible: () => true,
             title: `${table.tblName}`,
             Icon: Icon.Database,
             id: `${table.tblName}`,
