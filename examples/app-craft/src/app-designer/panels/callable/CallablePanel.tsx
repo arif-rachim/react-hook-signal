@@ -13,6 +13,7 @@ import {useShowModal} from "../../../modal/useShowModal.ts";
 import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 import {BORDER} from "../../Border.ts";
+import {useRemoveDashboardPanel} from "../../dashboard/useRemoveDashboardPanel.ts";
 
 
 function AddButton(props:{editCallable: () => void}) {
@@ -48,7 +49,7 @@ export function CallablePanel() {
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
     const updateApplication = useUpdateApplication();
-
+    const removePanel = useRemoveDashboardPanel();
     async function deleteCallable(callable: Callable, scope: 'application' | 'page') {
         const deleteVariableConfirm = await showModal<string>(closePanel => {
             return <ConfirmationDialog message={'Are you sure you want to delete this callable ?'}
@@ -64,6 +65,7 @@ export function CallablePanel() {
                 const callables = allPageCallablesSignal.get().filter(i => i.id !== callable.id);
                 updatePage({type: 'callable', callables: callables})
             }
+            removePanel(callable.id)
         }
     }
 

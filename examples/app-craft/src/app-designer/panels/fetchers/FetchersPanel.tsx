@@ -14,6 +14,7 @@ import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 import {Signal} from "signal-polyfill";
 import {BORDER} from "../../Border.ts";
+import {useRemoveDashboardPanel} from "../../dashboard/useRemoveDashboardPanel.ts";
 
 function RenderFetcher(props:{isFocused: boolean, fetcher: Fetcher, focusedItemSignal: Signal.State<string>, editFetcher: (fetcher?: Fetcher) => void, deleteFetcher: (fetcher: Fetcher) => Promise<void>}) {
     const {editFetcher,deleteFetcher,isFocused,fetcher,focusedItemSignal} = props;
@@ -92,7 +93,7 @@ export function FetchersPanel() {
     const updateApplication = useUpdateApplication();
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
-
+    const removePanel = useRemoveDashboardPanel();
     async function deleteFetcher(fetcher: Fetcher,scope:'page'|'application') {
         const deleteVariableConfirm = await showModal<string>(closePanel => {
             return <ConfirmationDialog message={'Are you sure you want to delete this fetcher ?'}
@@ -108,6 +109,7 @@ export function FetchersPanel() {
                 const fetchers = allPageFetchersSignal.get().filter(i => i.id !== fetcher.id);
                 updatePage({type: 'fetcher', fetchers: fetchers})
             }
+            removePanel(fetcher.id);
         }
     }
 

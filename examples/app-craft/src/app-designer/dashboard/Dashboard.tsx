@@ -156,10 +156,10 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                             }
                         }}>
                             <RenderPanel panelsSignal={panelsSignal}
-                                         selectedPanelSignal={castSignal(selectedPanelSignal)}
+                                         selectedPanelSignal={selectedPanelSignal}
                                          position={'left'}/>
                             <RenderPanel panelsSignal={panelsSignal}
-                                         selectedPanelSignal={castSignal(selectedPanelSignal)}
+                                         selectedPanelSignal={selectedPanelSignal}
                                          position={'leftBottom'}/>
                         </notifiable.div>
                         <div style={{display: 'flex', flexGrow: 1, overflow: 'auto'}}>
@@ -180,15 +180,14 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                             }
                         }}>
                             <RenderPanel panelsSignal={panelsSignal}
-                                         selectedPanelSignal={castSignal(selectedPanelSignal)}
+                                         selectedPanelSignal={selectedPanelSignal}
                                          position={'right'}/>
                             <RenderPanel panelsSignal={panelsSignal}
-                                         selectedPanelSignal={castSignal(selectedPanelSignal)}
+                                         selectedPanelSignal={selectedPanelSignal}
                                          position={'rightBottom'}/>
                         </notifiable.div>
-
                     </div>
-                    <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={castSignal(selectedPanelSignal)}
+                    <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
                                  position={'bottom'}/>
                 </div>
                 <notifiable.div
@@ -321,42 +320,8 @@ function RenderPanel<T extends SelectedPanelType>(props: {
                 </div>
             })
 
-            //
-            // if (selectedLeftPanelId) {
-            //     const panel = panels.find(p => p.id === selectedLeftPanelId);
-            //     const Component = panel?.component ?? EmptyComponent;
-            //     return <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', borderTop: BORDER}}>
-            //         <div style={{
-            //             display: 'flex',
-            //             background: 'rgba(0,0,0,0.05)',
-            //             justifyContent: 'space-between',
-            //             alignItems: 'center',
-            //             borderBottom: BORDER
-            //
-            //         }}>
-            //             <div style={{padding: '5px 10px'}}>
-            //                 {panel?.title}
-            //             </div>
-            //
-            //             <RenderIcon onClick={() => {
-            //                 selectedPanelSignal.set({...selectedPanelSignal.get(), [position]: ''});
-            //             }} isFocused={false} style={{margin: '5px 5px'}}>
-            //                 <Icon.Minimize/>
-            //             </RenderIcon>
-            //
-            //         </div>
-            //         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
-            //             <Component/>
-            //         </div>
-            //     </div>
-            // }
-            // return <></>
         }}
     </notifiable.div>
-}
-
-function castSignal(value: unknown) {
-    return value as unknown as Signal.State<SelectedPanelType>
 }
 
 

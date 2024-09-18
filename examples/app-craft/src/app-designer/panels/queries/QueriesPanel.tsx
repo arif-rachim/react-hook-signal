@@ -13,6 +13,7 @@ import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 import {Query} from "../database/service/getTables.ts";
 import QueryEditorPanel from "./editor/QueryEditorPanel.tsx";
 import {BORDER} from "../../Border.ts";
+import {useRemoveDashboardPanel} from "../../dashboard/useRemoveDashboardPanel.ts";
 
 
 function AddButtons(props: { editQueries: () => void }) {
@@ -49,14 +50,13 @@ export function QueriesPanel() {
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
     const updateApplication = useUpdateApplication();
-
+    const removePanel = useRemoveDashboardPanel();
     async function deleteQuery(query: Query, scope: 'application' | 'page') {
         const deleteVariableConfirm = await showModal<string>(closePanel => {
             return <ConfirmationDialog message={'Are you sure you want to delete this query ?'}
                                        closePanel={closePanel}/>
         })
         if (deleteVariableConfirm === 'Yes') {
-
             if (scope === 'application') {
                 const queries = allApplicationQueriesSignal.get().filter(i => i.id !== query.id);
                 updateApplication(app => {
@@ -66,6 +66,7 @@ export function QueriesPanel() {
                 const queries = allPageQueriesSignal.get().filter(i => i.id !== query.id);
                 updatePage({type: 'query', queries: queries})
             }
+            removePanel(query.id);
         }
     }
 

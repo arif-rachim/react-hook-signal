@@ -16,6 +16,7 @@ import {useAppContext} from "../../hooks/useAppContext.ts";
 import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
 import {Signal} from "signal-polyfill";
 import {BORDER} from "../../Border.ts";
+import {useRemoveDashboardPanel} from "../../dashboard/useRemoveDashboardPanel.ts";
 
 function RenderVariable(props: {
     isFocused: boolean,
@@ -143,7 +144,7 @@ export function VariablesPanel() {
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
     const updateApplication = useUpdateApplication();
-
+    const removePanel = useRemoveDashboardPanel();
     async function editVariable(forType: VariableType, variable?: Variable, scope?: 'page' | 'application') {
         const panelId = variable?.id ?? guid();
         addPanel({
@@ -171,7 +172,7 @@ export function VariablesPanel() {
         if (deleteVariableConfirm === 'Yes') {
             if (scope === 'page') {
                 const variables = allPageVariablesSignal.get().filter(i => i.id !== variable?.id);
-                updatePage({type: 'variable', variables: variables.sort(sortSignal)})
+                updatePage({type: 'variable', variables: variables.sort(sortSignal)});
             }
             if (scope === 'application') {
                 const variables = allApplicationVariablesSignal.get().filter(i => i.id !== variable?.id);
@@ -179,6 +180,7 @@ export function VariablesPanel() {
                     app.variables = variables.sort(sortSignal);
                 });
             }
+            removePanel(variable.id);
         }
     }
 
