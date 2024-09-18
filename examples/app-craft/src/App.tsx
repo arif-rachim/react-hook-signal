@@ -6,7 +6,7 @@ export function App() {
         const val = localStorage.getItem('app-designer');
         if (val && val.length > 0) {
             const app = JSON.parse(val) as Application;
-            app.pages.forEach(p => {
+            app?.pages?.forEach(p => {
                 if(!p.name){
                     p.name = 'anonymous'
                 }
