@@ -92,8 +92,10 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
         if (leftBottomPanel && leftBottomPanel.visible && !leftBottomPanel.visible(centerTag, selectedPanel)) {
             delete selectedPanel.leftBottom
         }
-        if(JSON.stringify(selectedPanelSignal.get()) !== JSON.stringify(selectedPanel)){
-            setTimeout(() => {selectedPanelSignal.set({...selectedPanel})},0)
+        if (JSON.stringify(selectedPanelSignal.get()) !== JSON.stringify(selectedPanel)) {
+            setTimeout(() => {
+                selectedPanelSignal.set({...selectedPanel})
+            }, 0)
         }
 
 
@@ -188,7 +190,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                         </notifiable.div>
                     </div>
                     <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
-                                 position={'bottom'}/>
+                                 position={'bottom'} style={{minHeight: 0}}/>
                 </div>
                 <notifiable.div
                     style={{
@@ -278,23 +280,35 @@ function RenderIcon(props: PropsWithChildren<{ isFocused: boolean, onClick: () =
 function RenderPanel<T extends SelectedPanelType>(props: {
     selectedPanelSignal: Signal.State<T>,
     position: keyof T,
-    panelsSignal: Signal.State<Array<PanelInstance>>
+    panelsSignal: Signal.State<Array<PanelInstance>>,
+    style?: CSSProperties
 }) {
     const {selectedPanelSignal, position, panelsSignal} = props;
-
-    return <notifiable.div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'auto',
-        flexShrink: 0,
+    const panels = useComputed(() => {
+        return panelsSignal.get().filter(p => p.position === position)
+    })
+    return <notifiable.div style={() => {
+        const selectedLeftPanelId = selectedPanelSignal.get()[position] as string;
+        const hasFocused = !isEmpty(selectedLeftPanelId);
+        return {
+            display: hasFocused ? 'flex' : 'none',
+            flexDirection: 'column',
+            overflow: 'auto',
+            minHeight: '50%',
+            ...props.style
+        } as CSSProperties
     }}>
         {() => {
-            const panels = panelsSignal.get();
             const selectedLeftPanelId = selectedPanelSignal.get()[position] as string;
-            return panels.filter(p => p.position === position).map(panel => {
+            return panels.get().map(panel => {
                 const Component = panel?.component ?? EmptyComponent;
                 const isFocused = selectedLeftPanelId === panel.id;
-                return <div style={{display: isFocused ? 'flex':'none', flexDirection: 'column', overflow: 'auto', borderTop: BORDER}} key={panel.id}>
+                return <div style={{
+                    display: isFocused ? 'flex' : 'none',
+                    flexDirection: 'column',
+                    overflow: 'auto',
+                    borderTop: BORDER
+                }} key={panel.id}>
                     <div style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.05)',
@@ -362,7 +376,8 @@ function RenderTabPanel(props: {
                         activePageIdSignal.set(panel.pageId);
                     }
                 }} key={panel.id} isSelected={isSelected}>
-                    <div style={{textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}}>{panel.title}</div>
+                    <div
+                        style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>{panel.title}</div>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -402,8 +417,8 @@ function TabButton(props: HTMLProps<HTMLDivElement> & { isSelected: boolean }) {
         display: 'flex',
         gap: 5,
         alignItems: 'center',
-        overflow:"hidden",
-        whiteSpace:'nowrap',
+        overflow: "hidden",
+        whiteSpace: 'nowrap',
         ...style
     }
 

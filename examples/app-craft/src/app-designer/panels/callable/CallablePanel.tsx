@@ -153,7 +153,7 @@ export function CallablePanel() {
                     }} key={callable.id} onClick={() => {
                         focusedItemSignal.set(callable.id);
                         editCallable(callable,'application')
-                    }}>
+                    }} >
 
                         <div style={{
                             flexGrow: 1,

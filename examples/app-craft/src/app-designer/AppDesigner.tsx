@@ -307,6 +307,20 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             component: ComponentTree,
                             //visible: (tag) => tag?.type === 'DesignPanel'
                         },
+                        styles: {
+                            title: 'Styles',
+                            Icon: Icon.Style,
+                            position: 'right',
+                            component: StylePanel,
+                            //visible: (tag) => tag?.type === 'DesignPanel'
+                        },
+                        properties: {
+                            title: 'Properties',
+                            Icon: Icon.Property,
+                            position: 'right',
+                            component: PropertiesPanel,
+                            //visible: (tag) => tag?.type === 'DesignPanel'
+                        },
                         variables: {
                             title: 'Variables',
                             Icon: Icon.Variable,
@@ -314,18 +328,18 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             component: VariablesPanel,
                             //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
-                        fetchers: {
-                            title: 'Fetchers',
-                            Icon: Icon.Fetcher,
-                            position: 'leftBottom',
-                            component: FetchersPanel,
-                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
-                        },
                         functions: {
                             title: 'Callables',
                             Icon: Icon.Function,
                             position: 'leftBottom',
                             component: CallablePanel,
+                            //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
+                        },
+                        fetchers: {
+                            title: 'Fetchers',
+                            Icon: Icon.Fetcher,
+                            position: 'leftBottom',
+                            component: FetchersPanel,
                             //visible: (_, selectedPanel) => selectedPanel?.left === 'pages'
                         },
                         queries: {
@@ -347,20 +361,7 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                             position: 'bottom',
                             component: ErrorsPanel
                         },
-                        styles: {
-                            title: 'Styles',
-                            Icon: Icon.Style,
-                            position: 'rightBottom',
-                            component: StylePanel,
-                            //visible: (tag) => tag?.type === 'DesignPanel'
-                        },
-                        properties: {
-                            title: 'Properties',
-                            Icon: Icon.Property,
-                            position: 'rightBottom',
-                            component: PropertiesPanel,
-                            visible: (tag) => tag?.type === 'DesignPanel'
-                        },
+
                         bundle: {
                             title: 'Package',
                             Icon: Icon.Package,

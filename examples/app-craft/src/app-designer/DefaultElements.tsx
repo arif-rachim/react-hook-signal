@@ -3,7 +3,6 @@ import {z} from "zod";
 import {BORDER} from "./Border.ts";
 import {CSSProperties, forwardRef, LegacyRef, MutableRefObject, ReactNode, useEffect, useState} from "react";
 import {Icon} from "./Icon.ts";
-import {DataGroup} from "./data-group/DataGroup.tsx";
 import {Button} from "./button/Button.tsx";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
 import {PageSelectionPropertyEditor} from "./data-group/PageSelectionPropertyEditor.tsx";
@@ -83,26 +82,6 @@ export const DefaultElements: Record<string, Element> = {
                 label : 'properties',
                 component: PropertiesPropertyEditor
             }
-        }
-    }),
-    dataGroup: element({
-        shortName: 'Group',
-        icon: Icon.Table,
-        property: {
-            data: z.array(z.record(z.unknown())),
-            component: z.string(),
-            keyId: z.string(),
-            direction: z.enum(['vertical', 'horizontal']),
-        },
-        propertyEditor: {
-            component: {
-                label: 'component',
-                component: PageSelectionPropertyEditor
-            }
-        },
-        component: ({component, style, data, direction, keyId}, ref) => {
-            return <DataGroup data={data} style={style} keyId={keyId} component={component} direction={direction}
-                              ref={ref}/>
         }
     }),
     button: element({

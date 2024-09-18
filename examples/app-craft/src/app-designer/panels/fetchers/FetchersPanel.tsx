@@ -16,8 +16,14 @@ import {Signal} from "signal-polyfill";
 import {BORDER} from "../../Border.ts";
 import {useRemoveDashboardPanel} from "../../dashboard/useRemoveDashboardPanel.ts";
 
-function RenderFetcher(props:{isFocused: boolean, fetcher: Fetcher, focusedItemSignal: Signal.State<string>, editFetcher: (fetcher?: Fetcher) => void, deleteFetcher: (fetcher: Fetcher) => Promise<void>}) {
-    const {editFetcher,deleteFetcher,isFocused,fetcher,focusedItemSignal} = props;
+function RenderFetcher(props: {
+    isFocused: boolean,
+    fetcher: Fetcher,
+    focusedItemSignal: Signal.State<string>,
+    editFetcher: (fetcher?: Fetcher) => void,
+    deleteFetcher: (fetcher: Fetcher) => Promise<void>
+}) {
+    const {editFetcher, deleteFetcher, isFocused, fetcher, focusedItemSignal} = props;
     const context = useAppContext();
     return <div style={{
         display: 'flex',
@@ -59,7 +65,7 @@ function RenderFetcher(props:{isFocused: boolean, fetcher: Fetcher, focusedItemS
     </div>;
 }
 
-function AddButtons(props:{editFetcher: () => void}) {
+function AddButtons(props: { editFetcher: () => void }) {
     const {editFetcher} = props;
     return <div style={{display: 'flex', padding: 10}}>
         <Button
@@ -94,7 +100,8 @@ export function FetchersPanel() {
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
     const removePanel = useRemoveDashboardPanel();
-    async function deleteFetcher(fetcher: Fetcher,scope:'page'|'application') {
+
+    async function deleteFetcher(fetcher: Fetcher, scope: 'page' | 'application') {
         const deleteVariableConfirm = await showModal<string>(closePanel => {
             return <ConfirmationDialog message={'Are you sure you want to delete this fetcher ?'}
                                        closePanel={closePanel}/>
@@ -113,7 +120,7 @@ export function FetchersPanel() {
         }
     }
 
-    function editFetcher(fetcher?: Fetcher,scope?:'application'|'page') {
+    function editFetcher(fetcher?: Fetcher, scope?: 'application' | 'page') {
         const panelId = fetcher?.id ?? guid();
         addPanel({
             position: 'mainCenter',
@@ -154,7 +161,7 @@ export function FetchersPanel() {
                                               editFetcher(fetcher, 'page');
                                           }} deleteFetcher={(fetcher) => {
                         return deleteFetcher(fetcher, 'page');
-                    }}/>
+                    }} key={fetcher.id}/>
                 })
             }}
         </notifiable.div>

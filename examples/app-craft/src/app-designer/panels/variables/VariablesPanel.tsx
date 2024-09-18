@@ -198,7 +198,7 @@ export function VariablesPanel() {
                 }
                 return variables.map(variable => {
                     const isFocused = focusedVariable === variable.id;
-                    return <RenderVariable isFocused={isFocused} variable={variable}
+                    return <RenderVariable key={variable.id} isFocused={isFocused} variable={variable}
                                            focusedItemSignal={focusedItemSignal}
                                            editVariable={(forType, variable) => editVariable(forType, variable, 'page')}
                                            context={context}

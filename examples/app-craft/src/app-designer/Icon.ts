@@ -2,15 +2,15 @@ import {PiPackage, PiTrafficSignal, PiWebhooksLogo} from "react-icons/pi";
 import {LuFormInput, LuSigmaSquare} from "react-icons/lu";
 import {
     IoCodeSlashOutline,
-    IoGrid,
     IoInformationCircleOutline,
+    IoLogoWebComponent,
     IoOpenOutline,
     IoSquareOutline,
     IoTrashOutline
 } from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
-import {AiOutlineApi, AiOutlineFieldString, AiOutlineGroup} from "react-icons/ai";
-import {TbBinaryTree, TbDatabaseSearch, TbJumpRope, TbToggleLeftFilled} from "react-icons/tb";
+import {AiOutlineFieldString, AiOutlineFunction, AiOutlineGroup} from "react-icons/ai";
+import {TbBinaryTree, TbJumpRope, TbSql, TbToggleLeftFilled} from "react-icons/tb";
 import {
     MdAdd,
     MdCheck,
@@ -20,19 +20,21 @@ import {
     MdDataObject,
     MdError,
     MdMinimize,
+    MdOutlineHttp,
     MdOutlineQuestionMark,
     MdOutlineStyle,
-    MdTitle,
-    MdTouchApp
+    MdSmartButton,
+    MdTitle
 } from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
 import {RiPagesLine} from "react-icons/ri";
 import {BiChevronDown, BiChevronRight, BiReset} from "react-icons/bi";
 import {HiCollection, HiViewBoards} from "react-icons/hi";
 import {GoDatabase} from "react-icons/go";
-import {SiAzurefunctions} from "react-icons/si";
-import {FaCubes, FaFile, FaFolder, FaHollyBerry} from "react-icons/fa6";
+import {FaFile, FaFolder} from "react-icons/fa6";
 import {RedX} from "../components/fault-status-icon/FaultStatusIcon.tsx";
+import {HiOutlineVariable} from "react-icons/hi2";
+import {BsTable} from "react-icons/bs";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -54,9 +56,9 @@ export const Icon = {
     Formula: IoCodeSlashOutline,
     Minimize: MdMinimize,
     Page: RiPagesLine,
-    Component: FaCubes,
-    Variable: FaHollyBerry,
-    ApplicationVariable: FaHollyBerry,
+    Component: IoLogoWebComponent,
+    Variable: HiOutlineVariable,
+    ApplicationVariable: HiOutlineVariable ,
     Style: MdOutlineStyle,
     Property: TbJumpRope,
     Close: MdClose,
@@ -66,18 +68,18 @@ export const Icon = {
     CheckboxBlank: IoSquareOutline,
     CheckboxChecked: MdCheckBox,
     Confirmation: IoInformationCircleOutline,
-    Fetcher: AiOutlineApi,
+    Fetcher: MdOutlineHttp,
     Add: MdAdd,
-    Button: MdTouchApp,
+    Button: MdSmartButton,
     Input: LuFormInput,
     Table: HiCollection,
     Row: HiViewBoards,
     Title: MdTitle,
     Database: GoDatabase,
-    Query: TbDatabaseSearch,
-    Function: SiAzurefunctions,
+    Query: TbSql,
+    Function: AiOutlineFunction,
     Container: AiOutlineGroup,
-    Grid: IoGrid,
+    Grid: BsTable,
     FaultIcon: RedX,
     Folder: FaFolder,
     File: FaFile,
