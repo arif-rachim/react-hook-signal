@@ -29,20 +29,23 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
                     <div style={{
                         backgroundColor: '#444',
                         borderRadius: 20,
-                        boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)'
+                        boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)',
+                        maxWidth: 1200,
+                        maxHeight: 800,
+                        minWidth: 1200,
+                        minHeight: 800,
+                        display:'flex',
+                        flexDirection:'column',
+                        overflow:'auto',
+                        padding : 5
                     }}>
                         <notifiable.div style={{
                             flexGrow: 1,
                             display: 'flex',
                             flexDirection: 'column',
                             overflow: 'auto',
-                            maxWidth: 1200,
-                            maxHeight: 900,
-                            minWidth: 1200,
-                            minHeight: 900,
                             backgroundColor: 'white',
-                            margin: 5,
-                            borderRadius: 15
+                            borderRadius: 15,
                         }}>
                             {() => {
                                 const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));

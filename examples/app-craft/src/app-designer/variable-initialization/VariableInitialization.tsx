@@ -203,6 +203,7 @@ export function VariableInitialization(props: PropsWithChildren) {
         const allApplicationVariablesInstance = allApplicationVariablesSignalInstance.get();
         const appVar = variablesInstanceToDictionary(allApplicationVariablesInstance, allApplicationVariablesSignal.get());
         const appQueries = queryInitialization(allApplicationQueriesSignal.get());
+
         const app: FormulaDependencyParameter = {
             var: appVar,
             query: appQueries,
