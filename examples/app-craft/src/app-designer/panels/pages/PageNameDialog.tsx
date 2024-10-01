@@ -6,7 +6,7 @@ import {colors} from "stock-watch/src/utils/colors.ts";
 import {Button} from "../../button/Button.tsx";
 import {Icon} from "../../Icon.ts";
 
-export function PageNameDialog(props: { closePanel: (param?: string) => void, allPages: Array<Page>, page: Page }) {
+export function PageNameDialog(props: { closePanel: (param?: string) => void, allPages: Array<Page>, page: Page,isForClone?:boolean }) {
     const valueSignal = useSignal(props.page.name);
     const errorSignal = useSignal('');
 
@@ -25,7 +25,7 @@ export function PageNameDialog(props: { closePanel: (param?: string) => void, al
     const isNewPage = isEmpty(props.page.name);
 
     return <div style={{display: 'flex', flexDirection: "column", gap: 10, width: 300}}>
-        <div style={{fontSize: 22, padding: '10px 20px', borderBottom: BORDER}}>{isNewPage ? 'Add' : 'Edit'} Page</div>
+        <div style={{fontSize: 22, padding: '10px 20px', borderBottom: BORDER}}>{props.isForClone ? 'Save As' : isNewPage ? 'Add New Page' : 'Rename Page'}</div>
         <div style={{display: 'flex', flexDirection: 'column', padding: '0px 20px'}}>
             <label style={{display: 'flex', flexDirection: 'column'}}>
                 <div style={{marginLeft: 10}}>Page Name :</div>
@@ -63,6 +63,7 @@ export function PageNameDialog(props: { closePanel: (param?: string) => void, al
             padding: '10px 20px',
             gap: 10
         }}>
+
             <Button onClick={() => {
                 const errorMessage = nameIsValid();
                 errorSignal.set(errorMessage);

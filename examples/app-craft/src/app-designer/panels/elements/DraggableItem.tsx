@@ -29,7 +29,8 @@ export function DraggableItem(props: { draggableDataType: string, icon: IconType
         clone.style.position = 'absolute';
         clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
         document.body.appendChild(clone);
-        event.dataTransfer.setDragImage(clone, 0, 0);
+
+        //event.dataTransfer.setDragImage(clone, 0, 0);
         setTimeout(() => {
             document.body.removeChild(clone);
         }, 0);

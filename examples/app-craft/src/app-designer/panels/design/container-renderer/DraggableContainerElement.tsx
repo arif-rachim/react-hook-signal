@@ -6,7 +6,7 @@ import {dropZones} from "./drop-zone/dropZones.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
 import {BasicDragEvent, CancellableEvent, ElementProps} from "../../../LayoutBuilderProps.ts";
 import {ContainerRendererIdContext} from "./ContainerRenderer.tsx";
-import {addNewContainer} from "./draggable-container-element-tools/addNewContainer.ts";
+import {addNewContainer, addPageElement} from "./draggable-container-element-tools/addNewContainer.ts";
 import {swapContainerLocation} from "./draggable-container-element-tools/swapContainerLocation.ts";
 import {useUpdatePageSignal} from "../../../hooks/useUpdatePageSignal.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
@@ -35,7 +35,8 @@ export function DraggableContainerElement(props: { container: Container }) {
         hoveredDragContainerIdSignal,
         selectedDragContainerIdSignal,
         uiDisplayModeSignal,
-        allContainersSignal
+        allContainersSignal,
+        allPagesSignal
     } = useAppContext<AppDesignerContext>();
     const {refresh} = useRefresh('DraggableContainer');
     useSignalEffect(() => {
@@ -89,7 +90,10 @@ export function DraggableContainerElement(props: { container: Container }) {
         }
         const id = event.dataTransfer.getData('text');
         const keys = Object.keys(elementsLib as Record<string, unknown>);
-        if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
+        const page = allPagesSignal.get().find(p => p.id === id);
+        if(page !== undefined){
+            addPageElement(page,allContainersSignal, activeDropZoneIdSignal, updatePage);
+        }else if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
             addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal, updatePage);
         } else if (id) {
             swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal, updatePage);

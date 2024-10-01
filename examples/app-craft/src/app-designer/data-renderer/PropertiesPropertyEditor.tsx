@@ -10,6 +10,7 @@ import {ComponentPropertyEditor} from "../panels/properties/editor/ComponentProp
 import {useAddDashboardPanel} from "../dashboard/useAddDashboardPanel.tsx";
 import {z, ZodType} from "zod";
 
+
 export function PropertiesPropertyEditor(props: { propertyName: string }) {
     const containerSignal = useSelectedDragContainer();
     const context = useAppContext();
@@ -22,6 +23,7 @@ export function PropertiesPropertyEditor(props: { propertyName: string }) {
         const formula = container.properties[propertyName].formula;
         isFormulaEmpty = isEmpty(formula);
     }
+
 
     function onClick() {
         const container = containerSignal.get();

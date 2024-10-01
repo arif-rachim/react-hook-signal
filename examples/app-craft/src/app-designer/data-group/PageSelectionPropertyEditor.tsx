@@ -23,19 +23,19 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         isFormulaEmpty = isEmpty(formula);
     }
     const update = useUpdateDragContainer();
-    const selectedDragContainerSignal = useSelectedDragContainer();
-    const [value,setValue] = useState<string>('');
+    const [value, setValue] = useState<string>('');
+
     useSignalEffect(() => {
-        const selectedDragContainer = selectedDragContainerSignal.get();
-        if(selectedDragContainer && selectedDragContainer.properties && propertyName in selectedDragContainer.properties) {
+        const selectedDragContainer = containerSignal.get();
+        if (selectedDragContainer && selectedDragContainer.properties && propertyName in selectedDragContainer.properties) {
             const formula = selectedDragContainer.properties[propertyName].formula;
-            try{
-                const fun = new Function('module',formula);
-                const module = {exports:''};
-                fun.call(null,module)
+            try {
+                const fun = new Function('module', formula);
+                const module = {exports: ''};
+                fun.call(null, module)
                 const pageId = module.exports
                 setValue(pageId);
-            }catch(err){
+            } catch (err) {
                 console.error(err);
             }
         }
@@ -52,6 +52,7 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
         padding: 0
     };
+
     return <div style={{display: 'flex'}}>
         <PageInputSelector value={value} style={style} onChange={(value) => {
             const containerId = containerSignal.get()?.id;

@@ -17,9 +17,10 @@ import {useUpdateQueries} from "../../../hooks/useUpdateQueries.ts";
 import {Query} from "../../database/service/getTables.ts";
 import {RenderParameters} from "../../fetchers/editor/FetcherEditorPanel.tsx";
 import {ParamsObject, SqlValue} from "sql.js";
-import {queryPagination, SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
+import { SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
 import {composeArraySchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
+import {queryPagination} from "../../database/table-editor/queryPagination.ts";
 
 export default function QueryEditorPanel(props: {
     queryId?: string,
@@ -379,5 +380,5 @@ function extractParametersAndReplace(sqlQuery: string) {
     return (sqlQuery.match(parameterColon) ?? []).map(t => {
         const text = t.toString();
         return text.substring(1)
-    });
+    }).filter((f,index,source) => source.indexOf(f) === index);
 }

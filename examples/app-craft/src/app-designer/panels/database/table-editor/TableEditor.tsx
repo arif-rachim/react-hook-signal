@@ -1,7 +1,6 @@
 import {Table} from "../service/getTables.ts";
 import {CSSProperties, Dispatch, ReactNode, SetStateAction, useEffect, useState} from "react";
-import {queryDb} from "./queryDb.ts";
-import {ParamsObject, SqlValue} from "sql.js";
+import {SqlValue} from "sql.js";
 import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
@@ -13,36 +12,8 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {PageViewer} from "../../../../app-viewer/PageViewer.tsx";
 import {QueryTypeResult} from "../../../query-grid/QueryGrid.tsx";
 import {MdArrowDownward, MdArrowUpward} from "react-icons/md";
+import {queryPagination} from "./queryPagination.ts";
 
-
-export async function queryPagination(props: {
-    query: string,
-    params: ParamsObject,
-    currentPage: number,
-    pageSize: number,
-    filter: ParamsObject,
-    sort: Array<{ column: string, direction: 'asc' | 'desc' }>
-}) {
-    const {query, params, currentPage, pageSize, filter, sort} = props;
-    const {columns, values, page} = await queryDb(query, {
-        size: pageSize ?? 50,
-        number: currentPage
-    }, params, filter, sort)
-
-    const data = values.map(val => {
-        const result: Record<string, SqlValue> = {};
-        columns.forEach((c, index) => {
-            result[c] = val[index]
-        })
-        return result;
-    });
-    return ({
-        data,
-        columns,
-        currentPage: page.number,
-        totalPage: Math.ceil(page.totalRows / page.size)
-    })
-}
 
 async function queryTable(props: {
     table: Table,
@@ -287,6 +258,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
         sortable,
         onRowDoubleClick
     } = props;
+    const dataIsEmpty = (data ?? []).length === 0;
     const [focusedRow, setFocusedRow] = useState<T | undefined>(focusedRowProps);
     useEffect(() => setFocusedRow(focusedRowProps), [focusedRowProps]);
     const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
@@ -462,5 +434,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                 })}
             </div>
         })}
+        {dataIsEmpty && <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontStyle:'italic'}}>
+            {'There is no information to show in this table right now.'}
+        </div>}
     </div>
 }

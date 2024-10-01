@@ -49,7 +49,7 @@ export const DashboardContext = createContext<{
 export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChildren<{
     panels: T,
     defaultSelectedPanel: { [k in PanelPosition]?: keyof T },
-    onMainCenterClicked:(panel:PanelInstance,selectedPanelSignal:Signal.State<SelectedPanelType>) => void
+    onMainCenterClicked: (panel: PanelInstance, selectedPanelSignal: Signal.State<SelectedPanelType>) => void
 }>) {
     const panelsSignal = useSignal<Array<PanelInstance>>([]);
     useEffect(() => {
@@ -143,7 +143,8 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                         </notifiable.div>
                         <div style={{display: 'flex', flexGrow: 1, overflow: 'auto'}}>
                             <RenderTabPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
-                                            position={'mainCenter'} onMainCenterClicked={(panel) => props.onMainCenterClicked(panel,selectedPanelSignal)}/>
+                                            position={'mainCenter'}
+                                            onMainCenterClicked={(panel) => props.onMainCenterClicked(panel, selectedPanelSignal)}/>
                         </div>
                         <notifiable.div style={() => {
                             const selectedPanel = selectedPanelSignal.get();
@@ -313,7 +314,7 @@ function RenderTabPanel(props: {
     panelsSignal: Signal.State<Array<PanelInstance>>,
     selectedPanelSignal: Signal.State<SelectedPanelType>,
     position: PanelPosition,
-    onMainCenterClicked:(panel:PanelInstance) => void
+    onMainCenterClicked: (panel: PanelInstance) => void
 }) {
     const {panelsSignal, selectedPanelSignal, position} = props;
     const {activePageIdSignal} = useAppContext<AppDesignerContext>();
@@ -338,8 +339,20 @@ function RenderTabPanel(props: {
     }}>
         <div style={{display: isEmpty ? 'none' : 'flex', flexDirection: 'row', borderBottom: BORDER}}>
             {panelsComputed.map(panel => {
+                const Econ = panel.tag?.type === 'DesignPanel' ? Icon.Component :
+                    panel.tag?.type === 'QueryEditorPanel' ? Icon.Query :
+                        panel.tag?.type === 'FetcherEditorPanel' ? Icon.Fetcher :
+                            panel.tag?.type === 'CallableEditorPanel' ? Icon.Function :
+                                panel.tag?.type === 'VariableEditorPanel' ? Icon.Variable :
+                                    panel.tag?.type === 'ComponentPropertyEditor' ? Icon.Property :
+                                        panel.tag?.type === 'TableEditor' ? Icon.Table : Icon.Component
 
                 const isSelected = (selectedPanel && panel.id === selectedPanel[position]) ?? false;
+                let title = panel.title;
+                if (typeof panel.title === 'string') {
+                    const paths = panel.title.split('/');
+                    title = paths[paths.length - 1];
+                }
                 return <TabButton onClick={() => {
                     const cloneSelectedPanel = structuredClone(selectedPanelSignal.get());
                     cloneSelectedPanel[position] = panel.id;
@@ -349,10 +362,10 @@ function RenderTabPanel(props: {
                         props.onMainCenterClicked(panel)
                     }
                     selectedPanelSignal.set(cloneSelectedPanel);
-
                 }} key={panel.id} isSelected={isSelected}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Econ/></div>
                     <div
-                        style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>{panel.title}</div>
+                        style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>{title}</div>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

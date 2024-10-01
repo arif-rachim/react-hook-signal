@@ -10,11 +10,11 @@ import {useShowModal} from "../../modal/useShowModal.ts";
 import {Button} from "../button/Button.tsx";
 import {ColumnsConfig} from "../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../AppDesigner.tsx";
-import {queryGridColumnsTemporalColumns} from "./QueryGrid.tsx";
 import {PageInputSelector} from "../page-selector/PageInputSelector.tsx";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {MdOutlineCheckBox, MdOutlineCheckBoxOutlineBlank} from "react-icons/md";
 import {IoMdCheckbox} from "react-icons/io";
+import {queryGridColumnsTemporalColumns} from "./queryGridColumnsTemporalColumns.ts";
 
 function getFormula(container: Container | undefined, propertyName: string) {
     if (container && container.properties[propertyName]) {

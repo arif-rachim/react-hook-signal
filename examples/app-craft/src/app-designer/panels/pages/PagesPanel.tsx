@@ -15,6 +15,7 @@ import {CSSProperties} from "react";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {guid} from "../../../utils/guid.ts";
 import {useRefactorPageName} from "../../hooks/useRefactorPageName.ts";
+import {AppDesignerContext} from "../../AppDesignerContext.ts";
 
 type TreeNode = {
     [key: string]: {
@@ -66,9 +67,11 @@ export function PagesPanel() {
 
     const showModal = useShowModal();
     const addPanel = useAddDashboardPanel();
+    const updatePage = useUpdatePageSignal();
+    const refactorPage = useRefactorPageName();
 
     async function addPage() {
-        const page = createNewBlankPage({name:''});
+        const page = createNewBlankPage({name: ''});
         page.name = await showModal<string>(closePanel => {
             return <PageNameDialog closePanel={closePanel} allPages={allPagesSignal.get()} page={page}/>
         });
@@ -82,16 +85,43 @@ export function PagesPanel() {
         updatePage({type: 'delete-page', pageId: page.id})
     }
 
-    const updatePage = useUpdatePageSignal();
-    const refactorPage = useRefactorPageName()
+    async function clonePage(page: Page) {
+        const newPage = structuredClone(page);
+        newPage.id = guid();
+        newPage.fetchers.forEach(f => f.id = guid())
+        newPage.queries.forEach(q => q.id = guid())
+        newPage.callables.forEach(q => q.id = guid())
+        newPage.containers.forEach(container => {
+            const oldId = container.id;
+            const newId = guid();
+            container.id = newId;
+            newPage.containers.forEach(c => {
+                if (c.children.includes(oldId)) {
+                    c.children.splice(c.children.indexOf(oldId), 1, newId);
+                }
+                if (c.parent === oldId) {
+                    c.parent = newId;
+                }
+            })
+        })
+        // here we need to prompt edit
+        const newName = await showModal<string>(closePanel => {
+            return <PageNameDialog closePanel={closePanel} allPages={allPagesSignal.get()} page={newPage} isForClone={true}/>
+        });
+        if (newName) {
+            newPage.name = newName;
+            updatePage({type: 'add-page', page:newPage})
+        }
+    }
+
     async function editPage(page: Page) {
         const currentName = page.name;
         const newName = await showModal<string>(closePanel => {
             return <PageNameDialog closePanel={closePanel} allPages={allPagesSignal.get()} page={page}/>
         });
-        if(newName){
+        if (newName) {
             updatePage({type: 'page-name', name: newName, pageId: page.id})
-            refactorPage({newName:newName,currentName:currentName});
+            refactorPage({newName: newName, currentName: currentName});
         }
     }
 
@@ -157,6 +187,11 @@ export function PagesPanel() {
                     if (page) {
                         deletePage(page);
                     }
+                }} onClonePage={path => {
+                    const page = allPages.find(p => p.name === path);
+                    if (page) {
+                        clonePage(page).then();
+                    }
                 }}/>
             }}
         </notifiable.div>
@@ -172,10 +207,20 @@ function RenderTree(props: {
     focusedPath: string,
     onFocusedPathChange: (path: string) => void,
     onDeletePath: (path: string) => void,
-    onRenamePath: (path: string) => void
+    onRenamePath: (path: string) => void,
+    onClonePage: (path: string) => void
 }) {
-    const {data, paddingLeft, onToggle, focusedPath, onFocusedPathChange, onDeletePath, onRenamePath} = props;
-
+    const {
+        data,
+        paddingLeft,
+        onToggle,
+        focusedPath,
+        onFocusedPathChange,
+        onDeletePath,
+        onRenamePath,
+        onClonePage
+    } = props;
+    const {activeDropZoneIdSignal} = useAppContext<AppDesignerContext>();
     return Object.keys(data).sort((a, b) => {
         const aNodeIsFolder = data[a].pageId !== undefined;
         const bNodeIsFolder = data[b].pageId !== undefined;
@@ -191,19 +236,83 @@ function RenderTree(props: {
         const isFolder = node.pageId === undefined;
         const isOpen = node.isOpen
         const isFocused = node.path === focusedPath;
+
+
+        /**
+
+         data-element-id={props.draggableDataType}
+         style={{
+         padding: 5,
+         borderRadius: 5,
+         backgroundColor: 'white',
+         display: 'flex',
+         flexDirection:'column',
+         alignItems: 'center',
+         justifyContent: 'center',
+         width: '20%',
+         height: 50,
+         flexShrink: 0,
+         flexGrow: 0
+         }} onDragStart={(event) => {
+         event.dataTransfer.setData('text/plain', props.draggableDataType);
+         const dragElement = document.querySelector(`[data-element-id="${props.draggableDataType}"]`);
+         if (dragElement === null) {
+         return;
+         }
+         const clone = dragElement.cloneNode(true) as HTMLElement;
+         clone.style.position = 'absolute';
+         clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
+         document.body.appendChild(clone);
+
+         //event.dataTransfer.setDragImage(clone, 0, 0);
+         setTimeout(() => {
+         document.body.removeChild(clone);
+         }, 0);
+         }}
+         draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}
+
+         */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         return <div key={key} style={{
             display: 'flex',
             flexDirection: 'column',
             background: isFocused ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.9)', ...props.style
         }}>
-            <div style={{display: 'flex', paddingLeft: paddingLeft, alignItems: 'center', gap: 5}}
+            <div style={{display: 'flex', paddingLeft: paddingLeft, alignItems: 'center', gap: 5, paddingRight: 5}}
+                 data-element-id={node.pageId}
                  onClick={() => {
                      if (isFolder) {
                          onToggle(node.path)
                      } else {
                          onFocusedPathChange(node.path);
                      }
-                 }}>
+                 }}  onDragStart={(event) => {
+                        event.dataTransfer.setData('text/plain', node.pageId ?? '');
+                        const dragElement = document.querySelector(`[data-element-id="${node.pageId}"]`);
+                        if (dragElement === null) {
+                            return;
+                        }
+                        const clone = dragElement.cloneNode(true) as HTMLElement;
+                        clone.style.position = 'absolute';
+                        clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
+                        document.body.appendChild(clone);
+                        setTimeout(() => {
+                            document.body.removeChild(clone);
+                        }, 0);
+                    }} draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}>
                 <div style={{width: 10}}>
                     {isFolder && isOpen && <Icon.ChevronDown/>}
                     {isFolder && !isOpen && <Icon.ChevronRight/>}
@@ -213,7 +322,7 @@ function RenderTree(props: {
                         <Icon.Folder style={{color: colors.yellow}}/>
                     }
                     {!isFolder &&
-                        <Icon.File style={{color: colors.grey}}/>
+                        <Icon.Component style={{color: colors.grey}}/>
                     }
                 </div>
                 <div style={{flexGrow: 1, ...props.styleLabel}}>
@@ -236,7 +345,17 @@ function RenderTree(props: {
                         alignItems: 'center',
                         justifyContent: 'center',
                     }} onClick={() => onRenamePath(node.path)}>
-                        <Icon.Detail style={{fontSize: 18}}/>
+                        <Icon.Edit style={{fontSize: 18}}/>
+                    </div>
+                }
+                {!isFolder && isFocused &&
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }} onClick={() => onClonePage(node.path)}>
+                        <Icon.SaveAs style={{fontSize: 18}}/>
                     </div>
                 }
             </div>
@@ -246,6 +365,7 @@ function RenderTree(props: {
                             onFocusedPathChange={onFocusedPathChange}
                             onDeletePath={onDeletePath}
                             onRenamePath={onRenamePath}
+                            onClonePage={onClonePage}
                 />
             }
         </div>

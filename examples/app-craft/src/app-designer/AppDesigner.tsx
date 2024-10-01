@@ -1,12 +1,10 @@
-import {CSSProperties, useEffect, useMemo, useState} from "react";
+import {CSSProperties, useEffect, useState} from "react";
 import {AnySignal, notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
-import {Signal} from "signal-polyfill";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
 import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
-import {ErrorType} from "./errors/ErrorType.ts";
 import {Dashboard} from "./dashboard/Dashboard.tsx";
 import {Icon} from "./Icon.ts";
 import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
@@ -18,13 +16,13 @@ import {ErrorsPanel} from "./panels/errors/ErrorsPanel.tsx";
 import PackagePanel from "./panels/package/PackagePanel.tsx";
 import {DefaultElements} from "./DefaultElements.tsx";
 import {DatabasePanel} from "./panels/database/DatabasePanel.tsx";
-import {createNewBlankApplication} from "./createNewBlankApplication.ts";
 import {Query, Table} from "./panels/database/service/getTables.ts";
 import {FetchersPanel} from "./panels/fetchers/FetchersPanel.tsx";
 import {CallablePanel} from "./panels/callable/CallablePanel.tsx";
 import {QueriesPanel} from "./panels/queries/QueriesPanel.tsx";
 import {useAppContext} from "./hooks/useAppContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {useAppInitiator} from "./hooks/useAppInitiator.ts";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -107,111 +105,6 @@ export type Container = {
     properties: Record<string, ContainerPropertyType> & { defaultStyle?: CSSProperties },
 }
 
-export function useAppInitiator(props: LayoutBuilderProps & { activePageId?: string }) {
-    const applicationSignal = useSignal(createNewBlankApplication());
-
-    const allApplicationCallablesSignal = useComputed(() => applicationSignal.get().callables ?? []);
-    const allPagesSignal = useComputed<Array<Page>>(() => applicationSignal.get().pages ?? []);
-    const allTablesSignal = useComputed<Array<Table>>(() => applicationSignal.get().tables ?? []);
-    const allApplicationQueriesSignal = useComputed(() => applicationSignal.get().queries ?? []);
-
-    const activePageIdSignal = useSignal<string>(props.activePageId ?? '');
-    const activeDropZoneIdSignal = useSignal('');
-    const selectedDragContainerIdSignal = useSignal('');
-    const hoveredDragContainerIdSignal = useSignal('');
-
-    const uiDisplayModeSignal = useSignal<'design' | 'view'>('design');
-    const variableInitialValueSignal = useSignal<Record<string, unknown>>({});
-    const allApplicationVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
-
-    const allPageVariablesSignalInstance: Signal.State<VariableInstance[]> = useSignal<Array<VariableInstance>>([]);
-    const allErrorsSignal = useSignal<Array<ErrorType>>([]);
-
-    const activePageSignal = useComputed(() => {
-        const activePageId = activePageIdSignal.get();
-        const allPages = allPagesSignal.get();
-        return allPages.find(i => i.id === activePageId)
-    })
-
-    const allApplicationVariablesSignal = useComputed<Array<Variable>>(() => applicationSignal.get().variables ?? []);
-    const allPageVariablesSignal = useComputed<Array<Variable>>(() => activePageSignal.get()?.variables ?? []);
-    const allContainersSignal = useComputed<Array<Container>>(() => activePageSignal.get()?.containers ?? []);
-    const allApplicationFetchersSignal = useComputed<Array<Fetcher>>(() => applicationSignal.get()?.fetchers ?? []);
-    const allPageFetchersSignal = useComputed<Array<Fetcher>>(() => activePageSignal.get()?.fetchers ?? []);
-    const allPageCallablesSignal = useComputed<Array<Callable>>(() => activePageSignal.get()?.callables ?? []);
-    const allPageQueriesSignal = useComputed<Array<Query>>(() => activePageSignal.get()?.queries ?? []);
-
-    const allVariablesSignalInstance = useComputed(() => [...allPageVariablesSignalInstance.get(), ...allApplicationVariablesSignalInstance.get()])
-    const allVariablesSignal = useComputed(() => [...allPageVariablesSignal.get(), ...allApplicationVariablesSignal.get()])
-    const allFetchersSignal = useComputed(() => [...allPageFetchersSignal.get(), ...allApplicationFetchersSignal.get()])
-    const allQueriesSignal = useComputed(() => [...allPageQueriesSignal.get(), ...allApplicationQueriesSignal.get()])
-    const allCallablesSignal = useComputed(() => [...allPageCallablesSignal.get(), ...allApplicationCallablesSignal.get()])
-    const {value, onChange} = props;
-    useEffect(() => {
-        applicationSignal.set(value);
-        if (value && value.pages && value.pages.length > 0) {
-            const currentActivePageId = activePageIdSignal.get();
-            const hasSelection = value.pages.findIndex(i => i.id === currentActivePageId) >= 0;
-            if (!hasSelection) {
-                allErrorsSignal.set([]);
-                variableInitialValueSignal.set({});
-                activePageIdSignal.set(value.pages[0].id);
-            }
-        }
-    }, [activePageIdSignal, allErrorsSignal, applicationSignal, value, variableInitialValueSignal]);
-
-    useSignalEffect(() => {
-        onChange(applicationSignal.get());
-    })
-
-    const navigate = useMemo(() => {
-        return async function navigate(path: string, param?: unknown) {
-            const page = allPagesSignal.get().find(p => p.name === path);
-            if (page === undefined) {
-                return;
-            }
-            if (uiDisplayModeSignal && uiDisplayModeSignal.get() === 'design') {
-                alert('Please switch to view mode to navigate');
-                return;
-            }
-            allErrorsSignal.set([]);
-            variableInitialValueSignal.set(param as Record<string, unknown> ?? {});
-            activePageIdSignal.set(page.id);
-        }
-    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, uiDisplayModeSignal, variableInitialValueSignal])
-    return {
-        applicationSignal,
-        allApplicationCallablesSignal,
-        allPagesSignal,
-        allTablesSignal,
-        activePageIdSignal,
-        activeDropZoneIdSignal,
-        selectedDragContainerIdSignal,
-        hoveredDragContainerIdSignal,
-        uiDisplayModeSignal,
-        variableInitialValueSignal,
-        allApplicationVariablesSignalInstance,
-        allPageVariablesSignalInstance,
-        allErrorsSignal,
-        allApplicationVariablesSignal,
-        allPageVariablesSignal,
-        allContainersSignal,
-        allPageFetchersSignal,
-        allApplicationFetchersSignal,
-        allPageCallablesSignal,
-        allApplicationQueriesSignal,
-        allPageQueriesSignal,
-
-
-        allVariablesSignalInstance,
-        allVariablesSignal,
-        allFetchersSignal,
-        allQueriesSignal,
-        allCallablesSignal,
-
-        navigate
-    };
-}
 
 export default function AppDesigner(props: LayoutBuilderProps) {
     const {
@@ -367,29 +260,57 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                    right: 'layoutTree',
                                    rightBottom: 'properties',
                                }}
-                    onMainCenterClicked={(panel,selectedPanelSignal) => {
-                        setTimeout(() => {
-                            if(panel.tag?.type === 'VariableEditorPanel') {
-                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'variables',right:'',rightBottom:''})
-                            }
-                            if(panel.tag?.type === 'ComponentPropertyEditor') {
-                                selectedPanelSignal.set({...selectedPanelSignal.get(),right:'layoutTree',rightBottom:'properties'})
-                            }
-                            if(panel.tag?.type === 'CallableEditorPanel') {
-                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'callable',right:'',rightBottom:''})
-                            }
-                            if(panel.tag?.type === 'FetcherEditorPanel') {
-                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'fetcher',right:'',rightBottom:''})
-                            }
-                            if(panel.tag?.type === 'QueryEditorPanel') {
-                                selectedPanelSignal.set({...selectedPanelSignal.get(),leftBottom:'queries',right:'',rightBottom:''})
-                            }
-                            if(panel.tag?.type === 'DesignPanel') {
-                                selectedPanelSignal.set({...selectedPanelSignal.get(),left:'pages',right:'',rightBottom:''})
-                            }
-                        },0);
-                    }}
-                    >
+                               onMainCenterClicked={(panel, selectedPanelSignal) => {
+                                   setTimeout(() => {
+                                       if (panel.tag?.type === 'VariableEditorPanel') {
+                                           selectedPanelSignal.set({
+                                               ...selectedPanelSignal.get(),
+                                               leftBottom: 'variables',
+                                               right: '',
+                                               rightBottom: ''
+                                           })
+                                       }
+                                       if (panel.tag?.type === 'ComponentPropertyEditor') {
+                                           selectedPanelSignal.set({
+                                               ...selectedPanelSignal.get(),
+                                               right: 'layoutTree',
+                                               rightBottom: 'properties'
+                                           })
+                                       }
+                                       if (panel.tag?.type === 'CallableEditorPanel') {
+                                           selectedPanelSignal.set({
+                                               ...selectedPanelSignal.get(),
+                                               leftBottom: 'callable',
+                                               right: '',
+                                               rightBottom: ''
+                                           })
+                                       }
+                                       if (panel.tag?.type === 'FetcherEditorPanel') {
+                                           selectedPanelSignal.set({
+                                               ...selectedPanelSignal.get(),
+                                               leftBottom: 'fetcher',
+                                               right: '',
+                                               rightBottom: ''
+                                           })
+                                       }
+                                       if (panel.tag?.type === 'QueryEditorPanel') {
+                                           selectedPanelSignal.set({
+                                               ...selectedPanelSignal.get(),
+                                               leftBottom: 'queries',
+                                               right: '',
+                                               rightBottom: ''
+                                           })
+                                       }
+                                       if (panel.tag?.type === 'DesignPanel') {
+                                           selectedPanelSignal.set({
+                                               ...selectedPanelSignal.get(),
+                                               left: 'pages',
+                                               right: '',
+                                               rightBottom: ''
+                                           })
+                                       }
+                                   }, 0);
+                               }}>
                     </Dashboard>
                 </VariableInitialization>
             </AppDesignerContext.Provider>

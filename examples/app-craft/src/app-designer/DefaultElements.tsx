@@ -15,19 +15,20 @@ import {ContainerRendererIdContext} from "./panels/design/container-renderer/Con
 import {Signal} from "signal-polyfill";
 import {ContainerElement} from "../app-viewer/ContainerElement.tsx";
 import {QueryGrid} from "./query-grid/QueryGrid.tsx";
-import {faultToIconByStatusId} from "../components/fault-status-icon/FaultStatusIcon.tsx";
 import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
 import {cssPropertiesSchema} from "./zod-schema/cssPropertiesSchema.ts";
 import {DataRenderer} from "./data-renderer/DataRenderer.tsx";
 import {PropertiesPropertyEditor} from "./data-renderer/PropertiesPropertyEditor.tsx";
+import {faultToIconByStatusId} from "../components/fault-status-icon/faultToIconByStatusId.tsx";
 
 export const DefaultElements: Record<string, Element> = {
     container: element({
         shortName: 'Container',
         icon: Icon.Container,
         property: {
-            style: cssPropertiesSchema
+            style: cssPropertiesSchema,
+            onClick : z.function().returns(z.void()),
         },
         component: (props, ref) => {
             return <LayoutContainer ref={ref} {...props}/>
@@ -206,7 +207,7 @@ export const DefaultElements: Record<string, Element> = {
             </div>
         }
     })
-}
+} as const;
 
 /**
  *
@@ -224,10 +225,11 @@ const viewMode = new Signal.Computed(() => 'view');
 const LayoutContainer = forwardRef(function LayoutContainer(props: {
     container: Container,
     style: CSSProperties,
+    onClick : () => void,
     ["data-element-id"]: string
 }, ref) {
 
-    const {container, ...elementProps} = props;
+    const {container,onClick, ...elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
     const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
     const displayMode = uiDisplayModeSignal ?? viewMode;
@@ -265,6 +267,14 @@ const LayoutContainer = forwardRef(function LayoutContainer(props: {
         <div ref={ref as LegacyRef<HTMLDivElement>}
              style={style}
              data-element-id={elementProps["data-element-id"]}
+             onClick={() => {
+                 if(displayMode.get() === 'design') {
+                     return;
+                 }
+                 if(displayMode.get() === 'view' && onClick) {
+                     onClick();
+                 }
+             }}
         >
             {elements}
         </div>

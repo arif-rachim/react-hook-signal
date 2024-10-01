@@ -5,6 +5,7 @@ import {CSSProperties, useEffect, useState} from "react";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {ElementStyleProps} from "../app-designer/LayoutBuilderProps.ts";
 import {ElementRenderer} from "./ElementRenderer.tsx";
+import {EmptyComponent} from "../app-designer/empty-component/EmptyComponent.tsx";
 
 /**
  * The ContainerElement component renders a container element based on the provided props.
@@ -39,5 +40,5 @@ export function ContainerElement(props: { container: Container }) {
     if (elements && elements[container?.type]) {
         return <ElementRenderer container={container} elementProps={elementProps}/>
     }
-    return <></>
+    return <EmptyComponent />
 }

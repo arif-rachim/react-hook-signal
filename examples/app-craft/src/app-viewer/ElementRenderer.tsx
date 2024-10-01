@@ -37,7 +37,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <ErrorBoundary container={container}>
             <Component ref={ref} key={container?.id} container={container}
-                       data-element-id={elementProps["data-element-id"]} {...componentProperties}
+                       {...componentProperties}
                        style={{...elementProps.style, ...defaultStyle}}/>
         </ErrorBoundary>
     </>

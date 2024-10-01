@@ -9,7 +9,7 @@ import {
     IoTrashOutline
 } from "react-icons/io5";
 import {TiSortNumerically} from "react-icons/ti";
-import {AiOutlineFieldString, AiOutlineFunction, AiOutlineGroup} from "react-icons/ai";
+import {AiOutlineFieldString, AiOutlineFunction} from "react-icons/ai";
 import {TbBinaryTree, TbJumpRope, TbSql, TbToggleLeftFilled} from "react-icons/tb";
 import {
     MdAdd,
@@ -18,6 +18,7 @@ import {
     MdClose,
     MdDataArray,
     MdDataObject,
+    MdEdit,
     MdError,
     MdMinimize,
     MdOutlineHttp,
@@ -27,7 +28,7 @@ import {
     MdTitle
 } from "react-icons/md";
 import {IoIosArrowDown, IoIosArrowForward, IoIosExit, IoIosSave} from "react-icons/io";
-import {RiPagesLine} from "react-icons/ri";
+import {RiInsertRowBottom, RiPagesLine} from "react-icons/ri";
 import {BiChevronDown, BiChevronRight, BiReset} from "react-icons/bi";
 import {HiCollection, HiViewBoards} from "react-icons/hi";
 import {GoDatabase} from "react-icons/go";
@@ -35,6 +36,8 @@ import {FaFile, FaFolder} from "react-icons/fa6";
 import {RedX} from "../components/fault-status-icon/FaultStatusIcon.tsx";
 import {HiOutlineVariable} from "react-icons/hi2";
 import {BsTable} from "react-icons/bs";
+import {FiCopy} from "react-icons/fi";
+import {ImInsertTemplate} from "react-icons/im";
 
 export const Icon = {
     State: PiTrafficSignal,
@@ -78,12 +81,15 @@ export const Icon = {
     Database: GoDatabase,
     Query: TbSql,
     Function: AiOutlineFunction,
-    Container: AiOutlineGroup,
+    Container: ImInsertTemplate,
     Grid: BsTable,
     FaultIcon: RedX,
     Folder: FaFolder,
     File: FaFile,
     ChevronRight: BiChevronRight,
     ChevronDown: BiChevronDown,
-    Tree : TbBinaryTree
+    Tree : TbBinaryTree,
+    Edit : MdEdit,
+    SaveAs : FiCopy,
+    Slot : RiInsertRowBottom
 }

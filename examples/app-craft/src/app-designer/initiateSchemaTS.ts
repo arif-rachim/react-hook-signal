@@ -86,4 +86,3 @@ function composeNavigation(allPages: Array<Page>) {
     declare const navigate = <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
     `
 }
-

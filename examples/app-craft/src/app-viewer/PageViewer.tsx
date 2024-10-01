@@ -1,5 +1,5 @@
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
-import {Application, Container, Page, useAppInitiator} from "../app-designer/AppDesigner.tsx";
+import {Application, Container, Page} from "../app-designer/AppDesigner.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {useEffect, useState} from "react";
 import {AppViewerContext} from "./AppViewerContext.ts";
@@ -7,6 +7,7 @@ import {isEmpty} from "../utils/isEmpty.ts";
 import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
 import {VariableInitialization} from "../app-designer/variable-initialization/VariableInitialization.tsx";
 import {ContainerElement} from "./ContainerElement.tsx";
+import {useAppInitiator} from "../app-designer/hooks/useAppInitiator.ts";
 
 export function PageViewer(props: {
     elements: LayoutBuilderProps['elements'],
@@ -35,7 +36,8 @@ export function PageViewer(props: {
         onChange: () => {
             // do nothing, we are not accepting changes
         },
-        activePageId: page.id
+
+        startingPage: page.name
     })
     const context: AppViewerContext = {
         applicationSignal: appContext.applicationSignal,

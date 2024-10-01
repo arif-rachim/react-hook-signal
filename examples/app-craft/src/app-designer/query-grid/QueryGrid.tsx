@@ -3,6 +3,7 @@ import {CSSProperties, forwardRef, LegacyRef, useEffect, useState} from "react";
 import {ColumnsConfig, SimpleTable, SimpleTableFooter} from "../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
+import {queryGridColumnsTemporalColumns} from "./queryGridColumnsTemporalColumns.ts";
 
 export type QueryTypeResult = {
     error?: string,
@@ -11,8 +12,6 @@ export type QueryTypeResult = {
     totalPage?: number,
     currentPage?: number
 }
-
-export const queryGridColumnsTemporalColumns: Record<Container['id'], string[]> = {};
 
 export const QueryGrid = forwardRef(function QueryGrid(props: {
     query: QueryType,
@@ -75,10 +74,13 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                     rowPerPage: pageable ? 20 : Number.MAX_SAFE_INTEGER
                 });
                 setQueryResult(oldVal => {
-                    if (result.columns?.length === 0 && oldVal.columns?.length && oldVal.columns?.length > 0) {
+                    if (result && result.columns && result.columns.length === 0 && oldVal && oldVal.columns && oldVal.columns.length && oldVal.columns.length > 0) {
                         result.columns = oldVal.columns;
                     }
-                    return result
+                    if(result){
+                        return result
+                    }
+                    return oldVal;
                 });
             })();
         }
@@ -86,9 +88,8 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
 
     // this is to just store them in the temporal state to be used by editor
     queryGridColumnsTemporalColumns[container.id] = queryResult.columns ?? [];
-
     return <div ref={ref as LegacyRef<HTMLDivElement>}
-                style={{overflow: 'auto', display: 'flex', flexDirection: 'column', flexGrow: 1, ...style}}>
+                style={{overflow: 'auto', display: 'flex', flexDirection: 'column', flexGrow: 1,background:'white', ...style}}>
         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', flexGrow: 1}}>
             <SimpleTable columns={queryResult.columns ?? []}
                          data={queryResult.data as Array<Record<string, SqlValue>>}
