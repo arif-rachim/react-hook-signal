@@ -1,10 +1,10 @@
 import {Callable, Fetcher, Page, Variable} from "./AppDesigner.tsx";
 import {zodSchemaToJson} from "./zodSchemaToJson.ts";
 import {Query, Table} from "./panels/database/service/getTables.ts";
-import {composeDbSchema} from "./variable-initialization/dbSchemaInitialization.ts";
-import {composeCallableSchema} from "./variable-initialization/callableSchemaInitialization.ts";
-import {composeFetcherSchema} from "./variable-initialization/fetcherSchemaInitialization.ts";
-import {composeQuerySchema} from "./variable-initialization/queryInitialization.ts";
+import {composeDbSchema} from "./variable-initialization/initiator/dbSchemaInitialization.ts";
+import {composeCallableSchema} from "./variable-initialization/initiator/callableSchemaInitialization.ts";
+import {composeFetcherSchema} from "./variable-initialization/initiator/fetcherSchemaInitialization.ts";
+import {composeQuerySchema} from "./variable-initialization/initiator/queryInitialization.ts";
 
 export function initiateSchemaTS(props: {
     allApplicationVariables: Array<Variable>,

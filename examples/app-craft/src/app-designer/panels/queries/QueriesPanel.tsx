@@ -51,6 +51,7 @@ export function QueriesPanel() {
     const addPanel = useAddDashboardPanel();
     const updateApplication = useUpdateApplication();
     const removePanel = useRemoveDashboardPanel();
+
     async function deleteQuery(query: Query, scope: 'application' | 'page') {
         const deleteVariableConfirm = await showModal<string>(closePanel => {
             return <ConfirmationDialog message={'Are you sure you want to delete this query ?'}

@@ -17,8 +17,8 @@ import {useUpdateQueries} from "../../../hooks/useUpdateQueries.ts";
 import {Query} from "../../database/service/getTables.ts";
 import {RenderParameters} from "../../fetchers/editor/FetcherEditorPanel.tsx";
 import {ParamsObject, SqlValue} from "sql.js";
-import { SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
-import {composeArraySchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
+import {SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableEditor.tsx";
+import {composeArraySchema} from "../../../variable-initialization/initiator/dbSchemaInitialization.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 import {queryPagination} from "../../database/table-editor/queryPagination.ts";
 
@@ -127,31 +127,32 @@ export default function QueryEditorPanel(props: {
             return params;
         }, params)
         const result = await queryPagination({
-            query:query.query,
+            query: query.query,
             params,
-            filter:filterSignal.get(),
-            currentPage:page ?? 1,
-            pageSize:50,
-            sort : []
+            filter: filterSignal.get(),
+            currentPage: page ?? 1,
+            pageSize: 50,
+            sort: []
         });
         const prevTableData = tableDataSignal.get();
-        if(prevTableData.columns.length > 0 && result.columns.length === 0) {
+        if (prevTableData.columns.length > 0 && result.columns.length === 0) {
             tableDataSignal.set({...result, columns: prevTableData.columns});
-        }else{
-        tableDataSignal.set(result);
+        } else {
+            tableDataSignal.set(result);
         }
         if (page === 1) {
             const allData = await queryPagination({
-                query:query.query,
+                query: query.query,
                 params,
-                filter : filterSignal.get(),
-                currentPage : page ?? 1,
-                pageSize : 50,
-                sort : []
+                filter: filterSignal.get(),
+                currentPage: page ?? 1,
+                pageSize: 50,
+                sort: []
             });
             querySignal.set({...query, schemaCode: composeArraySchema(allData.data)})
         }
     }
+
     const refactorName = useNameRefactor();
     return <div style={{
         display: 'flex',
@@ -194,10 +195,10 @@ export default function QueryEditorPanel(props: {
                 <notifiable.div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    maxHeight:400,
+                    maxHeight: 400,
                     minHeight: 400,
                     flexGrow: 1,
-                    overflow:'auto'
+                    overflow: 'auto'
                 }}>
                     {() => {
                         const callable = querySignal.get();
@@ -248,7 +249,7 @@ export default function QueryEditorPanel(props: {
                                             data={tableData.data as Array<Record<string, SqlValue>>}
                                             keyField={'id'}
                                             filter={filter}
-                                            onFilterChange={async ({column,value}) =>{
+                                            onFilterChange={async ({column, value}) => {
                                                 const filter = {...filterSignal.get()};
                                                 filter[column] = value as SqlValue;
                                                 filterSignal.set(filter);
@@ -324,8 +325,13 @@ export default function QueryEditorPanel(props: {
 
                                 const currentName = query?.name ?? '';
                                 const newName = querySignal.get().name ?? '';
-                                if(currentName !== newName && !isEmpty(currentName)) {
-                                    refactorName({currentName,newName,scope:scope === 'page' ? 'page' : 'app',type:'query'});
+                                if (currentName !== newName && !isEmpty(currentName)) {
+                                    refactorName({
+                                        currentName,
+                                        newName,
+                                        scope: scope === 'page' ? 'page' : 'app',
+                                        type: 'query'
+                                    });
                                 }
                                 removePanel(panelId)
                             } else {
@@ -380,5 +386,5 @@ function extractParametersAndReplace(sqlQuery: string) {
     return (sqlQuery.match(parameterColon) ?? []).map(t => {
         const text = t.toString();
         return text.substring(1)
-    }).filter((f,index,source) => source.indexOf(f) === index);
+    }).filter((f, index, source) => source.indexOf(f) === index);
 }

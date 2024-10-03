@@ -30,18 +30,18 @@ export async function queryDb(sql: string, page?: {
 
     const sortStrings: string[] = [];
     (sort ?? []).forEach(s => {
-        if(hasFilter){
+        if (hasFilter) {
             sortStrings.push(`T.${s.column} ${s.direction}`);
-        }else{
+        } else {
             sortStrings.push(`${s.column} ${s.direction}`);
         }
     })
 
     const hasSort = sortStrings.length > 0;
     if (hasSort) {
-        if(hasFilter){
+        if (hasFilter) {
             sql = `${sql} ORDER BY ${sortStrings.join(', ')}`;
-        }else{
+        } else {
             sql = `SELECT * FROM (${sql}) ORDER BY ${sortStrings.join(', ')}`;
         }
     }

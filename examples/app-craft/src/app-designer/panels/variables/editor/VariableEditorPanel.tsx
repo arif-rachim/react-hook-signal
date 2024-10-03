@@ -245,7 +245,12 @@ export function VariableEditorPanel(props: {
                             const currentName = variable?.name ?? '';
                             const newName = variableSignal.get().name ?? '';
                             if (currentName !== newName && !isEmpty(currentName)) {
-                                refactorVariableName({currentName, newName, scope: scope !== 'page' ? 'app' : 'page',type:'var'})
+                                refactorVariableName({
+                                    currentName,
+                                    newName,
+                                    scope: scope !== 'page' ? 'app' : 'page',
+                                    type: 'var'
+                                })
                             }
                             removePanel(panelId)
                         } else {

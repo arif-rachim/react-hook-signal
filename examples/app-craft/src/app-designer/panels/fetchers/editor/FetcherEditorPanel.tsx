@@ -563,8 +563,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
 
                     const currentName = fetcher?.name ?? '';
                     const newName = fetcherSignal.get().name ?? '';
-                    if(currentName !== newName && !isEmpty(currentName)) {
-                        refactorName({currentName,newName,scope:scope === 'page' ? 'page' : 'app',type:'fetch'});
+                    if (currentName !== newName && !isEmpty(currentName)) {
+                        refactorName({currentName, newName, scope: scope === 'page' ? 'page' : 'app', type: 'fetch'});
                     }
                     removePanel(panelId)
                 } else {

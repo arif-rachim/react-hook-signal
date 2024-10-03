@@ -3,7 +3,12 @@ import {useAppContext} from "../../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
 import {CSSProperties} from "react";
 
-export function DraggableItem(props: { draggableDataType: string, icon: IconType, styleIcon?: CSSProperties,shortName:string }) {
+export function DraggableItem(props: {
+    draggableDataType: string,
+    icon: IconType,
+    styleIcon?: CSSProperties,
+    shortName: string
+}) {
     const Icon = props.icon;
     const {activeDropZoneIdSignal} = useAppContext<AppDesignerContext>();
     return <div data-element-id={props.draggableDataType}
@@ -12,7 +17,7 @@ export function DraggableItem(props: { draggableDataType: string, icon: IconType
                     borderRadius: 5,
                     backgroundColor: 'white',
                     display: 'flex',
-                    flexDirection:'column',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     width: '20%',

@@ -27,19 +27,25 @@ export function DesignPanel() {
 function ToggleViewToolbar() {
     const {uiDisplayModeSignal} = useAppContext<AppDesignerContext>();
 
-    return <notifiable.div style={{display: 'flex', justifyContent: 'flex-end', padding: 5, background: 'rgba(0,0,0,0.05)',borderBottom:'1px solid rgba(0,0,0,0.1)'}}>
+    return <notifiable.div style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        padding: 5,
+        background: 'rgba(0,0,0,0.05)',
+        borderBottom: '1px solid rgba(0,0,0,0.1)'
+    }}>
         {() => {
             const displayMode = uiDisplayModeSignal.get();
             return <ButtonGroup buttons={{
                 'view': {
-                    title : 'View',
+                    title: 'View',
                     onClick: () => uiDisplayModeSignal.set('view')
                 },
                 'design': {
-                    title : 'Design',
+                    title: 'Design',
                     onClick: () => uiDisplayModeSignal.set('design')
                 }
-            }} value={displayMode ?? 'Design'} />
+            }} value={displayMode ?? 'Design'}/>
         }}
     </notifiable.div>
 }

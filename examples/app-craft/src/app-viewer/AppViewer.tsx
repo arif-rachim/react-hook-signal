@@ -1,12 +1,13 @@
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {notifiable} from "react-hook-signal";
-import {VariableInitialization} from "../app-designer/variable-initialization/VariableInitialization.tsx";
+import {AppVariableInitialization} from "../app-designer/variable-initialization/AppVariableInitialization.tsx";
 import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
 import {AppViewerContext} from "./AppViewerContext.ts";
 import {ContainerElement} from "./ContainerElement.tsx";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {DefaultElements} from "../app-designer/DefaultElements.tsx";
 import {useAppInitiator} from "../app-designer/hooks/useAppInitiator.ts";
+import {PageVariableInitialization} from "../app-designer/variable-initialization/PageVariableInitialization.tsx";
 
 /**
  * Renders the application viewer component.
@@ -25,38 +26,41 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
     }}>
         <AppViewerContext.Provider value={context}>
             <ErrorBoundary>
-                <VariableInitialization>
-                    <div style={{
-                        backgroundColor: '#444',
-                        borderRadius: 20,
-                        boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)',
-                        maxWidth: 1200,
-                        maxHeight: 800,
-                        minWidth: 1200,
-                        minHeight: 800,
-                        display:'flex',
-                        flexDirection:'column',
-                        overflow:'auto',
-                        padding : 5
-                    }}>
-                        <notifiable.div style={{
-                            flexGrow: 1,
+
+                <AppVariableInitialization>
+                    <PageVariableInitialization>
+                        <div style={{
+                            backgroundColor: '#444',
+                            borderRadius: 20,
+                            boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)',
+                            maxWidth: 1200,
+                            maxHeight: 800,
+                            minWidth: 1200,
+                            minHeight: 800,
                             display: 'flex',
                             flexDirection: 'column',
                             overflow: 'auto',
-                            backgroundColor: 'white',
-                            borderRadius: 15,
+                            padding: 5
                         }}>
-                            {() => {
-                                const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
-                                if (container) {
-                                    return <ContainerElement container={container}/>
-                                }
-                                return <></>
-                            }}
-                        </notifiable.div>
-                    </div>
-                </VariableInitialization>
+                            <notifiable.div style={{
+                                flexGrow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'auto',
+                                backgroundColor: 'white',
+                                borderRadius: 15,
+                            }}>
+                                {() => {
+                                    const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
+                                    if (container) {
+                                        return <ContainerElement container={container}/>
+                                    }
+                                    return <></>
+                                }}
+                            </notifiable.div>
+                        </div>
+                    </PageVariableInitialization>
+                </AppVariableInitialization>
             </ErrorBoundary>
         </AppViewerContext.Provider>
     </div>

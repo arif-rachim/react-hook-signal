@@ -4,7 +4,7 @@ import {useAppContext} from "../hooks/useAppContext.ts";
 
 export function useRemoveDashboardPanel() {
     const {panelsSignal, selectedPanelSignal} = useContext(DashboardContext);
-    const {activePageIdSignal,allPagesSignal} = useAppContext();
+    const {activePageIdSignal, allPagesSignal} = useAppContext();
     return function removePanel(panelId: string) {
         const panels = panelsSignal.get();
         const panelToRemove = panels.find(p => p.id === panelId)!;

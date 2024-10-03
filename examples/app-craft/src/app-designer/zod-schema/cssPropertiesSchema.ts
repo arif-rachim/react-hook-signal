@@ -204,7 +204,7 @@ export const cssPropertiesSchema = z.object({
     position: cssPosition,
     right: cssLength.optional(),
     top: cssLength.optional(),
-    textAlign : z.string().optional(),
+    textAlign: z.string().optional(),
     visibility: z.string().optional(),
     zIndex: z.union([z.string(), z.number()]).optional(),
 });

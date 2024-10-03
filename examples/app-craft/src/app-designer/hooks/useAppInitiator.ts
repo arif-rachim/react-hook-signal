@@ -20,7 +20,7 @@ export function useAppInitiator(props: LayoutBuilderProps & {
     const allApplicationQueriesSignal = useComputed(() => applicationSignal.get().queries ?? []);
     useSignalEffect(() => {
         const allPages = allPagesSignal.get();
-        if(props.startingPage){
+        if (props.startingPage) {
             const startingPageId = allPages.find(p => {
                 return p.name === props.startingPage;
             })?.id ?? '';

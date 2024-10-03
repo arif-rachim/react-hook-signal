@@ -263,8 +263,13 @@ export default function CallableEditorPanel(props: {
 
                             const currentName = callable?.name ?? '';
                             const newName = callableSignal.get().name ?? '';
-                            if(currentName !== newName && !isEmpty(currentName)) {
-                                refactorName({currentName,newName,scope:scope === 'page' ? 'page' : 'app',type:'call'});
+                            if (currentName !== newName && !isEmpty(currentName)) {
+                                refactorName({
+                                    currentName,
+                                    newName,
+                                    scope: scope === 'page' ? 'page' : 'app',
+                                    type: 'call'
+                                });
                             }
                             removePanel(panelId)
                         } else {

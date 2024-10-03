@@ -61,7 +61,7 @@ export const Icon = {
     Page: RiPagesLine,
     Component: IoLogoWebComponent,
     Variable: HiOutlineVariable,
-    ApplicationVariable: HiOutlineVariable ,
+    ApplicationVariable: HiOutlineVariable,
     Style: MdOutlineStyle,
     Property: TbJumpRope,
     Close: MdClose,
@@ -88,8 +88,8 @@ export const Icon = {
     File: FaFile,
     ChevronRight: BiChevronRight,
     ChevronDown: BiChevronDown,
-    Tree : TbBinaryTree,
-    Edit : MdEdit,
-    SaveAs : FiCopy,
-    Slot : RiInsertRowBottom
+    Tree: TbBinaryTree,
+    Edit: MdEdit,
+    SaveAs: FiCopy,
+    Slot: RiInsertRowBottom
 }

@@ -1,8 +1,8 @@
-import {Fetcher} from "../AppDesigner.tsx";
-import {zodSchemaToJson} from "../zodSchemaToJson.ts";
-import {isEmpty} from "../../utils/isEmpty.ts";
-import {createRequest} from "../panels/fetchers/editor/createRequest.ts";
-import {FetchType, FormulaDependencyParameter} from "./VariableInitialization.tsx";
+import {Fetcher} from "../../AppDesigner.tsx";
+import {zodSchemaToJson} from "../../zodSchemaToJson.ts";
+import {isEmpty} from "../../../utils/isEmpty.ts";
+import {createRequest} from "../../panels/fetchers/editor/createRequest.ts";
+import {FetchType, FormulaDependencyParameter} from "../AppVariableInitialization.tsx";
 
 export function composeFetcherSchema(allFetchers: Array<Fetcher>) {
     const fetchersSchema = allFetchers.map(i => {

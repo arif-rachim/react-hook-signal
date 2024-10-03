@@ -363,7 +363,7 @@ function RenderTabPanel(props: {
                     }
                     selectedPanelSignal.set(cloneSelectedPanel);
                 }} key={panel.id} isSelected={isSelected}>
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Econ/></div>
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Econ/></div>
                     <div
                         style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>{title}</div>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={(e) => {

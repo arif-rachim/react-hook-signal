@@ -5,8 +5,9 @@ import {useRecordErrorMessage} from "../../../../hooks/useRecordErrorMessage.ts"
 import {useAppContext} from "../../../../hooks/useAppContext.ts";
 import {AppViewerContext} from "../../../../../app-viewer/AppViewerContext.ts";
 import {ZodRawShape} from "zod";
-import {dbSchemaInitialization} from "../../../../variable-initialization/dbSchemaInitialization.ts";
-import {VariableInitializationContext} from "../../../../variable-initialization/VariableInitialization.tsx";
+import {dbSchemaInitialization} from "../../../../variable-initialization/initiator/dbSchemaInitialization.ts";
+import {AppVariableInitializationContext} from "../../../../variable-initialization/AppVariableInitialization.tsx";
+import {PageVariableInitializationContext} from "../../../../variable-initialization/PageVariableInitialization.tsx";
 
 const db = dbSchemaInitialization();
 
@@ -15,7 +16,8 @@ export function PropertyInitialization(props: {
     setComponentProps: Dispatch<SetStateAction<Record<string, unknown>>>,
 }) {
     const context = useAppContext<AppViewerContext>();
-    const appPageSignal = useContext(VariableInitializationContext);
+    const appSignal = useContext(AppVariableInitializationContext);
+    const pageSignal = useContext(PageVariableInitializationContext);
     const {container, setComponentProps} = props;
     const {
         elements: elementsLib,
@@ -33,7 +35,8 @@ export function PropertyInitialization(props: {
 
     useSignalEffect(() => {
         const containerProperties = propertiesSignal.get();
-        const appPage = appPageSignal.get();
+        const app = appSignal.get();
+        const page = pageSignal.get();
         const destroyerCallbacks: Array<() => void> = [];
         for (const containerPropKey of Object.keys(containerProperties)) {
             const containerProp = containerProperties[containerPropKey];
@@ -47,7 +50,7 @@ export function PropertyInitialization(props: {
                 const module: { exports: unknown } = {exports: {}};
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, navigate, db, appPage.app, appPage.page, ...propDependencies];
+                    const funcParamsInstance = [module, navigate, db,app, page, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {

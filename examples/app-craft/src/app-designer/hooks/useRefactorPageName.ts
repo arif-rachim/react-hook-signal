@@ -10,14 +10,14 @@ import {useUpdateApplication} from "./useUpdateApplication.ts";
 // effect pake
 // callable pake
 // property callback pake
-export function useRefactorPageName(){
+export function useRefactorPageName() {
 
     const updateApplication = useUpdateApplication();
-    return function refactorPageName(props:{currentName:string, newName:string}){
+    return function refactorPageName(props: { currentName: string, newName: string }) {
         updateApplication(application => {
             const app = structuredClone(application);
-            let codesToCheck:Array<{functionCode:string,id:string,name:string}> = []
-            const {currentName,newName} = props;
+            let codesToCheck: Array<{ functionCode: string, id: string, name: string }> = []
+            const {currentName, newName} = props;
 
             codesToCheck = codesToCheck.concat(app.variables);
             codesToCheck = codesToCheck.concat(app.callables);
@@ -27,13 +27,13 @@ export function useRefactorPageName(){
                 codesToCheck = codesToCheck.concat(p.callables);
             });
 
-            const propsToCheck:Array<Record<string, ContainerPropertyType>> = []
+            const propsToCheck: Array<Record<string, ContainerPropertyType>> = []
             app.pages.forEach(p => {
                 p.containers.forEach(p => {
                     propsToCheck.push(p.properties)
                 })
             })
-            const regex = new RegExp(`navigate\\(\\s*['"]${currentName.replace(/\//g,'\\/')}['"]\\s*(,\\s*\\{[^}]*\\})?\\s*\\)`,'g');
+            const regex = new RegExp(`navigate\\(\\s*['"]${currentName.replace(/\//g, '\\/')}['"]\\s*(,\\s*\\{[^}]*\\})?\\s*\\)`, 'g');
 
             codesToCheck.forEach(v => {
                 const matches = v.functionCode.matchAll(regex);

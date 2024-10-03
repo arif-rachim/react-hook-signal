@@ -5,9 +5,10 @@ import {useEffect, useState} from "react";
 import {AppViewerContext} from "./AppViewerContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
-import {VariableInitialization} from "../app-designer/variable-initialization/VariableInitialization.tsx";
 import {ContainerElement} from "./ContainerElement.tsx";
 import {useAppInitiator} from "../app-designer/hooks/useAppInitiator.ts";
+import {PageVariableInitialization} from "../app-designer/variable-initialization/PageVariableInitialization.tsx";
+import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
 
 export function PageViewer(props: {
     elements: LayoutBuilderProps['elements'],
@@ -36,26 +37,27 @@ export function PageViewer(props: {
         onChange: () => {
             // do nothing, we are not accepting changes
         },
-
         startingPage: page.name
     })
+    const parentContext = useAppContext();
+
     const context: AppViewerContext = {
         applicationSignal: appContext.applicationSignal,
-        allApplicationCallablesSignal: appContext.allApplicationCallablesSignal,
+        allApplicationCallablesSignal: parentContext.allApplicationCallablesSignal,
         allPageCallablesSignal: appContext.allPageCallablesSignal,
-        allTablesSignal: appContext.allTablesSignal,
-        allPagesSignal: appContext.allPagesSignal,
+        allTablesSignal: parentContext.allTablesSignal,
+        allPagesSignal: parentContext.allPagesSignal,
         activePageIdSignal: appContext.activePageIdSignal,
         allContainersSignal: appContext.allContainersSignal,
         allPageVariablesSignal: appContext.allPageVariablesSignal,
         allPageFetchersSignal: appContext.allPageFetchersSignal,
-        allApplicationFetchersSignal: appContext.allApplicationFetchersSignal,
+        allApplicationFetchersSignal: parentContext.allApplicationFetchersSignal,
         variableInitialValueSignal,
         allPageVariablesSignalInstance: appContext.allPageVariablesSignalInstance,
         allErrorsSignal: appContext.allErrorsSignal,
-        allApplicationVariablesSignal: appContext.allApplicationVariablesSignal,
-        allApplicationVariablesSignalInstance: appContext.allApplicationVariablesSignalInstance,
-        allApplicationQueriesSignal: appContext.allApplicationQueriesSignal,
+        allApplicationVariablesSignal: parentContext.allApplicationVariablesSignal,
+        allApplicationVariablesSignalInstance: parentContext.allApplicationVariablesSignalInstance,
+        allApplicationQueriesSignal: parentContext.allApplicationQueriesSignal,
         allPageQueriesSignal: appContext.allPageQueriesSignal,
         allVariablesSignalInstance: appContext.allVariablesSignalInstance,
         allVariablesSignal: appContext.allVariablesSignal,
@@ -75,10 +77,10 @@ export function PageViewer(props: {
         }
     })
     return <AppViewerContext.Provider value={context}>
-        <VariableInitialization>
+        <PageVariableInitialization>
             <ErrorBoundary>
                 {container && <ContainerElement container={container}/>}
             </ErrorBoundary>
-        </VariableInitialization>
+        </PageVariableInitialization>
     </AppViewerContext.Provider>
 }

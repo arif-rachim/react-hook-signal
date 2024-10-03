@@ -16,7 +16,7 @@ import {BORDER} from "../../Border.ts";
 import {useRemoveDashboardPanel} from "../../dashboard/useRemoveDashboardPanel.ts";
 
 
-function AddButton(props:{editCallable: () => void}) {
+function AddButton(props: { editCallable: () => void }) {
     return <div style={{display: 'flex', padding: 10}}>
         <Button
             style={{
@@ -50,6 +50,7 @@ export function CallablePanel() {
     const addPanel = useAddDashboardPanel();
     const updateApplication = useUpdateApplication();
     const removePanel = useRemoveDashboardPanel();
+
     async function deleteCallable(callable: Callable, scope: 'application' | 'page') {
         const deleteVariableConfirm = await showModal<string>(closePanel => {
             return <ConfirmationDialog message={'Are you sure you want to delete this callable ?'}
@@ -69,7 +70,7 @@ export function CallablePanel() {
         }
     }
 
-    function editCallable(callable?: Callable,scope?:'application'|'page') {
+    function editCallable(callable?: Callable, scope?: 'application' | 'page') {
         const panelId = callable?.id ?? guid();
         addPanel({
             position: 'mainCenter',
@@ -109,7 +110,7 @@ export function CallablePanel() {
                         backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
                     }} key={callable.id} onClick={() => {
                         focusedItemSignal.set(callable.id);
-                        editCallable(callable,'page')
+                        editCallable(callable, 'page')
                     }}>
 
                         <div style={{
@@ -151,8 +152,8 @@ export function CallablePanel() {
                         backgroundColor: isFocused ? 'rgba(0,0,0,0.1)' : 'unset'
                     }} key={callable.id} onClick={() => {
                         focusedItemSignal.set(callable.id);
-                        editCallable(callable,'application')
-                    }} >
+                        editCallable(callable, 'application')
+                    }}>
 
                         <div style={{
                             flexGrow: 1,

@@ -33,7 +33,7 @@ export function addNewContainer(allContainersSignal: Signal.Computed<Array<Conta
     updatePage({type: 'container', containers: newAllContainers});
 }
 
-export function addPageElement(page:Page,allContainersSignal: Signal.Computed<Array<Container>>, dropZoneId: Signal.State<string>, updatePage: ReturnType<typeof useUpdatePageSignal>){
+export function addPageElement(page: Page, allContainersSignal: Signal.Computed<Array<Container>>, dropZoneId: Signal.State<string>, updatePage: ReturnType<typeof useUpdatePageSignal>) {
     const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
     const newContainer: Container = {
         id: guid(),
@@ -41,11 +41,11 @@ export function addPageElement(page:Page,allContainersSignal: Signal.Computed<Ar
         children: [],
         parent: parentContainerId,
         properties: {
-            component : {
-                formula : `module.exports = "${page.id}"`
+            component: {
+                formula: `module.exports = "${page.id}"`
             },
-            properties : {
-                formula : `module.exports = {}`
+            properties: {
+                formula: `module.exports = {}`
             }
         }
     }

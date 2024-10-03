@@ -5,7 +5,7 @@ import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
-import {composeTableSchema} from "../../../variable-initialization/dbSchemaInitialization.ts";
+import {composeTableSchema} from "../../../variable-initialization/initiator/dbSchemaInitialization.ts";
 import {Editor} from "@monaco-editor/react";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
@@ -396,7 +396,9 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         if (config.rendererPageDataMapperFormula) {
                             try {
                                 const fun = new Function('module', config.rendererPageDataMapperFormula)
-                                const module:{exports:(props:unknown) => unknown} = {exports: (props: unknown) => console.log(props)};
+                                const module: {
+                                    exports: (props: unknown) => unknown
+                                } = {exports: (props: unknown) => console.log(props)};
                                 fun.call(null, module)
                                 valueParams = module.exports({
                                     cellValue: value,
@@ -434,8 +436,9 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                 })}
             </div>
         })}
-        {dataIsEmpty && <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontStyle:'italic'}}>
-            {'There is no information to show in this table right now.'}
-        </div>}
+        {dataIsEmpty &&
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', fontStyle: 'italic'}}>
+                {'There is no information to show in this table right now.'}
+            </div>}
     </div>
 }

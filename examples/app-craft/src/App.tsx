@@ -28,7 +28,7 @@ export function App() {
             localStorage.setItem('app-designer', JSON.stringify(val));
             setValue(val);
         }} startingPage={'adm/home/landing-page'}/>}
-        <Button style={{position:'absolute',bottom:5,right:5}} onClick={() => {
+        <Button style={{position: 'absolute', bottom: 5, right: 5}} onClick={() => {
             setDesignMode(!designMode)
         }}>{designMode ? 'App' : 'Dev'}</Button>
     </div>

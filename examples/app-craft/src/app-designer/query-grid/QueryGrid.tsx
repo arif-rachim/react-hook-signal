@@ -1,4 +1,4 @@
-import {QueryType} from "../variable-initialization/VariableInitialization.tsx";
+import {QueryType} from "../variable-initialization/AppVariableInitialization.tsx";
 import {CSSProperties, forwardRef, LegacyRef, useEffect, useState} from "react";
 import {ColumnsConfig, SimpleTable, SimpleTableFooter} from "../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../AppDesigner.tsx";
@@ -57,7 +57,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         error: '',
         totalPage: 1
     });
-    const [focusedRow,setFocusedRow] = useState(props.focusedRow);
+    const [focusedRow, setFocusedRow] = useState(props.focusedRow);
     useEffect(() => {
         setFocusedRow(props.focusedRow);
     }, [props.focusedRow]);
@@ -77,7 +77,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                     if (result && result.columns && result.columns.length === 0 && oldVal && oldVal.columns && oldVal.columns.length && oldVal.columns.length > 0) {
                         result.columns = oldVal.columns;
                     }
-                    if(result){
+                    if (result) {
                         return result
                     }
                     return oldVal;
@@ -89,7 +89,13 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
     // this is to just store them in the temporal state to be used by editor
     queryGridColumnsTemporalColumns[container.id] = queryResult.columns ?? [];
     return <div ref={ref as LegacyRef<HTMLDivElement>}
-                style={{overflow: 'auto', display: 'flex', flexDirection: 'column', flexGrow: 1,background:'white', ...style}}>
+                style={{
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flexGrow: 1,
+                    background: 'white', ...style
+                }}>
         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', flexGrow: 1}}>
             <SimpleTable columns={queryResult.columns ?? []}
                          data={queryResult.data as Array<Record<string, SqlValue>>}
@@ -106,7 +112,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                                      data,
                                      currentPage: queryResult.currentPage ?? 0
                                  })
-                             }else {
+                             } else {
                                  setFocusedRow(value);
                              }
                          }}
@@ -154,7 +160,13 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         {pageable &&
             <SimpleTableFooter totalPages={queryResult.totalPage ?? 1} value={queryResult.currentPage ?? 1}
                                onChange={async (newPage) => {
-                                   const result = await query({filter: filter, page: newPage, params: {}, sort,rowPerPage:pageable ? 20 : Number.MAX_SAFE_INTEGER});
+                                   const result = await query({
+                                       filter: filter,
+                                       page: newPage,
+                                       params: {},
+                                       sort,
+                                       rowPerPage: pageable ? 20 : Number.MAX_SAFE_INTEGER
+                                   });
                                    setQueryResult(oldVal => {
                                        if (result.columns?.length === 0 && oldVal.columns?.length && oldVal.columns?.length > 0) {
                                            result.columns = oldVal.columns;

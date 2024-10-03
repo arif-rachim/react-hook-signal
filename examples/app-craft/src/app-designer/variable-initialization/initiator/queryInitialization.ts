@@ -1,7 +1,7 @@
-import {Query} from "../panels/database/service/getTables.ts";
-import {zodSchemaToJson} from "../zodSchemaToJson.ts";
-import {QueryType} from "./VariableInitialization.tsx";
-import {queryPagination} from "../panels/database/table-editor/queryPagination.ts";
+import {Query} from "../../panels/database/service/getTables.ts";
+import {zodSchemaToJson} from "../../zodSchemaToJson.ts";
+import {QueryType} from "../AppVariableInitialization.tsx";
+import {queryPagination} from "../../panels/database/table-editor/queryPagination.ts";
 
 export function queryInitialization(allQueries: Array<Query>): Record<string, QueryType> {
     const queries: Record<string, QueryType> = {};

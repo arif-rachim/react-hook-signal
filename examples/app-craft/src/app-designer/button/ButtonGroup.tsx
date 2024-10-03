@@ -2,7 +2,7 @@ import {Button} from "./Button.tsx";
 import {BORDER} from "../Border.ts";
 
 export default function ButtonGroup(props: {
-    buttons: Record<string, { onClick: () => void,title:string }>,
+    buttons: Record<string, { onClick: () => void, title: string }>,
     value: string
 }) {
     const {value} = props;
@@ -21,7 +21,7 @@ export default function ButtonGroup(props: {
                                borderBottomRightRadius: isLastElement ? 20 : 0,
                                backgroundColor: isSelected ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)',
                                color: isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.9)',
-                               padding:'0px 10px 2px 10px'
+                               padding: '0px 10px 2px 10px'
                            }}
                            onClick={() => {
                                props.buttons[key].onClick()

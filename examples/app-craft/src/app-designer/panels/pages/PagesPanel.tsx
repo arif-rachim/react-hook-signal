@@ -106,11 +106,12 @@ export function PagesPanel() {
         })
         // here we need to prompt edit
         const newName = await showModal<string>(closePanel => {
-            return <PageNameDialog closePanel={closePanel} allPages={allPagesSignal.get()} page={newPage} isForClone={true}/>
+            return <PageNameDialog closePanel={closePanel} allPages={allPagesSignal.get()} page={newPage}
+                                   isForClone={true}/>
         });
         if (newName) {
             newPage.name = newName;
-            updatePage({type: 'add-page', page:newPage})
+            updatePage({type: 'add-page', page: newPage})
         }
     }
 
@@ -274,18 +275,6 @@ function RenderTree(props: {
          */
 
 
-
-
-
-
-
-
-
-
-
-
-
-
         return <div key={key} style={{
             display: 'flex',
             flexDirection: 'column',
@@ -299,20 +288,20 @@ function RenderTree(props: {
                      } else {
                          onFocusedPathChange(node.path);
                      }
-                 }}  onDragStart={(event) => {
-                        event.dataTransfer.setData('text/plain', node.pageId ?? '');
-                        const dragElement = document.querySelector(`[data-element-id="${node.pageId}"]`);
-                        if (dragElement === null) {
-                            return;
-                        }
-                        const clone = dragElement.cloneNode(true) as HTMLElement;
-                        clone.style.position = 'absolute';
-                        clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
-                        document.body.appendChild(clone);
-                        setTimeout(() => {
-                            document.body.removeChild(clone);
-                        }, 0);
-                    }} draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}>
+                 }} onDragStart={(event) => {
+                event.dataTransfer.setData('text/plain', node.pageId ?? '');
+                const dragElement = document.querySelector(`[data-element-id="${node.pageId}"]`);
+                if (dragElement === null) {
+                    return;
+                }
+                const clone = dragElement.cloneNode(true) as HTMLElement;
+                clone.style.position = 'absolute';
+                clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
+                document.body.appendChild(clone);
+                setTimeout(() => {
+                    document.body.removeChild(clone);
+                }, 0);
+            }} draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}>
                 <div style={{width: 10}}>
                     {isFolder && isOpen && <Icon.ChevronDown/>}
                     {isFolder && !isOpen && <Icon.ChevronRight/>}

@@ -4,7 +4,7 @@ import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {LayoutBuilderProps} from "./LayoutBuilderProps.ts";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
-import {VariableInitialization} from "./variable-initialization/VariableInitialization.tsx";
+import {AppVariableInitialization} from "./variable-initialization/AppVariableInitialization.tsx";
 import {Dashboard} from "./dashboard/Dashboard.tsx";
 import {Icon} from "./Icon.ts";
 import {PagesPanel} from "./panels/pages/PagesPanel.tsx";
@@ -23,6 +23,7 @@ import {QueriesPanel} from "./panels/queries/QueriesPanel.tsx";
 import {useAppContext} from "./hooks/useAppContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import {useAppInitiator} from "./hooks/useAppInitiator.ts";
+import {PageVariableInitialization} from "./variable-initialization/PageVariableInitialization.tsx";
 
 export type VariableType = 'state' | 'computed' | 'effect';
 
@@ -177,7 +178,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
         <ModalProvider>
             <AppDesignerContext.Provider
                 value={context}>
-                <VariableInitialization>
+                <AppVariableInitialization>
+                    <PageVariableInitialization>
                     <Dashboard panels={{
                         pages: {
                             title: 'Pages',
@@ -312,7 +314,8 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                    }, 0);
                                }}>
                     </Dashboard>
-                </VariableInitialization>
+                    </PageVariableInitialization>
+                </AppVariableInitialization>
             </AppDesignerContext.Provider>
         </ModalProvider>
     </ErrorBoundary>

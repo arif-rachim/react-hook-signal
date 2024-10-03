@@ -1,7 +1,7 @@
-import {zodSchemaToJson} from "../zodSchemaToJson.ts";
-import {Callable} from "../AppDesigner.tsx";
+import {zodSchemaToJson} from "../../zodSchemaToJson.ts";
+import {Callable} from "../../AppDesigner.tsx";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
-import {FormulaDependencyParameter} from "./VariableInitialization.tsx";
+import {FormulaDependencyParameter} from "../AppVariableInitialization.tsx";
 
 export function composeCallableSchema(allCallables: Array<Callable>) {
     const callableSchema = [];

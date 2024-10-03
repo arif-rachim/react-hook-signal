@@ -6,7 +6,7 @@ export function createNewBlankApplication(): Application {
     return {
         id: guid(),
         name: '',
-        pages: [createNewBlankPage({name:'home'})],
+        pages: [createNewBlankPage({name: 'home'})],
         tables: [],
         callables: [],
         variables: [],

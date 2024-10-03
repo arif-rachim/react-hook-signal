@@ -145,6 +145,7 @@ export function VariablesPanel() {
     const addPanel = useAddDashboardPanel();
     const updateApplication = useUpdateApplication();
     const removePanel = useRemoveDashboardPanel();
+
     async function editVariable(forType: VariableType, variable?: Variable, scope?: 'page' | 'application') {
         const panelId = variable?.id ?? guid();
         addPanel({

@@ -28,7 +28,7 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Container,
         property: {
             style: cssPropertiesSchema,
-            onClick : z.function().returns(z.void()),
+            onClick: z.function().returns(z.void()),
         },
         component: (props, ref) => {
             return <LayoutContainer ref={ref} {...props}/>
@@ -225,11 +225,11 @@ const viewMode = new Signal.Computed(() => 'view');
 const LayoutContainer = forwardRef(function LayoutContainer(props: {
     container: Container,
     style: CSSProperties,
-    onClick : () => void,
+    onClick: () => void,
     ["data-element-id"]: string
 }, ref) {
 
-    const {container,onClick, ...elementProps} = props;
+    const {container, onClick, ...elementProps} = props;
     const [elements, setElements] = useState<ReactNode[]>([]);
     const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
     const displayMode = uiDisplayModeSignal ?? viewMode;
@@ -268,10 +268,10 @@ const LayoutContainer = forwardRef(function LayoutContainer(props: {
              style={style}
              data-element-id={elementProps["data-element-id"]}
              onClick={() => {
-                 if(displayMode.get() === 'design') {
+                 if (displayMode.get() === 'design') {
                      return;
                  }
-                 if(displayMode.get() === 'view' && onClick) {
+                 if (displayMode.get() === 'view' && onClick) {
                      onClick();
                  }
              }}

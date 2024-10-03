@@ -1,7 +1,7 @@
-import {Table} from "../panels/database/service/getTables.ts";
-import sqlite from "../panels/database/sqlite/sqlite.ts";
+import {Table} from "../../panels/database/service/getTables.ts";
+import sqlite from "../../panels/database/sqlite/sqlite.ts";
 import {SqlValue} from "sql.js";
-import {zodSchemaToJson} from "../zodSchemaToJson.ts";
+import {zodSchemaToJson} from "../../zodSchemaToJson.ts";
 
 export function composeTableSchema(table: Table) {
     const schema: string[] = [];

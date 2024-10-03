@@ -91,9 +91,9 @@ export function DraggableContainerElement(props: { container: Container }) {
         const id = event.dataTransfer.getData('text');
         const keys = Object.keys(elementsLib as Record<string, unknown>);
         const page = allPagesSignal.get().find(p => p.id === id);
-        if(page !== undefined){
-            addPageElement(page,allContainersSignal, activeDropZoneIdSignal, updatePage);
-        }else if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
+        if (page !== undefined) {
+            addPageElement(page, allContainersSignal, activeDropZoneIdSignal, updatePage);
+        } else if (id === VERTICAL || id === HORIZONTAL || keys.indexOf(id) >= 0) {
             addNewContainer(allContainersSignal, {type: id}, activeDropZoneIdSignal, updatePage);
         } else if (id) {
             swapContainerLocation(allContainersSignal, id, activeDropZoneIdSignal, updatePage);
