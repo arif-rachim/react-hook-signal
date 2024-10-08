@@ -168,7 +168,6 @@ export function DraggableContainerElement(props: { container: Container }) {
     useSignalEffect(() => {
         const mode = uiDisplayModeSignal.get();
         const container: Container | undefined = containerSignal.get();
-        const isContainer = container?.type === 'container';
         const isFocused = selectedDragContainerIdSignal.get() === container?.id;
         const isHovered = hoveredDragContainerIdSignal.get() === container?.id;
         const isRoot = isEmpty(container?.parent);
@@ -207,33 +206,7 @@ export function DraggableContainerElement(props: { container: Container }) {
         if (isHovered && mode === 'design' && !isFocused) {
             styleFromSignal.background = 'rgba(14,255,242,0.1)';
         }
-        if (mode === 'design' && isContainer) {
-            (styleFromSignal as CSSProperties).border = '1px dashed rgba(0,0,0,0.1)';
-        }
 
-        function toInt(text: unknown) {
-            if (typeof text === 'string') {
-                return parseInt(text)
-            }
-            return -1;
-        }
-
-        const MIN_SPACE = 5;
-        if (mode === 'design' && isContainer) {
-            styleFromSignal.minHeight = 24;
-            styleFromSignal.minWidth = 24;
-            styleFromSignal.paddingTop = toInt(styleFromSignal?.paddingTop) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingTop;
-            styleFromSignal.paddingRight = toInt(styleFromSignal?.paddingRight) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingRight;
-            styleFromSignal.paddingBottom = toInt(styleFromSignal?.paddingBottom) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingBottom;
-            styleFromSignal.paddingLeft = toInt(styleFromSignal?.paddingLeft) < MIN_SPACE ? MIN_SPACE : styleFromSignal.paddingLeft;
-
-            styleFromSignal.marginTop = toInt(styleFromSignal.marginTop) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginTop;
-            styleFromSignal.marginRight = toInt(styleFromSignal.marginRight) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginRight;
-            styleFromSignal.marginBottom = toInt(styleFromSignal.marginBottom) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginBottom;
-            styleFromSignal.marginLeft = toInt(styleFromSignal.marginLeft) < MIN_SPACE ? MIN_SPACE : styleFromSignal.marginLeft;
-
-            styleFromSignal.gap = toInt(styleFromSignal.gap) < MIN_SPACE ? MIN_SPACE : styleFromSignal.gap;
-        }
         setComputedStyle(styleFromSignal as CSSProperties)
     });
 

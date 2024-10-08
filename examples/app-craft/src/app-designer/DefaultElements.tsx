@@ -1,7 +1,7 @@
 import {element, Element} from "./LayoutBuilderProps.ts";
 import {z} from "zod";
 import {BORDER} from "./Border.ts";
-import {CSSProperties, forwardRef, LegacyRef, MutableRefObject, ReactNode, useEffect, useState} from "react";
+import {CSSProperties, forwardRef, LegacyRef, MutableRefObject, ReactNode, useEffect, useMemo, useState} from "react";
 import {Icon} from "./Icon.ts";
 import {Button} from "./button/Button.tsx";
 import {notifiable, useSignal, useSignalEffect} from "react-hook-signal";
@@ -28,10 +28,22 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Container,
         property: {
             style: cssPropertiesSchema,
-            onClick: z.function().returns(z.void()),
+            onClick: z.function().returns(z.void())
         },
         component: (props, ref) => {
             return <LayoutContainer ref={ref} {...props}/>
+        }
+    }),
+    titleBox: element({
+        shortName: 'Title Box',
+        icon: Icon.Container,
+        property: {
+            style: cssPropertiesSchema,
+            onClick: z.function().returns(z.void()),
+            title: z.string()
+        },
+        component: (props, ref) => {
+            return <TitleBox ref={ref} {...props}/>
         }
     }),
     input: element({
@@ -222,22 +234,108 @@ export const DefaultElements: Record<string, Element> = {
 
 const viewMode = new Signal.Computed(() => 'view');
 
+const TitleBox = forwardRef(function TitleBox(props: {
+    container: Container,
+    style: CSSProperties,
+    onClick: () => void,
+    title: string,
+    ["data-element-id"]: string
+}, ref) {
+
+    const {container, onClick, style, title} = props;
+    const containerStyle = useContainerStyleHook(style);
+    const {elements, displayMode} = useContainerLayoutHook(container);
+
+    return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
+        <div style={{display: 'flex', flexDirection: 'column-reverse',flexGrow:1}}>
+            <div ref={ref as LegacyRef<HTMLDivElement>}
+                 style={{padding:10,...containerStyle,border :'1px solid rgba(0,0,0,0.1)',borderRadius:5}}
+                 data-element-id={props["data-element-id"]}
+                 onClick={() => (displayMode.get() === 'view' && onClick ? onClick() : null)}
+            >
+                {elements}
+            </div>
+            <div style={{display:'flex',flexDirection:'row',paddingLeft:10}}>
+                <div style={{
+                    fontSize: 'smaller',
+                    borderTop: '1px solid rgba(0,0,0,0.1)',
+                    borderLeft: '1px solid rgba(0,0,0,0.1)',
+                    borderRight: '1px solid rgba(0,0,0,0.1)',
+                    paddingLeft: 5,
+                    paddingTop: 3,
+                    paddingRight: 5,
+                    borderTopLeftRadius: 5,
+                    borderTopRightRadius: 5,
+                    lineHeight: 0.8, position: 'relative',
+                    bottom: -1,
+                    background: 'white'
+                }}>{title}</div>
+            </div>
+
+        </div>
+    </ContainerRendererIdContext.Provider>
+
+})
+
+
 const LayoutContainer = forwardRef(function LayoutContainer(props: {
     container: Container,
     style: CSSProperties,
     onClick: () => void,
-    ["data-element-id"]: string
+    ["data-element-id"]: string,
 }, ref) {
+    const {container, onClick, style} = props;
+    const containerStyle = useContainerStyleHook(style);
+    const {elements, displayMode} = useContainerLayoutHook(container);
+    return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
+        <div ref={ref as LegacyRef<HTMLDivElement>}
+             style={containerStyle}
+             data-element-id={props["data-element-id"]}
+             onClick={() => (displayMode.get() === 'view' && onClick ? onClick() : null)}
+        >
+            {elements}
+        </div>
+    </ContainerRendererIdContext.Provider>
+})
 
-    const {container, onClick, ...elementProps} = props;
-    const [elements, setElements] = useState<ReactNode[]>([]);
+function useContainerStyleHook(style: CSSProperties) {
+    const {uiDisplayModeSignal} = useAppContext<AppDesignerContext>();
+    const displayMode = uiDisplayModeSignal ?? viewMode;
+    const styleString = JSON.stringify(style);
+    return useMemo(() => {
+        const style = JSON.parse(styleString);
+        const mode = displayMode.get();
+        const MIN_SPACE = 5;
+        if (mode === 'design') {
+            style.border = '1px dashed rgba(0,0,0,0.1)';
+            const minWidthHeight = ['minWidth', 'minHeight'] as const;
+            minWidthHeight.forEach(key => {
+                if (style[key] !== 24) {
+                    style[key] = 24;
+                }
+            })
+            const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft','gap'] as const;
+            keys.forEach(key => {
+                if (toInt(style[key]) < MIN_SPACE) {
+                    style[key] = MIN_SPACE;
+                }
+            })
+        }
+        return style;
+    }, [displayMode, styleString]);
+}
+
+function useContainerLayoutHook(container: Container) {
     const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
     const displayMode = uiDisplayModeSignal ?? viewMode;
     const containerSignal = useSignal(container);
 
+    const [elements, setElements] = useState<ReactNode[]>([]);
+
     useEffect(() => {
         containerSignal.set(container);
     }, [containerSignal, container]);
+
 
     useSignalEffect(() => {
         const mode = displayMode.get();
@@ -262,21 +360,12 @@ const LayoutContainer = forwardRef(function LayoutContainer(props: {
         }
         setElements(result);
     });
-    const {style} = elementProps;
-    return <ContainerRendererIdContext.Provider value={elementProps["data-element-id"]}>
-        <div ref={ref as LegacyRef<HTMLDivElement>}
-             style={style}
-             data-element-id={elementProps["data-element-id"]}
-             onClick={() => {
-                 if (displayMode.get() === 'design') {
-                     return;
-                 }
-                 if (displayMode.get() === 'view' && onClick) {
-                     onClick();
-                 }
-             }}
-        >
-            {elements}
-        </div>
-    </ContainerRendererIdContext.Provider>
-})
+    return {elements, displayMode};
+}
+
+function toInt(text: unknown) {
+    if (typeof text === 'string') {
+        return parseInt(text)
+    }
+    return -1;
+}
