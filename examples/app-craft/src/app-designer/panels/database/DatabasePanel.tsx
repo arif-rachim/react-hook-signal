@@ -1,4 +1,4 @@
-import {MdAdd} from "react-icons/md";
+import {MdAdd, MdRemove} from "react-icons/md";
 import {Button} from "../../button/Button.tsx";
 import {ChangeEvent, useRef} from "react";
 import sqlite from "./sqlite/sqlite.ts";
@@ -14,12 +14,28 @@ export function DatabasePanel() {
     const focusedItemSignal = useSignal<string>('');
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const {applicationSignal} = useAppContext();
-    const tablesSignal = useComputed<Table[]>(() => applicationSignal.get().tables);
+    const tablesSignal = useComputed<Table[]>(() => {
+        return applicationSignal.get().tables;
+    });
     const addPanel = useAddDashboardPanel();
 
     function addSqlLite() {
         if (fileInputRef.current) {
             (fileInputRef.current as HTMLInputElement).click();
+        }
+    }
+
+    async function deleteSqlLite(){
+        // we need to delete sqlite here
+        const result = await sqlite({type: 'deleteFromFile'});
+        if (!result.errors) {
+            const result = await getTables();
+            console.log('WE GOT THE TABLES HERE BABY, THIS SHOULD BE EMPTY ',result);
+            updateApplication(old => {
+
+                old.tables = result;
+            });
+
         }
     }
 
@@ -57,25 +73,51 @@ export function DatabasePanel() {
     }
 
     return <div style={{display: 'flex', flexDirection: 'column'}}>
-        <Button
-            style={{
-                display: 'flex',
-                margin: 10,
-                alignItems: 'center',
-                gap: 5,
-                justifyContent: 'center',
-                padding: '0px 10px 2px 10px',
-                background: 'rgba(0,0,0,0.0)',
-                border: '1px solid rgba(0,0,0,0.2)',
-                color: '#333',
-            }}
-            onClick={() => addSqlLite()}
-        >
-            {'Load SqlLite'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
-        </Button>
+        <div style={{display: 'flex',padding : 10}}>
+            <Button
+                style={{
+                    flexGrow :1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    justifyContent: 'center',
+                    padding: '0px 10px 2px 10px',
+                    background: 'rgba(0,0,0,0.0)',
+                    border: '1px solid rgba(0,0,0,0.2)',
+                    borderTopRightRadius:0,
+                    borderBottomRightRadius : 0,
+                    borderRight : 'unset',
+                    color: '#333',
+                }}
+                onClick={() => addSqlLite()}
+            >
+                {'Load SqlLite'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <MdAdd style={{fontSize: 20}}/>
+                </div>
+            </Button>
+            <Button
+                style={{
+                    flexGrow :1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    justifyContent: 'center',
+                    padding: '0px 10px 2px 10px',
+                    background: 'rgba(0,0,0,0.0)',
+                    border: '1px solid rgba(0,0,0,0.2)',
+                    borderTopLeftRadius:0,
+                    borderBottomLeftRadius : 0,
+                    color: '#333',
+                }}
+                onClick={() => deleteSqlLite()}
+            >
+                {'Delete SqlLite'}
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <MdRemove style={{fontSize: 20}}/>
+                </div>
+            </Button>
+        </div>
         <input type={'file'}
                ref={fileInputRef}
                accept={".sqlite,.db"}
@@ -104,7 +146,6 @@ export function DatabasePanel() {
                             fontSize: 'small'
                         }}>{table.tblName}</div>
                     </div>
-
                 })
             }}
         </notifiable.div>

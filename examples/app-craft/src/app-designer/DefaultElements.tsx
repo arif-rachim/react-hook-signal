@@ -130,6 +130,9 @@ export const DefaultElements: Record<string, Element> = {
         component: (props, ref) => {
             const {style} = props;
             let {title} = props;
+            if (title && typeof title !== 'string') {
+                title = JSON.stringify(title);
+            }
             title = title ?? 'Add text here'
             return <div ref={ref as LegacyRef<HTMLDivElement>}
                         style={{flexShrink: 0, lineHeight: 1.1, ...style, minHeight: 12}}>{title}</div>
@@ -234,6 +237,7 @@ export const DefaultElements: Record<string, Element> = {
 
 const viewMode = new Signal.Computed(() => 'view');
 
+
 const TitleBox = forwardRef(function TitleBox(props: {
     container: Container,
     style: CSSProperties,
@@ -247,15 +251,22 @@ const TitleBox = forwardRef(function TitleBox(props: {
     const {elements, displayMode} = useContainerLayoutHook(container);
 
     return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
-        <div style={{display: 'flex', flexDirection: 'column-reverse',flexGrow:1}}>
+        <div style={{display: 'flex', flexDirection: 'column-reverse', flexGrow: 1}}>
             <div ref={ref as LegacyRef<HTMLDivElement>}
-                 style={{padding:10,...containerStyle,border :'1px solid rgba(0,0,0,0.1)',borderRadius:5}}
+                 style={{
+                     padding: 10,
+                     flexGrow: 1,
+                     background: 'white',
+                     boxShadow: '0 5px 10px -3px rgba(0,0,0,0.1)', ...containerStyle,
+                     border: '1px solid rgba(0,0,0,0.1)',
+                     borderRadius: 5
+                 }}
                  data-element-id={props["data-element-id"]}
                  onClick={() => (displayMode.get() === 'view' && onClick ? onClick() : null)}
             >
                 {elements}
             </div>
-            <div style={{display:'flex',flexDirection:'row',paddingLeft:10}}>
+            <div style={{display: 'flex', flexDirection: 'row', paddingLeft: 10}}>
                 <div style={{
                     fontSize: 'smaller',
                     borderTop: '1px solid rgba(0,0,0,0.1)',
@@ -314,7 +325,7 @@ function useContainerStyleHook(style: CSSProperties) {
                     style[key] = 24;
                 }
             })
-            const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft','gap'] as const;
+            const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap'] as const;
             keys.forEach(key => {
                 if (toInt(style[key]) < MIN_SPACE) {
                     style[key] = MIN_SPACE;

@@ -91,6 +91,8 @@ async function deleteFromOPFS({fileName}: { fileName: string }): Promise<{ succe
     try {
         log('[OPFS]Removing entry', fileName);
         await root.removeEntry(fileName, {recursive: true});
+        log('[OPFS]Clearing cache', fileName);
+        delete database[fileName];
         log('[OPFS]Succesfully removing', fileName);
         return {data: '', success: true};
     } catch (e: unknown) {
@@ -108,7 +110,7 @@ const initSqlJs = self['initSqlJs'];
 
 async function getDatabase(fileName: string) {
     let db: Database | undefined = undefined;
-    if (fileName in database) {
+    if (fileName in database && database[fileName]) {
         db = database[fileName];
     } else {
         try {
