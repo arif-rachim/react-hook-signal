@@ -22,6 +22,7 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
         justifyContent: 'center',
         height: '100%',
         width: '100%',
+        padding : 10,
         background: 'linear-gradient(0deg,#666,#555)'
     }}>
         <AppViewerContext.Provider value={context}>
@@ -35,9 +36,9 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
                             boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)',
                             maxWidth: 1200,
                             maxHeight: 800,
-                            minWidth: 1200,
-                            minHeight: 800,
                             display: 'flex',
+                            width : '100%',
+                            height : '100%',
                             flexDirection: 'column',
                             overflow: 'auto',
                             padding: 5

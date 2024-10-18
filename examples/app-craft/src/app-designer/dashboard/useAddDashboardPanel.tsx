@@ -2,7 +2,7 @@ import {useContext} from "react";
 import {DashboardContext, Panel, PanelInstance} from "./Dashboard.tsx";
 import {guid} from "../../utils/guid.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
-
+import {addCenterPanel} from "./centerPanelStacks.ts";
 
 export function useAddDashboardPanel() {
     const {panelsSignal, selectedPanelSignal} = useContext(DashboardContext);
@@ -18,5 +18,9 @@ export function useAddDashboardPanel() {
             panelsSignal.set([...panels, {...panel, id: panel.id, pageId: activePageIdSignal.get()}]);
         }
         selectedPanelSignal.set({...selectedPanelSignal.get(), [panel.position]: panel.id});
+        if(panel.position === 'mainCenter'){
+            addCenterPanel(panel.id);
+        }
+
     }
 }

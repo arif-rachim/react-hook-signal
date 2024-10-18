@@ -12,6 +12,7 @@ import {useAppContext} from "../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {EmptyComponent} from "../empty-component/EmptyComponent.tsx";
 import {ToolBar} from "../ToolBar.tsx";
+import {addCenterPanel} from "./centerPanelStacks.ts";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom'
 export type Panel = {
@@ -360,6 +361,7 @@ function RenderTabPanel(props: {
                     if (position === 'mainCenter') {
                         activePageIdSignal.set(panel.pageId);
                         props.onMainCenterClicked(panel)
+                        addCenterPanel(panel.id);
                     }
                     selectedPanelSignal.set(cloneSelectedPanel);
                 }} key={panel.id} isSelected={isSelected}>
@@ -370,7 +372,6 @@ function RenderTabPanel(props: {
                         e.preventDefault();
                         e.stopPropagation();
                         removePanel(panel.id);
-
                     }}><Icon.Close/>
                     </div>
                 </TabButton>
