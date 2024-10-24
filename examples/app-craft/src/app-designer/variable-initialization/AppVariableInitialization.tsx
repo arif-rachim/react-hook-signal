@@ -16,12 +16,13 @@ import {initiateComputed} from "./initiator/initiateComputed.ts";
 import {initiateEffect} from "./initiator/initiateEffect.ts";
 import {initiateState} from "./initiator/initiateState.ts";
 import {variablesInstanceToDictionary} from "./initiator/variablesInstanceToDictionary.ts";
+import {QueryParamsObject} from "../panels/database/table-editor/queryDb.ts";
 
 
 export type QueryType = (props: {
     params?: Record<string, SqlValue>,
     page?: number,
-    filter?: Record<string, SqlValue>,
+    filter?: QueryParamsObject,
     sort?: Array<{ column: string, direction: 'asc' | 'desc' }>,
     rowPerPage?: number
 }) => Promise<QueryTypeResult>

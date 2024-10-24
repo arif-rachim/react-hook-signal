@@ -21,6 +21,5 @@ export function useAddDashboardPanel() {
         if(panel.position === 'mainCenter'){
             addCenterPanel(panel.id);
         }
-
     }
 }

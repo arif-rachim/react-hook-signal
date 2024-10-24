@@ -30,7 +30,6 @@ export function DatabasePanel() {
         const result = await sqlite({type: 'deleteFromFile'});
         if (!result.errors) {
             const result = await getTables();
-            console.log('WE GOT THE TABLES HERE BABY, THIS SHOULD BE EMPTY ',result);
             updateApplication(old => {
 
                 old.tables = result;

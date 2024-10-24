@@ -21,6 +21,7 @@ import {SimpleTable, SimpleTableFooter} from "../../database/table-editor/TableE
 import {composeArraySchema} from "../../../variable-initialization/initiator/dbSchemaInitialization.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 import {queryPagination} from "../../database/table-editor/queryPagination.ts";
+import {QueryParamsObject} from "../../database/table-editor/queryDb.ts";
 
 export default function QueryEditorPanel(props: {
     queryId?: string,
@@ -61,7 +62,7 @@ export default function QueryEditorPanel(props: {
     }
 
     const querySignal = useSignal(query ?? createNewQuery());
-    const filterSignal = useSignal<ParamsObject>({});
+    const filterSignal = useSignal<QueryParamsObject>({});
 
     function validateForm(): [boolean, Partial<Record<keyof Query, Array<string>>>] {
         function nameIsDuplicate(name: string, id: string) {
@@ -247,7 +248,6 @@ export default function QueryEditorPanel(props: {
                         const filter = filterSignal.get();
                         return <SimpleTable columns={tableData.columns}
                                             data={tableData.data as Array<Record<string, SqlValue>>}
-                                            keyField={'id'}
                                             filter={filter}
                                             onFilterChange={async ({column, value}) => {
                                                 const filter = {...filterSignal.get()};

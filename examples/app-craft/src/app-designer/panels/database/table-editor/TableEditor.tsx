@@ -13,13 +13,14 @@ import {PageViewer} from "../../../../app-viewer/PageViewer.tsx";
 import {QueryTypeResult} from "../../../query-grid/QueryGrid.tsx";
 import {MdArrowDownward, MdArrowUpward} from "react-icons/md";
 import {queryPagination} from "./queryPagination.ts";
+import {QueryParamsObject} from "./queryDb.ts";
 
 
 async function queryTable(props: {
     table: Table,
     currentPage: number,
     setTableData: Dispatch<SetStateAction<QueryTypeResult>>,
-    filter: Record<string, SqlValue>,
+    filter: QueryParamsObject,
     sort: Array<{ column: string, direction: 'asc' | 'desc' }>
 }) {
     const {setTableData, table, currentPage, filter, sort} = props;
@@ -88,7 +89,7 @@ export default function TableEditor(props: { table: Table }) {
         </CollapsibleLabelContainer>
         <div style={{flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
             <SimpleTable columns={tableData.columns ?? []} data={tableData.data as Array<Record<string, SqlValue>>}
-                         keyField={'ID_'} filterable={true} filter={filter}
+                         filterable={true} filter={filter}
                          onFilterChange={({column, value}) => {
                              setFilter(oldValue => {
                                  const returnValue = {...oldValue};
@@ -227,16 +228,21 @@ function extractWidthAndHiddenField(columnsConfig: ColumnsConfig | undefined, co
     }
     return {width, hide};
 }
-
+const defaultItemToKey = (item:unknown) => {
+    if(item !== null && item !== undefined && typeof item === 'object' && 'ID_' in item){
+        return item?.ID_
+    }
+    return undefined;
+}
 export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     columns: Array<string>,
     data: Array<T>,
-    keyField: string,
+    itemToKey?: (item: T) => string|number,
     onFocusedRowChange?: (focusedItem: T) => void,
     focusedRow?: T,
     columnsConfig?: ColumnsConfig,
     filterable?: boolean,
-    filter?: Record<string, SqlValue>,
+    filter?: QueryParamsObject,
     onFilterChange?: (props: { column: string, value: unknown, oldValue: unknown }) => void,
     sortable?: boolean,
     sort?: Array<{ column: string, direction: 'asc' | 'desc' }>,
@@ -246,7 +252,6 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     const {
         columns,
         data,
-        keyField,
         focusedRow: focusedRowProps,
         onFocusedRowChange,
         columnsConfig,
@@ -256,7 +261,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
         sort,
         onSortChange,
         sortable,
-        onRowDoubleClick
+        onRowDoubleClick,
+        itemToKey
     } = props;
     const dataIsEmpty = (data ?? []).length === 0;
     const [focusedRow, setFocusedRow] = useState<T | undefined>(focusedRowProps);
@@ -360,8 +366,10 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
             </div>
         }
         {data.map((item, rowIndex) => {
-            const key = keyField in item ? item[keyField] : rowIndex;
-            const isFocused = item === focusedRow;
+            const keyMapper = itemToKey ?? defaultItemToKey;
+            const key = keyMapper(item) ? keyMapper(item) : rowIndex;
+            const focusedKey = focusedRow && keyMapper(focusedRow) ? keyMapper(focusedRow) : -1;
+            const isFocused = key === focusedKey;
             return <div style={{display: 'table-row', background: isFocused ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0)'}}
                         key={`${key}`} onClick={() => {
                 if (onFocusedRowChange) {

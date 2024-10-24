@@ -1,7 +1,7 @@
 import type {BindParams, Database, SqlValue} from "sql.js";
 
 const defaultFileName = 'database.db';
-const debug: boolean = false;
+const debug: boolean = true;
 
 const log = (...args: unknown[]) => {
     if (debug) {

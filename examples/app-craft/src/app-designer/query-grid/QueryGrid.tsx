@@ -18,6 +18,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
     style: CSSProperties,
     columnsConfig: ColumnsConfig,
     focusedRow?: Record<string, SqlValue>,
+    itemToKey?:(item:Record<string, SqlValue>) => string|number,
     onFocusedRowChange?: (props: {
         value: Record<string, SqlValue>,
         data: Array<Record<string, SqlValue>>,
@@ -36,7 +37,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
     }) => (Promise<void> | void),
     filterable?: boolean,
     sortable?: boolean,
-    pageable?: boolean,
+    pageable?: boolean
 }, ref) {
     const {
         query,
@@ -48,7 +49,8 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         onRowDoubleClick,
         filterable,
         sortable,
-        pageable
+        pageable,
+        itemToKey
     } = props;
     const [queryResult, setQueryResult] = useState<QueryTypeResult>({
         columns: [],
@@ -57,6 +59,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         error: '',
         totalPage: 1
     });
+
     const [focusedRow, setFocusedRow] = useState(props.focusedRow);
     useEffect(() => {
         setFocusedRow(props.focusedRow);
@@ -99,7 +102,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', flexGrow: 1}}>
             <SimpleTable columns={queryResult.columns ?? []}
                          data={queryResult.data as Array<Record<string, SqlValue>>}
-                         keyField={'ID_'}
+                         itemToKey={itemToKey}
                          columnsConfig={columnsConfig}
                          focusedRow={focusedRow}
                          onFocusedRowChange={(value: Record<string, SqlValue>) => {
@@ -110,7 +113,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                                      index: data.indexOf(value),
                                      totalPage: queryResult.totalPage ?? 0,
                                      data,
-                                     currentPage: queryResult.currentPage ?? 0
+                                     currentPage: queryResult.currentPage ?? 1
                                  })
                              } else {
                                  setFocusedRow(value);
@@ -148,7 +151,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                                  onRowDoubleClick({
                                      data,
                                      value,
-                                     currentPage: queryResult.currentPage ?? 0,
+                                     currentPage: queryResult.currentPage ?? 1,
                                      totalPage: queryResult.totalPage ?? 0,
                                      index: data.indexOf(value)
                                  });

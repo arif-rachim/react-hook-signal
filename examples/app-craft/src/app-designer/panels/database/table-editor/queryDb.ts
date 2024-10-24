@@ -1,10 +1,12 @@
 import sqlite from "../sqlite/sqlite.ts";
 import {ParamsObject, SqlValue} from "sql.js";
 
+export type QueryParamsObject = Record<string, SqlValue | { value: SqlValue, type: 'like' | 'equal' }>;
+
 export async function queryDb(sql: string, page?: {
     size: number,
     number: number
-}, params?: ParamsObject, filter?: ParamsObject, sort?: Array<{ column: string, direction: 'asc' | 'desc' }>) {
+}, params?: ParamsObject, filter?: QueryParamsObject, sort?: Array<{ column: string, direction: 'asc' | 'desc' }>) {
     const {size, number} = page ?? {size: 50, number: 0};
     const dynamicFilterParam = filter ?? {};
     const dynamicFilterQuery: string[] = [];
@@ -18,8 +20,22 @@ export async function queryDb(sql: string, page?: {
 
     Object.keys(filter ?? {}).forEach(key => {
         if (dynamicFilterParam[key]) {
-            dynamicFilterQuery.push(`T.${key} LIKE @${key}`)
-            combinedParams[`@${key}`] = `%${dynamicFilterParam[key]}%`;
+            const val = dynamicFilterParam[key];
+            if (val !== null && typeof val === 'object' && 'type' in val) {
+                if (val.type === 'equal') {
+                    dynamicFilterQuery.push(`T.${key} = @${key}`)
+                    combinedParams[`@${key}`] = `${val.value}`;
+                } else {
+                    dynamicFilterQuery.push(`T.${key} LIKE @${key}`)
+                    combinedParams[`@${key}`] = `%${val.value}%`;
+                }
+            } else {
+                if (val !== null) {
+                    dynamicFilterQuery.push(`T.${key} LIKE @${key}`)
+                    combinedParams[`@${key}`] = `%${dynamicFilterParam[key]}%`;
+                }
+            }
+
         }
     })
     const hasFilter = dynamicFilterQuery.length > 0;

@@ -372,6 +372,7 @@ function RenderTabPanel(props: {
                         e.preventDefault();
                         e.stopPropagation();
                         removePanel(panel.id);
+
                     }}><Icon.Close/>
                     </div>
                 </TabButton>

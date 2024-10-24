@@ -25,7 +25,7 @@ export function useRemoveDashboardPanel() {
         if(position === 'mainCenter'){
             nextPanelId = removeCenterPanel(panelId);
             if(allPagesSignal.get().findIndex(p => p.id === nextPanelId) > -1){
-                activePageIdSignal.set(nextPanelId);
+            activePageIdSignal.set(nextPanelId);
             }
         }
         if (nextPanelId) {

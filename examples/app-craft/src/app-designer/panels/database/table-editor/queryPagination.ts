@@ -1,12 +1,12 @@
 import {ParamsObject, SqlValue} from "sql.js";
-import {queryDb} from "./queryDb.ts";
+import {queryDb, QueryParamsObject} from "./queryDb.ts";
 
 export async function queryPagination(props: {
     query: string,
     params: ParamsObject,
     currentPage: number,
     pageSize: number,
-    filter: ParamsObject,
+    filter: QueryParamsObject,
     sort: Array<{ column: string, direction: 'asc' | 'desc' }>
 }) {
     const {query, params, currentPage, pageSize, filter, sort} = props;

@@ -15,7 +15,7 @@ export function queryInitialization(allQueries: Array<Query>): Record<string, Qu
                     sort: sort ?? [],
                     params: params ?? {},
                     pageSize: rowPerPage ?? 50,
-                    currentPage: page ?? 1,
+                    currentPage: page || 1,
                 }).then(result => {
                     resolve(result);
                 }).catch(error => {
@@ -33,7 +33,6 @@ export function queryInitialization(allQueries: Array<Query>): Record<string, Qu
     }
     return queries
 }
-
 export function composeQuerySchema(allQueries: Array<Query>) {
     const queriesSchema = allQueries.map(i => {
         const schema = zodSchemaToJson(`z.array(${i.schemaCode})`);
@@ -42,7 +41,7 @@ export function composeQuerySchema(allQueries: Array<Query>) {
             return result;
         }, [] as Array<string>)
         const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props:{params?:${type},page?:number,filter?:Record<string,SqlValue>,sort?:Record<string,SqlValue>,rowPerPage?:number}) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
+        return `${i.name} : (props:{params?:${type},page?:number,filter?:Record<string, SqlValue|{value:SqlValue,type:'like'|'equal'}>,sort?:Record<string,SqlValue>,rowPerPage?:number}) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
     })
     return `{${queriesSchema.join(',')}}`
 }
