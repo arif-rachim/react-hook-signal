@@ -25,6 +25,7 @@ import {DateRangeInput} from "./form/date-input/DateRangeInput.tsx";
 import {SelectInput} from "./form/select-input/SelectInput.tsx";
 import {zodSchemaToZodType} from "./zodSchemaToJson.ts";
 import {createCustomPropertyEditor} from "./data-renderer/CustomPropertyEditor.tsx";
+import {DateTimeInput} from "./form/date-input/DateTimeInput.tsx";
 
 const ZodSqlValue = z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]);
 
@@ -80,6 +81,22 @@ export const DefaultElements: Record<string, Element> = {
         },
         component: (props, ref) => {
             return <DateInput ref={ref as MutableRefObject<HTMLLabelElement>} {...props}
+                              style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
+        }
+    }),
+    dateTime : element({
+        shortName: 'DateTime',
+        icon: Icon.Input,
+        property: {
+            value: z.union([z.date(), z.string()]).optional(),
+            label: z.string().optional(),
+            errorMessage: z.string().optional(),
+            onChange: z.function().args(z.union([z.date(), z.string()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
+            style: cssPropertiesSchema,
+            inputStyle: cssPropertiesSchema
+        },
+        component: (props, ref) => {
+            return <DateTimeInput ref={ref as MutableRefObject<HTMLDivElement>} {...props}
                               style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
         }
     }),

@@ -13,6 +13,7 @@ export const TextInput = forwardRef(function TextInput(props: {
         errorMessage?: string,
         style?: CSSProperties,
         inputStyle?: CSSProperties,
+        maxLength?: number,
         popup?: {
             element?: ReactNode,
             position?: 'top' | 'bottom',
@@ -29,7 +30,8 @@ export const TextInput = forwardRef(function TextInput(props: {
             onFocus,
             onBlur,
             onKeyDown,
-            onMouseDown
+            onMouseDown,
+            maxLength
         } = props;
 
         const [localValue, setLocalValue] = useState<string | undefined>(value);
@@ -37,10 +39,10 @@ export const TextInput = forwardRef(function TextInput(props: {
             setLocalValue(value)
         }, [value]);
         const style = {
-            ...inputStyle,
             border: errorMessage ? BORDER_ERROR : BORDER,
             padding: '0px 5px',
-            borderRadius: 5
+            borderRadius: 5,
+            ...inputStyle,
         }
         if (style?.border === 'unset') {
             style.border = BORDER
@@ -49,6 +51,7 @@ export const TextInput = forwardRef(function TextInput(props: {
         return <Label label={label} ref={ref} style={defaultStyle} popup={props.popup}>
             <input
                 value={localValue}
+                maxLength={maxLength}
                 onChange={(e) => {
                     const val = e.target.value;
                     if (onChange) {
