@@ -1,5 +1,5 @@
 import {BORDER, BORDER_ERROR} from "../../Border.ts";
-import {CSSProperties, ForwardedRef, forwardRef, ReactNode, useEffect, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, ReactNode, useEffect, useRef, useState} from "react";
 import {Label} from "../label/Label.tsx";
 
 export const TextInput = forwardRef(function TextInput(props: {
@@ -35,9 +35,18 @@ export const TextInput = forwardRef(function TextInput(props: {
         } = props;
 
         const [localValue, setLocalValue] = useState<string | undefined>(value);
+        const [cursorLoc, setCursorLoc] = useState<null | number>(null);
+        const inputRef = useRef<HTMLInputElement>(null);
+
         useEffect(() => {
             setLocalValue(value)
         }, [value]);
+
+        useEffect(() => {
+            if (inputRef.current) {
+                inputRef.current.setSelectionRange(cursorLoc, cursorLoc);
+            }
+        }, [localValue, cursorLoc]);
         const style = {
             border: errorMessage ? BORDER_ERROR : BORDER,
             padding: '0px 5px',
@@ -50,11 +59,13 @@ export const TextInput = forwardRef(function TextInput(props: {
 
         return <Label label={label} ref={ref} style={defaultStyle} popup={props.popup}>
             <input
+                ref={inputRef}
                 value={localValue}
                 maxLength={maxLength}
                 onChange={(e) => {
                     const val = e.target.value;
                     if (onChange) {
+                        setCursorLoc(e.target.selectionStart);
                         onChange(val);
                     } else {
                         setLocalValue(val)
