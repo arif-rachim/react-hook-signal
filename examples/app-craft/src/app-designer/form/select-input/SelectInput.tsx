@@ -6,8 +6,8 @@ import {ColumnsConfig} from "../../panels/database/table-editor/TableEditor.tsx"
 import {Container} from "../../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
 
-const defaultRowDataToText = (data:unknown) => {
-    if(typeof data === "string") {
+const defaultRowDataToText = (data: unknown) => {
+    if (typeof data === "string") {
         return data;
     }
     return JSON.stringify(data)
@@ -24,7 +24,7 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     inputStyle?: CSSProperties,
     valueToRowData?: (value?: string | number) => Promise<Record<string, SqlValue>>,
     rowDataToText?: (data?: Record<string, SqlValue>) => string,
-    itemToKey?:(data?:Record<string,SqlValue>) => string|number
+    itemToKey?: (data?: Record<string, SqlValue>) => string | number
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {
         inputStyle,
@@ -55,7 +55,7 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     }, [value]);
 
     const [rowData, setRowData] = useState<Record<string, SqlValue> | undefined>();
-
+    const popupRef = useRef<HTMLDivElement>(null);
     const element = <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -66,7 +66,7 @@ export const SelectInput = forwardRef(function SelectInput(props: {
         borderBottomLeftRadius: 5,
         width: 270,
         boxShadow: '0px 10px 5px -3px rgba(0,0,0,0.5)'
-    }}>
+    }} ref={popupRef}>
         <QueryGrid query={query} columnsConfig={config}
                    onFocusedRowChange={(props) => {
                        if (onChange) {
@@ -86,6 +86,21 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     const mutableRef = useRef({userIsChangingData: false});
     const text = (rowDataToText ? rowDataToText(rowData) : defaultRowDataToText(rowData)) ?? '';
 
+    useEffect(() => {
+        function onClick(event: unknown) {
+            if (showPopup && event && typeof event === 'object' && 'target' in event && popupRef.current && !popupRef.current.contains(event.target as Node)) {
+                setShowPopup(false);
+            }
+        }
+
+        if (showPopup) {
+            setTimeout(() => {
+                window.addEventListener('mousedown', onClick);
+            }, 100);
+
+        }
+        return () => window.removeEventListener('mousedown', onClick);
+    }, [showPopup]);
     return <TextInput ref={ref}
                       popup={{position: 'bottom', element, visible: showPopup}}
                       inputStyle={inputStyle}

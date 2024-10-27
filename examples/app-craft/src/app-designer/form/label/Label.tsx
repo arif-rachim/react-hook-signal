@@ -1,4 +1,4 @@
-import {CSSProperties, ForwardedRef, forwardRef, PropsWithChildren, ReactNode} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, PropsWithChildren, ReactNode, useRef} from "react";
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
 
@@ -16,6 +16,8 @@ export const Label = forwardRef(function LabelContainer(props: PropsWithChildren
         const {style, label, styleLabel} = props;
         const context = useAppContext<AppDesignerContext>();
         const isDesignMode = context && context.uiDisplayModeSignal && context.uiDisplayModeSignal.get() === 'design'
+        const visible = props.popup?.visible;
+        const popupRef = useRef<HTMLDivElement>(null);
         return <label ref={ref} style={{
             display: 'flex',
             flexDirection: 'column',
@@ -24,24 +26,24 @@ export const Label = forwardRef(function LabelContainer(props: PropsWithChildren
         }}>
             {label && <div style={{padding: '0 5px', fontSize: 'small', lineHeight: 1.2, ...styleLabel}}>{label}</div>}
             {props.children}
-            {props.popup?.visible === true && !isDesignMode &&
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'absolute',
-                top: props.popup?.position === 'top' ? 0 : "unset",
-                bottom: props.popup?.position !== 'top' ? 0 : "unset",
-                height: 1,
-                width: '100%'
-            }}>
+            {visible === true && !isDesignMode &&
                 <div style={{
-                    zIndex: LABEL_POPUP_Z_INDEX,
-                    bottom: props.popup?.position === 'top' ? 0 : "unset",
-                    top: props.popup?.position !== 'top' ? 0 : "unset",
+                    display: 'flex',
+                    flexDirection: 'column',
                     position: 'absolute',
+                    top: props.popup?.position === 'top' ? 0 : "unset",
+                    bottom: props.popup?.position !== 'top' ? 0 : "unset",
+                    height: 1,
                     width: '100%'
-                }}>{props.popup?.element}</div>
-            </div>
+                }}>
+                    <div style={{
+                        zIndex: LABEL_POPUP_Z_INDEX,
+                        bottom: props.popup?.position === 'top' ? 0 : "unset",
+                        top: props.popup?.position !== 'top' ? 0 : "unset",
+                        position: 'absolute',
+                        width: '100%'
+                    }} ref={popupRef}>{props.popup?.element}</div>
+                </div>
             }
         </label>
     }
