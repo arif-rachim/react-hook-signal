@@ -81,7 +81,12 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
               onSubmit={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
-                  submit();
+                  submit().then()
+              }}
+              onKeyDown={(e) => {
+                  if(e.code.toUpperCase() === 'ENTER') {
+                      submit().then()
+                  }
               }}
         >
             <FormContext.Provider value={{

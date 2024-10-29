@@ -69,13 +69,16 @@ export const TextInput = forwardRef(function TextInput(props: {
 
         useSignalEffect(() => {
             const formValue = formContext?.value.get();
-            const formError = formContext?.errors.get();
             const name = nameSignal.get();
             if (name && formValue && name in formValue) {
                 let val = formValue[name];
                 val = typeof val !== 'string' ? JSON.stringify(val) : val;
                 setLocalValue(val as string);
             }
+        })
+        useSignalEffect(() => {
+            const formError = formContext?.errors.get();
+            const name = nameSignal.get();
             if (name && formError) {
                 setLocalError(formError[name]);
             }

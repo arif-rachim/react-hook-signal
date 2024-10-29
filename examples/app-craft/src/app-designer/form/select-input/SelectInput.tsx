@@ -1,10 +1,12 @@
-import {CSSProperties, ForwardedRef, forwardRef, useEffect, useRef, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
 import {TextInput} from "../text-input/TextInput.tsx";
 import {QueryGrid} from "../../query-grid/QueryGrid.tsx";
 import {QueryType} from "../../variable-initialization/AppVariableInitialization.tsx";
 import {ColumnsConfig} from "../../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
+import {FormContext} from "../Form.tsx";
+import {useSignal, useSignalEffect} from "react-hook-signal";
 
 const defaultRowDataToText = (data: unknown) => {
     if (typeof data === "string") {
@@ -48,7 +50,14 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     propsRef.current = {valueToRowData, rowDataToText, rowDataToValue}
 
     const [localValue, setLocalValue] = useState<Record<string, SqlValue> | undefined>();
-
+    const [localError, setLocalError] = useState<string | undefined>(error);
+    const nameSignal = useSignal(name);
+    useEffect(() => {
+        nameSignal.set(name);
+    }, [name, nameSignal]);
+    useEffect(() => {
+        setLocalError(error);
+    }, [error]);
     useEffect(() => {
         (async () => {
             if (propsRef.current && propsRef.current.valueToRowData) {
@@ -59,8 +68,33 @@ export const SelectInput = forwardRef(function SelectInput(props: {
             }
         })();
     }, [value]);
+    const formContext = useContext(FormContext);
+    useSignalEffect(() => {
+        const formValue = formContext?.value.get();
+
+        const name = nameSignal.get();
+        if (name && formValue && name in formValue) {
+            const value = formValue[name] as string;
+            (async () => {
+                if (propsRef.current && propsRef.current.valueToRowData) {
+                    const result = await propsRef.current.valueToRowData(value)
+                    if (result) {
+                        setLocalValue(result);
+                    }
+                }
+            })();
+        }
+    })
+    useSignalEffect(() => {
+        const formError = formContext?.errors.get();
+        const name = nameSignal.get();
+        if (name && formError) {
+            setLocalError(formError[name]);
+        }
+    })
 
     const popupRef = useRef<HTMLDivElement>(null);
+
     const element = <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -74,10 +108,16 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     }} ref={popupRef}>
         <QueryGrid query={query} columnsConfig={config}
                    onFocusedRowChange={(props) => {
-                       if (onChange && propsRef.current.rowDataToValue) {
-                           onChange(propsRef.current.rowDataToValue(props.value))
+                       if (name && formContext && propsRef.current.rowDataToValue) {
+                           const newFormVal = {...formContext.value.get()};
+                           newFormVal[name] = propsRef.current.rowDataToValue(props.value);
+                           formContext.value.set(newFormVal);
                        } else {
-                           setLocalValue(props.value);
+                           if (onChange && propsRef.current.rowDataToValue) {
+                               onChange(propsRef.current.rowDataToValue(props.value))
+                           } else {
+                               setLocalValue(props.value);
+                           }
                        }
                        setTimeout(() => setShowPopup(false), 100)
                    }}
@@ -108,9 +148,8 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     return <TextInput ref={ref}
                       popup={{position: 'bottom', element, visible: showPopup}}
                       inputStyle={inputStyle}
-                      name={name}
                       style={style}
-                      error={error}
+                      error={localError}
                       label={label}
                       value={text}
                       onFocus={() => {

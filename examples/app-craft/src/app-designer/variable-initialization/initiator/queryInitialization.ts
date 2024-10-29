@@ -36,12 +36,22 @@ export function queryInitialization(allQueries: Array<Query>): Record<string, Qu
 export function composeQuerySchema(allQueries: Array<Query>) {
     const queriesSchema = allQueries.map(i => {
         const schema = zodSchemaToJson(`z.array(${i.schemaCode})`);
+        const matches = [...schema.matchAll(/(\w+)\?:\s*\((number|string)/g)];
+
+        const filterTypeItems = matches.map(match => ({
+            key: match[1],
+            type: match[2]
+        })).map(keyType => {
+            return `${keyType.key}?:${keyType.type}|{value?:${keyType.type},type?:'like'|'equal'}`
+        }).join(',')
+        const filterType = `{${filterTypeItems}}`;
         const paths = [...i.parameters].reduce((result, param) => {
             result.push(`${param.name}:string`)
             return result;
         }, [] as Array<string>)
-        const type = '{' + paths.join(',') + '}'
-        return `${i.name} : (props:{params?:${type},page?:number,filter?:Record<string, SqlValue|{value:SqlValue,type:'like'|'equal'}>,sort?:Record<string,SqlValue>,rowPerPage?:number}) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
+        const type = '{' + paths.join(',') + '}';
+
+        return `${i.name} : (props:{params?:${type},page?:number,filter?:${filterType},sort?:Array<{column:string,direction:'asc'|'desc'}> ,rowPerPage?:number}) => Promise<{error?:string,data?:${schema},columns?:Array<string>,currentPage?:number,totalPage?:number }>`
     })
     return `{${queriesSchema.join(',')}}`
 }
