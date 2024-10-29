@@ -14,22 +14,24 @@ const defaultRowDataToText = (data: unknown) => {
 }
 export const SelectInput = forwardRef(function SelectInput(props: {
     value?: string | number,
-    onChange?: (data?: Record<string, SqlValue>) => void,
+    name?: string,
+    onChange?: (data?: string | number) => void,
     label?: string,
     query: QueryType,
     config: ColumnsConfig,
     container: Container,
-    errorMessage?: string,
+    error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
     valueToRowData?: (value?: string | number) => Promise<Record<string, SqlValue>>,
     rowDataToText?: (data?: Record<string, SqlValue>) => string,
+    rowDataToValue?: (data?: Record<string, SqlValue>) => string | number,
     itemToKey?: (data?: Record<string, SqlValue>) => string | number
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {
         inputStyle,
         style,
-        errorMessage,
+        error,
         label,
         onChange,
         value,
@@ -38,23 +40,26 @@ export const SelectInput = forwardRef(function SelectInput(props: {
         query,
         valueToRowData,
         rowDataToText,
-        itemToKey
+        rowDataToValue,
+        itemToKey,
+        name
     } = props;
-    const propsRef = useRef({valueToRowData, rowDataToText});
-    propsRef.current = {valueToRowData, rowDataToText}
+    const propsRef = useRef({valueToRowData, rowDataToText, rowDataToValue});
+    propsRef.current = {valueToRowData, rowDataToText, rowDataToValue}
+
+    const [localValue, setLocalValue] = useState<Record<string, SqlValue> | undefined>();
 
     useEffect(() => {
         (async () => {
             if (propsRef.current && propsRef.current.valueToRowData) {
                 const result = await propsRef.current.valueToRowData(value)
                 if (result) {
-                    setRowData(result);
+                    setLocalValue(result);
                 }
             }
         })();
     }, [value]);
 
-    const [rowData, setRowData] = useState<Record<string, SqlValue> | undefined>();
     const popupRef = useRef<HTMLDivElement>(null);
     const element = <div style={{
         display: 'flex',
@@ -69,21 +74,21 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     }} ref={popupRef}>
         <QueryGrid query={query} columnsConfig={config}
                    onFocusedRowChange={(props) => {
-                       if (onChange) {
-                           onChange(props.value)
+                       if (onChange && propsRef.current.rowDataToValue) {
+                           onChange(propsRef.current.rowDataToValue(props.value))
                        } else {
-                           setRowData(props.value);
+                           setLocalValue(props.value);
                        }
                        setTimeout(() => setShowPopup(false), 100)
                    }}
                    style={{}}
-                   focusedRow={rowData} container={container}
+                   focusedRow={localValue} container={container}
                    filterable={true} sortable={true} pageable={true} itemToKey={itemToKey}
         />
     </div>;
 
     const [showPopup, setShowPopup] = useState(false);
-    const text = (rowDataToText ? rowDataToText(rowData) : defaultRowDataToText(rowData)) ?? '';
+    const text = (rowDataToText ? rowDataToText(localValue) : defaultRowDataToText(localValue)) ?? '';
 
     useEffect(() => {
         function onClick(event: unknown) {
@@ -103,8 +108,9 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     return <TextInput ref={ref}
                       popup={{position: 'bottom', element, visible: showPopup}}
                       inputStyle={inputStyle}
+                      name={name}
                       style={style}
-                      errorMessage={errorMessage}
+                      error={error}
                       label={label}
                       value={text}
                       onFocus={() => {

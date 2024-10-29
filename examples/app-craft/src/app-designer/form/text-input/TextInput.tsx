@@ -1,16 +1,19 @@
 import {BORDER, BORDER_ERROR} from "../../Border.ts";
-import {CSSProperties, ForwardedRef, forwardRef, ReactNode, useEffect, useRef, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, ReactNode, useContext, useEffect, useRef, useState} from "react";
 import {Label} from "../label/Label.tsx";
+import {useSignal, useSignalEffect} from "react-hook-signal";
+import {FormContext} from "../Form.tsx";
 
 export const TextInput = forwardRef(function TextInput(props: {
         value?: string,
         onChange?: (value: string) => void,
         onFocus?: () => void,
         onBlur?: (value: string) => void,
+        name?: string,
         onKeyDown?: () => void,
         onMouseDown?: () => void,
         label?: string,
-        errorMessage?: string,
+        error?: string,
         style?: CSSProperties,
         inputStyle?: CSSProperties,
         maxLength?: number,
@@ -18,7 +21,8 @@ export const TextInput = forwardRef(function TextInput(props: {
             element?: ReactNode,
             position?: 'top' | 'bottom',
             visible?: boolean
-        }
+        },
+        type?: 'text' | 'number' | 'password'
     }, ref: ForwardedRef<HTMLLabelElement>) {
         const {
             value,
@@ -26,29 +30,59 @@ export const TextInput = forwardRef(function TextInput(props: {
             style: defaultStyle,
             label,
             inputStyle,
-            errorMessage,
+            error,
             onFocus,
             onBlur,
             onKeyDown,
             onMouseDown,
-            maxLength
+            maxLength,
+            name,
+            type
         } = props;
-
+        const nameSignal = useSignal(name);
         const [localValue, setLocalValue] = useState<string | undefined>(value);
+        const [localError, setLocalError] = useState<string | undefined>();
         const [cursorLoc, setCursorLoc] = useState<null | number>(null);
         const inputRef = useRef<HTMLInputElement>(null);
+        const propsRef = useRef({onChange});
+        propsRef.current.onChange = onChange;
 
         useEffect(() => {
-            setLocalValue(value)
+            nameSignal.set(name);
+        }, [name, nameSignal]);
+
+        useEffect(() => {
+            setLocalValue(value);
         }, [value]);
+
+        useEffect(() => {
+            setLocalError(error);
+        }, [error]);
 
         useEffect(() => {
             if (inputRef.current) {
                 inputRef.current.setSelectionRange(cursorLoc, cursorLoc);
             }
         }, [localValue, cursorLoc]);
+
+        const formContext = useContext(FormContext);
+
+        useSignalEffect(() => {
+            const formValue = formContext?.value.get();
+            const formError = formContext?.errors.get();
+            const name = nameSignal.get();
+            if (name && formValue && name in formValue) {
+                let val = formValue[name];
+                val = typeof val !== 'string' ? JSON.stringify(val) : val;
+                setLocalValue(val as string);
+            }
+            if (name && formError) {
+                setLocalError(formError[name]);
+            }
+        })
+
         const style = {
-            border: errorMessage ? BORDER_ERROR : BORDER,
+            border: localError ? BORDER_ERROR : BORDER,
             padding: '0px 5px',
             borderRadius: 5,
             ...inputStyle,
@@ -60,15 +94,23 @@ export const TextInput = forwardRef(function TextInput(props: {
         return <Label label={label} ref={ref} style={defaultStyle} popup={props.popup}>
             <input
                 ref={inputRef}
-                value={localValue}
+                name={name}
+                value={localValue ?? ''}
                 maxLength={maxLength}
+                type={type}
                 onChange={(e) => {
                     const val = e.target.value;
-                    if (onChange) {
-                        setCursorLoc(e.target.selectionStart);
-                        onChange(val);
+                    setCursorLoc(e.target.selectionStart);
+                    if (name && formContext) {
+                        const newFormVal = {...formContext.value.get()};
+                        newFormVal[name] = val;
+                        formContext.value.set(newFormVal);
                     } else {
-                        setLocalValue(val)
+                        if (onChange) {
+                            onChange(val);
+                        } else {
+                            setLocalValue(val)
+                        }
                     }
                 }}
                 onFocus={() => {
@@ -94,13 +136,13 @@ export const TextInput = forwardRef(function TextInput(props: {
                 }}
                 style={style}
             />
-            {errorMessage && <div style={{
+            {localError && <div style={{
                 padding: '0 5px',
                 fontSize: 'small',
                 lineHeight: 1,
                 color: '#C00000',
                 textAlign: 'right'
-            }}>{errorMessage}</div>}
+            }}>{localError}</div>}
         </Label>
     }
 );

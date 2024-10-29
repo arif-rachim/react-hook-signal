@@ -17,11 +17,11 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
     value?: RangeInput,
     onChange?: (value?: RangeInput) => void,
     label?: string,
-    errorMessage?: string,
+    error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
 }, ref: ForwardedRef<HTMLLabelElement>) {
-    const {inputStyle, style: defaultStyle, errorMessage, label, onChange, value} = props;
+    const {inputStyle, style: defaultStyle, error, label, onChange, value} = props;
 
     const dateRange = useMemo(() => {
         const result: { from?: Date, to?: Date } = {};
@@ -80,7 +80,7 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
 
     const style = {
         ...inputStyle,
-        border: errorMessage ? BORDER_ERROR : BORDER,
+        border: error ? BORDER_ERROR : BORDER,
         padding: '0px 5px',
         borderRadius: 5,
         width: '50%'
@@ -104,13 +104,13 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
             />
         </div>
 
-        {errorMessage && <div style={{
+        {error && <div style={{
             padding: '0 5px',
             fontSize: 'small',
             lineHeight: 1,
             color: '#C00000',
             textAlign: 'right'
-        }}>{errorMessage}</div>}
+        }}>{error}</div>}
     </Label>
 
 })

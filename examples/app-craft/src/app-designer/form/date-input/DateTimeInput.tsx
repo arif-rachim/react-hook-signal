@@ -8,11 +8,11 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
     value?: Date | string,
     onChange?: (value?: Date | string) => void,
     label?: string,
-    errorMessage?: string,
+    error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
 }, ref: ForwardedRef<HTMLDivElement>) {
-    const {inputStyle, style, errorMessage, label, onChange, value} = props;
+    const {inputStyle, style, error, label, onChange, value} = props;
 
 
     const {date, hour, minutes} = useMemo(() => {
@@ -87,7 +87,7 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
         <div style={{display: 'flex', flexDirection: 'row', gap: 10, alignItems: 'flex-end'}}>
             <TextInput
                 popup={{position: 'bottom', element, visible: showPopup}}
-                inputStyle={{...inputStyle, width: 85, borderColor: errorMessage ? ERROR_COLOR : 'rgba(0,0,0,0.1)'}}
+                inputStyle={{...inputStyle, width: 85, borderColor: error ? ERROR_COLOR : 'rgba(0,0,0,0.1)'}}
                 label={label}
                 value={localDate}
                 onChange={val => setLocalDate(val)}
@@ -104,7 +104,7 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                         borderBottomRightRadius: 0,
                         borderRight: 'unset',
                         textAlign: 'right',
-                        borderColor: errorMessage ? ERROR_COLOR : 'rgba(0,0,0,0.1)'
+                        borderColor: error ? ERROR_COLOR : 'rgba(0,0,0,0.1)'
                     }}
                     value={localHour}
                     style={{width: 30}}
@@ -118,7 +118,7 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                         borderBottomLeftRadius: 0,
                         borderLeft: 'unset',
                         textAlign: 'left',
-                        borderColor: errorMessage ? ERROR_COLOR : 'rgba(0,0,0,0.1)'
+                        borderColor: error ? ERROR_COLOR : 'rgba(0,0,0,0.1)'
                     }}
                     value={localMinute}
                     style={{width: 30}}
@@ -127,12 +127,12 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                 />
             </div>
         </div>
-        {errorMessage && <div style={{
+        {error && <div style={{
             padding: '0 5px',
             fontSize: 'small',
             lineHeight: 1,
             color: ERROR_COLOR,
             textAlign: 'right'
-        }}>{errorMessage}</div>}
+        }}>{error}</div>}
     </div>
 })

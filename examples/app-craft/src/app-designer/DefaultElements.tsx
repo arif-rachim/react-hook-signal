@@ -54,11 +54,11 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Container,
         property: {
             style: cssPropertiesSchema,
-            value : z.record(z.unknown()),
-            onChange : z.function().args(z.record(z.unknown())).returns(z.void())
+            value: z.record(z.unknown()),
+            onChange: z.function().args(z.record(z.unknown())).returns(z.void())
         },
         component: (props, ref) => {
-            return <Form ref={ref as MutableRefObject<HTMLDivElement>} {...props} style={props.style as CSSProperties}/>
+            return <Form ref={ref as MutableRefObject<HTMLFormElement>} {...props} style={props.style as CSSProperties}/>
         }
     }),
     input: element({
@@ -66,14 +66,23 @@ export const DefaultElements: Record<string, Element> = {
         icon: Icon.Input,
         property: {
             value: z.string(),
+            name: z.string().optional(),
             label: z.string().optional(),
-            errorMessage: z.string().optional(),
+            error: z.string().optional(),
             onChange: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
-            type: z.enum(['text', 'number', 'password'])
+            type: z.enum(['text', 'number', 'password']).optional()
         },
         component: (props, ref) => {
-            return <TextInput ref={ref as MutableRefObject<HTMLLabelElement>} {...props}/>
+            return <TextInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                              style={props.style}
+                              name={props.name}
+                              onChange={props.onChange}
+                              value={props.value}
+                              label={props.label}
+                              error={props.error}
+                              type={props.type}
+            />
         }
     }),
     date: element({
@@ -82,7 +91,7 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             value: z.union([z.date(), z.string()]).optional(),
             label: z.string().optional(),
-            errorMessage: z.string().optional(),
+            error: z.string().optional(),
             onChange: z.function().args(z.union([z.date(), z.string()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema
@@ -92,20 +101,20 @@ export const DefaultElements: Record<string, Element> = {
                               style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
         }
     }),
-    dateTime : element({
+    dateTime: element({
         shortName: 'DateTime',
         icon: Icon.Input,
         property: {
             value: z.union([z.date(), z.string()]).optional(),
             label: z.string().optional(),
-            errorMessage: z.string().optional(),
+            error: z.string().optional(),
             onChange: z.function().args(z.union([z.date(), z.string()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
             return <DateTimeInput ref={ref as MutableRefObject<HTMLDivElement>} {...props}
-                              style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
+                                  style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
         }
     }),
     range: element({
@@ -114,7 +123,7 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             value: z.object({from: z.union([z.date(), z.string()]), to: z.union([z.date(), z.string()])}).optional(),
             label: z.string().optional(),
-            errorMessage: z.string().optional(),
+            error: z.string().optional(),
             onChange: z.function().args(z.object({
                 from: z.union([z.date(), z.string()]),
                 to: z.union([z.date(), z.string()])
@@ -131,10 +140,11 @@ export const DefaultElements: Record<string, Element> = {
         shortName: 'Select',
         icon: Icon.Input,
         property: {
+            name : z.string().optional(),
             value: z.union([z.string(), z.number()]).optional(),
             label: z.string().optional(),
-            errorMessage: z.string().optional(),
-            onChange: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.promise(z.void()), z.void()])),
+            error: z.string().optional(),
+            onChange: z.function().args(z.union([z.string(), z.number()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema,
             query: z.function().args(z.object({
@@ -158,6 +168,7 @@ export const DefaultElements: Record<string, Element> = {
             })),
             valueToRowData: z.function().args(z.union([z.string(), z.number()]).optional()).returns(z.promise(z.record(z.union([z.number(), z.string()])))),
             rowDataToText: z.function().args(z.record(ZodSqlValue).optional()).returns(z.string()),
+            rowDataToValue: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(),z.number()])),
             itemToKey: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(), z.number()]))
         },
 
@@ -172,9 +183,10 @@ export const DefaultElements: Record<string, Element> = {
                                 onChange={props.onChange}
                                 value={props.value}
                                 label={props.label}
-                                errorMessage={props.errorMessage}
+                                error={props.error}
                                 valueToRowData={props.valueToRowData}
-
+                                rowDataToValue={props.rowDataToValue}
+                                name={props.name}
             />
         },
         propertyEditor: {
@@ -214,6 +226,24 @@ export const DefaultElements: Record<string, Element> = {
                             return result;
                         }, {} as ZodRawShape);
                         returnTypeZod = z.function().args(z.object(param).optional()).returns(z.string())
+                    }
+                    return returnTypeZod;
+                })
+            },
+            rowDataToValue: {
+                label: 'rowDataToValue',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, gridTemporalColumns, propertyName} = props;
+                    let returnTypeZod: ZodType = z.any();
+                    if (element) {
+                        returnTypeZod = element.property[propertyName]
+                    }
+                    if (gridTemporalColumns) {
+                        const param = gridTemporalColumns.reduce((result, key) => {
+                            result[key] = z.union([z.number(), z.string()]);
+                            return result;
+                        }, {} as ZodRawShape);
+                        returnTypeZod = z.function().args(z.object(param).optional()).returns(z.union([z.string(),z.number()]).optional())
                     }
                     return returnTypeZod;
                 })

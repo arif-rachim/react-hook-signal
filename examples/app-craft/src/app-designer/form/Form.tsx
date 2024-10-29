@@ -6,7 +6,11 @@ import {useContainerStyleHook} from "./container/useContainerStyleHook.ts";
 import {useContainerLayoutHook} from "./container/useContainerLayoutHook.tsx";
 import {ContainerRendererIdContext} from "../panels/design/container-renderer/ContainerRenderer.tsx";
 
-type Validator = (params: { key: string, value: unknown, formValue: Record<string, unknown> }) => string | undefined;
+type Validator = (params: {
+    key: string,
+    value: unknown,
+    formValue: Record<string, unknown>
+}) => Promise<string | undefined>;
 
 export const Form = forwardRef(function Form(props: PropsWithChildren<{
     value: Record<string, unknown>,
@@ -14,10 +18,9 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
     container: Container,
     style: CSSProperties,
     ["data-element-id"]: string
-}>, ref: ForwardedRef<HTMLDivElement>) {
+}>, ref: ForwardedRef<HTMLFormElement>) {
 
     const {value, onChange, container, style} = props;
-
     const containerStyle = useContainerStyleHook(style);
     const {elements} = useContainerLayoutHook(container);
 
@@ -27,28 +30,43 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
     const validators = useSignal<Record<string, Validator>>({});
     const isChanged = useSignal<boolean>(false);
 
-    const resetValue = () => {
+    const reset = () => {
         localValue.set(structuredClone(value));
         isChanged.set(false);
     }
 
-    const submit = () => {
+    const submit = async () => {
+        const isValid = await formIsValid();
+        if (!isValid) {
+            return;
+        }
         onChange(localValue.get());
         isChanged.set(false);
     }
-    const formIsValid = () => {
+    const validateValue = (props: { key: string, value: unknown }) => {
+        const validatorsValue = validators.get();
+        const formValue = localValue.get();
+        if (props.key in validatorsValue && validatorsValue[props.key]) {
+            const validator = validatorsValue[props.key];
+            return validator({...props, formValue})
+        }
+        return undefined;
+    }
+
+    const formIsValid = async () => {
         const formValue = localValue.get();
         const validatorsValue = validators.get();
         const errorsValue: Record<string, string> = {};
-        Object.keys(validatorsValue).forEach(key => {
+        const validatorKeys = Object.keys(validatorsValue);
+        for (const key of validatorKeys) {
             if (key in formValue) {
                 const value = formValue[key];
-                const error = validatorsValue[key]({formValue, key, value})
+                const error = await validateValue({key, value});
                 if (error) {
                     errorsValue[key] = error
                 }
             }
-        });
+        }
         errors.set(errorsValue);
         return Object.keys(errorsValue).length === 0;
     }
@@ -57,9 +75,14 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
         isChanged.set(false);
     }, [localValue, isChanged, value]);
     return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
-        <div ref={ref as LegacyRef<HTMLDivElement>}
-             style={containerStyle}
-             data-element-id={props["data-element-id"]}
+        <form ref={ref as LegacyRef<HTMLFormElement>}
+              style={containerStyle}
+              data-element-id={props["data-element-id"]}
+              onSubmit={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  submit();
+              }}
         >
             <FormContext.Provider value={{
                 value: localValue,
@@ -67,13 +90,14 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
                 errors,
                 validators,
                 submit,
-                resetValue,
+                reset,
                 isChanged,
-                formIsValid
+                formIsValid,
+                validateValue
             }}>
                 {elements}
             </FormContext.Provider>
-        </div>
+        </form>
     </ContainerRendererIdContext.Provider>
 });
 
@@ -83,8 +107,10 @@ export const FormContext = createContext<{
     errors: Signal.State<Record<string, string>>,
     isChanged: Signal.State<boolean>,
     validators: Signal.State<Record<string, Validator>>,
-    resetValue: () => void,
-    submit: () => void,
-    formIsValid: () => boolean
+    reset: () => void,
+    submit: () => Promise<void>,
+    formIsValid: () => Promise<boolean>
+    validateValue: (params: { key: string, value: unknown }) => Promise<string | undefined> | undefined
+
 } | undefined>(undefined)
 

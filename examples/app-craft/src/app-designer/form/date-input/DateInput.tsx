@@ -7,11 +7,11 @@ export const DateInput = forwardRef(function DateInput(props: {
     value?: Date | string,
     onChange?: (value?: Date | string) => void,
     label?: string,
-    errorMessage?: string,
+    error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
 }, ref: ForwardedRef<HTMLLabelElement>) {
-    const {inputStyle, style, errorMessage, label, onChange, value} = props;
+    const {inputStyle, style, error, label, onChange, value} = props;
 
     const date = useMemo(() => {
         let result: Date | undefined;
@@ -62,7 +62,7 @@ export const DateInput = forwardRef(function DateInput(props: {
                       popup={{position: 'bottom', element, visible: showPopup}}
                       inputStyle={inputStyle}
                       style={style}
-                      errorMessage={errorMessage}
+                      error={error}
                       label={label}
                       value={format_ddMMMyyyy(localValue)}
                       onFocus={() => {
