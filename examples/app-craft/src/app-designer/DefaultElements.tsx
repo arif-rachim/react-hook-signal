@@ -1,18 +1,11 @@
 import {element, Element} from "./LayoutBuilderProps.ts";
 import {z, ZodRawShape, ZodType} from "zod";
-import {CSSProperties, forwardRef, LegacyRef, MutableRefObject, ReactNode, useEffect, useMemo, useState} from "react";
+import {CSSProperties, forwardRef, LegacyRef, MutableRefObject} from "react";
 import {Icon} from "./Icon.ts";
 import {Button} from "./button/Button.tsx";
-import {useSignal, useSignalEffect} from "react-hook-signal";
 import {PageSelectionPropertyEditor} from "./data-group/PageSelectionPropertyEditor.tsx";
-import {useAppContext} from "./hooks/useAppContext.ts";
-import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {Container} from "./AppDesigner.tsx";
-import {DropZone} from "./panels/design/container-renderer/drop-zone/DropZone.tsx";
-import {DraggableContainerElement} from "./panels/design/container-renderer/DraggableContainerElement.tsx";
 import {ContainerRendererIdContext} from "./panels/design/container-renderer/ContainerRenderer.tsx";
-import {Signal} from "signal-polyfill";
-import {ContainerElement} from "../app-viewer/ContainerElement.tsx";
 import {QueryGrid} from "./query-grid/QueryGrid.tsx";
 import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
@@ -26,6 +19,9 @@ import {SelectInput} from "./form/select-input/SelectInput.tsx";
 import {zodSchemaToZodType} from "./zodSchemaToJson.ts";
 import {createCustomPropertyEditor} from "./data-renderer/CustomPropertyEditor.tsx";
 import {DateTimeInput} from "./form/date-input/DateTimeInput.tsx";
+import {useContainerLayoutHook} from "./form/container/useContainerLayoutHook.tsx";
+import {useContainerStyleHook} from "./form/container/useContainerStyleHook.ts";
+import {Form} from "./form/Form.tsx";
 
 const ZodSqlValue = z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]);
 
@@ -51,6 +47,18 @@ export const DefaultElements: Record<string, Element> = {
         },
         component: (props, ref) => {
             return <TitleBox ref={ref} {...props}/>
+        }
+    }),
+    form: element({
+        shortName: 'Form',
+        icon: Icon.Container,
+        property: {
+            style: cssPropertiesSchema,
+            value : z.record(z.unknown()),
+            onChange : z.function().args(z.record(z.unknown())).returns(z.void())
+        },
+        component: (props, ref) => {
+            return <Form ref={ref as MutableRefObject<HTMLDivElement>} {...props} style={props.style as CSSProperties}/>
         }
     }),
     input: element({
@@ -394,20 +402,6 @@ export const DefaultElements: Record<string, Element> = {
     })
 } as const;
 
-/**
- *
- * export type QueryType = (inputs?: Record<string, unknown>, page?: number) => Promise<{
- *     error?: string,
- *     data: Record<string, number | string | Uint8Array | null>[],
- *     columns: Column[],
- *     totalPage: number,
- *     currentPage: number
- * }>
- */
-
-const viewMode = new Signal.Computed(() => 'view');
-
-
 const TitleBox = forwardRef(function TitleBox(props: {
     container: Container,
     style: CSSProperties,
@@ -478,75 +472,3 @@ const LayoutContainer = forwardRef(function LayoutContainer(props: {
         </div>
     </ContainerRendererIdContext.Provider>
 })
-
-function useContainerStyleHook(style: CSSProperties) {
-    const {uiDisplayModeSignal} = useAppContext<AppDesignerContext>();
-    const displayMode = uiDisplayModeSignal ?? viewMode;
-    const styleString = JSON.stringify(style);
-    return useMemo(() => {
-        const style = JSON.parse(styleString);
-        const mode = displayMode.get();
-        const MIN_SPACE = 5;
-        if (mode === 'design') {
-            style.border = '1px dashed rgba(0,0,0,0.1)';
-            const minWidthHeight = ['minWidth', 'minHeight'] as const;
-            minWidthHeight.forEach(key => {
-                if (style[key] !== 24) {
-                    style[key] = 24;
-                }
-            })
-            const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap'] as const;
-            keys.forEach(key => {
-                if (toInt(style[key]) < MIN_SPACE) {
-                    style[key] = MIN_SPACE;
-                }
-            })
-        }
-        return style;
-    }, [displayMode, styleString]);
-}
-
-function useContainerLayoutHook(container: Container) {
-    const {uiDisplayModeSignal, allContainersSignal} = useAppContext<AppDesignerContext>();
-    const displayMode = uiDisplayModeSignal ?? viewMode;
-    const containerSignal = useSignal(container);
-
-    const [elements, setElements] = useState<ReactNode[]>([]);
-
-    useEffect(() => {
-        containerSignal.set(container);
-    }, [containerSignal, container]);
-
-
-    useSignalEffect(() => {
-        const mode = displayMode.get();
-        const container: Container | undefined = containerSignal.get();
-        const children = container?.children ?? [];
-        const result: Array<ReactNode> = [];
-        if (mode === 'design') {
-            result.push(<DropZone precedingSiblingId={''}
-                                  key={`drop-zone-root-${container?.id}`}
-                                  parentContainerId={container?.id ?? ''}/>)
-        }
-        for (let i = 0; i < children?.length; i++) {
-            const childId = children[i];
-            const childContainer = allContainersSignal.get().find(i => i.id === childId)!;
-            if (mode === 'design') {
-                result.push(<DraggableContainerElement container={childContainer} key={childId}/>)
-                result.push(<DropZone precedingSiblingId={childId} key={`drop-zone-${i}-${container?.id}`}
-                                      parentContainerId={container?.id ?? ''}/>);
-            } else {
-                result.push(<ContainerElement container={childContainer} key={childId}/>)
-            }
-        }
-        setElements(result);
-    });
-    return {elements, displayMode};
-}
-
-function toInt(text: unknown) {
-    if (typeof text === 'string') {
-        return parseInt(text)
-    }
-    return -1;
-}

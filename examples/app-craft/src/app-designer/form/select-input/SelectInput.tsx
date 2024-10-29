@@ -83,7 +83,6 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     </div>;
 
     const [showPopup, setShowPopup] = useState(false);
-    const mutableRef = useRef({userIsChangingData: false});
     const text = (rowDataToText ? rowDataToText(rowData) : defaultRowDataToText(rowData)) ?? '';
 
     useEffect(() => {
@@ -113,24 +112,6 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                       }}
                       onMouseDown={() => {
                           setShowPopup(true);
-                      }}
-                      onBlur={() => {
-                          if (mutableRef.current.userIsChangingData) {
-                              mutableRef.current.userIsChangingData = false;
-                              // const date = new Date(newVal);
-                              // const isValid = !isNaN(date.getDate());
-                              // if (isValid) {
-                              //     if (onChange) {
-                              //         onChange(date);
-                              //     } else {
-                              //         setLocalValue(date);
-                              //     }
-                              // }
-                          }
-                          //setShowPopup(false);
-                      }}
-                      onKeyDown={() => {
-                          mutableRef.current.userIsChangingData = true;
                       }}
     />
 })
