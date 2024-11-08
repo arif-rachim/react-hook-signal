@@ -1,0 +1,58 @@
+import {useEffect, useRef, useState} from "react";
+import {useSignalEffect} from "react-hook-signal";
+
+const transitionDuration = 100;
+export default function LoadingScreen() {
+    const [isStable, setIsStable] = useState(false);
+    const [showLoading, setShowLoading] = useState(true);
+    const stabilityDelay = 100;
+    const stabilityTimer = useRef<number>(0);
+
+    useSignalEffect(() => {
+        setIsStable(false);
+        setShowLoading(true);
+        const tm = setTimeout(() => {
+            setIsStable(true);
+        }, transitionDuration / 2);
+        stabilityTimer.current = tm as unknown as number;
+    })
+    useEffect(() => {
+        const observer = new PerformanceObserver(() => {
+            setIsStable(false);
+            clearTimeout(stabilityTimer.current);
+
+            const tm = setTimeout(() => {
+                setIsStable(true);
+            }, stabilityDelay);
+            stabilityTimer.current = tm as unknown as number;
+        });
+        observer.observe({type: 'layout-shift'});
+        return () => {
+            observer.disconnect();
+            clearTimeout(stabilityTimer.current);
+        }
+    }, []);
+    useEffect(() => {
+        if (isStable) {
+            setTimeout(() => {
+                setShowLoading(false);
+            }, transitionDuration + 50);
+        }
+    }, [isStable]);
+    return <>{showLoading && <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: isStable ? 'rgba(255,255,255,0)' : 'rgba(255,255,255,0.5)',
+        backdropFilter: isStable ? 'blur(0px)' : 'blur(30px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 20,
+        transition: `all ${transitionDuration}ms ease-in-out`
+    }}></div>}</>
+
+
+}
