@@ -34,18 +34,6 @@ export function ConfigPropertyEditor(props: { propertyName: string }) {
     const isFormulaEmpty = isEmpty(formula);
     const update = useUpdateDragContainer();
     const showModal = useShowModal();
-    const style: CSSProperties = {
-        width: 28,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderTopRightRadius: 0,
-        borderTopLeftRadius: 20,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 0,
-        backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
-        padding: 0
-    };
 
     async function updateTableConfig() {
         const updatedFormula = await showModal(closePanel => {
@@ -64,16 +52,25 @@ export function ConfigPropertyEditor(props: { propertyName: string }) {
         }
     }
 
+
     return <div style={{display: 'flex'}}>
-        <div style={style} onClick={updateTableConfig}/>
+        <Button style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderTopRightRadius: 0,
+            borderBottomRightRadius: 0,
+            backgroundColor: isFormulaEmpty ? 'rgba(255,255,255,0.9)' : colors.green,
+            color: isFormulaEmpty ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)',
+            padding: '0px 5px'
+        }} onClick={updateTableConfig}><Icon.Formula style={{fontSize: 16}}/></Button>
         <div style={{
             display: 'flex',
-            padding: '0px 2px',
+            padding: '0px 5px',
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: 'rgba(0,0,0,0.05)',
             border: BORDER,
-            width: 28,
             borderTopRightRadius: 20,
             borderBottomRightRadius: 20
         }}>

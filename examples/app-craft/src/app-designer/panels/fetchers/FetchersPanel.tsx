@@ -1,5 +1,4 @@
 import {Button} from "../../button/Button.tsx";
-import {MdAdd} from "react-icons/md";
 import {notifiable, useSignal} from "react-hook-signal";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
@@ -81,11 +80,9 @@ function AddButtons(props: { editFetcher: () => void }) {
                 color: '#333',
             }}
             onClick={() => editFetcher()}
+            icon={'IoMdAdd'}
         >
             {'Fetcher'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
     </div>
 }

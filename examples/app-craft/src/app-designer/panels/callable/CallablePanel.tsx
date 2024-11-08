@@ -1,6 +1,5 @@
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {Button} from "../../button/Button.tsx";
-import {MdAdd} from "react-icons/md";
 import {notifiable, useSignal} from "react-hook-signal";
 import {Callable} from "../../AppDesigner.tsx";
 import {guid} from "../../../utils/guid.ts";
@@ -31,11 +30,8 @@ function AddButton(props: { editCallable: () => void }) {
                 color: '#333',
             }}
             onClick={() => props.editCallable()}
-        >
+            icon={'IoMdAdd'}>
             {'Add Callable'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
     </div>;
 }
@@ -112,7 +108,7 @@ export function CallablePanel() {
                         focusedItemSignal.set(callable.id);
                         editCallable(callable, 'page')
                     }}>
-
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Icon.Function /></div>
                         <div style={{
                             flexGrow: 1,
                             overflow: 'hidden',
@@ -154,7 +150,7 @@ export function CallablePanel() {
                         focusedItemSignal.set(callable.id);
                         editCallable(callable, 'application')
                     }}>
-
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Icon.Function/></div>
                         <div style={{
                             flexGrow: 1,
                             overflow: 'hidden',

@@ -2,6 +2,7 @@ import {Variable} from "../../AppDesigner.tsx";
 import {effect} from "react-hook-signal";
 import {FormulaDependencyParameter} from "../AppVariableInitialization.tsx";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
+import {ModalBox} from "./useModalBox.tsx";
 
 
 const db = dbSchemaInitialization()
@@ -10,13 +11,15 @@ export function initiateEffect(props: {
     navigate: (path: string, param?: unknown) => Promise<void>,
     variables: Array<Variable>,
     app: FormulaDependencyParameter,
-    page: FormulaDependencyParameter
+    page: FormulaDependencyParameter,
+    modalBox: ModalBox
 }) {
     const {
         navigate,
         variables,
         app,
-        page
+        page,
+        modalBox
     } = props;
 
     const destructorCallbacks: Array<() => void> = [];
@@ -24,11 +27,11 @@ export function initiateEffect(props: {
         if (v.type !== 'effect') {
             continue;
         }
-        const params = ['navigate', 'db', 'app', 'page', `try{${v.functionCode}}catch(e){console.log(e)}`];
+        const params = ['navigate', 'db', 'app', 'page', 'modalBox', `${v.functionCode}`];
         try {
             const func = new Function(...params) as (...args: unknown[]) => void
             const destructor = effect(() => {
-                const instances = [navigate, db, app, page]
+                const instances = [navigate, db, app, page, modalBox]
                 try {
                     func.call(null, ...instances);
                 } catch (err) {

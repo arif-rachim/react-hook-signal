@@ -8,6 +8,7 @@ import {z, ZodRawShape} from "zod";
 import {dbSchemaInitialization} from "../../../../variable-initialization/initiator/dbSchemaInitialization.ts";
 import {AppVariableInitializationContext} from "../../../../variable-initialization/AppVariableInitialization.tsx";
 import {PageVariableInitializationContext} from "../../../../variable-initialization/PageVariableInitialization.tsx";
+import {useModalBox} from "../../../../variable-initialization/initiator/useModalBox.tsx";
 
 const db = dbSchemaInitialization();
 
@@ -26,9 +27,12 @@ export function PropertyInitialization(props: {
         navigate
     } = context;
 
+    const modalBox = useModalBox();
+
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
+
     useEffect(() => {
         propertiesSignal.set(container.properties)
     }, [container.properties, propertiesSignal]);
@@ -46,19 +50,19 @@ export function PropertyInitialization(props: {
                 const allVariables = allVariablesSignal.get();
                 const propDependencies = allVariables.map(t => allVariablesInstance.find(v => v.id === t.id)?.instance) as Array<AnySignal<unknown>>;
 
-                const funcParams = ['module', 'navigate', 'db', 'app', 'page','z', containerProp.formula] as Array<string>;
+                const funcParams = ['module', 'navigate', 'db', 'app', 'page', 'z', 'modalBox', containerProp.formula] as Array<string>;
                 const module: { exports: unknown } = {exports: {}};
 
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, navigate, db,app, page,z, ...propDependencies];
+                    const funcParamsInstance = [module, navigate, db, app, page, z, modalBox, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id, err});
                 }
                 if (returnType) {
-                    if(JSON.stringify(module.exports) !== '{}'){
+                    if (JSON.stringify(module.exports) !== '{}') {
                         try {
                             returnType.parse(module.exports)
                             errorMessage.propertyValidation({
@@ -94,7 +98,7 @@ export function PropertyInitialization(props: {
                     }
                     setComponentProps(props => ({...props, [containerPropKey]: wrapper}))
                 } else {
-                    if(JSON.stringify(module.exports) !== '{}'){
+                    if (JSON.stringify(module.exports) !== '{}') {
                         setComponentProps(props => ({...props, [containerPropKey]: module.exports}))
                     }
                 }

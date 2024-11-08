@@ -40,5 +40,5 @@ export function ContainerElement(props: { container: Container }) {
     if (elements && elements[container?.type]) {
         return <ElementRenderer container={container} elementProps={elementProps}/>
     }
-    return <EmptyComponent/>
+    return <EmptyComponent />
 }

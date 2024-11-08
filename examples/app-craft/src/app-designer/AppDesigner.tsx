@@ -175,149 +175,150 @@ export default function AppDesigner(props: LayoutBuilderProps) {
     }
 
     return <ErrorBoundary>
-        <ModalProvider>
-            <AppDesignerContext.Provider
-                value={context}>
-                <AppVariableInitialization>
-                    <PageVariableInitialization>
-                    <Dashboard panels={{
-                        pages: {
-                            title: 'Pages',
-                            Icon: Icon.Page,
-                            position: 'left',
-                            component: PagesPanel
-                        },
-                        components: {
-                            title: 'Components',
-                            Icon: Icon.Component,
-                            position: 'leftBottom',
-                            component: ElementsPanel,
-                        },
-                        layoutTree: {
-                            title: 'Layout Tree',
-                            Icon: Icon.Tree,
-                            position: 'right',
-                            component: ComponentTree,
-                        },
-                        properties: {
-                            title: 'Properties',
-                            Icon: Icon.Property,
-                            position: 'rightBottom',
-                            component: PropertiesPanel,
-                        },
-                        styles: {
-                            title: 'Styles',
-                            Icon: Icon.Style,
-                            position: 'rightBottom',
-                            component: StylePanel,
-                        },
-                        variables: {
-                            title: 'Variables',
-                            Icon: Icon.Variable,
-                            position: 'leftBottom',
-                            component: VariablesPanel,
-                        },
-                        functions: {
-                            title: 'Callables',
-                            Icon: Icon.Function,
-                            position: 'leftBottom',
-                            component: CallablePanel,
-                        },
-                        fetchers: {
-                            title: 'Fetchers',
-                            Icon: Icon.Fetcher,
-                            position: 'leftBottom',
-                            component: FetchersPanel,
-                        },
-                        queries: {
-                            title: 'Queries',
-                            Icon: Icon.Query,
-                            position: 'leftBottom',
-                            component: QueriesPanel,
-                        },
-                        database: {
-                            title: 'Database',
-                            Icon: Icon.Database,
-                            position: 'leftBottom',
-                            component: DatabasePanel
-                        },
-                        errors: {
-                            title: 'Errors',
-                            Icon: Icon.Error,
-                            position: 'bottom',
-                            component: ErrorsPanel
-                        },
 
-                        bundle: {
-                            title: 'Package',
-                            Icon: Icon.Package,
-                            position: 'bottom',
-                            component: PackagePanel
-                        }
-                    }}
-                               defaultSelectedPanel={{
-                                   left: 'pages',
-                                   leftBottom: 'components',
-                                   bottom: 'errors',
-                                   right: 'layoutTree',
-                                   rightBottom: 'properties',
-                               }}
-                               onMainCenterClicked={(panel, selectedPanelSignal) => {
-                                   setTimeout(() => {
-                                       if (panel.tag?.type === 'VariableEditorPanel') {
-                                           selectedPanelSignal.set({
-                                               ...selectedPanelSignal.get(),
-                                               leftBottom: 'variables',
-                                               right: '',
-                                               rightBottom: ''
-                                           })
-                                       }
-                                       if (panel.tag?.type === 'ComponentPropertyEditor') {
-                                           selectedPanelSignal.set({
-                                               ...selectedPanelSignal.get(),
-                                               right: 'layoutTree',
-                                               rightBottom: 'properties'
-                                           })
-                                       }
-                                       if (panel.tag?.type === 'CallableEditorPanel') {
-                                           selectedPanelSignal.set({
-                                               ...selectedPanelSignal.get(),
-                                               leftBottom: 'callable',
-                                               right: '',
-                                               rightBottom: ''
-                                           })
-                                       }
-                                       if (panel.tag?.type === 'FetcherEditorPanel') {
-                                           selectedPanelSignal.set({
-                                               ...selectedPanelSignal.get(),
-                                               leftBottom: 'fetcher',
-                                               right: '',
-                                               rightBottom: ''
-                                           })
-                                       }
-                                       if (panel.tag?.type === 'QueryEditorPanel') {
-                                           selectedPanelSignal.set({
-                                               ...selectedPanelSignal.get(),
-                                               leftBottom: 'queries',
-                                               right: '',
-                                               rightBottom: ''
-                                           })
-                                       }
-                                       if (panel.tag?.type === 'DesignPanel') {
-                                           selectedPanelSignal.set({
-                                               ...selectedPanelSignal.get(),
-                                               left: 'pages',
-                                               right: '',
-                                               rightBottom: ''
-                                           })
-                                       }
-                                   }, 0);
-                               }}>
-                    </Dashboard>
-                    </PageVariableInitialization>
-                </AppVariableInitialization>
-            </AppDesignerContext.Provider>
-        </ModalProvider>
+        <AppDesignerContext.Provider
+            value={context}>
+            <AppVariableInitialization>
+                <PageVariableInitialization>
+                    <ModalProvider>
+                        <Dashboard panels={{
+                            pages: {
+                                title: 'Pages',
+                                Icon: Icon.Page,
+                                position: 'left',
+                                component: PagesPanel
+                            },
+                            components: {
+                                title: 'Components',
+                                Icon: Icon.Component,
+                                position: 'leftBottom',
+                                component: ElementsPanel,
+                            },
+                            layoutTree: {
+                                title: 'Layout Tree',
+                                Icon: Icon.Tree,
+                                position: 'right',
+                                component: ComponentTree,
+                            },
+                            properties: {
+                                title: 'Properties',
+                                Icon: Icon.Property,
+                                position: 'rightBottom',
+                                component: PropertiesPanel,
+                            },
+                            styles: {
+                                title: 'Styles',
+                                Icon: Icon.Style,
+                                position: 'rightBottom',
+                                component: StylePanel,
+                            },
+                            variables: {
+                                title: 'Variables',
+                                Icon: Icon.Variable,
+                                position: 'leftBottom',
+                                component: VariablesPanel,
+                            },
+                            functions: {
+                                title: 'Callables',
+                                Icon: Icon.Function,
+                                position: 'leftBottom',
+                                component: CallablePanel,
+                            },
+                            fetchers: {
+                                title: 'Fetchers',
+                                Icon: Icon.Fetcher,
+                                position: 'leftBottom',
+                                component: FetchersPanel,
+                            },
+                            queries: {
+                                title: 'Queries',
+                                Icon: Icon.Query,
+                                position: 'leftBottom',
+                                component: QueriesPanel,
+                            },
+                            database: {
+                                title: 'Database',
+                                Icon: Icon.Database,
+                                position: 'leftBottom',
+                                component: DatabasePanel
+                            },
+                            errors: {
+                                title: 'Errors',
+                                Icon: Icon.Error,
+                                position: 'bottom',
+                                component: ErrorsPanel
+                            },
+
+                            bundle: {
+                                title: 'Package',
+                                Icon: Icon.Package,
+                                position: 'bottom',
+                                component: PackagePanel
+                            }
+                        }}
+                                   defaultSelectedPanel={{
+                                       left: 'pages',
+                                       leftBottom: 'components',
+                                       bottom: 'errors',
+                                       right: 'layoutTree',
+                                       rightBottom: 'properties',
+                                   }}
+                                   onMainCenterClicked={(panel, selectedPanelSignal) => {
+                                       setTimeout(() => {
+                                           if (panel.tag?.type === 'VariableEditorPanel') {
+                                               selectedPanelSignal.set({
+                                                   ...selectedPanelSignal.get(),
+                                                   leftBottom: 'variables',
+                                                   right: '',
+                                                   rightBottom: ''
+                                               })
+                                           }
+                                           if (panel.tag?.type === 'ComponentPropertyEditor') {
+                                               selectedPanelSignal.set({
+                                                   ...selectedPanelSignal.get(),
+                                                   right: 'layoutTree',
+                                                   rightBottom: 'properties'
+                                               })
+                                           }
+                                           if (panel.tag?.type === 'CallableEditorPanel') {
+                                               selectedPanelSignal.set({
+                                                   ...selectedPanelSignal.get(),
+                                                   leftBottom: 'callable',
+                                                   right: '',
+                                                   rightBottom: ''
+                                               })
+                                           }
+                                           if (panel.tag?.type === 'FetcherEditorPanel') {
+                                               selectedPanelSignal.set({
+                                                   ...selectedPanelSignal.get(),
+                                                   leftBottom: 'fetcher',
+                                                   right: '',
+                                                   rightBottom: ''
+                                               })
+                                           }
+                                           if (panel.tag?.type === 'QueryEditorPanel') {
+                                               selectedPanelSignal.set({
+                                                   ...selectedPanelSignal.get(),
+                                                   leftBottom: 'queries',
+                                                   right: '',
+                                                   rightBottom: ''
+                                               })
+                                           }
+                                           if (panel.tag?.type === 'DesignPanel') {
+                                               selectedPanelSignal.set({
+                                                   ...selectedPanelSignal.get(),
+                                                   left: 'pages',
+                                                   right: '',
+                                                   rightBottom: ''
+                                               })
+                                           }
+                                       }, 0);
+                                   }}>
+                        </Dashboard>
+                    </ModalProvider>
+                </PageVariableInitialization>
+            </AppVariableInitialization>
+        </AppDesignerContext.Provider>
     </ErrorBoundary>
 }
 

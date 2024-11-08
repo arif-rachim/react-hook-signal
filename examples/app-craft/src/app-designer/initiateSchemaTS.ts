@@ -39,7 +39,7 @@ export function initiateSchemaTS(props: {
 ${returnTypeDefinition(returnType)}
 ${composeNavigation(allPages)}
 ${composeDbSchema(allTables)}
-
+${composeAlert()}
 declare const app:{
     var:${composeLibrary(allApplicationVariables)},
     query:${composeQuerySchema(allApplicationQueries)},
@@ -84,5 +84,11 @@ function composeNavigation(allPages: Array<Page>) {
     return `
     type Navigate = {${type}};
     declare const navigate = <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
+    `
+}
+
+function composeAlert(){
+    return `
+    declare const modalBox = (props:{message:string,title?:string,icon?:string,buttons?:Array<{id:string,label:string,icon:string}>}) => Promise<string>;
     `
 }

@@ -8,6 +8,8 @@ import {isEmpty} from "../utils/isEmpty.ts";
 import {DefaultElements} from "../app-designer/DefaultElements.tsx";
 import {useAppInitiator} from "../app-designer/hooks/useAppInitiator.ts";
 import {PageVariableInitialization} from "../app-designer/variable-initialization/PageVariableInitialization.tsx";
+import LoadingScreen from "../utils/LoadingScreen.tsx";
+import {ModalProvider} from "../modal/ModalProvider.tsx";
 
 /**
  * Renders the application viewer component.
@@ -22,47 +24,52 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
         justifyContent: 'center',
         height: '100%',
         width: '100%',
-        padding : 10,
+        padding: 10,
         background: 'linear-gradient(0deg,#666,#555)'
     }}>
-        <AppViewerContext.Provider value={context}>
+        <div style={{
+            backgroundColor: '#444',
+            borderRadius: 20,
+            boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)',
+            maxWidth: 1200,
+            maxHeight: 800,
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            overflow: 'auto',
+            padding: 5
+        }}>
             <ErrorBoundary>
+                <AppViewerContext.Provider value={context}>
+                    <AppVariableInitialization>
+                        <PageVariableInitialization>
+                            <ModalProvider>
+                                <notifiable.div style={{
+                                    flexGrow: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    overflow: 'auto',
+                                    backgroundColor: 'white',
+                                    borderRadius: 15,
+                                    position: 'relative'
+                                }}>
+                                    {() => {
+                                        const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
+                                        if (container) {
+                                            return <><ContainerElement container={container}/>
+                                                <LoadingScreen/></>
+                                        }
+                                        return <></>
+                                    }}
+                                </notifiable.div>
+                            </ModalProvider>
+                        </PageVariableInitialization>
+                    </AppVariableInitialization>
+                </AppViewerContext.Provider>
 
-                <AppVariableInitialization>
-                    <PageVariableInitialization>
-                        <div style={{
-                            backgroundColor: '#444',
-                            borderRadius: 20,
-                            boxShadow: '0px 15px 20px -4px rgba(0,0,0,0.5)',
-                            maxWidth: 1200,
-                            maxHeight: 800,
-                            display: 'flex',
-                            width : '100%',
-                            height : '100%',
-                            flexDirection: 'column',
-                            overflow: 'auto',
-                            padding: 5
-                        }}>
-                            <notifiable.div style={{
-                                flexGrow: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                overflow: 'auto',
-                                backgroundColor: 'white',
-                                borderRadius: 15,
-                            }}>
-                                {() => {
-                                    const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
-                                    if (container) {
-                                        return <ContainerElement container={container}/>
-                                    }
-                                    return <></>
-                                }}
-                            </notifiable.div>
-                        </div>
-                    </PageVariableInitialization>
-                </AppVariableInitialization>
             </ErrorBoundary>
-        </AppViewerContext.Provider>
+
+        </div>
     </div>
 }

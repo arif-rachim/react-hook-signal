@@ -14,7 +14,6 @@ import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import {Button} from "../../../button/Button.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
-import {Icon} from "../../../Icon.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
 import {useUpdateCallable} from "../../../hooks/useUpdateCallable.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
@@ -96,7 +95,7 @@ export default function CallableEditorPanel(props: {
             <LabelContainer label={'Name : '}
                             style={{flexGrow: 1, flexBasis: '50%', flexDirection: 'row', alignItems: 'center', gap: 10}}
                             styleLabel={{fontStyle: 'italic'}}>
-                <notifiable.input name={'callableName'} autoComplete={'unset'}
+                <notifiable.input name={'callableName'} autoComplete={guid()}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                   value={() => {
                                       return callableSignal.get().name
@@ -280,7 +279,7 @@ export default function CallableEditorPanel(props: {
                                     })
                                 }).flat();
                                 return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                    icon: Icon.Exit,
+                                    icon: 'IoIosExit',
                                     label: 'Ok',
                                     id: 'Ok'
                                 }]}/>
@@ -290,11 +289,8 @@ export default function CallableEditorPanel(props: {
                         display: 'flex',
                         gap: 5,
                         alignItems: 'center'
-                    }}>
+                    }} icon={'IoIosSave'}>
                         {'Save'}
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Save style={{fontSize: 18}}/>
-                        </div>
                     </Button>
                     <Button onClick={async () => {
                         callableSignal.set(callable ?? createNewCallable());
@@ -303,11 +299,8 @@ export default function CallableEditorPanel(props: {
                         display: 'flex',
                         gap: 5,
                         alignItems: 'center'
-                    }}>
+                    }} icon={'IoIosExit'}>
                         {'Reset'}
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Reset style={{fontSize: 18}}/>
-                        </div>
                     </Button>
                 </>
             }}

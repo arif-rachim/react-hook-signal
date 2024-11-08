@@ -80,21 +80,15 @@ export function PageSelector(props: {
                 display: 'flex',
                 gap: 5,
                 alignItems: 'center'
-            }}>
+            }} icon={'IoIosSave'}>
                 {'Save'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Save style={{fontSize: 18}}/>
-                </div>
             </Button>
             <Button onClick={() => closePanel('cancel')} style={{
                 display: 'flex',
                 gap: 5,
                 alignItems: 'center'
-            }}>
+            }} icon={'IoIosExit'}>
                 {'Cancel'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Exit style={{fontSize: 18}}/>
-                </div>
             </Button>
         </div>
     </div>

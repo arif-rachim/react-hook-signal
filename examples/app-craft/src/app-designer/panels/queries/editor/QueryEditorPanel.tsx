@@ -12,7 +12,6 @@ import {BORDER} from "../../../Border.ts";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {Button} from "../../../button/Button.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
-import {Icon} from "../../../Icon.ts";
 import {useUpdateQueries} from "../../../hooks/useUpdateQueries.ts";
 import {Query} from "../../database/service/getTables.ts";
 import {RenderParameters} from "../../fetchers/editor/FetcherEditorPanel.tsx";
@@ -165,7 +164,7 @@ export default function QueryEditorPanel(props: {
             <LabelContainer label={'Name : '}
                             style={{flexGrow: 1, flexBasis: '50%', flexDirection: 'row', alignItems: 'center', gap: 10}}
                             styleLabel={{fontStyle: 'italic'}}>
-                <notifiable.input name={'queryName'} autoComplete={'unset'}
+                <notifiable.input name={'queryName'} autoComplete={guid()}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                   value={() => {
                                       return querySignal.get().name
@@ -311,11 +310,8 @@ export default function QueryEditorPanel(props: {
                         display: 'flex',
                         gap: 5,
                         alignItems: 'center'
-                    }}>
+                    }} icon={'IoMdGlobe'}>
                         {'Test'}
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Query style={{fontSize: 18}}/>
-                        </div>
                     </Button>
                     {modified &&
                         <Button onClick={async () => {
@@ -343,7 +339,7 @@ export default function QueryEditorPanel(props: {
                                         })
                                     }).flat();
                                     return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                        icon: Icon.Exit,
+                                        icon: 'IoIosExit',
                                         label: 'Ok',
                                         id: 'Ok'
                                     }]}/>
@@ -353,11 +349,8 @@ export default function QueryEditorPanel(props: {
                             display: 'flex',
                             gap: 5,
                             alignItems: 'center'
-                        }}>
+                        }} icon={'IoIosSave'}>
                             {'Save'}
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                <Icon.Save style={{fontSize: 18}}/>
-                            </div>
                         </Button>
                     }
                     {modified &&
@@ -368,11 +361,8 @@ export default function QueryEditorPanel(props: {
                             display: 'flex',
                             gap: 5,
                             alignItems: 'center'
-                        }}>
+                        }} icon={'IoIosExit'}>
                             {'Reset'}
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                <Icon.Reset style={{fontSize: 18}}/>
-                            </div>
                         </Button>
                     }
                 </>

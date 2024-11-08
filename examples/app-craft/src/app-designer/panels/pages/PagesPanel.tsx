@@ -4,7 +4,6 @@ import {isEmpty} from "../../../utils/isEmpty.ts";
 import {Page} from "../../AppDesigner.tsx";
 import {useUpdatePageSignal} from "../../hooks/useUpdatePageSignal.ts";
 import {Button} from "../../button/Button.tsx";
-import {MdAdd} from "react-icons/md";
 import {notifiable, useSignal} from "react-hook-signal";
 import {Icon} from "../../Icon.ts";
 import {PageNameDialog} from "./PageNameDialog.tsx";
@@ -140,11 +139,8 @@ export function PagesPanel() {
                     border: '1px solid rgba(0,0,0,0.2)',
                     color: '#333',
                     marginBottom: 5
-                }}>
+                }} icon={'IoMdAdd'}>
             {'Add New Page'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
         <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>
             {() => {

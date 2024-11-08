@@ -15,7 +15,7 @@ export function PageViewer(props: {
     page: Page,
     appConfig: Omit<Application, 'id' | 'name'>
     value: Record<string, unknown>,
-    navigate: AppViewerContext['navigate'],
+    navigate: AppViewerContext['navigate']
 }) {
     const {elements, page, appConfig, value, navigate} = props;
     const variableInitialValueSignal = useSignal<Record<string, unknown>>(value);
@@ -65,7 +65,7 @@ export function PageViewer(props: {
         allQueriesSignal: appContext.allQueriesSignal,
         allCallablesSignal: appContext.allCallablesSignal,
         elements,
-        navigate
+        navigate,
     } as AppViewerContext;
 
     const [container, setContainer] = useState<Container | undefined>();

@@ -41,17 +41,21 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
         }
     })
     const style: CSSProperties = {
-        width: 28,
+        width: 38,
+        flexShrink:0,
+        height: 21,
+        borderTopLeftRadius: 20,
+        borderBottomLeftRadius: 20,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         borderTopRightRadius: 0,
-        borderTopLeftRadius: 20,
-        borderBottomLeftRadius: 20,
         borderBottomRightRadius: 0,
-        backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
-        padding: 0
+        backgroundColor: isFormulaEmpty ? 'rgba(255,255,255,0.9)' : colors.green,
+        color: isFormulaEmpty ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)',
+        padding: '0px 5px'
     };
+
 
     return <div style={{display: 'flex'}}>
         <PageInputSelector value={value} style={style} onChange={(value) => {
@@ -73,13 +77,13 @@ export function PageSelectionPropertyEditor(props: { propertyName: string }) {
             }
         }} hidePageName={true}/>
         <div style={{
+            width: 28,
             display: 'flex',
-            padding: '0px 2px',
+            padding: '0px 5px',
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: 'rgba(0,0,0,0.05)',
             border: BORDER,
-            width: 28,
             borderTopRightRadius: 20,
             borderBottomRightRadius: 20
         }}>

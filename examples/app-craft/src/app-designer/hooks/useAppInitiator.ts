@@ -5,7 +5,7 @@ import {Query, Table} from "../panels/database/service/getTables.ts";
 import {Signal} from "signal-polyfill";
 import {ErrorType} from "../errors/ErrorType.ts";
 import {useEffect, useMemo} from "react";
-import {Callable, Container, Fetcher, Page, Variable, VariableInstance} from "../AppDesigner.tsx";
+import {Application, Callable, Container, Fetcher, Page, Variable, VariableInstance} from "../AppDesigner.tsx";
 
 export function useAppInitiator(props: LayoutBuilderProps & {
     startingPage?: string,
@@ -60,6 +60,7 @@ export function useAppInitiator(props: LayoutBuilderProps & {
     const allCallablesSignal = useComputed(() => [...allPageCallablesSignal.get(), ...allApplicationCallablesSignal.get()])
     const {value, onChange} = props;
     useEffect(() => {
+        validateAndFixAppMeta(value);
         applicationSignal.set(value);
         if (value && value.pages && value.pages.length > 0) {
             const currentActivePageId = activePageIdSignal.get();
@@ -90,7 +91,9 @@ export function useAppInitiator(props: LayoutBuilderProps & {
             variableInitialValueSignal.set(param as Record<string, unknown> ?? {});
             activePageIdSignal.set(page.id);
         }
-    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, uiDisplayModeSignal, variableInitialValueSignal])
+    }, [activePageIdSignal, allErrorsSignal, allPagesSignal, uiDisplayModeSignal, variableInitialValueSignal]);
+
+
     return {
         applicationSignal,
         allApplicationCallablesSignal,
@@ -114,7 +117,6 @@ export function useAppInitiator(props: LayoutBuilderProps & {
         allApplicationQueriesSignal,
         allPageQueriesSignal,
 
-
         allVariablesSignalInstance,
         allVariablesSignal,
         allFetchersSignal,
@@ -123,4 +125,34 @@ export function useAppInitiator(props: LayoutBuilderProps & {
 
         navigate
     };
+}
+
+function validateAndFixAppMeta(value:Application):Application{
+
+    for (const p of value.pages) {
+        for (const parent of p.containers) {
+            if(!parent.children){
+                p.containers.splice(p.containers.indexOf(parent), 1);
+                continue;
+            }
+            for (const child of parent.children) {
+                const isOrphan = p.containers.findIndex(c => c.id === child) <= 0;
+                if(isOrphan){
+                    p.containers.push({
+                        type : 'title',
+                        children : [],
+                        parent : parent.id,
+                        id : child,
+                        properties : {
+                            title : {
+                                formula : 'module.exports = "Missing Component Registry"'
+                            }
+                        }
+                    })
+                }
+            }
+        }
+    }
+
+    return value;
 }

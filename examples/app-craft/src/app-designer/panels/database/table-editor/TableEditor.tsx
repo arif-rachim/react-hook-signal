@@ -1,5 +1,5 @@
 import {Table} from "../service/getTables.ts";
-import {CSSProperties, Dispatch, ReactNode, SetStateAction, useEffect, useState} from "react";
+import {CSSProperties, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from "react";
 import {SqlValue} from "sql.js";
 import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
@@ -14,6 +14,12 @@ import {QueryTypeResult} from "../../../query-grid/QueryGrid.tsx";
 import {MdArrowDownward, MdArrowUpward} from "react-icons/md";
 import {queryPagination} from "./queryPagination.ts";
 import {QueryParamsObject} from "./queryDb.ts";
+import {guid} from "../../../../utils/guid.ts";
+import {
+    AppVariableInitializationContext,
+    FormulaDependencyParameter
+} from "../../../variable-initialization/AppVariableInitialization.tsx";
+import {PageVariableInitializationContext} from "../../../variable-initialization/PageVariableInitialization.tsx";
 
 
 async function queryTable(props: {
@@ -134,9 +140,14 @@ export default function TableEditor(props: { table: Table }) {
 }
 
 
-export function SimpleTableFooter(props: { totalPages: number, value: number, onChange: (value: number) => void }) {
-    const {totalPages, value, onChange} = props;
-    const maxButtons = 7;
+export function SimpleTableFooter(props: {
+    totalPages: number,
+    value: number,
+    onChange: (value: number) => void,
+    buttonCount?: number
+}) {
+    const {totalPages, value, onChange, buttonCount} = props;
+    const maxButtons = buttonCount ? buttonCount : 7;
     const halfRange = Math.floor(maxButtons / 2);
     let startPage = Math.max(value - halfRange, 1);
     const endPage = Math.min(startPage + maxButtons - 1, totalPages);
@@ -228,16 +239,18 @@ function extractWidthAndHiddenField(columnsConfig: ColumnsConfig | undefined, co
     }
     return {width, hide};
 }
-const defaultItemToKey = (item:unknown) => {
-    if(item !== null && item !== undefined && typeof item === 'object' && 'ID_' in item){
+
+const defaultItemToKey = (item: unknown) => {
+    if (item !== null && item !== undefined && typeof item === 'object' && 'ID_' in item) {
         return item?.ID_
     }
     return undefined;
 }
+
 export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     columns: Array<string>,
     data: Array<T>,
-    itemToKey?: (item: T) => string|number,
+    itemToKey?: (item: T) => string | number,
     onFocusedRowChange?: (focusedItem: T) => void,
     focusedRow?: T,
     columnsConfig?: ColumnsConfig,
@@ -268,77 +281,28 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     const [focusedRow, setFocusedRow] = useState<T | undefined>(focusedRowProps);
     useEffect(() => setFocusedRow(focusedRowProps), [focusedRowProps]);
     const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
-    return <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
-        <div style={{display: 'table-row', position: 'sticky', top: 0}}>
-            {columns.map(col => {
-                const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
-                let title = col;
-                if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
-                    const config = columnsConfig[col];
-                    if (config.title) {
-                        title = config.title;
-                    }
-                }
-                let sortDirection: 'asc' | 'desc' | undefined = undefined;
-                let sortIndex = -1;
-                if (sortable && sort) {
-                    sortIndex = sort.findIndex(s => s.column === col);
-                    if (sortIndex >= 0) {
-                        sortDirection = sort[sortIndex].direction;
-                    }
-                }
-                return <div style={{
-                    display: hide ? 'none' : 'table-cell',
-                    borderBottom: BORDER,
-                    backgroundColor: '#F2F2F2',
-                    color: "black",
-                    padding: '5px 0px 5px 10px',
-                    width,
-                }} onClick={() => {
-                    if (onSortChange === undefined) {
-                        return;
-                    }
-                    if (sortDirection === 'asc') {
-                        onSortChange({value: 'desc', column: col});
-                    } else if (sortDirection === 'desc') {
-                        onSortChange({value: 'remove', column: col});
-                    } else {
-                        onSortChange({value: 'asc', column: col});
-                    }
-                }} key={col}>
-                    <div style={{display: 'flex', justifyContent: 'center', gap: 5}}>
-                        <div style={{width: '100%'}}>
-                            {title}
-                        </div>
-                        {sortable && sortIndex >= 0 &&
-                            <div>{(sortIndex + 1).toString()}</div>
-                        }
-                        {sortable &&
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                {sortDirection === 'asc' &&
-                                    <MdArrowUpward/>
-                                }
-                                {sortDirection === 'desc' &&
-                                    <MdArrowDownward/>
-                                }
-                            </div>
-                        }
-                    </div>
-                </div>
-            })}
-        </div>
-        {filterable &&
-            <div style={{display: 'table-row', position: 'sticky', top: 32}}>
-                {columns.map((col, index, source) => {
-                    const lastIndex = (source.length - 1) === index
+    const appSignal = useContext(AppVariableInitializationContext);
+    const pageSignal = useContext(PageVariableInitializationContext);
+
+
+    return <>
+        <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
+            <div style={{display: 'table-row', position: 'sticky', top: 0}}>
+                {columns.map(col => {
                     const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
-                    let value = '';
-                    if (filter && col in filter) {
-                        const val = filter[col];
-                        if (typeof val === 'string') {
-                            value = val;
-                        } else {
-                            value = JSON.stringify(val ?? '');
+                    let title = col;
+                    if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
+                        const config = columnsConfig[col];
+                        if (config.title) {
+                            title = config.title;
+                        }
+                    }
+                    let sortDirection: 'asc' | 'desc' | undefined = undefined;
+                    let sortIndex = -1;
+                    if (sortable && sort) {
+                        sortIndex = sort.findIndex(s => s.column === col);
+                        if (sortIndex >= 0) {
+                            sortDirection = sort[sortIndex].direction;
                         }
                     }
                     return <div style={{
@@ -346,107 +310,169 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         borderBottom: BORDER,
                         backgroundColor: '#F2F2F2',
                         color: "black",
+                        padding: '5px 0px 5px 10px',
                         width,
-                    }} key={`filter-${col}`}><input style={{
-                        border: 'unset',
-                        borderRight: lastIndex ? 'unset' : BORDER,
-                        width: '100%',
-                        padding: '5px 10px'
-                    }} value={value} onChange={(e) => {
-                        const val = e.target.value;
-                        if (onFilterChange) {
-                            onFilterChange({
-                                column: col,
-                                value: val,
-                                oldValue: value
-                            });
+                    }} onClick={() => {
+                        if (onSortChange === undefined) {
+                            return;
                         }
-                    }}/></div>
+                        if (sortDirection === 'asc') {
+                            onSortChange({value: 'desc', column: col});
+                        } else if (sortDirection === 'desc') {
+                            onSortChange({value: 'remove', column: col});
+                        } else {
+                            onSortChange({value: 'asc', column: col});
+                        }
+                    }} key={col}>
+                        <div style={{display: 'flex', justifyContent: 'center', gap: 5}}>
+                            <div style={{width: '100%'}}>
+                                {title}
+                            </div>
+                            {sortable && sortIndex >= 0 &&
+                                <div>{(sortIndex + 1).toString()}</div>
+                            }
+                            {sortable &&
+                                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                    {sortDirection === 'asc' &&
+                                        <MdArrowUpward/>
+                                    }
+                                    {sortDirection === 'desc' &&
+                                        <MdArrowDownward/>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
                 })}
             </div>
-        }
-        {data.map((item, rowIndex) => {
-            const keyMapper = itemToKey ?? defaultItemToKey;
-            const key = keyMapper(item) ? keyMapper(item) : rowIndex;
-            const focusedKey = focusedRow && keyMapper(focusedRow) ? keyMapper(focusedRow) : -1;
-            const isFocused = key === focusedKey;
-            return <div style={{display: 'table-row', background: isFocused ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0)'}}
-                        key={`${key}`} onClick={() => {
-                if (onFocusedRowChange) {
-                    onFocusedRowChange(item)
-                } else {
-                    setFocusedRow(item)
-                }
-            }} onDoubleClick={() => {
-                if (onRowDoubleClick) {
-                    onRowDoubleClick(item)
-                }
-            }}>
-                {columns.map((col) => {
-                    let width: CSSProperties['width'] | undefined = undefined;
-                    let hide: boolean | undefined = false;
-                    let rendererPageId: string | undefined = undefined;
-                    const value = item[col] as ReactNode;
-                    let valueParams = {value};
-                    if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
-                        const config = columnsConfig[col];
-                        if (!isEmpty(config.width)) {
-                            {
-                                width = config.width;
+            {filterable &&
+                <div style={{display: 'table-row', position: 'sticky', top: 32}}>
+                    {columns.map((col, index, source) => {
+                        const lastIndex = (source.length - 1) === index
+                        const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
+                        let value = '';
+                        if (filter && col in filter) {
+                            const val = filter[col];
+                            if (typeof val === 'string') {
+                                value = val;
+                            } else {
+                                value = JSON.stringify(val ?? '');
                             }
                         }
-                        if (config.hidden !== undefined) {
-                            hide = config.hidden;
-                        }
-                        if (config.rendererPageId) {
-                            rendererPageId = config.rendererPageId;
-                        }
-                        if (config.rendererPageDataMapperFormula) {
-                            try {
-                                const fun = new Function('module', config.rendererPageDataMapperFormula)
-                                const module: {
-                                    exports: (props: unknown) => unknown
-                                } = {exports: (props: unknown) => console.log(props)};
-                                fun.call(null, module)
-                                valueParams = module.exports({
-                                    cellValue: value,
-                                    rowIndex,
-                                    rowData: item,
-                                    columnName: col,
-                                    gridData: data
-                                }) as unknown as typeof valueParams;
-                            } catch (err) {
-                                console.log(err);
+                        return <div style={{
+                            display: hide ? 'none' : 'table-cell',
+                            borderBottom: BORDER,
+                            backgroundColor: '#F2F2F2',
+                            color: "black",
+                            width,
+                        }} key={`filter-${col}`}><input style={{
+                            border: 'unset',
+                            borderRight: lastIndex ? 'unset' : BORDER,
+                            width: '100%',
+                            padding: '5px 10px'
+                        }} value={value} onChange={(e) => {
+                            const val = e.target.value;
+                            if (onFilterChange) {
+                                onFilterChange({
+                                    column: col,
+                                    value: val,
+                                    oldValue: value
+                                });
+                            }
+                        }} autoComplete={guid()}/></div>
+                    })}
+                </div>
+            }
+            {data.map((item, rowIndex) => {
+                const keyMapper = itemToKey ?? defaultItemToKey;
+                const key = keyMapper(item) ? keyMapper(item) : rowIndex;
+                const focusedKey = focusedRow && keyMapper(focusedRow) ? keyMapper(focusedRow) : -1;
+                const isFocused = key === focusedKey;
+                return <div style={{display: 'table-row', background: isFocused ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0)'}}
+                            key={`${key}`} onClick={() => {
+                    if (onFocusedRowChange) {
+                        onFocusedRowChange(item)
+                    } else {
+                        setFocusedRow(item)
+                    }
+                }} onDoubleClick={() => {
+                    if (onRowDoubleClick) {
+                        onRowDoubleClick(item)
+                    }
+                }}>
+                    {columns.map((col) => {
+                        let width: CSSProperties['width'] | undefined = undefined;
+                        let hide: boolean | undefined = false;
+                        let rendererPageId: string | undefined = undefined;
+                        const value = item[col] as ReactNode;
+                        let valueParams = {value};
+                        if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
+                            const config = columnsConfig[col];
+                            if (!isEmpty(config.width)) {
+                                {
+                                    width = config.width;
+                                }
+                            }
+                            if (config.hidden !== undefined) {
+                                hide = config.hidden;
+                            }
+                            if (config.rendererPageId) {
+                                rendererPageId = config.rendererPageId;
+                            }
+                            if (config.rendererPageDataMapperFormula) {
+                                try {
+                                    const app: FormulaDependencyParameter | undefined = appSignal ? appSignal.get() : undefined;
+                                    const page: FormulaDependencyParameter | undefined = pageSignal ? pageSignal.get() : undefined;
+                                    const fun = new Function('module', 'app', 'page', config.rendererPageDataMapperFormula)
+
+                                    const module: {
+                                        exports: (props: unknown) => unknown
+                                    } = {exports: (props: unknown) => console.log(props)};
+
+                                    fun.call(null, module, app, page)
+                                    valueParams = module.exports({
+                                        cellValue: value,
+                                        rowIndex,
+                                        rowData: item,
+                                        columnName: col,
+                                        gridData: data
+                                    }) as unknown as typeof valueParams;
+                                } catch (err) {
+                                    console.log(err);
+                                }
                             }
                         }
-                    }
-                    let renderer = <div>{value}</div>;
-                    if (rendererPageId) {
-                        const page = allPagesSignal.get().find(p => p.id === rendererPageId);
-                        if (page) {
-                            renderer = <PageViewer
-                                elements={elements}
-                                page={page!}
-                                key={`${col}:${rowIndex}`}
-                                appConfig={applicationSignal.get()}
-                                value={valueParams}
-                                navigate={navigate}
-                            />
+                        let renderer = <div style={{textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={value?.toString()}>{value}</div>;
+                        if (rendererPageId) {
+                            const page = allPagesSignal.get().find(p => p.id === rendererPageId);
+                            if (page) {
+                                renderer = <PageViewer
+                                    elements={elements}
+                                    page={page!}
+                                    key={`${col}:${rowIndex}`}
+                                    appConfig={applicationSignal.get()}
+                                    value={valueParams}
+                                    navigate={navigate}
+                                />
+                            }
                         }
-                    }
-                    return <div style={{
-                        display: hide ? 'none' : 'table-cell',
-                        verticalAlign: 'middle',
-                        borderBottom: '1px solid rgba(0,0,0,0.1)',
-                        padding: '0px 10px',
-                        width
-                    }} key={`${col}:${rowIndex}`}>{renderer}</div>
-                })}
-            </div>
-        })}
+                        return <div style={{
+                            display: hide ? 'none' : 'table-cell',
+                            verticalAlign: 'middle',
+                            borderBottom: '1px solid rgba(0,0,0,0.1)',
+                            padding: '0px 10px',
+                            width,
+                            maxWidth:width
+                        }} key={`${col}:${rowIndex}`}>
+                            <div style={{minHeight: 22, display: 'flex', flexDirection: 'column'}}>{renderer}</div>
+                        </div>
+                    })}
+                </div>
+            })}
+
+        </div>
         {dataIsEmpty &&
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', fontStyle: 'italic'}}>
                 {'There is no information to show in this table right now.'}
-            </div>}
-    </div>
+            </div>}</>
 }

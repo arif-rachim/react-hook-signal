@@ -14,6 +14,7 @@ import {validateVariables} from "./initiator/validateVariables.ts";
 import {initiateComputed} from "./initiator/initiateComputed.ts";
 import {initiateState} from "./initiator/initiateState.ts";
 import {initiateEffect} from "./initiator/initiateEffect.ts";
+import {useModalBox} from "./initiator/useModalBox.tsx";
 
 export function PageVariableInitialization(props: PropsWithChildren) {
 
@@ -29,6 +30,8 @@ export function PageVariableInitialization(props: PropsWithChildren) {
         variableInitialValueSignal,
         navigate
     } = useAppContext();
+
+    const modalBox = useModalBox();
 
     const validatorsComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
         return createValidator(allPageVariablesSignal.get(), errorMessage);
@@ -88,7 +91,8 @@ export function PageVariableInitialization(props: PropsWithChildren) {
             app,
             page,
             navigate,
-            variables
+            variables,
+            modalBox
         })
     })
     return <PageVariableInitializationContext.Provider value={pageScopesSignal}>

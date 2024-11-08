@@ -17,6 +17,7 @@ import {initiateEffect} from "./initiator/initiateEffect.ts";
 import {initiateState} from "./initiator/initiateState.ts";
 import {variablesInstanceToDictionary} from "./initiator/variablesInstanceToDictionary.ts";
 import {QueryParamsObject} from "../panels/database/table-editor/queryDb.ts";
+import {useModalBox} from "./initiator/useModalBox.tsx";
 
 
 export type QueryType = (props: {
@@ -47,6 +48,7 @@ export function AppVariableInitialization(props: PropsWithChildren) {
         navigate
     } = useAppContext();
 
+    const modalBox = useModalBox();
 
     const validatorsApplicationComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
         return createValidator(allApplicationVariablesSignal.get(), errorMessage);
@@ -99,7 +101,8 @@ export function AppVariableInitialization(props: PropsWithChildren) {
             app,
             page: {},
             navigate,
-            variables
+            variables,
+            modalBox
         })
     })
 

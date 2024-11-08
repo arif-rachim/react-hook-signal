@@ -4,7 +4,6 @@ import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {Button} from "../../../button/Button.tsx";
 import {ContainerPropertyType} from "../../../AppDesigner.tsx";
 import {zodTypeToJson} from "../../../zodSchemaToJson.ts";
-import {Icon} from "../../../Icon.ts";
 import {BORDER} from "../../../Border.ts";
 import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
@@ -120,13 +119,9 @@ export function ComponentPropertyEditor(props: {
                 removePanel(props.panelId);
             }} style={{
                 display: 'flex',
-                gap: 5,
                 alignItems: 'center'
-            }}>
+            }} icon={'IoIosSave'}>
                 {'Save'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Save style={{fontSize: 18}}/>
-                </div>
             </Button>
             <Button onClick={async () => {
                 propsSignal.set(initialValue);
@@ -135,11 +130,8 @@ export function ComponentPropertyEditor(props: {
                 display: 'flex',
                 gap: 5,
                 alignItems: 'center'
-            }}>
+            }} icon={'IoIosUndo'}>
                 {'Reset'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Reset style={{fontSize: 18}}/>
-                </div>
             </Button>
         </div>
     </div>

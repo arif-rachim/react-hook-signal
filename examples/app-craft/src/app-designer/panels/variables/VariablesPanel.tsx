@@ -7,7 +7,6 @@ import {ConfirmationDialog} from "../../ConfirmationDialog.tsx";
 import {sortSignal} from "../../sortSignal.ts";
 import {notifiable, useSignal} from "react-hook-signal";
 import {Button} from "../../button/Button.tsx";
-import {MdAdd} from "react-icons/md";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Icon} from "../../Icon.ts";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
@@ -51,6 +50,11 @@ function RenderVariable(props: {
                 return <></>
             }}
         </notifiable.div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {variable.type === 'state' && <Icon.State />}
+            {variable.type === 'computed' && <Icon.Computed />}
+            {variable.type === 'effect' && <Icon.Effect />}
+        </div>
         <div style={{
             flexGrow: 1,
             overflow: 'hidden',
@@ -84,11 +88,8 @@ function AddButtons(props: { editVariable: (forType: VariableType) => Promise<vo
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
 
-                }}>
+                }} icon={'IoMdAdd'}>
             {'State'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
         <Button onClick={() => editVariable('computed')}
                 style={{
@@ -104,11 +105,8 @@ function AddButtons(props: { editVariable: (forType: VariableType) => Promise<vo
                     borderRadius: 0,
                     borderLeft: 'unset',
                     borderRight: 'unset'
-                }}>
+                }} icon={'IoMdAdd'}>
             {'Computed'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
         <Button onClick={() => editVariable('effect')}
                 style={{
@@ -123,11 +121,8 @@ function AddButtons(props: { editVariable: (forType: VariableType) => Promise<vo
                     color: '#333',
                     borderTopLeftRadius: 0,
                     borderBottomLeftRadius: 0
-                }}>
+                }} icon={'IoMdAdd'}>
             {'Effect'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
     </div>;
 }

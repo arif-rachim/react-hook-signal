@@ -1,10 +1,11 @@
-import {createContext, CSSProperties, ForwardedRef, forwardRef, LegacyRef, PropsWithChildren, useEffect} from "react";
+import {createContext, CSSProperties, ForwardedRef, forwardRef, LegacyRef, useEffect} from "react";
 import {useSignal} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {Container} from "../AppDesigner.tsx";
 import {useContainerStyleHook} from "./container/useContainerStyleHook.ts";
 import {useContainerLayoutHook} from "./container/useContainerLayoutHook.tsx";
 import {ContainerRendererIdContext} from "../panels/design/container-renderer/ContainerRenderer.tsx";
+import {guid} from "../../utils/guid.ts";
 
 type Validator = (params: {
     key: string,
@@ -12,36 +13,44 @@ type Validator = (params: {
     formValue: Record<string, unknown>
 }) => Promise<string | undefined>;
 
-export const Form = forwardRef(function Form(props: PropsWithChildren<{
-    value: Record<string, unknown>,
-    onChange: (value: Record<string, unknown>) => void,
+export const Form = forwardRef(function Form(props: {
+    value?: Record<string, unknown>,
+    onChange?: (value: Record<string, unknown>,config:{errors:Signal.State<Record<string, string>> }) => Promise<void>|void,
     container: Container,
     style: CSSProperties,
     ["data-element-id"]: string
-}>, ref: ForwardedRef<HTMLFormElement>) {
+}, ref: ForwardedRef<HTMLFormElement>) {
 
     const {value, onChange, container, style} = props;
     const containerStyle = useContainerStyleHook(style);
     const {elements} = useContainerLayoutHook(container);
 
 
-    const localValue = useSignal<Record<string, unknown>>(structuredClone(value));
+    const localValue = useSignal<Record<string, unknown>>(structuredClone(value ?? {}));
     const errors = useSignal<Record<string, string>>({});
     const validators = useSignal<Record<string, Validator>>({});
     const isChanged = useSignal<boolean>(false);
+    const isBusy = useSignal<boolean>(false);
 
     const reset = () => {
-        localValue.set(structuredClone(value));
+        localValue.set(structuredClone(value ?? {}));
         isChanged.set(false);
     }
 
     const submit = async () => {
+        isBusy.set(true);
         const isValid = await formIsValid();
+        // await delay(100);
         if (!isValid) {
+            return isBusy.set(false);
+        }
+        if(!onChange){
+            isBusy.set(false);
             return;
         }
-        onChange(localValue.get());
+        await onChange(localValue.get(),{errors});
         isChanged.set(false);
+        isBusy.set(false);
     }
     const validateValue = (props: { key: string, value: unknown }) => {
         const validatorsValue = validators.get();
@@ -71,7 +80,7 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
         return Object.keys(errorsValue).length === 0;
     }
     useEffect(() => {
-        localValue.set(structuredClone(value));
+        localValue.set(structuredClone(value ?? {}));
         isChanged.set(false);
     }, [localValue, isChanged, value]);
     return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
@@ -84,21 +93,22 @@ export const Form = forwardRef(function Form(props: PropsWithChildren<{
                   submit().then()
               }}
               onKeyDown={(e) => {
-                  if(e.code.toUpperCase() === 'ENTER') {
+                  if (e.code.toUpperCase() === 'ENTER') {
                       submit().then()
                   }
               }}
-        >
+              autoComplete={guid()}>
             <FormContext.Provider value={{
                 value: localValue,
-                initialValue: value,
+                initialValue: value ?? {},
                 errors,
                 validators,
                 submit,
                 reset,
                 isChanged,
                 formIsValid,
-                validateValue
+                validateValue,
+                isBusy
             }}>
                 {elements}
             </FormContext.Provider>
@@ -115,7 +125,17 @@ export const FormContext = createContext<{
     reset: () => void,
     submit: () => Promise<void>,
     formIsValid: () => Promise<boolean>
-    validateValue: (params: { key: string, value: unknown }) => Promise<string | undefined> | undefined
+    validateValue: (params: { key: string, value: unknown }) => Promise<string | undefined> | undefined,
+    isBusy : Signal.State<boolean>
 
 } | undefined>(undefined)
+/*
+function delay(milliSecond:number){
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(true);
+        },milliSecond);
+    })
+}
 
+ */

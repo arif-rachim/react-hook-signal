@@ -322,7 +322,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
             <div style={{display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 20px'}}>
                 <LabelContainer label={'Name : '} style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
                                 styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH}}>
-                    <notifiable.input name={'fetcherName'} autoComplete={'unset'}
+                    <notifiable.input name={'fetcherName'} autoComplete={guid()}
                                       style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                       value={() => {
                                           return fetcherSignal.get().name
@@ -368,7 +368,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                     <LabelContainer label={'Domain : '}
                                     style={{flexDirection: 'row', alignItems: 'center', gap: 10, flexGrow: 1}}
                                     styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH - 5}}>
-                        <notifiable.input name={'domain'} autoComplete={'unset'}
+                        <notifiable.input name={'domain'} autoComplete={guid()}
                                           style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                           value={() => {
                                               return fetcherSignal.get().domain
@@ -396,7 +396,7 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                 <LabelContainer label={'Path : '}
                                 style={{flexDirection: 'row', alignItems: 'center', gap: 10, flexGrow: 1}}
                                 styleLabel={{fontStyle: 'italic', width: LABEL_WIDTH}}>
-                    <notifiable.input name={'path'} autoComplete={'unset'}
+                    <notifiable.input name={'path'} autoComplete={guid()}
                                       style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                       value={() => {
                                           return fetcherSignal.get().path
@@ -474,11 +474,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
         <Visible when={() => hasContent.get()}>
             <CollapsibleLabelContainer label={'Post Data Param'}>
                 <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
-                    <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')}>
-                        <div style={{paddingBottom: 2}}>Add Post Param</div>
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Add style={{fontSize: 20}}/>
-                        </div>
+                    <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('data')} icon={'IoMdAdd'}>
+                        Add Post Param
                     </Button>
                 </div>
                 <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'data'}
@@ -488,11 +485,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
 
         <CollapsibleLabelContainer label={'Headers'} defaultOpen={false}>
             <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'center'}}>
-                <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('headers')}>
-                    <div style={{paddingBottom: 2}}>Add Header</div>
-                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        <Icon.Add style={{fontSize: 20}}/>
-                    </div>
+                <Button style={{display: 'flex', alignItems: 'center'}} onClick={() => addParam('headers')} icon={'IoMdAdd'}>
+                    Add Header
                 </Button>
             </div>
             <RenderParameters fetcherSignal={fetcherSignal} isModified={isModified} type={'headers'}
@@ -551,10 +545,8 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
         <div style={{display: 'flex', justifyContent: 'flex-end', padding: '10px 20px', gap: 10}}>
             <Button onClick={async () => {
                 await testFetcher()
-            }} style={{display: 'flex', alignItems: 'center', gap: 5}}>
-                <div>Test</div>
-                <div style={{fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Fetcher/></div>
+            }} icon={'IoIosGitNetwork'}>
+                Test
             </Button>
             <Button onClick={async () => {
                 const [isValid, errors] = validateForm();
@@ -575,16 +567,14 @@ export function FetcherEditorPanel(props: { fetcherId?: string, panelId: string,
                             })
                         }).flat();
                         return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                            icon: Icon.Exit,
+                            icon: 'IoIosExit',
                             label: 'Ok',
                             id: 'Ok'
                         }]}/>
                     })
                 }
-            }} style={{display: 'flex', alignItems: 'center', gap: 5}}>
-                <div>Save</div>
-                <div style={{fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Save/></div>
+            }} style={{display: 'flex', alignItems: 'center', gap: 5}} icon={'IoIosSave'}>
+                Save
             </Button>
         </div>
     </div>
@@ -692,7 +682,7 @@ export function RenderParameters<T extends Query | Fetcher>(props: {
                     const isLastIndex = index === source.length - 1;
                     return <div key={param.id} style={{display: 'table-row'}}>
                         <div style={{display: 'table-cell'}}>
-                            <input name={'paramName'} autoComplete={'unset'}
+                            <input name={'paramName'} autoComplete={guid()}
                                    readOnly={nameReadOnly}
                                    style={{
                                        border: BORDER,
@@ -715,7 +705,7 @@ export function RenderParameters<T extends Query | Fetcher>(props: {
                             />
                         </div>
                         <div style={{display: 'table-cell'}}>
-                            <input name={'valueName'} autoComplete={'unset'}
+                            <input name={'valueName'} autoComplete={guid()}
                                    style={{
                                        border: BORDER,
                                        borderTop: isFirstIndex ? BORDER : 'unset',

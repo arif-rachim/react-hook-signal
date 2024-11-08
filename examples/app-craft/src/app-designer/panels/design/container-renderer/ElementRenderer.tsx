@@ -25,7 +25,7 @@ import ErrorBoundary from "../../../ErrorBoundary.tsx";
 export function ElementRenderer(props: { container: Container, elementProps: ElementProps }) {
     const {container, elementProps} = props;
     const context = useAppContext();
-    const {component} = context && context.elements && container.type in context.elements ? context.elements[container.type] : {component: EmptyComponent};
+    const {component} = context && context.elements && container && container.type in context.elements ? context.elements[container.type] : {component: EmptyComponent};
     const ref = useRef<HTMLElement | null>(null);
 
     const propsRef = useRef(elementProps);
@@ -75,6 +75,7 @@ export function ElementRenderer(props: { container: Container, elementProps: Ele
     }, [Component]);
     const {style, ...componentProperties} = componentProps;
     const defaultStyle = (style ?? {}) as CSSProperties;
+
     return <>
         <PropertyInitialization container={props.container} setComponentProps={setComponentProps}/>
         <ErrorBoundary container={container}>

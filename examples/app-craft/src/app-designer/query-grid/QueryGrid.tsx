@@ -1,9 +1,11 @@
 import {QueryType} from "../variable-initialization/AppVariableInitialization.tsx";
-import {CSSProperties, forwardRef, LegacyRef, useEffect, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useEffect, useRef, useState} from "react";
 import {ColumnsConfig, SimpleTable, SimpleTableFooter} from "../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
 import {queryGridColumnsTemporalColumns} from "./queryGridColumnsTemporalColumns.ts";
+import {detectClickOutside} from "../hooks/useShowPopUp.tsx";
+import {useForwardedRef} from "../hooks/useForwardedRef.ts";
 
 export type QueryTypeResult = {
     error?: string,
@@ -13,12 +15,12 @@ export type QueryTypeResult = {
     currentPage?: number
 }
 
-export const QueryGrid = forwardRef(function QueryGrid(props: {
+export const QueryGrid = forwardRef<HTMLDivElement|null, {
     query: QueryType,
-    style: CSSProperties,
+    style?: CSSProperties,
     columnsConfig: ColumnsConfig,
     focusedRow?: Record<string, SqlValue>,
-    itemToKey?:(item:Record<string, SqlValue>) => string|number,
+    itemToKey?: (item: Record<string, SqlValue>) => string | number,
     onFocusedRowChange?: (props: {
         value: Record<string, SqlValue>,
         data: Array<Record<string, SqlValue>>,
@@ -37,8 +39,12 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
     }) => (Promise<void> | void),
     filterable?: boolean,
     sortable?: boolean,
-    pageable?: boolean
-}, ref) {
+    pageable?: boolean,
+    rowPerPage?: number,
+    paginationButtonCount?: number,
+    onClickOutside?: () => void
+}>(function QueryGrid(props, ref) {
+    const referenceRef = useForwardedRef<HTMLDivElement>(ref);
     const {
         query,
         style,
@@ -50,8 +56,11 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         filterable,
         sortable,
         pageable,
-        itemToKey
+        itemToKey,
+        paginationButtonCount,
+        onClickOutside
     } = props;
+    const rowPerPage = pageable ? props.rowPerPage ? props.rowPerPage : 20 : Number.MAX_SAFE_INTEGER
     const [queryResult, setQueryResult] = useState<QueryTypeResult>({
         columns: [],
         data: [],
@@ -59,6 +68,8 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         error: '',
         totalPage: 1
     });
+    const propsRef = useRef({onClickOutside});
+    propsRef.current = {onClickOutside};
 
     const [focusedRow, setFocusedRow] = useState(props.focusedRow);
     useEffect(() => {
@@ -66,6 +77,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
     }, [props.focusedRow]);
     const [filter, setFilter] = useState<Record<string, SqlValue>>({});
     const [sort, setSort] = useState<Array<{ column: string, direction: 'asc' | 'desc' }>>([]);
+
     useEffect(() => {
         if (query) {
             (async () => {
@@ -74,7 +86,7 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                     page: 0,
                     filter: filter,
                     sort: sort,
-                    rowPerPage: pageable ? 20 : Number.MAX_SAFE_INTEGER
+                    rowPerPage: rowPerPage
                 });
                 setQueryResult(oldVal => {
                     if (result && result.columns && result.columns.length === 0 && oldVal && oldVal.columns && oldVal.columns.length && oldVal.columns.length > 0) {
@@ -87,11 +99,19 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
                 });
             })();
         }
-    }, [query, refreshQueryKey, filter, sort, pageable]);
+    }, [query, refreshQueryKey, filter, sort, pageable, rowPerPage]);
 
     // this is to just store them in the temporal state to be used by editor
     queryGridColumnsTemporalColumns[container.id] = queryResult.columns ?? [];
-    return <div ref={ref as LegacyRef<HTMLDivElement>}
+
+    useEffect(() => {
+        return detectClickOutside(referenceRef as ForwardedRef<HTMLElement>, () => {
+            if (propsRef.current.onClickOutside) {
+                propsRef.current.onClickOutside()
+            }
+        }, {delay: 100})
+    }, [referenceRef]);
+    return <div ref={referenceRef}
                 style={{
                     overflow: 'auto',
                     display: 'flex',
@@ -162,13 +182,14 @@ export const QueryGrid = forwardRef(function QueryGrid(props: {
         </div>
         {pageable &&
             <SimpleTableFooter totalPages={queryResult.totalPage ?? 1} value={queryResult.currentPage ?? 1}
+                               buttonCount={paginationButtonCount}
                                onChange={async (newPage) => {
                                    const result = await query({
                                        filter: filter,
                                        page: newPage,
                                        params: {},
                                        sort,
-                                       rowPerPage: pageable ? 20 : Number.MAX_SAFE_INTEGER
+                                       rowPerPage: rowPerPage
                                    });
                                    setQueryResult(oldVal => {
                                        if (result.columns?.length === 0 && oldVal.columns?.length && oldVal.columns?.length > 0) {

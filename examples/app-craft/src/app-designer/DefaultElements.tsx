@@ -1,6 +1,6 @@
 import {element, Element} from "./LayoutBuilderProps.ts";
-import {z, ZodRawShape, ZodType} from "zod";
-import {CSSProperties, forwardRef, LegacyRef, MutableRefObject} from "react";
+import {z, ZodFunction, ZodObject, ZodRawShape, ZodTuple, ZodType, ZodTypeAny} from "zod";
+import {CSSProperties, ForwardedRef, forwardRef, LegacyRef, MutableRefObject} from "react";
 import {Icon} from "./Icon.ts";
 import {Button} from "./button/Button.tsx";
 import {PageSelectionPropertyEditor} from "./data-group/PageSelectionPropertyEditor.tsx";
@@ -9,7 +9,7 @@ import {ContainerRendererIdContext} from "./panels/design/container-renderer/Con
 import {QueryGrid} from "./query-grid/QueryGrid.tsx";
 import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
-import {cssPropertiesSchema} from "./zod-schema/cssPropertiesSchema.ts";
+import {cssPropertiesSchema, iconSchema} from "./zod-schema/cssPropertiesSchema.ts";
 import {DataRenderer} from "./data-renderer/DataRenderer.tsx";
 import {faultToIconByStatusId} from "../components/fault-status-icon/faultToIconByStatusId.tsx";
 import {TextInput} from "./form/text-input/TextInput.tsx";
@@ -22,6 +22,16 @@ import {DateTimeInput} from "./form/date-input/DateTimeInput.tsx";
 import {useContainerLayoutHook} from "./form/container/useContainerLayoutHook.tsx";
 import {useContainerStyleHook} from "./form/container/useContainerStyleHook.ts";
 import {Form} from "./form/Form.tsx";
+import {CheckboxInput} from "./form/checkbox-input/CheckboxInput.tsx";
+import {RadioInput} from "./form/radio-input/RadioInput.tsx";
+import {IconElement} from "./form/icon-element/IconElement.tsx";
+import {MdInsertEmoticon, MdOutlineCalendarMonth, MdOutlineSubtitles, MdRadioButtonChecked} from "react-icons/md";
+import {FaWpforms} from "react-icons/fa";
+import {IoCheckboxOutline} from "react-icons/io5";
+import {IoMdTime} from "react-icons/io";
+import {LuCalendarRange, LuTextCursorInput} from "react-icons/lu";
+import {RxButton} from "react-icons/rx";
+import {BsMenuButtonWide} from "react-icons/bs";
 
 const ZodSqlValue = z.union([z.number(), z.string(), z.instanceof(Uint8Array), z.null()]);
 
@@ -34,36 +44,129 @@ export const DefaultElements: Record<string, Element> = {
             onClick: z.function().returns(z.void())
         },
         component: (props, ref) => {
-            return <LayoutContainer ref={ref} {...props}/>
+            const {container, onClick, style} = props;
+            return <LayoutContainer ref={ref}
+                                    data-element-id={props["data-element-id"]}
+                                    container={container}
+                                    onClick={onClick}
+                                    style={style}
+            />
         }
     }),
     titleBox: element({
         shortName: 'Title Box',
-        icon: Icon.Container,
+        icon: MdOutlineSubtitles,
         property: {
             style: cssPropertiesSchema,
             onClick: z.function().returns(z.void()),
-            title: z.string()
+            title: z.string(),
+            flexGrow: z.number().optional()
         },
         component: (props, ref) => {
-            return <TitleBox ref={ref} {...props}/>
+            const {style, onClick, title, flexGrow, container} = props;
+            return <TitleBox ref={ref}
+                             style={style}
+                             onClick={onClick}
+                             title={title}
+                             flexGrow={flexGrow}
+                             container={container}
+                             data-element-id={props['data-element-id']}
+            />
         }
     }),
     form: element({
         shortName: 'Form',
-        icon: Icon.Container,
+        icon: FaWpforms,
         property: {
             style: cssPropertiesSchema,
-            value: z.record(z.unknown()),
-            onChange: z.function().args(z.record(z.unknown())).returns(z.void())
+            value: z.record(z.unknown()).optional(),
+            onChange: z.function().args(
+                z.record(z.unknown()),
+                z.object({
+                    errors: z.object({
+                        get: z.function().args().returns(z.record(z.string())),
+                        set: z.function().args(z.record(z.string())).returns(z.void()),
+                    })
+                })
+            ).returns(z.union([z.promise(z.void()), z.void()])).optional(),
+            schema: z.any()
         },
         component: (props, ref) => {
-            return <Form ref={ref as MutableRefObject<HTMLFormElement>} {...props} style={props.style as CSSProperties}/>
+            const {container, onChange, value} = props;
+            return <Form ref={ref as MutableRefObject<HTMLFormElement>} {...props}
+                         style={props.style as CSSProperties}
+                         container={container}
+                         data-element-id={props["data-element-id"]}
+                         onChange={onChange}
+                         value={value}
+
+            />
+        },
+        propertyEditor: {
+            value: {
+                label: 'value',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, propertyName, container} = props;
+                    let returnTypeZod: ZodType = z.any();
+                    if (element) {
+                        returnTypeZod = element.property[propertyName]
+                    }
+                    if ('schema' in container.properties && container.properties.schema && container.properties.schema.formula) {
+                        try {
+                            const fun = new Function('module', 'z', container.properties.schema.formula);
+                            const module: { exports: ZodType | undefined } = {exports: undefined};
+                            fun.apply(null, [module, z]);
+                            if (module.exports) {
+                                returnTypeZod = module.exports
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                    return returnTypeZod;
+                })
+            },
+            onChange: {
+                label: 'onChange',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, propertyName, container} = props;
+                    let returnTypeZod: ZodType = z.any();
+                    if (element) {
+                        returnTypeZod = element.property[propertyName]
+                    }
+                    if ('schema' in container.properties && container.properties.schema && container.properties.schema.formula) {
+                        try {
+                            const fun = new Function('module', 'z', container.properties.schema.formula);
+                            const module: { exports: ZodType | undefined } = {exports: undefined};
+                            fun.apply(null, [module, z]);
+                            if (module.exports) {
+                                const voSchema = module.exports as ZodObject<ZodRawShape>;
+                                const shapes = Object.keys(voSchema._def.shape() as object) as Array<string>;
+                                const errorsSchema = z.object(shapes.reduce((result, key) => {
+                                    result[key] = z.string().optional()
+                                    return result;
+                                }, {} as Record<string, ZodType>));
+                                const configSchema = z.object({
+                                    errors: z.object({
+                                        set: z.function().args(errorsSchema).returns(z.void()),
+                                        get: z.function().args().returns(errorsSchema)
+                                    })
+                                })
+                                returnTypeZod = z.function().args(module.exports, configSchema).returns(z.void())
+                            }
+
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                    return returnTypeZod;
+                })
+            },
         }
     }),
     input: element({
         shortName: 'Input',
-        icon: Icon.Input,
+        icon: LuTextCursorInput,
         property: {
             value: z.string(),
             name: z.string().optional(),
@@ -74,21 +177,86 @@ export const DefaultElements: Record<string, Element> = {
             type: z.enum(['text', 'number', 'password']).optional()
         },
         component: (props, ref) => {
+            const {name, onChange, value, label, error, type} = props;
             return <TextInput ref={ref as MutableRefObject<HTMLLabelElement>}
                               style={props.style}
-                              name={props.name}
-                              onChange={props.onChange}
-                              value={props.value}
-                              label={props.label}
-                              error={props.error}
-                              type={props.type}
+                              name={name}
+                              onChange={onChange}
+                              value={value}
+                              label={label}
+                              error={error}
+                              type={type}
+            />
+        }
+    }),
+    checkbox: element({
+        shortName: 'Checkbox',
+        icon: IoCheckboxOutline,
+        property: {
+            name: z.string().optional(),
+            label: z.string().optional(),
+            value: z.boolean().optional(),
+            onChange: z.function().args(z.boolean().optional()).returns(z.union([z.promise(z.void()), z.void()])).optional(),
+            error: z.string().optional(),
+            style: cssPropertiesSchema
+        },
+        component: (props, ref) => {
+            const {style, name, onChange, value, label, error} = props;
+            return <CheckboxInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                                  style={style}
+                                  name={name}
+                                  onChange={onChange}
+                                  value={value}
+                                  label={label}
+                                  error={error}
+            />
+        }
+    }),
+    radio: element({
+        shortName: 'Radio',
+        icon: MdRadioButtonChecked,
+        property: {
+            name: z.string().optional(),
+            label: z.string().optional(),
+            value: z.string().optional(),
+            valueMatcher: z.string().optional(),
+            onChange: z.function().args(z.string().optional()).returns(z.union([z.promise(z.void()), z.void()])).optional(),
+            error: z.string().optional(),
+            style: cssPropertiesSchema
+        },
+        component: (props, ref) => {
+            const {style, name, onChange, value, valueMatcher, label, error} = props;
+            return <RadioInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                               style={style}
+                               name={name}
+                               onChange={onChange}
+                               value={value}
+                               valueMatcher={valueMatcher}
+                               label={label}
+                               error={error}
+            />
+        }
+    }),
+    icon: element({
+        shortName: 'Icon',
+        icon: MdInsertEmoticon,
+        property: {
+            value: iconSchema,
+            style: cssPropertiesSchema
+        },
+        component: (props, ref) => {
+            const {style, value} = props;
+            return <IconElement ref={ref as MutableRefObject<HTMLDivElement>}
+                                style={style}
+                                value={value}
             />
         }
     }),
     date: element({
         shortName: 'Date',
-        icon: Icon.Input,
+        icon: MdOutlineCalendarMonth,
         property: {
+            name: z.string().optional(),
             value: z.union([z.date(), z.string()]).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
@@ -97,14 +265,23 @@ export const DefaultElements: Record<string, Element> = {
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
+            const {inputStyle, style, label, error, name, value, onChange} = props;
             return <DateInput ref={ref as MutableRefObject<HTMLLabelElement>} {...props}
-                              style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
+                              style={style as CSSProperties} inputStyle={inputStyle as CSSProperties}
+                              label={label}
+                              error={error}
+                              name={name}
+                              value={value}
+                              onChange={onChange}
+
+            />
         }
     }),
     dateTime: element({
         shortName: 'DateTime',
-        icon: Icon.Input,
+        icon: IoMdTime,
         property: {
+            name: z.string().optional(),
             value: z.union([z.date(), z.string()]).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
@@ -113,14 +290,23 @@ export const DefaultElements: Record<string, Element> = {
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
-            return <DateTimeInput ref={ref as MutableRefObject<HTMLDivElement>} {...props}
-                                  style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
+            const {inputStyle, value, name, onChange, label, error} = props;
+            return <DateTimeInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                                  style={props.style as CSSProperties}
+                                  inputStyle={inputStyle as CSSProperties}
+                                  value={value}
+                                  name={name}
+                                  onChange={onChange}
+                                  label={label}
+                                  error={error}
+            />
         }
     }),
     range: element({
         shortName: 'Range',
-        icon: Icon.Input,
+        icon: LuCalendarRange,
         property: {
+            name: z.string().optional(),
             value: z.object({from: z.union([z.date(), z.string()]), to: z.union([z.date(), z.string()])}).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
@@ -132,21 +318,30 @@ export const DefaultElements: Record<string, Element> = {
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
-            return <DateRangeInput ref={ref as MutableRefObject<HTMLLabelElement>} {...props}
-                                   style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}/>
+            const {inputStyle, style, error, label, name, value, onChange} = props;
+            return <DateRangeInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                                   style={style as CSSProperties}
+                                   inputStyle={inputStyle as CSSProperties}
+                                   error={error}
+                                   label={label}
+                                   name={name}
+                                   value={value}
+                                   onChange={onChange}
+            />
         }
     }),
     select: element({
         shortName: 'Select',
-        icon: Icon.Input,
+        icon: BsMenuButtonWide,
         property: {
-            name : z.string().optional(),
+            name: z.string().optional(),
             value: z.union([z.string(), z.number()]).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
             onChange: z.function().args(z.union([z.string(), z.number()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema,
+            popupStyle: cssPropertiesSchema,
             query: z.function().args(z.object({
                 params: z.record(ZodSqlValue).optional(),
                 page: z.number().optional(),
@@ -168,25 +363,44 @@ export const DefaultElements: Record<string, Element> = {
             })),
             valueToRowData: z.function().args(z.union([z.string(), z.number()]).optional()).returns(z.promise(z.record(z.union([z.number(), z.string()])))),
             rowDataToText: z.function().args(z.record(ZodSqlValue).optional()).returns(z.string()),
-            rowDataToValue: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(),z.number()])),
+            rowDataToValue: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(), z.number()])),
             itemToKey: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(), z.number()]))
         },
 
         component: (props, ref) => {
+            const {
+                style,
+                inputStyle,
+                popupStyle,
+                container,
+                config,
+                query,
+                itemToKey,
+                rowDataToText,
+                onChange,
+                value,
+                label,
+                error,
+                valueToRowData,
+                rowDataToValue,
+                name
+            } = props;
             return <SelectInput ref={ref as MutableRefObject<HTMLLabelElement>}
-                                style={props.style as CSSProperties} inputStyle={props.inputStyle as CSSProperties}
-                                container={props.container}
-                                config={props.config}
-                                query={props.query}
-                                itemToKey={props.itemToKey}
-                                rowDataToText={props.rowDataToText}
-                                onChange={props.onChange}
-                                value={props.value}
-                                label={props.label}
-                                error={props.error}
-                                valueToRowData={props.valueToRowData}
-                                rowDataToValue={props.rowDataToValue}
-                                name={props.name}
+                                style={style as CSSProperties}
+                                inputStyle={inputStyle as CSSProperties}
+                                popupStyle={popupStyle as CSSProperties}
+                                container={container}
+                                config={config}
+                                query={query}
+                                itemToKey={itemToKey}
+                                rowDataToText={rowDataToText}
+                                onChange={onChange}
+                                value={value}
+                                label={label}
+                                error={error}
+                                valueToRowData={valueToRowData}
+                                rowDataToValue={rowDataToValue}
+                                name={name}
             />
         },
         propertyEditor: {
@@ -198,54 +412,54 @@ export const DefaultElements: Record<string, Element> = {
                 label: 'itemToKey',
                 component: createCustomPropertyEditor((props) => {
                     const {element, gridTemporalColumns, propertyName} = props;
-                    let returnTypeZod: ZodType = z.any();
+                    let returnTypeZod: ZodFunction<ZodTuple, ZodTypeAny> | undefined = undefined;
                     if (element) {
-                        returnTypeZod = element.property[propertyName]
+                        returnTypeZod = element.property[propertyName] as ZodFunction<ZodTuple, ZodTypeAny>
                     }
                     if (gridTemporalColumns) {
                         const param = gridTemporalColumns.reduce((result, key) => {
                             result[key] = ZodSqlValue.optional();
                             return result;
                         }, {} as ZodRawShape);
-                        returnTypeZod = z.function().args(z.object(param)).returns(z.union([z.string(), z.number()]))
+                        returnTypeZod = z.function().args(z.object(param)).returns(z.union([z.string(), z.number()])) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
                     }
-                    return returnTypeZod;
+                    return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
                 })
             },
             rowDataToText: {
                 label: 'rowDataToText',
                 component: createCustomPropertyEditor((props) => {
                     const {element, gridTemporalColumns, propertyName} = props;
-                    let returnTypeZod: ZodType = z.any();
+                    let returnTypeZod: ZodFunction<ZodTuple, ZodTypeAny> | undefined = undefined;
                     if (element) {
-                        returnTypeZod = element.property[propertyName]
+                        returnTypeZod = element.property[propertyName] as ZodFunction<ZodTuple, ZodTypeAny>;
                     }
                     if (gridTemporalColumns) {
                         const param = gridTemporalColumns.reduce((result, key) => {
                             result[key] = z.union([z.number(), z.string()]);
                             return result;
                         }, {} as ZodRawShape);
-                        returnTypeZod = z.function().args(z.object(param).optional()).returns(z.string())
+                        returnTypeZod = z.function().args(z.object(param).optional()).returns(z.string()) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
                     }
-                    return returnTypeZod;
+                    return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
                 })
             },
             rowDataToValue: {
                 label: 'rowDataToValue',
                 component: createCustomPropertyEditor((props) => {
                     const {element, gridTemporalColumns, propertyName} = props;
-                    let returnTypeZod: ZodType = z.any();
+                    let returnTypeZod: ZodFunction<ZodTuple, ZodTypeAny> | undefined = undefined;
                     if (element) {
-                        returnTypeZod = element.property[propertyName]
+                        returnTypeZod = element.property[propertyName] as ZodFunction<ZodTuple, ZodTypeAny>
                     }
                     if (gridTemporalColumns) {
                         const param = gridTemporalColumns.reduce((result, key) => {
                             result[key] = z.union([z.number(), z.string()]);
                             return result;
                         }, {} as ZodRawShape);
-                        returnTypeZod = z.function().args(z.object(param).optional()).returns(z.union([z.string(),z.number()]).optional())
+                        returnTypeZod = z.function().args(z.object(param).optional()).returns(z.union([z.string(), z.number()]).optional()) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
                     }
-                    return returnTypeZod;
+                    return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
                 })
             }
         }
@@ -287,23 +501,23 @@ export const DefaultElements: Record<string, Element> = {
     }),
     button: element({
         shortName: 'Button',
-        icon: Icon.Button,
+        icon: RxButton,
         property: {
             onClick: z.function().returns(z.void()),
             label: z.string(),
-            style: cssPropertiesSchema
+            style: cssPropertiesSchema,
+            icon: iconSchema,
+            type: z.enum(['button', 'submit', 'reset']).optional()
         },
         component: (props, ref) => {
-            const {onClick, style} = props;
+            const {onClick, style, type, icon} = props;
             let {label} = props;
             label = label ?? 'Add label here';
             delete style.background;
             delete style.backgroundColor;
 
             return <Button style={style} ref={ref as LegacyRef<HTMLButtonElement>}
-                           onClick={() => {
-                               onClick()
-                           }}>
+                           onClick={onClick} type={type} icon={icon}>
                 {label}
             </Button>
         }
@@ -385,7 +599,8 @@ export const DefaultElements: Record<string, Element> = {
                 pageable,
                 itemToKey
             } = props;
-            return <QueryGrid ref={ref} query={query} style={style} columnsConfig={config}
+            return <QueryGrid ref={ref as ForwardedRef<HTMLDivElement>} query={query} style={style}
+                              columnsConfig={config}
                               onFocusedRowChange={onFocusedRowChange}
                               focusedRow={focusedRow} container={container}
                               refreshQueryKey={refreshQueryKey} onRowDoubleClick={onRowDoubleClick}
@@ -401,18 +616,61 @@ export const DefaultElements: Record<string, Element> = {
                 label: 'itemToKey',
                 component: createCustomPropertyEditor((props) => {
                     const {element, gridTemporalColumns, propertyName} = props;
-                    let returnTypeZod: ZodType = z.any();
+                    let returnTypeZod: ZodFunction<ZodTuple, ZodTypeAny> | undefined = undefined;
                     if (element) {
-                        returnTypeZod = element.property[propertyName]
+                        returnTypeZod = element.property[propertyName] as ZodFunction<ZodTuple, ZodTypeAny>
                     }
                     if (gridTemporalColumns) {
                         const param = gridTemporalColumns.reduce((result, key) => {
                             result[key] = ZodSqlValue.optional();
                             return result;
                         }, {} as ZodRawShape);
-                        returnTypeZod = z.function().args(z.object(param)).returns(z.union([z.string(), z.number()]))
+                        returnTypeZod = z.function().args(z.object(param)).returns(z.union([z.string(), z.number()])) as unknown as ZodFunction<ZodTuple, ZodTypeAny>;
                     }
-                    return returnTypeZod;
+                    return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
+                })
+            },
+            focusedRow: {
+                label: 'focusedRow',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, gridTemporalColumns, propertyName} = props;
+                    let returnTypeZod: ZodObject<ZodRawShape> | undefined = undefined;
+                    if (element) {
+                        returnTypeZod = element.property[propertyName] as ZodObject<ZodRawShape>
+                    }
+                    if (gridTemporalColumns) {
+                        const param = gridTemporalColumns.reduce((result, key) => {
+                            result[key] = ZodSqlValue.optional();
+                            return result;
+                        }, {} as ZodRawShape);
+                        returnTypeZod = z.object(param)
+                    }
+                    return returnTypeZod as ZodObject<ZodRawShape>;
+                })
+            },
+            onFocusedRowChange: {
+                label: 'onFocusedRowChange',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, gridTemporalColumns, propertyName} = props;
+                    let returnTypeZod: ZodFunction<ZodTuple, ZodTypeAny> | undefined = undefined;
+                    if (element) {
+                        returnTypeZod = element.property[propertyName] as ZodFunction<ZodTuple, ZodTypeAny>
+                    }
+                    if (gridTemporalColumns) {
+                        const param = gridTemporalColumns.reduce((result, key) => {
+                            result[key] = ZodSqlValue.optional();
+                            return result;
+                        }, {} as ZodRawShape);
+                        returnTypeZod = z.function().args(z.object({
+                            value: z.object(param),
+                            data: z.array(z.object(param)),
+                            totalPage: z.number(),
+                            currentPage: z.number(),
+                            index: z.number()
+                        })).returns(z.void()) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
+
+                    }
+                    return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
                 })
             }
         }
@@ -437,15 +695,16 @@ const TitleBox = forwardRef(function TitleBox(props: {
     style: CSSProperties,
     onClick: () => void,
     title: string,
-    ["data-element-id"]: string
+    ["data-element-id"]: string,
+    flexGrow: CSSProperties['flexGrow']
 }, ref) {
 
-    const {container, onClick, style, title} = props;
+    const {container, onClick, style, title, flexGrow} = props;
     const containerStyle = useContainerStyleHook(style);
     const {elements, displayMode} = useContainerLayoutHook(container);
 
     return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
-        <div style={{display: 'flex', flexDirection: 'column-reverse', flexGrow: 1}}>
+        <div style={{display: 'flex', flexDirection: 'column-reverse', flexGrow: flexGrow}}>
             <div ref={ref as LegacyRef<HTMLDivElement>}
                  style={{
                      padding: 10,

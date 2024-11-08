@@ -18,7 +18,17 @@ export function PageSchemaMapper(props: {
 }) {
 
     const {closePanel, pageId, mapperInputSchema} = props;
-    const {allPagesSignal} = useAppContext();
+    const {
+        allPagesSignal,
+        allApplicationQueriesSignal,
+        allApplicationVariablesSignal,
+        allApplicationFetchersSignal,
+        allApplicationCallablesSignal,
+        allPageQueriesSignal,
+        allPageVariablesSignal,
+        allPageFetchersSignal,
+        allPageCallablesSignal
+    } = useAppContext();
     const [value, setValue] = useState(props.value)
     const mapperOutputSchema = useMemo(() => {
         const page = allPagesSignal.get().find(i => i.id === pageId)
@@ -31,6 +41,18 @@ export function PageSchemaMapper(props: {
         return `{${type}}`;
     }, [allPagesSignal, pageId]);
     const returnType = `(param:{cellValue?:string|number|null,rowIndex:number,rowData:${mapperInputSchema},columnName:string,gridData:Array<${mapperInputSchema}>}) => ${mapperOutputSchema}`;
+
+
+    const allApplicationQueries = allApplicationQueriesSignal.get();
+    const allApplicationVariables = allApplicationVariablesSignal.get();
+    const allApplicationFetchers = allApplicationFetchersSignal.get();
+    const allApplicationCallables = allApplicationCallablesSignal.get();
+
+    const allPageQueries = allPageQueriesSignal.get();
+    const allPageVariables = allPageVariablesSignal.get();
+    const allPageFetchers = allPageFetchersSignal.get();
+    const allPageCallables = allPageCallablesSignal.get();
+
     return <div style={{display: 'flex', flexDirection: 'column', gap: 10, width: 600, height: 800}}>
         <div style={{
             borderBottom: BORDER,
@@ -54,15 +76,15 @@ export function PageSchemaMapper(props: {
                         allPages: [],
                         allTables: [],
 
-                        allApplicationQueries: [],
-                        allApplicationVariables: [],
-                        allApplicationFetchers: [],
-                        allApplicationCallables: [],
+                        allApplicationQueries,
+                        allApplicationVariables,
+                        allApplicationFetchers,
+                        allApplicationCallables,
 
-                        allPageQueries: [],
-                        allPageVariables: [],
-                        allPageFetchers: [],
-                        allPageCallables: [],
+                        allPageQueries,
+                        allPageVariables,
+                        allPageFetchers,
+                        allPageCallables,
                     })
                     monaco.languages.typescript.javascriptDefaults.addExtraLib(dtsContent, "ts:filename/validation-source.d.ts");
                 }}
@@ -85,21 +107,15 @@ export function PageSchemaMapper(props: {
                 display: 'flex',
                 gap: 5,
                 alignItems: 'center'
-            }}>
+            }} icon={'IoIosSave'}>
                 {'Save'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Save style={{fontSize: 18}}/>
-                </div>
             </Button>
             <Button onClick={() => closePanel('cancel')} style={{
                 display: 'flex',
                 gap: 5,
                 alignItems: 'center'
-            }}>
+            }} icon={'IoIosExit'}>
                 {'Cancel'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Icon.Exit style={{fontSize: 18}}/>
-                </div>
             </Button>
         </div>
     </div>

@@ -8,7 +8,7 @@ import {Button} from "../button/Button.tsx";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {BORDER} from "../Border.ts";
 import {queryGridColumnsTemporalColumns} from "../query-grid/queryGridColumnsTemporalColumns.ts";
-import {z, ZodRawShape, ZodType} from "zod";
+import {z, ZodRawShape, ZodType, ZodTypeAny} from "zod";
 import {Container} from "../AppDesigner.tsx";
 import type {Element} from "../LayoutBuilderProps.ts";
 import {AppViewerContext} from "../../app-viewer/AppViewerContext.ts";
@@ -18,14 +18,16 @@ type Callback = (props: {
     container: Container,
     gridTemporalColumns?: string[],
     element?: Element,
-    allPagesSignal : AppViewerContext['allPagesSignal']
-}) => ZodType;
+    allPagesSignal: AppViewerContext['allPagesSignal']
+}) => ZodTypeAny;
 
+type ReturnType = z.ZodFunction<z.ZodTuple<[z.ZodObject<z.ZodRawShape, "strip", z.ZodTypeAny, Record<string, unknown>, Record<string, unknown>>], z.ZodUnknown>, z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
 const defaultCallback: Callback = (props) => {
     const {element, gridTemporalColumns, propertyName} = props;
-    let returnTypeZod:ZodType = z.any();
+
+    let returnTypeZod: ReturnType | undefined = undefined;
     if (element) {
-        returnTypeZod = element.property[propertyName]
+        returnTypeZod = element.property[propertyName] as ReturnType
     }
     if (gridTemporalColumns) {
         const param = gridTemporalColumns.reduce((result, key) => {
@@ -34,7 +36,7 @@ const defaultCallback: Callback = (props) => {
         }, {} as ZodRawShape);
         returnTypeZod = z.function().args(z.object(param)).returns(z.union([z.string(), z.number()]))
     }
-    return returnTypeZod;
+    return returnTypeZod as ZodTypeAny;
 }
 
 export function createCustomPropertyEditor(callback: Callback) {
@@ -50,13 +52,14 @@ export function createCustomPropertyEditor(callback: Callback) {
             const formula = container.properties[propertyName].formula;
             isFormulaEmpty = isEmpty(formula);
         }
+
         function onClick() {
             const container = containerSignal.get();
             if (container) {
                 const panelId = `${container?.id}-${propertyName}`;
-                let element:Element|undefined = undefined;
-                let gridTemporalColumns:string[]|undefined = undefined;
-                let returnTypeZod:ZodType = z.any();
+                let element: Element | undefined = undefined;
+                let gridTemporalColumns: string[] | undefined = undefined;
+                let returnTypeZod: ZodType = z.any();
                 if (context.elements && container.type in context.elements) {
                     element = context.elements[container.type];
                 }
@@ -68,13 +71,13 @@ export function createCustomPropertyEditor(callback: Callback) {
                     element,
                     container,
                     gridTemporalColumns,
-                    allPagesSignal : context.allPagesSignal
+                    allPagesSignal: context.allPagesSignal
                 }) : defaultCallback({
                     propertyName,
                     element,
                     container,
                     gridTemporalColumns,
-                    allPagesSignal : context.allPagesSignal
+                    allPagesSignal: context.allPagesSignal
                 })
                 addPanel({
                     position: 'mainCenter',
@@ -101,17 +104,17 @@ export function createCustomPropertyEditor(callback: Callback) {
                 justifyContent: 'center',
                 borderTopRightRadius: 0,
                 borderBottomRightRadius: 0,
-                backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
+                backgroundColor: isFormulaEmpty ? 'rgba(255,255,255,0.9)' : colors.green,
+                color: isFormulaEmpty ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)',
                 padding: '0px 5px'
             }} onClick={onClick}><Icon.Formula style={{fontSize: 16}}/></Button>
             <div style={{
                 display: 'flex',
-                padding: '0px 2px',
+                padding: '0px 5px',
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: 'rgba(0,0,0,0.05)',
                 border: BORDER,
-                width: 28,
                 borderTopRightRadius: 20,
                 borderBottomRightRadius: 20
             }}>

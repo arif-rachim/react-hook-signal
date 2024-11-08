@@ -7,6 +7,7 @@ import {Container} from "../../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
 import {FormContext} from "../Form.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
+import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 
 const defaultRowDataToText = (data: unknown) => {
     if (typeof data === "string") {
@@ -15,8 +16,8 @@ const defaultRowDataToText = (data: unknown) => {
     return JSON.stringify(data)
 }
 export const SelectInput = forwardRef(function SelectInput(props: {
-    value?: string | number,
     name?: string,
+    value?: string | number,
     onChange?: (data?: string | number) => void,
     label?: string,
     query: QueryType,
@@ -25,6 +26,7 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
+    popupStyle?: CSSProperties,
     valueToRowData?: (value?: string | number) => Promise<Record<string, SqlValue>>,
     rowDataToText?: (data?: Record<string, SqlValue>) => string,
     rowDataToValue?: (data?: Record<string, SqlValue>) => string | number,
@@ -44,47 +46,49 @@ export const SelectInput = forwardRef(function SelectInput(props: {
         rowDataToText,
         rowDataToValue,
         itemToKey,
-        name
+        name,
+        popupStyle
     } = props;
+    const nameSignal = useSignal(name);
+    const [localValue, setLocalValue] = useState<Record<string, SqlValue> | undefined>();
+    const [localError, setLocalError] = useState<string | undefined>(error);
+
     const propsRef = useRef({valueToRowData, rowDataToText, rowDataToValue});
     propsRef.current = {valueToRowData, rowDataToText, rowDataToValue}
 
-    const [localValue, setLocalValue] = useState<Record<string, SqlValue> | undefined>();
-    const [localError, setLocalError] = useState<string | undefined>(error);
-    const nameSignal = useSignal(name);
     useEffect(() => {
         nameSignal.set(name);
     }, [name, nameSignal]);
-    useEffect(() => {
-        setLocalError(error);
-    }, [error]);
+
     useEffect(() => {
         (async () => {
             if (propsRef.current && propsRef.current.valueToRowData) {
                 const result = await propsRef.current.valueToRowData(value)
-                if (result) {
-                    setLocalValue(result);
-                }
+                setLocalValue(result);
             }
         })();
     }, [value]);
+
+    useEffect(() => {
+        setLocalError(error);
+    }, [error]);
+
     const formContext = useContext(FormContext);
+
     useSignalEffect(() => {
         const formValue = formContext?.value.get();
-
         const name = nameSignal.get();
         if (name && formValue && name in formValue) {
             const value = formValue[name] as string;
             (async () => {
                 if (propsRef.current && propsRef.current.valueToRowData) {
                     const result = await propsRef.current.valueToRowData(value)
-                    if (result) {
-                        setLocalValue(result);
-                    }
+                    setLocalValue(result);
                 }
             })();
         }
     })
+
     useSignalEffect(() => {
         const formError = formContext?.errors.get();
         const name = nameSignal.get();
@@ -93,70 +97,55 @@ export const SelectInput = forwardRef(function SelectInput(props: {
         }
     })
 
-    const popupRef = useRef<HTMLDivElement>(null);
-
-    const element = <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'white',
-        padding: 10,
-        marginTop: 1,
-        borderBottomRightRadius: 5,
-        borderBottomLeftRadius: 5,
-        width: 270,
-        boxShadow: '0px 10px 5px -3px rgba(0,0,0,0.5)'
-    }} ref={popupRef}>
-        <QueryGrid query={query} columnsConfig={config}
-                   onFocusedRowChange={(props) => {
-                       if (name && formContext && propsRef.current.rowDataToValue) {
-                           const newFormVal = {...formContext.value.get()};
-                           newFormVal[name] = propsRef.current.rowDataToValue(props.value);
-                           formContext.value.set(newFormVal);
-                       } else {
-                           if (onChange && propsRef.current.rowDataToValue) {
-                               onChange(propsRef.current.rowDataToValue(props.value))
-                           } else {
-                               setLocalValue(props.value);
-                           }
-                       }
-                       setTimeout(() => setShowPopup(false), 100)
-                   }}
-                   style={{}}
-                   focusedRow={localValue} container={container}
-                   filterable={true} sortable={true} pageable={true} itemToKey={itemToKey}
-        />
-    </div>;
-
-    const [showPopup, setShowPopup] = useState(false);
     const text = (rowDataToText ? rowDataToText(localValue) : defaultRowDataToText(localValue)) ?? '';
 
-    useEffect(() => {
-        function onClick(event: unknown) {
-            if (showPopup && event && typeof event === 'object' && 'target' in event && popupRef.current && !popupRef.current.contains(event.target as Node)) {
-                setShowPopup(false);
-            }
-        }
-
-        if (showPopup) {
-            setTimeout(() => {
-                window.addEventListener('mousedown', onClick);
-            }, 100);
-
-        }
-        return () => window.removeEventListener('mousedown', onClick);
-    }, [showPopup]);
+    const showPopup = useShowPopUp();
     return <TextInput ref={ref}
-                      popup={{position: 'bottom', element, visible: showPopup}}
                       inputStyle={inputStyle}
                       style={style}
                       error={localError}
                       label={label}
                       value={text}
-                      onFocus={() => {
-                          setShowPopup(true);
-                      }}
-                      onMouseDown={() => {
-                          setShowPopup(true);
+                      onFocus={async () => {
+                          const props = await showPopup<{
+                              value: Record<string, SqlValue>,
+                              data: Array<Record<string, SqlValue>>,
+                              totalPage: number,
+                              currentPage: number,
+                              index: number
+                          } | false, HTMLLabelElement>(ref, closePanel => {
+
+                              return <QueryGrid query={query} columnsConfig={config}
+                                                rowPerPage={10}
+                                                paginationButtonCount={3}
+                                                onFocusedRowChange={(props) => {
+                                                    closePanel(props)
+                                                }}
+                                                onClickOutside={() => {
+                                                    closePanel(false);
+                                                }}
+                                                style={popupStyle}
+                                                focusedRow={localValue} container={container}
+                                                filterable={true} sortable={true} pageable={true} itemToKey={itemToKey}
+                              />
+                          })
+                          if (props === false) {
+                              return;
+                          }
+                          if (name && formContext && propsRef.current.rowDataToValue) {
+                              const newFormVal = {...formContext.value.get()};
+                              newFormVal[name] = propsRef.current.rowDataToValue(props.value);
+                              const errors = {...formContext.errors.get()};
+                              delete errors[name];
+                              formContext.value.set(newFormVal);
+                              formContext.errors.set(errors)
+                          } else {
+                              if (onChange && propsRef.current.rowDataToValue) {
+                                  onChange(propsRef.current.rowDataToValue(props.value))
+                              } else {
+                                  setLocalValue(props.value);
+                              }
+                          }
                       }}
     />
 })

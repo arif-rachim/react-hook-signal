@@ -7,7 +7,7 @@ import {useSignal} from "react-hook-signal";
 export type ModalParameter = {
     id: string,
     element: ReactElement,
-    config: Config
+    config?: Config
 };
 type ShowModal = <P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config) => Promise<P>;
 
@@ -15,14 +15,20 @@ export function useModal() {
     const modalPanels = useSignal<Array<ModalParameter>>([]);
 
     const showModal: ShowModal = useCallback(function showModal<P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config): Promise<P> {
-        config = config || {animation: 'pop', position: 'center'};
+        config = config || {animation: 'pop', position: 'center',plainPanel:false};
         return new Promise(resolve => {
             const id = guid();
             const element = factory((params?: P) => {
                 modalPanels.set(modalPanels.get().filter(p => p.id !== id));
                 resolve(params as P);
             });
-            modalPanels.set([...modalPanels.get(), {id, element, config}]);
+            const panels = [...modalPanels.get()];
+            panels.push({
+                id : id,
+                element : element,
+                config : config
+            })
+            modalPanels.set(panels);
         })
     }, [modalPanels]);
 

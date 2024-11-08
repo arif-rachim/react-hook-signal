@@ -1,6 +1,5 @@
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {Button} from "../../button/Button.tsx";
-import {MdAdd} from "react-icons/md";
 import {notifiable, useSignal} from "react-hook-signal";
 import {guid} from "../../../utils/guid.ts";
 import {Icon} from "../../Icon.ts";
@@ -32,11 +31,8 @@ function AddButtons(props: { editQueries: () => void }) {
                 color: '#333',
             }}
             onClick={() => editQueries()}
-        >
+        icon={'IoMdAdd'}>
             {'Queries'}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <MdAdd style={{fontSize: 20}}/>
-            </div>
         </Button>
     </div>
 }
@@ -112,7 +108,9 @@ export function QueriesPanel() {
                         focusedItemSignal.set(query.id);
                         editQuery(query, 'page');
                     }}>
-
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <Icon.Query />
+                        </div>
                         <div style={{
                             flexGrow: 1,
                             overflow: 'hidden',
@@ -154,7 +152,9 @@ export function QueriesPanel() {
                         focusedItemSignal.set(query.id);
                         editQuery(query, 'application');
                     }}>
-
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <Icon.Query/>
+                        </div>
                         <div style={{
                             flexGrow: 1,
                             overflow: 'hidden',

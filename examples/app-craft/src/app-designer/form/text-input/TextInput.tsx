@@ -1,15 +1,16 @@
 import {BORDER, BORDER_ERROR} from "../../Border.ts";
-import {CSSProperties, ForwardedRef, forwardRef, ReactNode, useContext, useEffect, useRef, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
 import {Label} from "../label/Label.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {FormContext} from "../Form.tsx";
+import {guid} from "../../../utils/guid.ts";
 
 export const TextInput = forwardRef(function TextInput(props: {
+        name?: string,
         value?: string,
         onChange?: (value: string) => void,
         onFocus?: () => void,
         onBlur?: (value: string) => void,
-        name?: string,
         onKeyDown?: () => void,
         onMouseDown?: () => void,
         label?: string,
@@ -17,12 +18,8 @@ export const TextInput = forwardRef(function TextInput(props: {
         style?: CSSProperties,
         inputStyle?: CSSProperties,
         maxLength?: number,
-        popup?: {
-            element?: ReactNode,
-            position?: 'top' | 'bottom',
-            visible?: boolean
-        },
-        type?: 'text' | 'number' | 'password'
+        type?: 'text' | 'number' | 'password',
+        allCaps?:boolean
     }, ref: ForwardedRef<HTMLLabelElement>) {
         const {
             value,
@@ -37,15 +34,18 @@ export const TextInput = forwardRef(function TextInput(props: {
             onMouseDown,
             maxLength,
             name,
-            type
+            type,
+            allCaps
         } = props;
         const nameSignal = useSignal(name);
         const [localValue, setLocalValue] = useState<string | undefined>(value);
         const [localError, setLocalError] = useState<string | undefined>();
         const [cursorLoc, setCursorLoc] = useState<null | number>(null);
-        const inputRef = useRef<HTMLInputElement>(null);
+        const [isBusy, setIsBusy] = useState<boolean>(false);
+        const inputRef = useRef<HTMLInputElement | null>(null);
+
         const propsRef = useRef({onChange});
-        propsRef.current.onChange = onChange;
+        propsRef.current = {onChange};
 
         useEffect(() => {
             nameSignal.set(name);
@@ -76,6 +76,7 @@ export const TextInput = forwardRef(function TextInput(props: {
                 setLocalValue(val as string);
             }
         })
+
         useSignalEffect(() => {
             const formError = formContext?.errors.get();
             const name = nameSignal.get();
@@ -84,30 +85,43 @@ export const TextInput = forwardRef(function TextInput(props: {
             }
         })
 
+        useSignalEffect(() => {
+            const isBusy = formContext !== undefined && formContext.isBusy.get();
+            setIsBusy(isBusy)
+        });
         const style = {
             border: localError ? BORDER_ERROR : BORDER,
-            padding: '0px 5px',
+            padding: '2px 5px 3px 5px',
             borderRadius: 5,
+            opacity : isBusy ? 0.8 : 1,
             ...inputStyle,
         }
+
         if (style?.border === 'unset') {
             style.border = BORDER
         }
 
-        return <Label label={label} ref={ref} style={defaultStyle} popup={props.popup}>
+        return <Label label={label} ref={ref} style={defaultStyle} >
             <input
                 ref={inputRef}
                 name={name}
+                disabled={isBusy}
                 value={localValue ?? ''}
                 maxLength={maxLength}
                 type={type}
                 onChange={(e) => {
-                    const val = e.target.value;
+                    let val = e.target.value;
+                    if(allCaps !== false && type !== 'password') {
+                        val = val.toUpperCase();
+                    }
                     setCursorLoc(e.target.selectionStart);
                     if (name && formContext) {
                         const newFormVal = {...formContext.value.get()};
                         newFormVal[name] = val;
+                        const errors = {...formContext.errors.get()};
+                        delete errors[name];
                         formContext.value.set(newFormVal);
+                        formContext.errors.set(errors)
                     } else {
                         if (onChange) {
                             onChange(val);
@@ -138,6 +152,7 @@ export const TextInput = forwardRef(function TextInput(props: {
                     }
                 }}
                 style={style}
+                autoComplete={guid()}
             />
             {localError && <div style={{
                 padding: '0 5px',

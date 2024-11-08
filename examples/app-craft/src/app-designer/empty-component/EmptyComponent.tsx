@@ -1,5 +1,6 @@
 import {Icon} from "../Icon.ts";
 
+
 export function EmptyComponent() {
     return <div style={{
         display: 'flex',
@@ -11,7 +12,7 @@ export function EmptyComponent() {
     }}>
         <Icon.Question style={{fontSize: 18}}/>
         <div>
-            Oops we cant find the component to render
+            Oops we cant find the component to render!
         </div>
     </div>
 }

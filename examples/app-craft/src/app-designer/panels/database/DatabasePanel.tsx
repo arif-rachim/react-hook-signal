@@ -1,4 +1,3 @@
-import {MdAdd, MdRemove} from "react-icons/md";
 import {Button} from "../../button/Button.tsx";
 import {ChangeEvent, useRef} from "react";
 import sqlite from "./sqlite/sqlite.ts";
@@ -41,10 +40,11 @@ export function DatabasePanel() {
     const updateApplication = useUpdateApplication();
 
     async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-        if (e.target.files === null || e.target.files.length === 0) {
+        const files = e.target.files;
+        if (files === null || files.length === 0) {
             return;
         }
-        const file = e.target.files[0];
+        const file = files && files.length > 0 ? files[0] : undefined;
 
         if (file) {
             const arrayBuffer = await file.arrayBuffer();
@@ -89,12 +89,7 @@ export function DatabasePanel() {
                     color: '#333',
                 }}
                 onClick={() => addSqlLite()}
-            >
-                {'Load SqlLite'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <MdAdd style={{fontSize: 20}}/>
-                </div>
-            </Button>
+            icon={'IoMdAdd'} >{'Load SqlLite'}</Button>
             <Button
                 style={{
                     flexGrow :1,
@@ -109,12 +104,9 @@ export function DatabasePanel() {
                     borderBottomLeftRadius : 0,
                     color: '#333',
                 }}
-                onClick={() => deleteSqlLite()}
+                onClick={() => deleteSqlLite()} icon={'IoMdRemove'}
             >
                 {'Delete SqlLite'}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <MdRemove style={{fontSize: 20}}/>
-                </div>
             </Button>
         </div>
         <input type={'file'}

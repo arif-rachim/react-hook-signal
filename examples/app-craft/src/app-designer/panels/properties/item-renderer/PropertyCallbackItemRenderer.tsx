@@ -63,7 +63,8 @@ export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
                         justifyContent: 'center',
                         borderTopRightRadius: 0,
                         borderBottomRightRadius: 0,
-                        backgroundColor: isFormulaEmpty ? colors.grey : colors.green,
+                        backgroundColor: isFormulaEmpty ? 'rgba(255,255,255,0.9)' : colors.green,
+                        color:isFormulaEmpty ? 'rgba(0,0,0,0.9)' :  'rgba(255,255,255,0.9)',
                         padding: '0px 5px'
                     }} onClick={onClick}><Icon.Formula style={{fontSize: 16}}/></Button>
 

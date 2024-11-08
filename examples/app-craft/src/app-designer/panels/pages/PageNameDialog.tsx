@@ -4,7 +4,6 @@ import {isEmpty} from "../../../utils/isEmpty.ts";
 import {BORDER} from "../../Border.ts";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {Button} from "../../button/Button.tsx";
-import {Icon} from "../../Icon.ts";
 
 export function PageNameDialog(props: {
     closePanel: (param?: string) => void,
@@ -79,17 +78,13 @@ export function PageNameDialog(props: {
                 if (isEmpty(errorMessage)) {
                     props.closePanel(valueSignal.get());
                 }
-            }} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 5}}>
-                <div>{'Save'}</div>
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18}}>
-                    <Icon.Save/></div>
+            }} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 5}} icon={'IoIosSave'}>
+                {'Save'}
             </Button>
             <Button onClick={() => {
                 props.closePanel();
-            }} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 5}}>
-                <div>{'Close'}</div>
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18}}>
-                    <Icon.Exit/></div>
+            }} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 5}} icon={'IoIosExit'}>
+                {'Close'}
             </Button>
         </div>
     </div>

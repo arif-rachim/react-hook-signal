@@ -43,7 +43,6 @@ export function ToolBar() {
 
     useSignalEffect(() => {
         const container = containerSignal.get();
-
         const displayMode = uiDisplayModeSignal.get();
         const isDesignPanel = centerPanelComputed.get()?.tag?.type === 'DesignPanel';
         const element = toolbarRef.current;

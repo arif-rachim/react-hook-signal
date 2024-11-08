@@ -113,7 +113,8 @@ export function DraggableContainerElement(props: { container: Container }) {
             event.preventDefault();
             event.stopPropagation();
             onDragEnd();
-            selectedDragContainerIdSignal.set(containerSignal.get()?.id);
+            const containerId = containerSignal.get().id;
+            selectedDragContainerIdSignal.set(containerId);
         }
     }
 
@@ -222,8 +223,5 @@ export function DraggableContainerElement(props: { container: Container }) {
         container: props.container,
         ['data-element-id']: props.container?.id
     };
-    if (elementsLib && elementsLib[containerProp?.type]) {
-        return <ElementRenderer container={containerProp} elementProps={elementProps}/>
-    }
-    return <></>
+    return <ElementRenderer container={containerProp} elementProps={elementProps}/>
 }

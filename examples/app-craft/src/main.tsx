@@ -4,14 +4,13 @@ import './index.css'
 import "./editor/InitEditor.ts";
 import {App} from "./App.tsx";
 import CryptoJS from "crypto-js";
-import {DateInput} from "./app-designer/form/date-input/DateInput.tsx";
 
 window.CryptoJS = window.CryptoJS || CryptoJS;
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <div style={{padding:10}}>
-        <DateInput />
-        </div>
+        {/*<div style={{padding:10,alignItems:"center",justifyContent:"center",display:'flex',width:'100%',height:'100%'}}>*/}
+        {/*    <CheckboxInput label={'Kupret Man'} />*/}
+        {/*</div>*/}
         <App/>
         {/*<AppViewer elements={{*/}
         {/*    input: element({*/}

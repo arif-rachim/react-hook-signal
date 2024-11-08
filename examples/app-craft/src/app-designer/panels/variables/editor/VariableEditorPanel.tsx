@@ -11,7 +11,6 @@ import {Variable, VariableType} from "../../../AppDesigner.tsx";
 import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
-import {Icon} from "../../../Icon.ts";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
 import {useUpdateVariable} from "../../../hooks/useUpdateVariable.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
@@ -115,7 +114,7 @@ export function VariableEditorPanel(props: {
             <LabelContainer label={'Name : '}
                             style={{flexGrow: 1, flexBasis: '50%', flexDirection: 'row', alignItems: 'center', gap: 10}}
                             styleLabel={{fontStyle: 'italic'}}>
-                <notifiable.input name={'signalName'} autoComplete={'unset'}
+                <notifiable.input name={'signalName'} autoComplete={guid()}
                                   style={{border: BORDER, flexGrow: 1, padding: '5px 10px', borderRadius: 5}}
                                   value={() => {
                                       return variableSignal.get().name
@@ -261,7 +260,7 @@ export function VariableEditorPanel(props: {
                                     })
                                 }).flat();
                                 return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                    icon: Icon.Exit,
+                                    icon: 'IoIosExit',
                                     label: 'Ok',
                                     id: 'Ok'
                                 }]}/>
@@ -271,11 +270,8 @@ export function VariableEditorPanel(props: {
                         display: 'flex',
                         gap: 5,
                         alignItems: 'center'
-                    }}>
+                    }} icon={'IoIosSave'}>
                         {'Save'}
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Save style={{fontSize: 18}}/>
-                        </div>
                     </Button>
                     <Button onClick={async () => {
                         variableSignal.set(variable ?? createNewVariable());
@@ -284,11 +280,8 @@ export function VariableEditorPanel(props: {
                         display: 'flex',
                         gap: 5,
                         alignItems: 'center'
-                    }}>
+                    }} icon={'IoIosExit'}>
                         {'Reset'}
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Icon.Reset style={{fontSize: 18}}/>
-                        </div>
                     </Button>
                 </>
             }}

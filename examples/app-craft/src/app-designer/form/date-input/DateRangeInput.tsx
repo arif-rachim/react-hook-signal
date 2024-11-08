@@ -1,116 +1,189 @@
-import {CSSProperties, ForwardedRef, forwardRef, useEffect, useMemo, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
 import {format_ddMMMyyyy} from "../../../utils/dateFormat.ts";
 import {DateRangePicker} from "./DateRangePicker.tsx";
 import {Label} from "../label/Label.tsx";
 import {BORDER, BORDER_ERROR} from "../../Border.ts";
+import {useSignal, useSignalEffect} from "react-hook-signal";
+import {isDate} from "./isDate.ts";
+import {FormContext} from "../Form.tsx";
+import {TextInput} from "../text-input/TextInput.tsx";
+import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
+import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
 
 type RangeInput = { from: Date | string, to: Date | string };
 
-function isDate(val:unknown):val is Date{
-    return val instanceof Date
-}
-function isString(val:unknown):val is string{
+
+function isString(val: unknown): val is string {
     return typeof val === 'string'
 }
 
 export const DateRangeInput = forwardRef(function DateRangeInput(props: {
+    name?: string,
     value?: RangeInput,
     onChange?: (value?: RangeInput) => void,
     label?: string,
     error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
-}, ref: ForwardedRef<HTMLLabelElement>) {
-    const {inputStyle, style: defaultStyle, error, label, onChange, value} = props;
+}, forwardedRef: ForwardedRef<HTMLLabelElement>) {
+    const ref = useForwardedRef(forwardedRef);
+    const {inputStyle, style: defaultStyle, error, label, onChange, value, name} = props;
+    const nameSignal = useSignal(name);
+    const [localFrom, setLocalFrom] = useState<string | undefined>();
+    const [localTo, setLocalTo] = useState<string | undefined>();
+    const [localError, setLocalError] = useState<string | undefined>(error);
 
-    const dateRange = useMemo(() => {
-        const result: { from?: Date, to?: Date } = {};
-        if (isDate(value?.from)) {
-            result.from = value?.from as Date;
-        } else if (isString(value?.from)) {
-            result.from = new Date(value?.from as string);
-        } else if (!result.from || isNaN(result.from.getDate())) {
-            return undefined;
+    const propsRef = useRef({onChange, value});
+    propsRef.current = {onChange, value};
+
+    useEffect(() => {
+        nameSignal.set(name);
+    }, [name, nameSignal]);
+
+    useEffect(() => {
+        let from: string | undefined = undefined;
+        let to: string | undefined = undefined;
+        if (value && isDate(value.from)) {
+            from = format_ddMMMyyyy(value.from);
         }
-        if (isDate(value?.to)) {
-            result.to = value?.to as Date;
-        } else if (isString(value?.to)) {
-            result.to = new Date(value?.to as string);
-        } else if (!result.to || isNaN(result.to.getDate())) {
-            return undefined
+        if (value && isString(value.from)) {
+            from = format_ddMMMyyyy(new Date(value.from));
         }
-        return result;
+        if (value && isDate(value.to)) {
+            to = format_ddMMMyyyy(value.to);
+        }
+        if (value && isString(value.to)) {
+            to = format_ddMMMyyyy(new Date(value.to));
+        }
+        setLocalFrom(from);
+        setLocalTo(to);
     }, [value]);
 
-    const [localValue, setLocalValue] = useState<{ from?: Date, to?: Date }|undefined>(dateRange);
-    useEffect(() => {
-        setLocalValue(dateRange);
-    }, [dateRange]);
-    const element = <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'white',
-        padding: 10,
-        marginTop: 1,
-        borderBottomRightRadius: 5,
-        borderBottomLeftRadius: 5,
-        width: 500,
-        boxShadow: '0px 10px 5px -3px rgba(0,0,0,0.5)'
-    }} onMouseDown={(e) => {
-        e.preventDefault()
-    }}>
-        <DateRangePicker onChange={(newDate) => {
-            if (onChange) {
-                if(newDate) {
-                    onChange({
-                        from : isString(value?.from) ? newDate.from.toISOString() : newDate.from,
-                        to : isString(value?.to) ? newDate.to.toISOString() : newDate.to
-                    });
-                }else {
-                    onChange();
-                }
-            } else {
-                setLocalValue(newDate);
-            }
-            setShowPopup(false);
-        }} value={localValue as { from: Date, to: Date }}/>
-    </div>;
+    const formContext = useContext(FormContext);
 
-    const [showPopup, setShowPopup] = useState(false);
+    useEffect(() => {
+        const value = propsRef.current.value;
+        if (localFrom && localTo && localFrom.length === '01-JAN-1970'.length && localTo.length === '01-JAN-1970'.length) {
+            const fromIsString = isString(value?.from);
+            const toIsString = isString(value?.to);
+            const from = new Date(localFrom);
+            const to = new Date(localTo);
+            const fromIsChanged = value === undefined ||
+                (fromIsString && from.toISOString() !== value.from) || (isDate(value.from) && from.toISOString() !== value.from.toISOString());
+            const toIsChanged = value === undefined ||
+                (toIsString && to.toISOString() !== value.to) || (isDate(value.to) && to.toISOString() !== value.to.toISOString());
+            const shouldTriggerChange = fromIsChanged || toIsChanged;
+
+            if (name && formContext && shouldTriggerChange) {
+                const newFormVal = {...formContext.value.get()};
+                newFormVal[name] = {
+                    from: fromIsString ? from.toISOString() : from,
+                    to: toIsString ? to.toISOString() : to
+                };
+                const errors = {...formContext.errors.get()};
+                delete errors[name];
+                formContext.value.set(newFormVal);
+                formContext.errors.set(errors)
+            } else {
+                if (shouldTriggerChange && propsRef.current.onChange) {
+                    propsRef.current.onChange({
+                        from: fromIsString ? from.toISOString() : from,
+                        to: toIsString ? to.toISOString() : to
+                    });
+                }
+                setLocalFrom(format_ddMMMyyyy(from));
+                setLocalTo(format_ddMMMyyyy(to));
+            }
+        }
+    }, [formContext, localFrom, localTo, name]);
+
+    useEffect(() => {
+        setLocalError(error);
+    }, [error]);
+
+
+    useSignalEffect(() => {
+        const formValue = formContext?.value.get();
+        const name = nameSignal.get();
+        if (name && formValue && name in formValue) {
+            const value = formValue[name] as { from: string | Date, to: string | Date };
+            let from: string | undefined = undefined;
+            let to: string | undefined = undefined;
+            if (value && isDate(value.from)) {
+                from = format_ddMMMyyyy(value.from);
+            }
+            if (value && isString(value.from)) {
+                from = format_ddMMMyyyy(new Date(value.from));
+            }
+            if (value && isDate(value.to)) {
+                to = format_ddMMMyyyy(value.to);
+            }
+            if (value && isString(value.to)) {
+                to = format_ddMMMyyyy(new Date(value.to));
+            }
+            setLocalFrom(from);
+            setLocalTo(to);
+        }
+    })
 
     const style = {
-        ...inputStyle,
         border: error ? BORDER_ERROR : BORDER,
         padding: '0px 5px',
         borderRadius: 5,
-        width: '50%'
-    }
+        width: 90,
+        textAlign: 'center',
+        ...inputStyle
+    } as CSSProperties
     if (style?.border === 'unset') {
         style.border = BORDER
     }
 
-    return <Label label={label} ref={ref} style={defaultStyle}
-                  popup={{position: 'bottom', element, visible: showPopup}}>
-        <div style={{display: 'flex', gap: 5}}>
-            <input
-                value={format_ddMMMyyyy(localValue?.from)}
-                onFocus={() => setShowPopup(true)}
-                style={style}
+    const showPopup = useShowPopUp();
+
+    return <Label label={label} ref={ref} style={defaultStyle}>
+        <div style={{display: 'flex', gap: 10}}>
+            <TextInput
+                value={localFrom}
+                onChange={val => setLocalFrom(val)}
+                inputStyle={style}
+                onFocus={async () => {
+                    const newDate = await showPopup<{ from: Date, to: Date }, HTMLLabelElement>(ref, closePanel => {
+                        return <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            background: 'white',
+                            padding: 10,
+                            marginTop: 1,
+                            borderBottomRightRadius: 5,
+                            borderBottomLeftRadius: 5,
+                            width: 500,
+                            boxShadow: '0px 10px 5px -3px rgba(0,0,0,0.5)'
+                        }} onMouseDown={(e) => {
+                            e.preventDefault()
+                        }}>
+                            <DateRangePicker onChange={closePanel}
+                                             value={{from: new Date(localFrom ?? ''), to: new Date(localTo ?? '')}}/>
+                        </div>
+                    });
+                    setLocalFrom(format_ddMMMyyyy(newDate?.from));
+                    setLocalTo(format_ddMMMyyyy(newDate?.to));
+                }}
+
             />
-            <input
-                value={format_ddMMMyyyy(localValue?.to)}
-                onFocus={() => setShowPopup(true)}
-                style={style}
+            <TextInput
+                value={localTo}
+                onChange={val => setLocalTo(val)}
+                inputStyle={style}
             />
         </div>
 
-        {error && <div style={{
+        {localError && <div style={{
             padding: '0 5px',
             fontSize: 'small',
             lineHeight: 1,
             color: '#C00000',
             textAlign: 'right'
-        }}>{error}</div>}
+        }}>{localError}</div>}
     </Label>
 
 })
