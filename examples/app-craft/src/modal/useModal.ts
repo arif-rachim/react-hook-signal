@@ -1,6 +1,6 @@
 import {ReactElement, useCallback} from "react";
 import {guid} from "../utils/guid.ts";
-import {Config} from "./ModalContext.ts";
+import {Config, FactoryFunction} from "./ModalContext.ts";
 import {useSignal} from "react-hook-signal";
 
 
@@ -9,12 +9,12 @@ export type ModalParameter = {
     element: ReactElement,
     config?: Config
 };
-type ShowModal = <P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config) => Promise<P>;
+type ShowModal = <P>(factory:FactoryFunction<P>, config?: Config) => Promise<P>;
 
 export function useModal() {
     const modalPanels = useSignal<Array<ModalParameter>>([]);
 
-    const showModal: ShowModal = useCallback(function showModal<P>(factory: (closePanel: (params?: P) => void) => ReactElement, config?: Config): Promise<P> {
+    const showModal: ShowModal = useCallback(function showModal<P>(factory: FactoryFunction<P>, config?: Config): Promise<P> {
         config = config || {animation: 'pop', position: 'center',plainPanel:false};
         return new Promise(resolve => {
             const id = guid();

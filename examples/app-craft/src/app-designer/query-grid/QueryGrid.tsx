@@ -1,10 +1,9 @@
 import {QueryType} from "../variable-initialization/AppVariableInitialization.tsx";
-import {CSSProperties, ForwardedRef, forwardRef, useEffect, useRef, useState} from "react";
+import {CSSProperties, forwardRef, useEffect, useRef, useState} from "react";
 import {ColumnsConfig, SimpleTable, SimpleTableFooter} from "../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
 import {queryGridColumnsTemporalColumns} from "./queryGridColumnsTemporalColumns.ts";
-import {detectClickOutside} from "../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../hooks/useForwardedRef.ts";
 
 export type QueryTypeResult = {
@@ -15,7 +14,7 @@ export type QueryTypeResult = {
     currentPage?: number
 }
 
-export const QueryGrid = forwardRef<HTMLDivElement|null, {
+export const QueryGrid = forwardRef<HTMLDivElement | null, {
     query: QueryType,
     style?: CSSProperties,
     columnsConfig: ColumnsConfig,
@@ -42,7 +41,7 @@ export const QueryGrid = forwardRef<HTMLDivElement|null, {
     pageable?: boolean,
     rowPerPage?: number,
     paginationButtonCount?: number,
-    onClickOutside?: () => void
+    onQueryResultChange?: (result: QueryTypeResult) => void
 }>(function QueryGrid(props, ref) {
     const referenceRef = useForwardedRef<HTMLDivElement>(ref);
     const {
@@ -58,8 +57,10 @@ export const QueryGrid = forwardRef<HTMLDivElement|null, {
         pageable,
         itemToKey,
         paginationButtonCount,
-        onClickOutside
+        onQueryResultChange
     } = props;
+    const propsRef = useRef({onQueryResultChange});
+    propsRef.current = {onQueryResultChange};
     const rowPerPage = pageable ? props.rowPerPage ? props.rowPerPage : 20 : Number.MAX_SAFE_INTEGER
     const [queryResult, setQueryResult] = useState<QueryTypeResult>({
         columns: [],
@@ -68,8 +69,6 @@ export const QueryGrid = forwardRef<HTMLDivElement|null, {
         error: '',
         totalPage: 1
     });
-    const propsRef = useRef({onClickOutside});
-    propsRef.current = {onClickOutside};
 
     const [focusedRow, setFocusedRow] = useState(props.focusedRow);
     useEffect(() => {
@@ -103,21 +102,20 @@ export const QueryGrid = forwardRef<HTMLDivElement|null, {
 
     // this is to just store them in the temporal state to be used by editor
     queryGridColumnsTemporalColumns[container.id] = queryResult.columns ?? [];
-
     useEffect(() => {
-        return detectClickOutside(referenceRef as ForwardedRef<HTMLElement>, () => {
-            if (propsRef.current.onClickOutside) {
-                propsRef.current.onClickOutside()
-            }
-        }, {delay: 100})
-    }, [referenceRef]);
+        if (propsRef.current.onQueryResultChange) {
+            propsRef.current.onQueryResultChange(queryResult);
+        }
+    }, [queryResult]);
     return <div ref={referenceRef}
                 style={{
                     overflow: 'auto',
                     display: 'flex',
                     flexDirection: 'column',
                     flexGrow: 1,
-                    background: 'white', ...style
+                    background: 'white',
+
+                    ...style
                 }}>
         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', flexGrow: 1}}>
             <SimpleTable columns={queryResult.columns ?? []}

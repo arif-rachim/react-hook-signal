@@ -7,7 +7,7 @@ import {Container} from "../../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
 import {FormContext} from "../Form.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
-import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
+import {DivWithClickOutside, useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 
 const defaultRowDataToText = (data: unknown) => {
     if (typeof data === "string") {
@@ -113,21 +113,28 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                               totalPage: number,
                               currentPage: number,
                               index: number
-                          } | false, HTMLLabelElement>(ref, closePanel => {
+                          } | false, HTMLLabelElement>(ref, (closePanel,commitLayout) => {
 
-                              return <QueryGrid query={query} columnsConfig={config}
-                                                rowPerPage={10}
-                                                paginationButtonCount={3}
-                                                onFocusedRowChange={(props) => {
-                                                    closePanel(props)
-                                                }}
-                                                onClickOutside={() => {
-                                                    closePanel(false);
-                                                }}
-                                                style={popupStyle}
-                                                focusedRow={localValue} container={container}
-                                                filterable={true} sortable={true} pageable={true} itemToKey={itemToKey}
-                              />
+                              return <DivWithClickOutside onClickOutside={() => {
+                                  closePanel(false);
+                              }}><QueryGrid query={query} columnsConfig={config}
+                                            rowPerPage={10}
+                                            paginationButtonCount={3}
+                                            onFocusedRowChange={closePanel}
+                                            style={{
+                                                boxShadow: '0px 15px 8px -8px rgba(0,0,0,0.5)',
+                                                borderBottomLeftRadius: 10,
+                                                borderBottomRightRadius: 10,
+                                                ...popupStyle
+                                            }}
+                                            focusedRow={localValue}
+                                            container={container}
+                                            filterable={true}
+                                            sortable={true}
+                                            pageable={true}
+                                            itemToKey={itemToKey}
+                                            onQueryResultChange={commitLayout}
+                              /></DivWithClickOutside>
                           })
                           if (props === false) {
                               return;

@@ -5,19 +5,22 @@ const transitionDuration = 100;
 export default function LoadingScreen() {
     const [isStable, setIsStable] = useState(false);
     const [showLoading, setShowLoading] = useState(true);
-    const stabilityDelay = 100;
+    const stabilityDelay = transitionDuration;
     const stabilityTimer = useRef<number>(0);
 
     useSignalEffect(() => {
-        setIsStable(false);
         setShowLoading(true);
+        setIsStable(false);
         const tm = setTimeout(() => {
             setIsStable(true);
         }, transitionDuration / 2);
         stabilityTimer.current = tm as unknown as number;
     })
     useEffect(() => {
+        setShowLoading(true);
+        setIsStable(false);
         const observer = new PerformanceObserver(() => {
+            setShowLoading(true);
             setIsStable(false);
             clearTimeout(stabilityTimer.current);
 

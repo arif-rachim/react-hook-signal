@@ -127,7 +127,8 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                 value={localDate}
                 onChange={val => setLocalDate(val)}
                 onFocus={async () => {
-                    const newDate = await showPopup<Date | false | undefined, HTMLLabelElement>(ref, closePanel => {
+                    const newDate = await showPopup<Date | false | undefined, HTMLLabelElement>(ref, (closePanel,commitLayout) => {
+                        commitLayout();
                         return <DivWithClickOutside style={{
                             display: 'flex',
                             flexDirection: 'column',
