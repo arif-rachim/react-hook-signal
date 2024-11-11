@@ -174,6 +174,7 @@ export const DefaultElements: Record<string, Element> = {
             error: z.string().optional(),
             onChange: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
+            inputStyle: cssPropertiesSchema,
             type: z.enum(['text', 'number', 'password']).optional()
         },
         component: (props, ref) => {
@@ -184,6 +185,7 @@ export const DefaultElements: Record<string, Element> = {
                               onChange={onChange}
                               value={value}
                               label={label}
+                              inputStyle={props.inputStyle as CSSProperties}
                               error={error}
                               type={type}
             />

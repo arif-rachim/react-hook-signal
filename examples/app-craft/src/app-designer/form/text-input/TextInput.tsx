@@ -19,7 +19,7 @@ export const TextInput = forwardRef(function TextInput(props: {
         inputStyle?: CSSProperties,
         maxLength?: number,
         type?: 'text' | 'number' | 'password',
-        allCaps?:boolean
+        allCaps?: boolean
     }, ref: ForwardedRef<HTMLLabelElement>) {
         const {
             value,
@@ -60,7 +60,7 @@ export const TextInput = forwardRef(function TextInput(props: {
         }, [error]);
 
         useEffect(() => {
-            if (inputRef.current) {
+            if (inputRef.current && inputRef.current?.type !== 'number') {
                 inputRef.current.setSelectionRange(cursorLoc, cursorLoc);
             }
         }, [localValue, cursorLoc]);
@@ -93,7 +93,7 @@ export const TextInput = forwardRef(function TextInput(props: {
             border: localError ? BORDER_ERROR : BORDER,
             padding: '2px 5px 3px 5px',
             borderRadius: 5,
-            opacity : isBusy ? 0.8 : 1,
+            opacity: isBusy ? 0.8 : 1,
             ...inputStyle,
         }
 
@@ -101,7 +101,7 @@ export const TextInput = forwardRef(function TextInput(props: {
             style.border = BORDER
         }
 
-        return <Label label={label} ref={ref} style={defaultStyle} >
+        return <Label label={label} ref={ref} style={defaultStyle}>
             <input
                 ref={inputRef}
                 name={name}
@@ -111,7 +111,7 @@ export const TextInput = forwardRef(function TextInput(props: {
                 type={type}
                 onChange={(e) => {
                     let val = e.target.value;
-                    if(allCaps !== false && type !== 'password') {
+                    if (allCaps !== false && type !== 'password') {
                         val = val.toUpperCase();
                     }
                     setCursorLoc(e.target.selectionStart);
