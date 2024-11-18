@@ -9,6 +9,8 @@ import {dbSchemaInitialization} from "../../../../variable-initialization/initia
 import {AppVariableInitializationContext} from "../../../../variable-initialization/AppVariableInitialization.tsx";
 import {PageVariableInitializationContext} from "../../../../variable-initialization/PageVariableInitialization.tsx";
 import {useModalBox} from "../../../../variable-initialization/initiator/useModalBox.tsx";
+import {useSaveSqlLite} from "../../../../hooks/useSaveSqlLite.ts";
+import {useDeleteSqlLite} from "../../../../hooks/useDeleteSqlLite.ts";
 
 const db = dbSchemaInitialization();
 
@@ -27,8 +29,10 @@ export function PropertyInitialization(props: {
         navigate
     } = context;
 
-    const modalBox = useModalBox();
-
+    const alertBox = useModalBox();
+    const saveSqlLite = useSaveSqlLite();
+    const deleteSqlLite = useDeleteSqlLite();
+    const tools = {saveSqlLite,deleteSqlLite};
     const property = elementsLib ? elementsLib[container.type].property as ZodRawShape : undefined;
     const errorMessage = useRecordErrorMessage();
     const propertiesSignal = useSignal(container.properties);
@@ -50,12 +54,12 @@ export function PropertyInitialization(props: {
                 const allVariables = allVariablesSignal.get();
                 const propDependencies = allVariables.map(t => allVariablesInstance.find(v => v.id === t.id)?.instance) as Array<AnySignal<unknown>>;
 
-                const funcParams = ['module', 'navigate', 'db', 'app', 'page', 'z', 'modalBox', containerProp.formula] as Array<string>;
+                const funcParams = ['module', 'navigate', 'db', 'app', 'page', 'z', 'alertBox','tools', containerProp.formula] as Array<string>;
                 const module: { exports: unknown } = {exports: {}};
 
                 try {
                     const fun = new Function(...funcParams);
-                    const funcParamsInstance = [module, navigate, db, app, page, z, modalBox, ...propDependencies];
+                    const funcParamsInstance = [module, navigate, db, app, page, z, alertBox,tools, ...propDependencies];
                     fun.call(null, ...funcParamsInstance);
                     errorMessage.propertyValue({propertyName: containerPropKey, containerId: container.id});
                 } catch (err) {

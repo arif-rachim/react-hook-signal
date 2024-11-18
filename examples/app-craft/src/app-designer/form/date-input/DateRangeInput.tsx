@@ -7,8 +7,9 @@ import {useSignal, useSignalEffect} from "react-hook-signal";
 import {isDate} from "./isDate.ts";
 import {FormContext} from "../Form.tsx";
 import {TextInput} from "../text-input/TextInput.tsx";
-import {DivWithClickOutside, useShowPopUp} from "../../hooks/useShowPopUp.tsx";
+import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
+import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutsude.tsx"
 
 type RangeInput = { from: Date | string, to: Date | string };
 

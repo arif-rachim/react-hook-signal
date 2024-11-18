@@ -18,6 +18,8 @@ import {initiateState} from "./initiator/initiateState.ts";
 import {variablesInstanceToDictionary} from "./initiator/variablesInstanceToDictionary.ts";
 import {QueryParamsObject} from "../panels/database/table-editor/queryDb.ts";
 import {useModalBox} from "./initiator/useModalBox.tsx";
+import {useSaveSqlLite} from "../hooks/useSaveSqlLite.ts";
+import {useDeleteSqlLite} from "../hooks/useDeleteSqlLite.ts";
 
 
 export type QueryType = (props: {
@@ -48,7 +50,10 @@ export function AppVariableInitialization(props: PropsWithChildren) {
         navigate
     } = useAppContext();
 
-    const modalBox = useModalBox();
+    const alertBox = useModalBox();
+    const saveSqlLite = useSaveSqlLite();
+    const deleteSqlLite = useDeleteSqlLite();
+    const tools = {saveSqlLite,deleteSqlLite};
 
     const validatorsApplicationComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
         return createValidator(allApplicationVariablesSignal.get(), errorMessage);
@@ -80,7 +85,9 @@ export function AppVariableInitialization(props: PropsWithChildren) {
             allCallables: allApplicationCallablesSignal.get(),
             app,
             page: {},
-            navigate
+            navigate,
+            alertBox,
+            tools
         })
         return app;
     });
@@ -102,7 +109,8 @@ export function AppVariableInitialization(props: PropsWithChildren) {
             page: {},
             navigate,
             variables,
-            modalBox
+            alertBox,
+            tools
         })
     })
 

@@ -60,5 +60,5 @@ export function element<T extends ZodRawShape>(props: {
     component: ForwardRefRenderFunction<HTMLElement, (InferType<T> & ElementStyleProps)>,
     shortName: string
 }) {
-    return props as unknown as Element<ZodRawShape>;
+    return props as unknown as Element;
 }

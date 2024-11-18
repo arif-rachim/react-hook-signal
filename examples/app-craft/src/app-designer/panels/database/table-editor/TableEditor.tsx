@@ -400,12 +400,13 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         onRowDoubleClick(item)
                     }
                 }}>
-                    {columns.map((col) => {
+                    {columns.map((col, colIndex) => {
                         let width: CSSProperties['width'] | undefined = undefined;
                         let hide: boolean | undefined = false;
                         let rendererPageId: string | undefined = undefined;
                         const value = item[col] as ReactNode;
                         let valueParams = {value};
+                        const lastIndex = colIndex === (columns.length - 1);
                         if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
                             const config = columnsConfig[col];
                             if (!isEmpty(config.width)) {
@@ -442,14 +443,14 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                                 }
                             }
                         }
-                        let renderer = <div style={{textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={value?.toString()}>{value}</div>;
+                        let renderer = <div style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}
+                                            title={value?.toString()}>{value}</div>;
                         if (rendererPageId) {
                             const page = allPagesSignal.get().find(p => p.id === rendererPageId);
                             if (page) {
                                 renderer = <PageViewer
                                     elements={elements}
                                     page={page!}
-                                    key={`${col}:${rowIndex}`}
                                     appConfig={applicationSignal.get()}
                                     value={valueParams}
                                     navigate={navigate}
@@ -459,11 +460,13 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         return <div style={{
                             display: hide ? 'none' : 'table-cell',
                             verticalAlign: 'middle',
-                            borderBottom: '1px solid rgba(0,0,0,0.1)',
+                            borderBottom: BORDER,
+                            borderRight: lastIndex ? 'unset' : BORDER,
                             padding: '0px 10px',
+                            overflow: 'hidden',
                             width,
-                            maxWidth:width
-                        }} key={`${col}:${rowIndex}`}>
+                            maxWidth: width
+                        }} key={`${colIndex}:${rowIndex}:${value}`}>
                             <div style={{minHeight: 22, display: 'flex', flexDirection: 'column'}}>{renderer}</div>
                         </div>
                     })}

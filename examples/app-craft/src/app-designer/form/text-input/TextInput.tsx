@@ -87,18 +87,16 @@ export const TextInput = forwardRef(function TextInput(props: {
 
         useSignalEffect(() => {
             const isBusy = formContext !== undefined && formContext.isBusy.get();
-            setIsBusy(isBusy)
+            const isDisabled = formContext !== undefined && formContext.isDisabled.get();
+            setIsBusy(isBusy || isDisabled)
         });
         const style = {
             border: localError ? BORDER_ERROR : BORDER,
             padding: '2px 5px 3px 5px',
             borderRadius: 5,
             opacity: isBusy ? 0.8 : 1,
+            flexGrow: 1,
             ...inputStyle,
-        }
-
-        if (style?.border === 'unset') {
-            style.border = BORDER
         }
 
         return <Label label={label} ref={ref} style={defaultStyle}>

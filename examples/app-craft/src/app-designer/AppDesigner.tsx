@@ -178,9 +178,10 @@ export default function AppDesigner(props: LayoutBuilderProps) {
 
         <AppDesignerContext.Provider
             value={context}>
-            <AppVariableInitialization>
-                <PageVariableInitialization>
-                    <ModalProvider>
+            <ModalProvider>
+                <AppVariableInitialization>
+                    <PageVariableInitialization>
+
                         <Dashboard panels={{
                             pages: {
                                 title: 'Pages',
@@ -315,9 +316,10 @@ export default function AppDesigner(props: LayoutBuilderProps) {
                                        }, 0);
                                    }}>
                         </Dashboard>
-                    </ModalProvider>
-                </PageVariableInitialization>
-            </AppVariableInitialization>
+
+                    </PageVariableInitialization>
+                </AppVariableInitialization>
+            </ModalProvider>
         </AppDesignerContext.Provider>
     </ErrorBoundary>
 }

@@ -34,7 +34,7 @@ export default function LoadingScreen() {
             observer.disconnect();
             clearTimeout(stabilityTimer.current);
         }
-    }, []);
+    }, [stabilityDelay]);
     useEffect(() => {
         if (isStable) {
             setTimeout(() => {

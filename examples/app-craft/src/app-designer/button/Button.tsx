@@ -30,7 +30,8 @@ export const Button = forwardRef(function Button(props: DetailedHTMLProps<Button
     const formContext = useContext(FormContext);
     useSignalEffect(() => {
         const isBusy = formContext !== undefined && formContext.isBusy.get();
-        setIsBusy(isBusy);
+        const isDisabled = formContext !== undefined && formContext.isDisabled.get();
+        setIsBusy(isBusy || isDisabled)
     })
     const buttonStyle: CSSProperties = useMemo(() => {
         const defaultStyle: CSSProperties = {

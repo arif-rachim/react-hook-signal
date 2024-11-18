@@ -42,9 +42,9 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
         }}>
             <ErrorBoundary>
                 <AppViewerContext.Provider value={context}>
-                    <AppVariableInitialization>
-                        <PageVariableInitialization>
-                            <ModalProvider>
+                    <ModalProvider>
+                        <AppVariableInitialization>
+                            <PageVariableInitialization>
                                 <notifiable.div style={{
                                     flexGrow: 1,
                                     display: 'flex',
@@ -63,9 +63,10 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
                                         return <></>
                                     }}
                                 </notifiable.div>
-                            </ModalProvider>
-                        </PageVariableInitialization>
-                    </AppVariableInitialization>
+
+                            </PageVariableInitialization>
+                        </AppVariableInitialization>
+                    </ModalProvider>
                 </AppViewerContext.Provider>
 
             </ErrorBoundary>

@@ -15,6 +15,8 @@ import {initiateComputed} from "./initiator/initiateComputed.ts";
 import {initiateState} from "./initiator/initiateState.ts";
 import {initiateEffect} from "./initiator/initiateEffect.ts";
 import {useModalBox} from "./initiator/useModalBox.tsx";
+import {useSaveSqlLite} from "../hooks/useSaveSqlLite.ts";
+import {useDeleteSqlLite} from "../hooks/useDeleteSqlLite.ts";
 
 export function PageVariableInitialization(props: PropsWithChildren) {
 
@@ -31,7 +33,10 @@ export function PageVariableInitialization(props: PropsWithChildren) {
         navigate
     } = useAppContext();
 
-    const modalBox = useModalBox();
+    const alertBox = useModalBox();
+    const saveSqlLite = useSaveSqlLite();
+    const deleteSqlLite = useDeleteSqlLite();
+    const tools = {saveSqlLite,deleteSqlLite};
 
     const validatorsComputed = useComputed<Array<{ variableId: string, validator: ZodType }>>(() => {
         return createValidator(allPageVariablesSignal.get(), errorMessage);
@@ -62,7 +67,9 @@ export function PageVariableInitialization(props: PropsWithChildren) {
             allCallables: allPageCallablesSignal.get(),
             app,
             page,
-            navigate
+            navigate,
+            alertBox,
+            tools
         })
         return page;
     });
@@ -92,7 +99,8 @@ export function PageVariableInitialization(props: PropsWithChildren) {
             page,
             navigate,
             variables,
-            modalBox
+            alertBox,
+            tools
         })
     })
     return <PageVariableInitializationContext.Provider value={pageScopesSignal}>

@@ -12,14 +12,16 @@ export function initiateEffect(props: {
     variables: Array<Variable>,
     app: FormulaDependencyParameter,
     page: FormulaDependencyParameter,
-    modalBox: ModalBox
+    alertBox: ModalBox,
+    tools: { deleteSqlLite: () => Promise<void>, saveSqlLite: (buffer: ArrayBuffer) => Promise<void> },
 }) {
     const {
         navigate,
         variables,
         app,
         page,
-        modalBox
+        alertBox,
+        tools
     } = props;
 
     const destructorCallbacks: Array<() => void> = [];
@@ -27,11 +29,11 @@ export function initiateEffect(props: {
         if (v.type !== 'effect') {
             continue;
         }
-        const params = ['navigate', 'db', 'app', 'page', 'modalBox', `${v.functionCode}`];
+        const params = ['navigate', 'db', 'app', 'page', 'alertBox', 'tools', `${v.functionCode}`];
         try {
             const func = new Function(...params) as (...args: unknown[]) => void
             const destructor = effect(() => {
-                const instances = [navigate, db, app, page, modalBox]
+                const instances = [navigate, db, app, page, alertBox, tools]
                 try {
                     func.call(null, ...instances);
                 } catch (err) {

@@ -1,13 +1,13 @@
 import {Button} from "../../button/Button.tsx";
 import {ChangeEvent, useRef} from "react";
-import sqlite from "./sqlite/sqlite.ts";
-import {getTables, Table} from "./service/getTables.ts";
+import {Table} from "./service/getTables.ts";
 import {notifiable, useComputed, useSignal} from "react-hook-signal";
 import {Icon} from "../../Icon.ts";
 import {useAddDashboardPanel} from "../../dashboard/useAddDashboardPanel.tsx";
 import TableEditor from "./table-editor/TableEditor.tsx";
 import {useAppContext} from "../../hooks/useAppContext.ts";
-import {useUpdateApplication} from "../../hooks/useUpdateApplication.ts";
+import {useDeleteSqlLite} from "../../hooks/useDeleteSqlLite.ts";
+import {useSaveSqlLite} from "../../hooks/useSaveSqlLite.ts";
 
 export function DatabasePanel() {
     const focusedItemSignal = useSignal<string>('');
@@ -24,20 +24,8 @@ export function DatabasePanel() {
         }
     }
 
-    async function deleteSqlLite(){
-        // we need to delete sqlite here
-        const result = await sqlite({type: 'deleteFromFile'});
-        if (!result.errors) {
-            const result = await getTables();
-            updateApplication(old => {
-
-                old.tables = result;
-            });
-
-        }
-    }
-
-    const updateApplication = useUpdateApplication();
+    const deleteSqlLite = useDeleteSqlLite();
+    const saveSqlLite = useSaveSqlLite();
 
     async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
         const files = e.target.files;
@@ -48,13 +36,7 @@ export function DatabasePanel() {
 
         if (file) {
             const arrayBuffer = await file.arrayBuffer();
-            const result = await sqlite({type: 'saveToFile', binaryArray: new Uint8Array(arrayBuffer)})
-            if (!result.errors) {
-                const result = await getTables();
-                updateApplication(old => {
-                    old.tables = result;
-                })
-            }
+            await saveSqlLite(arrayBuffer);
         }
     }
 
@@ -72,10 +54,10 @@ export function DatabasePanel() {
     }
 
     return <div style={{display: 'flex', flexDirection: 'column'}}>
-        <div style={{display: 'flex',padding : 10}}>
+        <div style={{display: 'flex', padding: 10}}>
             <Button
                 style={{
-                    flexGrow :1,
+                    flexGrow: 1,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 5,
@@ -83,16 +65,16 @@ export function DatabasePanel() {
                     padding: '0px 10px 2px 10px',
                     background: 'rgba(0,0,0,0.0)',
                     border: '1px solid rgba(0,0,0,0.2)',
-                    borderTopRightRadius:0,
-                    borderBottomRightRadius : 0,
-                    borderRight : 'unset',
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    borderRight: 'unset',
                     color: '#333',
                 }}
                 onClick={() => addSqlLite()}
-            icon={'IoMdAdd'} >{'Load SqlLite'}</Button>
+                icon={'IoMdAdd'}>{'Load SqlLite'}</Button>
             <Button
                 style={{
-                    flexGrow :1,
+                    flexGrow: 1,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 5,
@@ -100,8 +82,8 @@ export function DatabasePanel() {
                     padding: '0px 10px 2px 10px',
                     background: 'rgba(0,0,0,0.0)',
                     border: '1px solid rgba(0,0,0,0.2)',
-                    borderTopLeftRadius:0,
-                    borderBottomLeftRadius : 0,
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
                     color: '#333',
                 }}
                 onClick={() => deleteSqlLite()} icon={'IoMdRemove'}

@@ -6,8 +6,9 @@ import {Label} from "../label/Label.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {isDate} from "./isDate.ts";
 import {FormContext} from "../Form.tsx";
-import {DivWithClickOutside, useShowPopUp} from "../../hooks/useShowPopUp.tsx";
+import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
+import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutsude.tsx"
 
 const ERROR_COLOR = '#C00000';
 export const DateTimeInput = forwardRef(function DateTimeInput(props: {

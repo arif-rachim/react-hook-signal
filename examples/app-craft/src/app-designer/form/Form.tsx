@@ -15,13 +15,16 @@ type Validator = (params: {
 
 export const Form = forwardRef(function Form(props: {
     value?: Record<string, unknown>,
-    onChange?: (value: Record<string, unknown>,config:{errors:Signal.State<Record<string, string>> }) => Promise<void>|void,
+    onChange?: (value: Record<string, unknown>, config: {
+        errors: Signal.State<Record<string, string>>
+    }) => Promise<void> | void,
     container: Container,
     style: CSSProperties,
+    disabled?: boolean,
     ["data-element-id"]: string
 }, ref: ForwardedRef<HTMLFormElement>) {
 
-    const {value, onChange, container, style} = props;
+    const {value, onChange, container, disabled, style} = props;
     const containerStyle = useContainerStyleHook(style);
     const {elements} = useContainerLayoutHook(container);
 
@@ -31,6 +34,8 @@ export const Form = forwardRef(function Form(props: {
     const validators = useSignal<Record<string, Validator>>({});
     const isChanged = useSignal<boolean>(false);
     const isBusy = useSignal<boolean>(false);
+    const isDisabled = useSignal<boolean>(disabled === true);
+
 
     const reset = () => {
         localValue.set(structuredClone(value ?? {}));
@@ -44,11 +49,11 @@ export const Form = forwardRef(function Form(props: {
         if (!isValid) {
             return isBusy.set(false);
         }
-        if(!onChange){
+        if (!onChange) {
             isBusy.set(false);
             return;
         }
-        await onChange(localValue.get(),{errors});
+        await onChange(localValue.get(), {errors});
         isChanged.set(false);
         isBusy.set(false);
     }
@@ -72,13 +77,17 @@ export const Form = forwardRef(function Form(props: {
                 const value = formValue[key];
                 const error = await validateValue({key, value});
                 if (error) {
-                    errorsValue[key] = error
+                    errorsValue[key] = error as string
                 }
             }
         }
         errors.set(errorsValue);
         return Object.keys(errorsValue).length === 0;
     }
+    useEffect(() => {
+        isDisabled.set(disabled === true);
+    }, [disabled, isDisabled]);
+
     useEffect(() => {
         localValue.set(structuredClone(value ?? {}));
         isChanged.set(false);
@@ -108,7 +117,8 @@ export const Form = forwardRef(function Form(props: {
                 isChanged,
                 formIsValid,
                 validateValue,
-                isBusy
+                isBusy,
+                isDisabled
             }}>
                 {elements}
             </FormContext.Provider>
@@ -126,7 +136,8 @@ export const FormContext = createContext<{
     submit: () => Promise<void>,
     formIsValid: () => Promise<boolean>
     validateValue: (params: { key: string, value: unknown }) => Promise<string | undefined> | undefined,
-    isBusy : Signal.State<boolean>
+    isBusy: Signal.State<boolean>,
+    isDisabled: Signal.State<boolean>
 
 } | undefined>(undefined)
 /*

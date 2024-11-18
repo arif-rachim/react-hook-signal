@@ -80,6 +80,7 @@ export const DefaultElements: Record<string, Element> = {
         property: {
             style: cssPropertiesSchema,
             value: z.record(z.unknown()).optional(),
+            disabled: z.boolean().optional(),
             onChange: z.function().args(
                 z.record(z.unknown()),
                 z.object({
@@ -92,8 +93,9 @@ export const DefaultElements: Record<string, Element> = {
             schema: z.any()
         },
         component: (props, ref) => {
-            const {container, onChange, value} = props;
+            const {container, onChange, disabled, value} = props;
             return <Form ref={ref as MutableRefObject<HTMLFormElement>} {...props}
+                         disabled={disabled}
                          style={props.style as CSSProperties}
                          container={container}
                          data-element-id={props["data-element-id"]}
@@ -173,18 +175,20 @@ export const DefaultElements: Record<string, Element> = {
             label: z.string().optional(),
             error: z.string().optional(),
             onChange: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
+            onBlur: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema,
             type: z.enum(['text', 'number', 'password']).optional()
         },
         component: (props, ref) => {
-            const {name, onChange, value, label, error, type} = props;
+            const {name, onChange, onBlur, value, label, error, type} = props;
             return <TextInput ref={ref as MutableRefObject<HTMLLabelElement>}
                               style={props.style}
                               name={name}
                               onChange={onChange}
                               value={value}
                               label={label}
+                              onBlur={onBlur}
                               inputStyle={props.inputStyle as CSSProperties}
                               error={error}
                               type={type}
@@ -584,6 +588,7 @@ export const DefaultElements: Record<string, Element> = {
             filterable: z.boolean().optional(),
             sortable: z.boolean().optional(),
             pageable: z.boolean().optional(),
+            style: cssPropertiesSchema,
             itemToKey: z.function().args(z.record(ZodSqlValue)).returns(z.union([z.string(), z.number()]))
         },
         component: (props, ref) => {

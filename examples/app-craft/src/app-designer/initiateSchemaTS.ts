@@ -5,6 +5,7 @@ import {composeDbSchema} from "./variable-initialization/initiator/dbSchemaIniti
 import {composeCallableSchema} from "./variable-initialization/initiator/callableSchemaInitialization.ts";
 import {composeFetcherSchema} from "./variable-initialization/initiator/fetcherSchemaInitialization.ts";
 import {composeQuerySchema} from "./variable-initialization/initiator/queryInitialization.ts";
+import {icons} from "./zod-schema/cssPropertiesSchema.ts";
 
 export function initiateSchemaTS(props: {
     allApplicationVariables: Array<Variable>,
@@ -40,6 +41,7 @@ ${returnTypeDefinition(returnType)}
 ${composeNavigation(allPages)}
 ${composeDbSchema(allTables)}
 ${composeAlert()}
+${composeTools()}
 declare const app:{
     var:${composeLibrary(allApplicationVariables)},
     query:${composeQuerySchema(allApplicationQueries)},
@@ -89,6 +91,14 @@ function composeNavigation(allPages: Array<Page>) {
 
 function composeAlert(){
     return `
-    declare const modalBox = (props:{message:string,title?:string,icon?:string,buttons?:Array<{id:string,label:string,icon:string}>}) => Promise<string>;
+    type Icons = ${icons.map(i => `"${i}"`).join('|')};
+    declare const alertBox = (props:{message:string,title?:string,icon?:Icons,buttons?:Array<{id:string,label:string,icon:Icons}>}) => Promise<string>;
     `
 }
+
+function composeTools(){
+    return `
+    declare const tools = {deleteSqlLite:() => Promise<void>,saveSqlLite:(arrayBuffer:ArrayBuffer) => Promise<void>};
+    `
+}
+
