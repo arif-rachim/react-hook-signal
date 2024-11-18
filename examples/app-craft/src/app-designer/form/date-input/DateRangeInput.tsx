@@ -9,7 +9,7 @@ import {FormContext} from "../Form.tsx";
 import {TextInput} from "../text-input/TextInput.tsx";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
-import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutsude.tsx"
+import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 
 type RangeInput = { from: Date | string, to: Date | string };
 

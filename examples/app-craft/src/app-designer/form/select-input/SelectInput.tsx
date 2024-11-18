@@ -8,7 +8,7 @@ import {SqlValue} from "sql.js";
 import {FormContext} from "../Form.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
-import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutsude.tsx"
+import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 
 const defaultRowDataToText = (data: unknown) => {
     if (typeof data === "string") {

@@ -8,7 +8,7 @@ import {isDate} from "./isDate.ts";
 import {FormContext} from "../Form.tsx";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
-import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutsude.tsx"
+import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 
 const ERROR_COLOR = '#C00000';
 export const DateTimeInput = forwardRef(function DateTimeInput(props: {

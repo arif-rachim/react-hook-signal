@@ -7,7 +7,7 @@ import {FormContext} from "../Form.tsx";
 import {isDate} from "./isDate.ts";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
-import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutsude.tsx"
+import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 
 export const DateInput = forwardRef(function DateInput(props: {
     name?: string,
