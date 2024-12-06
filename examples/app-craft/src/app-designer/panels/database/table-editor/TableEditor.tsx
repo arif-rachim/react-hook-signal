@@ -1,5 +1,5 @@
 import {Table} from "../service/getTables.ts";
-import {CSSProperties, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from "react";
+import {CSSProperties, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useMemo, useState} from "react";
 import {SqlValue} from "sql.js";
 import {Button} from "../../../button/Button.tsx";
 import {BORDER} from "../../../Border.ts";
@@ -217,7 +217,8 @@ export type ColumnsConfig = Record<string, {
     width?: CSSProperties["width"],
     rendererPageId?: string,
     rendererPageDataMapperFormula?: string,
-    title?: string
+    title?: string,
+    index?: number
 }>
 
 
@@ -263,7 +264,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     onRowDoubleClick?: (value: Record<string, SqlValue>) => void
 }) {
     const {
-        columns,
+        columns:columnsProps,
         data,
         focusedRow: focusedRowProps,
         onFocusedRowChange,
@@ -283,15 +284,21 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
     const appSignal = useContext(AppVariableInitializationContext);
     const pageSignal = useContext(PageVariableInitializationContext);
-
-
+    const columns = useMemo(() => {
+        return ((columnsProps ?? []).map((col, index) => {
+            if (columnsConfig && col in columnsConfig && columnsConfig[col]) {
+                return {col, index: columnsConfig[col].index}
+            }
+            return {col, index}
+        }) as Array<{ col: string, index: number }>).sort((a, b) => (a.index - b.index)).map(i => i.col);
+    }, [columnsProps, columnsConfig])
     return <>
         <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
             <div style={{display: 'table-row', position: 'sticky', top: 0}}>
                 {columns.map(col => {
                     const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
                     let title = col;
-                    if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
+                    if (columnsConfig && typeof columnsConfig === 'object' && col in columnsConfig) {
                         const config = columnsConfig[col];
                         if (config.title) {
                             title = config.title;
@@ -310,7 +317,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         borderBottom: BORDER,
                         backgroundColor: '#F2F2F2',
                         color: "black",
-                        padding: '5px 0px 5px 10px',
+                        padding: '2px 0px 2px 10px',
                         width,
                     }} onClick={() => {
                         if (onSortChange === undefined) {
@@ -325,7 +332,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         }
                     }} key={col}>
                         <div style={{display: 'flex', justifyContent: 'center', gap: 5}}>
-                            <div style={{width: '100%'}}>
+                            <div style={{width: '100%', fontSize: 'smaller', fontWeight: 'bold'}}>
                                 {title}
                             </div>
                             {sortable && sortIndex >= 0 &&
@@ -346,7 +353,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                 })}
             </div>
             {filterable &&
-                <div style={{display: 'table-row', position: 'sticky', top: 32}}>
+                <div style={{display: 'table-row', position: 'sticky', top: 26}}>
                     {columns.map((col, index, source) => {
                         const lastIndex = (source.length - 1) === index
                         const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
@@ -475,7 +482,13 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
 
         </div>
         {dataIsEmpty &&
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', fontStyle: 'italic'}}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontStyle: 'italic',
+                padding: '5px 10px'
+            }}>
                 {'There is no information to show in this table right now.'}
             </div>}</>
 }

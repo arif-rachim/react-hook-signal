@@ -9,6 +9,7 @@ import {FormContext} from "../Form.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 const defaultRowDataToText = (data: unknown) => {
     if (typeof data === "string") {
@@ -31,7 +32,11 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     valueToRowData?: (value?: string | number) => Promise<Record<string, SqlValue>>,
     rowDataToText?: (data?: Record<string, SqlValue>) => string,
     rowDataToValue?: (data?: Record<string, SqlValue>) => string | number,
-    itemToKey?: (data?: Record<string, SqlValue>) => string | number
+    itemToKey?: (data?: Record<string, SqlValue>) => string | number,
+    filterable?: boolean,
+    pageable?: boolean,
+    sortable?: boolean,
+    disabled?:boolean
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {
         inputStyle,
@@ -48,12 +53,17 @@ export const SelectInput = forwardRef(function SelectInput(props: {
         rowDataToValue,
         itemToKey,
         name,
-        popupStyle
+        popupStyle,
+        filterable,
+        sortable,
+        pageable,
+        disabled
     } = props;
     const nameSignal = useSignal(name);
     const [localValue, setLocalValue] = useState<Record<string, SqlValue> | undefined>();
     const [localError, setLocalError] = useState<string | undefined>(error);
-
+    const context = useAppContext();
+    const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
     const propsRef = useRef({valueToRowData, rowDataToText, rowDataToValue});
     propsRef.current = {valueToRowData, rowDataToText, rowDataToValue}
 
@@ -107,14 +117,21 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                       error={localError}
                       label={label}
                       value={text}
+                      disabled={disabled}
                       onFocus={async () => {
+                          if(disabled){
+                              return;
+                          }
+                          if(isDesignMode){
+                              return;
+                          }
                           const props = await showPopup<{
                               value: Record<string, SqlValue>,
                               data: Array<Record<string, SqlValue>>,
                               totalPage: number,
                               currentPage: number,
                               index: number
-                          } | false, HTMLLabelElement>(ref, (closePanel,commitLayout) => {
+                          } | false, HTMLLabelElement>(ref, (closePanel, commitLayout) => {
 
                               return <DivWithClickOutside onClickOutside={() => {
                                   closePanel(false);
@@ -123,16 +140,19 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                                             paginationButtonCount={3}
                                             onFocusedRowChange={closePanel}
                                             style={{
-                                                boxShadow: '0px 15px 8px -8px rgba(0,0,0,0.5)',
+                                                boxShadow: '0px 10px 8px -8px rgba(0,0,0,0.5)',
+                                                paddingBottom :filterable ? 0 : 15,
                                                 borderBottomLeftRadius: 10,
                                                 borderBottomRightRadius: 10,
+                                                borderLeft:'1px solid rgba(0,0,0,0.1)',
+                                                borderRight:'1px solid rgba(0,0,0,0.1)',
                                                 ...popupStyle
                                             }}
                                             focusedRow={localValue}
                                             container={container}
-                                            filterable={true}
-                                            sortable={true}
-                                            pageable={true}
+                                            filterable={filterable}
+                                            sortable={sortable}
+                                            pageable={pageable}
                                             itemToKey={itemToKey}
                                             onQueryResultChange={commitLayout}
                               /></DivWithClickOutside>

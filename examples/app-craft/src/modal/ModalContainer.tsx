@@ -14,8 +14,6 @@ export function ModalContainer(props: { modalPanels: Array<ModalParameter> }) {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    backdropFilter: 'blur(0.5px)',
-                    backgroundColor: 'rgba(0,0,0,0.1)',
                     width: '100%',
                     height: '100%',
                 }} key={p.id}>{p.element}</AutoFocusDiv>

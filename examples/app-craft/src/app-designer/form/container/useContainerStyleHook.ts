@@ -26,6 +26,10 @@ export function useContainerStyleHook(style: CSSProperties) {
                     style[key] = MIN_SPACE;
                 }
             })
+        }else{
+            // this is required otherwise container will look silly
+            style.minWidth = 0;
+            style.minHeight = 0;
         }
         return style;
     }, [displayMode, styleString]);

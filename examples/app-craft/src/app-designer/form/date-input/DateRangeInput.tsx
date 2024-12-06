@@ -10,6 +10,7 @@ import {TextInput} from "../text-input/TextInput.tsx";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 type RangeInput = { from: Date | string, to: Date | string };
 
@@ -24,16 +25,18 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
     onChange?: (value?: RangeInput) => void,
     label?: string,
     error?: string,
+    disabled?: boolean,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
-    const {inputStyle, style: defaultStyle, error, label, onChange, value, name} = props;
+    const {inputStyle, style: defaultStyle, error, label, onChange, value, name, disabled} = props;
     const nameSignal = useSignal(name);
     const [localFrom, setLocalFrom] = useState<string | undefined>();
     const [localTo, setLocalTo] = useState<string | undefined>();
-    const [localError, setLocalError] = useState<string | undefined>(error);
-
+    const [localError, setLocalError] = useState<string | undefined>(error)
+    const context = useAppContext();
+    const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
     const propsRef = useRef({onChange, value});
     propsRef.current = {onChange, value};
 
@@ -141,7 +144,13 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
 
     const showPopup = useShowPopUp();
     const onFocus = async () => {
-        const newDate = await showPopup<{ from: Date, to: Date }|false, HTMLLabelElement>(ref, (closePanel,commitLayout) => {
+        if (isDesignMode) {
+            return;
+        }
+        const newDate = await showPopup<{
+            from: Date,
+            to: Date
+        } | false, HTMLLabelElement>(ref, (closePanel, commitLayout) => {
             commitLayout();
             return <DivWithClickOutside style={{
                 display: 'flex',
@@ -158,7 +167,7 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
                                  value={{from: new Date(localFrom ?? ''), to: new Date(localTo ?? '')}}/>
             </DivWithClickOutside>
         });
-        if(newDate === false){
+        if (newDate === false) {
             return;
         }
         setLocalFrom(format_ddMMMyyyy(newDate.from));
@@ -167,6 +176,7 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
     return <Label label={label} ref={ref} style={defaultStyle}>
         <div style={{display: 'flex', gap: 10}}>
             <TextInput
+                disabled={disabled}
                 value={localFrom}
                 onChange={val => setLocalFrom(val)}
                 inputStyle={style}
@@ -174,6 +184,7 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
 
             />
             <TextInput
+                disabled={disabled}
                 value={localTo}
                 onChange={val => setLocalTo(val)}
                 inputStyle={style}

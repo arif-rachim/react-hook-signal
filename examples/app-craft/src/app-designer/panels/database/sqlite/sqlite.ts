@@ -1,7 +1,7 @@
 import type {BindParams, Database, SqlValue} from "sql.js";
 
 const defaultFileName = 'database.db';
-const debug: boolean = false;
+const debug: boolean = true;
 
 const log = (...args: unknown[]) => {
     if (debug) {
@@ -12,6 +12,11 @@ const log = (...args: unknown[]) => {
 interface SaveToOPFS {
     type: 'saveToFile',
     binaryArray: Uint8Array,
+    fileName?: string
+}
+
+interface PersistChanges {
+    type: 'persistChanges',
     fileName?: string
 }
 
@@ -32,7 +37,7 @@ interface ExecuteQuery {
     fileName?: string
 }
 
-type Payload = SaveToOPFS | LoadFromOPFS | ExecuteQuery | DeleteFromOPFS;
+type Payload = SaveToOPFS | LoadFromOPFS | ExecuteQuery | DeleteFromOPFS | PersistChanges;
 
 export default async function sqlite(payload: Payload): Promise<{ errors?: string, value?: unknown }> {
     if (payload.type === 'saveToFile') {
@@ -57,6 +62,10 @@ export default async function sqlite(payload: Payload): Promise<{ errors?: strin
     if (payload.type === 'deleteFromFile') {
         const result = await deleteFromOPFS({fileName: payload.fileName ?? defaultFileName});
         return {value: result.data, errors: result.success ? undefined : 'Unable to delete file'}
+    }
+    if (payload.type === 'persistChanges') {
+        await persistDb(payload.fileName ?? defaultFileName);
+        return {value: undefined, errors: undefined}
     }
     return {errors: 'Unable to identify payload type', value: ''}
 }
@@ -129,6 +138,14 @@ async function getDatabase(fileName: string) {
         }
     }
     return db;
+}
+
+async function persistDb(fileName:string){
+    const db = await getDatabase(fileName);
+    if(db){
+        const binaryArray = db.export();
+        await saveToOPFS({binaryArray,fileName})
+    }
 }
 
 async function executeQuery({query, params, fileName}: {

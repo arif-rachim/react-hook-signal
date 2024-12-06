@@ -44,7 +44,6 @@ export function useAppInitiator(props: LayoutBuilderProps & {
         const allPages = allPagesSignal.get();
         return allPages.find(i => i.id === activePageId)
     })
-
     const allApplicationVariablesSignal = useComputed<Array<Variable>>(() => applicationSignal.get().variables ?? []);
     const allPageVariablesSignal = useComputed<Array<Variable>>(() => activePageSignal.get()?.variables ?? []);
     const allContainersSignal = useComputed<Array<Container>>(() => activePageSignal.get()?.containers ?? []);

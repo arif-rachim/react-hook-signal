@@ -8,7 +8,6 @@ import {isEmpty} from "../utils/isEmpty.ts";
 import {DefaultElements} from "../app-designer/DefaultElements.tsx";
 import {useAppInitiator} from "../app-designer/hooks/useAppInitiator.ts";
 import {PageVariableInitialization} from "../app-designer/variable-initialization/PageVariableInitialization.tsx";
-import LoadingScreen from "../utils/LoadingScreen.tsx";
 import {ModalProvider} from "../modal/ModalProvider.tsx";
 
 /**
@@ -57,8 +56,10 @@ export default function AppViewer(props: LayoutBuilderProps & { startingPage: st
                                     {() => {
                                         const container = context.allContainersSignal.get().find(item => isEmpty(item.parent));
                                         if (container) {
-                                            return <><ContainerElement container={container}/>
-                                                <LoadingScreen/></>
+                                            return <>
+                                                <ContainerElement container={container}/>
+                                                {/*<LoadingScreen/>*/}
+                                            </>
                                         }
                                         return <></>
                                     }}

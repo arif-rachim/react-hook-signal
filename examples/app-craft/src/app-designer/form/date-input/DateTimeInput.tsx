@@ -9,24 +9,29 @@ import {FormContext} from "../Form.tsx";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
+import {useAppContext} from "../../hooks/useAppContext.ts";
+import {BORDER} from "../../Border.ts";
 
 const ERROR_COLOR = '#C00000';
 export const DateTimeInput = forwardRef(function DateTimeInput(props: {
     name?: string,
     value?: Date | string,
     onChange?: (value?: Date | string) => void,
+    disabled?: boolean,
     label?: string,
     error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
-    const {inputStyle, style, error, label, onChange, value, name} = props;
+    const {inputStyle, style, error, label, onChange, value, name, disabled} = props;
     const nameSignal = useSignal(name);
     const [localDate, setLocalDate] = useState<string | undefined>();
     const [localHour, setLocalHour] = useState<string | undefined>();
     const [localMinute, setLocalMinute] = useState<string | undefined>();
     const [localError, setLocalError] = useState<string | undefined>(error);
+    const context = useAppContext();
+    const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
     const propsRef = useRef({onChange, value});
     propsRef.current = {onChange, value};
 
@@ -114,11 +119,14 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
             setLocalMinute(minutes);
         }
     })
-
     const showPopup = useShowPopUp();
+    const firstSegmentTimeRef = useRef<HTMLInputElement | undefined>();
+    const secondSegmentTimeRef = useRef<HTMLInputElement | undefined>();
+    const trapHowManyTimesUserTypeKeyDown = useRef(0);
     return <Label ref={ref} label={label} style={{...style, flexDirection: 'column'}}>
         <div style={{display: 'flex', flexDirection: 'row', gap: 10, alignItems: 'flex-end'}}>
             <TextInput
+                disabled={disabled}
                 inputStyle={{
                     width: 90,
                     textAlign: 'center',
@@ -128,7 +136,10 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                 value={localDate}
                 onChange={val => setLocalDate(val)}
                 onFocus={async () => {
-                    const newDate = await showPopup<Date | false | undefined, HTMLLabelElement>(ref, (closePanel,commitLayout) => {
+                    if (isDesignMode) {
+                        return
+                    }
+                    const newDate = await showPopup<Date | false | undefined, HTMLLabelElement>(ref, (closePanel, commitLayout) => {
                         commitLayout();
                         return <DivWithClickOutside style={{
                             display: 'flex',
@@ -149,10 +160,15 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                         return;
                     }
                     setLocalDate(format_ddMMMyyyy(newDate));
+                    if (firstSegmentTimeRef.current) {
+                        firstSegmentTimeRef.current.focus();
+                    }
                 }}
             />
             <div style={{display: 'flex', flexDirection: 'row'}}>
                 <TextInput
+                    disabled={disabled}
+                    inputRef={firstSegmentTimeRef}
                     inputStyle={{
                         borderTopRightRadius: 0,
                         borderBottomRightRadius: 0,
@@ -165,8 +181,22 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                     style={{width: 30}}
                     maxLength={2}
                     onChange={e => setLocalHour(e)}
+                    onKeyUp={() => {
+                        trapHowManyTimesUserTypeKeyDown.current += 1;
+                        if (trapHowManyTimesUserTypeKeyDown.current === 2 && secondSegmentTimeRef.current) {
+                            trapHowManyTimesUserTypeKeyDown.current = 0;
+                            secondSegmentTimeRef.current.focus()
+                            return;
+                        }
+
+                    }}
                 />
+                <div style={{borderTop: BORDER, borderBottom: BORDER,background:disabled?'rgba(0,0,0,0.05)':'unset'}}>
+                    {':'}
+                </div>
                 <TextInput
+                    disabled={disabled}
+                    inputRef={secondSegmentTimeRef}
                     inputStyle={{
                         ...inputStyle,
                         borderTopLeftRadius: 0,

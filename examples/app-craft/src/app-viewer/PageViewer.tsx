@@ -1,7 +1,7 @@
 import {LayoutBuilderProps} from "../app-designer/LayoutBuilderProps.ts";
 import {Application, Container, Page} from "../app-designer/AppDesigner.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {AppViewerContext} from "./AppViewerContext.ts";
 import {isEmpty} from "../utils/isEmpty.ts";
 import ErrorBoundary from "../app-designer/ErrorBoundary.tsx";
@@ -17,10 +17,18 @@ export function PageViewer(props: {
     value: Record<string, unknown>,
     navigate: AppViewerContext['navigate']
 }) {
+
     const {elements, page, appConfig, value, navigate} = props;
     const variableInitialValueSignal = useSignal<Record<string, unknown>>(value);
+
+
+    const isMountedRef = useRef(false);
+
     useEffect(() => {
-        variableInitialValueSignal.set(value);
+        if(!isMountedRef.current){
+            variableInitialValueSignal.set(value);
+            isMountedRef.current = true;
+        }
     }, [value, variableInitialValueSignal]);
     const appContext = useAppInitiator({
         value: {
@@ -76,6 +84,13 @@ export function PageViewer(props: {
             setContainer(ctr);
         }
     })
+
+    /*
+    this is to debug why this panel is getting re-rendered
+    useWhichChange('PageViewer '+page.name,{...props,context,container});
+     */
+
+
     return <AppViewerContext.Provider value={context}>
         <PageVariableInitialization>
             <ErrorBoundary>

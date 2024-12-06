@@ -1,7 +1,7 @@
 import {z} from 'zod';
 
 // Utility for CSS length units (string or number)
-const cssLength = z.union([z.string(), z.number()]).optional();
+export const cssLength = z.union([z.string(), z.number()]).optional();
 
 // Enum-like validation for specific property values
 const cssPosition = z.enum(["static", "relative", "absolute", "fixed", "sticky"]).optional();

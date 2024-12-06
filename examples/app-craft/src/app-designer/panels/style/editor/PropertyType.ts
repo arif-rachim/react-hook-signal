@@ -1,5 +1,5 @@
 /**
- * Represents a property type of a container element.
+ * Represents a property type of container element.
  */
 export type PropertyType =
     'height'

@@ -2,13 +2,13 @@ import {notifiable, useSignal} from "react-hook-signal";
 import {Editor} from "@monaco-editor/react";
 import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {Button} from "../../../button/Button.tsx";
-import {ContainerPropertyType} from "../../../AppDesigner.tsx";
+import {Container, ContainerPropertyType} from "../../../AppDesigner.tsx";
 import {zodTypeToJson} from "../../../zodSchemaToJson.ts";
 import {BORDER} from "../../../Border.ts";
 import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContainer.ts";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
-import {ZodTypeAny} from "zod";
+import {z, ZodType, ZodTypeAny} from "zod";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -41,6 +41,10 @@ export function ComponentPropertyEditor(props: {
     const propsSignal = useSignal<ContainerPropertyType>(initialValue);
     const isModified = useSignal<boolean>(false)
     const update = useUpdateDragContainer();
+
+    // let's find parents form
+    const parentFormSchema = getParentFormSchema(selectedDragContainer, context.allContainersSignal.get())
+
     if (returnTypeZod === undefined) {
         return <></>
     }
@@ -90,6 +94,8 @@ export function ComponentPropertyEditor(props: {
                             allPageVariables,
                             allPageFetchers,
                             allPageCallables,
+
+                            formSchema: parentFormSchema
                         })
                         monaco.languages.typescript.javascriptDefaults.addExtraLib(dtsContent, "ts:filename/validation-source.d.ts");
                     }}
@@ -141,4 +147,31 @@ function createNewProps(): ContainerPropertyType {
     return {
         formula: '',
     }
+}
+
+
+function getParentFormSchema(selectedContainer: Container, allContainers: Container[]) {
+    const container = allContainers.find(i => i.id === selectedContainer?.parent);
+    if (container) {
+        if (container.type !== 'form') {
+            if (container.parent) {
+                return getParentFormSchema(container, allContainers);
+            }
+            return '';
+        }
+        if ('schema' in container.properties && container.properties.schema && container.properties.schema.formula) {
+            try {
+                const fun = new Function('module', 'z', container.properties.schema.formula);
+                const module: { exports: ZodType | undefined } = {exports: undefined};
+                fun.apply(null, [module, z]);
+                if (module.exports) {
+                    const type = module.exports as ZodType
+                    return zodTypeToJson(type)
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+    return '';
 }

@@ -258,7 +258,7 @@ function RenderTree(props: {
          }
          const clone = dragElement.cloneNode(true) as HTMLElement;
          clone.style.position = 'absolute';
-         clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
+         clone.style.top = '-9999px'; // Move it off-screen, so it doesn't interfere
          document.body.appendChild(clone);
 
          //event.dataTransfer.setDragImage(clone, 0, 0);

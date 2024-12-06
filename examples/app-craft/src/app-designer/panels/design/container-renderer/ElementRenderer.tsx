@@ -11,7 +11,7 @@ import ErrorBoundary from "../../../ErrorBoundary.tsx";
  * This is considered as the glue attaching external component and the platform.
  *
  * In summary, RenderContainer performs the following tasks:
- * - It makes use of the React Context, AppDesignerContext, to get various properties and signals (which presumably represent state values managed with some sort of a state management library).
+ * - It makes use of the React Context, AppDesignerContext, to get various properties and signals (which presumably represent state values managed with some sort of state management library).
  * - It derives the component based on container type. After destructuring container and elementsLib from the passed props and context respectively, Component is derived from elementsLib[container.type].
  * - It manages a propertiesSignal state, initialized from useSignal with container.properties and subsequently updated any time container.properties changes.
  * - It initializes an empty object in a state variable componentProps.

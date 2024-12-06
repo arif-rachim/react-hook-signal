@@ -14,7 +14,6 @@ function DataRendererFC(props: {
     const {style: propsStyle, component, ...properties} = props;
     const componentIdSignal = useSignal(component);
     const {allPagesSignal, elements, applicationSignal, navigate} = useAppContext();
-
     const [page, setPage] = useState<Page | undefined>(() => {
         const allPages = allPagesSignal.get();
         const componentId = componentIdSignal.get();
@@ -40,11 +39,13 @@ function DataRendererFC(props: {
         const page = allPages.find(p => p.id === componentId);
         setPage(page);
     });
+    const appConfig = applicationSignal.get();
+
     return <div ref={ref as ForwardedRef<HTMLDivElement>} style={style}>
         {page && <PageViewer
             elements={elements}
             page={page!}
-            appConfig={applicationSignal.get()}
+            appConfig={appConfig}
             value={properties} navigate={navigate}/>}
     </div>
 }

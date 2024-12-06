@@ -25,7 +25,7 @@ export function zodTypeToJson(type?: ZodType) {
     try {
         return printNode(zodToTs(type).node)
     } catch (_) {
-        // we dont need to print this error
+        // we don't need to print this error
     }
     return printNode(zodToTs(z.any()).node)
 }

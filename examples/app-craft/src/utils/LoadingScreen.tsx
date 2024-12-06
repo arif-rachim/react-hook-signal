@@ -1,5 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 import {useSignalEffect} from "react-hook-signal";
+import {useAppContext} from "../app-designer/hooks/useAppContext.ts";
+import {AppViewerContext} from "../app-viewer/AppViewerContext.ts";
 
 const transitionDuration = 100;
 export default function LoadingScreen() {
@@ -7,8 +9,10 @@ export default function LoadingScreen() {
     const [showLoading, setShowLoading] = useState(true);
     const stabilityDelay = transitionDuration;
     const stabilityTimer = useRef<number>(0);
+    const {activePageIdSignal} = useAppContext<AppViewerContext>();
 
     useSignalEffect(() => {
+        activePageIdSignal.get();
         setShowLoading(true);
         setIsStable(false);
         const tm = setTimeout(() => {
@@ -17,13 +21,10 @@ export default function LoadingScreen() {
         stabilityTimer.current = tm as unknown as number;
     })
     useEffect(() => {
-        setShowLoading(true);
-        setIsStable(false);
         const observer = new PerformanceObserver(() => {
             setShowLoading(true);
             setIsStable(false);
             clearTimeout(stabilityTimer.current);
-
             const tm = setTimeout(() => {
                 setIsStable(true);
             }, stabilityDelay);

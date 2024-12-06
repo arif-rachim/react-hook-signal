@@ -1,5 +1,5 @@
-import {createContext, CSSProperties, ForwardedRef, forwardRef, LegacyRef, useEffect} from "react";
-import {useSignal} from "react-hook-signal";
+import {createContext, CSSProperties, ForwardedRef, forwardRef, LegacyRef, useEffect, useRef} from "react";
+import {useSignal, useSignalEffect} from "react-hook-signal";
 import {Signal} from "signal-polyfill";
 import {Container} from "../AppDesigner.tsx";
 import {useContainerStyleHook} from "./container/useContainerStyleHook.ts";
@@ -19,17 +19,21 @@ export const Form = forwardRef(function Form(props: {
         errors: Signal.State<Record<string, string>>
     }) => Promise<void> | void,
     container: Container,
+    decorator?: (newValue?: Record<string, unknown>, prevValue?: Record<string, unknown>) => Promise<Record<string, unknown>>,
     style: CSSProperties,
     disabled?: boolean,
     ["data-element-id"]: string
 }, ref: ForwardedRef<HTMLFormElement>) {
 
-    const {value, onChange, container, disabled, style} = props;
+    const {value, onChange, container, disabled, style, decorator} = props;
     const containerStyle = useContainerStyleHook(style);
     const {elements} = useContainerLayoutHook(container);
 
-
+    const propsRef = useRef({onChange, decorator});
+    propsRef.current = {onChange, decorator};
+    const prevValueRef = useRef<Record<string, unknown> | undefined>(undefined);
     const localValue = useSignal<Record<string, unknown>>(structuredClone(value ?? {}));
+
     const errors = useSignal<Record<string, string>>({});
     const validators = useSignal<Record<string, Validator>>({});
     const isChanged = useSignal<boolean>(false);
@@ -49,11 +53,11 @@ export const Form = forwardRef(function Form(props: {
         if (!isValid) {
             return isBusy.set(false);
         }
-        if (!onChange) {
+        if (!propsRef.current.onChange) {
             isBusy.set(false);
             return;
         }
-        await onChange(localValue.get(), {errors});
+        await propsRef.current.onChange(localValue.get(), {errors});
         isChanged.set(false);
         isBusy.set(false);
     }
@@ -84,6 +88,7 @@ export const Form = forwardRef(function Form(props: {
         errors.set(errorsValue);
         return Object.keys(errorsValue).length === 0;
     }
+
     useEffect(() => {
         isDisabled.set(disabled === true);
     }, [disabled, isDisabled]);
@@ -92,6 +97,25 @@ export const Form = forwardRef(function Form(props: {
         localValue.set(structuredClone(value ?? {}));
         isChanged.set(false);
     }, [localValue, isChanged, value]);
+
+    useSignalEffect(() => {
+        let valPrev = prevValueRef.current;
+        let valCurrent = localValue.get();
+        (async () => {
+            if (propsRef.current.decorator) {
+                let valNext = await propsRef.current.decorator(valCurrent, valPrev);
+                while (valNext !== valCurrent){
+                    valPrev = valCurrent;
+                    valCurrent = valNext;
+                    valNext = await propsRef.current.decorator(valCurrent, valPrev);
+                }
+                prevValueRef.current = valCurrent;
+                localValue.set(valNext);
+
+            }
+        })();
+    })
+
     return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
         <form ref={ref as LegacyRef<HTMLFormElement>}
               style={containerStyle}
@@ -138,7 +162,6 @@ export const FormContext = createContext<{
     validateValue: (params: { key: string, value: unknown }) => Promise<string | undefined> | undefined,
     isBusy: Signal.State<boolean>,
     isDisabled: Signal.State<boolean>
-
 } | undefined>(undefined)
 /*
 function delay(milliSecond:number){

@@ -132,7 +132,7 @@ export function QueriesPanel() {
             <div style={{paddingBottom: 2, paddingLeft: 15, fontWeight: 'bold', marginTop: 10, flexGrow: 1}}>App
             </div>
             <AddButtons editQueries={() => {
-                editQuery(undefined, 'page')
+                editQuery(undefined, 'application')
             }}/>
         </div>
         <notifiable.div style={{display: 'flex', flexDirection: 'column'}}>

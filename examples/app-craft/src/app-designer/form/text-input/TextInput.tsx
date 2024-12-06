@@ -1,5 +1,14 @@
 import {BORDER, BORDER_ERROR} from "../../Border.ts";
-import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
+import {
+    CSSProperties,
+    ForwardedRef,
+    forwardRef,
+    MutableRefObject,
+    useContext,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import {Label} from "../label/Label.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {FormContext} from "../Form.tsx";
@@ -11,15 +20,18 @@ export const TextInput = forwardRef(function TextInput(props: {
         onChange?: (value: string) => void,
         onFocus?: () => void,
         onBlur?: (value: string) => void,
-        onKeyDown?: () => void,
+        onKeyDown?: (value: string) => void,
+        onKeyUp?: (value: string) => void,
         onMouseDown?: () => void,
         label?: string,
         error?: string,
         style?: CSSProperties,
         inputStyle?: CSSProperties,
         maxLength?: number,
+        disabled?: boolean,
         type?: 'text' | 'number' | 'password',
-        allCaps?: boolean
+        allCaps?: boolean,
+        inputRef?: MutableRefObject<HTMLInputElement|undefined>
     }, ref: ForwardedRef<HTMLLabelElement>) {
         const {
             value,
@@ -31,19 +43,24 @@ export const TextInput = forwardRef(function TextInput(props: {
             onFocus,
             onBlur,
             onKeyDown,
+            onKeyUp,
             onMouseDown,
             maxLength,
             name,
             type,
-            allCaps
+            allCaps,
+            disabled,
         } = props;
         const nameSignal = useSignal(name);
         const [localValue, setLocalValue] = useState<string | undefined>(value);
         const [localError, setLocalError] = useState<string | undefined>();
         const [cursorLoc, setCursorLoc] = useState<null | number>(null);
         const [isBusy, setIsBusy] = useState<boolean>(false);
-        const inputRef = useRef<HTMLInputElement | null>(null);
+        const [isDisabled, setIsDisabled] = useState<boolean>(disabled === true);
+        const localRef = useRef<HTMLInputElement | null>(null);
+        const inputRef = props.inputRef ? props.inputRef : localRef;
 
+        const inputDisabled = isDisabled || isBusy;
         const propsRef = useRef({onChange});
         propsRef.current = {onChange};
 
@@ -60,10 +77,14 @@ export const TextInput = forwardRef(function TextInput(props: {
         }, [error]);
 
         useEffect(() => {
+            setIsDisabled(disabled === true);
+        }, [disabled]);
+
+        useEffect(() => {
             if (inputRef.current && inputRef.current?.type !== 'number') {
                 inputRef.current.setSelectionRange(cursorLoc, cursorLoc);
             }
-        }, [localValue, cursorLoc]);
+        }, [inputRef,localValue, cursorLoc]);
 
         const formContext = useContext(FormContext);
 
@@ -88,27 +109,33 @@ export const TextInput = forwardRef(function TextInput(props: {
         useSignalEffect(() => {
             const isBusy = formContext !== undefined && formContext.isBusy.get();
             const isDisabled = formContext !== undefined && formContext.isDisabled.get();
-            setIsBusy(isBusy || isDisabled)
+            setIsBusy(isBusy);
+            setIsDisabled(isDisabled);
         });
         const style = {
             border: localError ? BORDER_ERROR : BORDER,
             padding: '2px 5px 3px 5px',
             borderRadius: 5,
-            opacity: isBusy ? 0.8 : 1,
+            backgroundColor: inputDisabled ? 'rgba(0,0,0,0.05)' : 'unset',
             flexGrow: 1,
+            minWidth : 0,
+            textAlign : type === 'number' ? 'right' : 'left',
             ...inputStyle,
-        }
+        } as CSSProperties
 
-        return <Label label={label} ref={ref} style={defaultStyle}>
+        return <Label label={label} ref={ref} style={{minWidth:0,...defaultStyle}}>
             <input
-                ref={inputRef}
+                ref={inputRef as MutableRefObject<HTMLInputElement>}
                 name={name}
-                disabled={isBusy}
+                disabled={inputDisabled}
                 value={localValue ?? ''}
                 maxLength={maxLength}
                 type={type}
                 onChange={(e) => {
-                    let val = e.target.value;
+                    if (inputDisabled) {
+                        return;
+                    }
+                    let val = getValue(e) ?? '';
                     if (allCaps !== false && type !== 'password') {
                         val = val.toUpperCase();
                     }
@@ -131,6 +158,8 @@ export const TextInput = forwardRef(function TextInput(props: {
                 onFocus={() => {
                     if (onFocus) {
                         onFocus()
+                    }else {
+                        inputRef.current?.select()
                     }
                 }}
                 onBlur={(e) => {
@@ -139,9 +168,16 @@ export const TextInput = forwardRef(function TextInput(props: {
                         onBlur(val);
                     }
                 }}
-                onKeyDown={() => {
+                onKeyDown={(e) => {
+                    const val = getValue(e) ?? '';
                     if (onKeyDown) {
-                        onKeyDown()
+                        onKeyDown(val)
+                    }
+                }}
+                onKeyUp={(e) => {
+                    const val = getValue(e) ?? '';
+                    if (onKeyUp) {
+                        onKeyUp(val)
                     }
                 }}
                 onMouseDown={() => {
@@ -162,3 +198,10 @@ export const TextInput = forwardRef(function TextInput(props: {
         </Label>
     }
 );
+
+function getValue(e: unknown): string | undefined {
+    if (e && typeof e === 'object' && 'target' in e && e.target && typeof e.target === 'object' && 'value' in e.target) {
+        return e.target.value as string;
+    }
+    return undefined;
+}

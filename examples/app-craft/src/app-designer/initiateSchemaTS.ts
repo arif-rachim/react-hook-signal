@@ -21,6 +21,8 @@ export function initiateSchemaTS(props: {
     returnType: string,
     allPages: Array<Page>,
     allTables: Array<Table>,
+
+    formSchema?: string
 }) {
     const {
         allApplicationVariables,
@@ -33,7 +35,8 @@ export function initiateSchemaTS(props: {
         allPageCallables,
         allTables,
         allPages,
-        returnType
+        returnType,
+        formSchema
     } = props;
     return `
 
@@ -42,6 +45,7 @@ ${composeNavigation(allPages)}
 ${composeDbSchema(allTables)}
 ${composeAlert()}
 ${composeTools()}
+${composeForm(formSchema)}
 declare const app:{
     var:${composeLibrary(allApplicationVariables)},
     query:${composeQuerySchema(allApplicationQueries)},
@@ -85,20 +89,39 @@ function composeNavigation(allPages: Array<Page>) {
     }).join(',');
     return `
     type Navigate = {${type}};
-    declare const navigate = <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
+    declare const navigate : <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
     `
 }
 
-function composeAlert(){
+function composeAlert() {
     return `
     type Icons = ${icons.map(i => `"${i}"`).join('|')};
-    declare const alertBox = (props:{message:string,title?:string,icon?:Icons,buttons?:Array<{id:string,label:string,icon:Icons}>}) => Promise<string>;
+    declare const alertBox : (props:{message:string,title?:string,icon?:Icons,buttons?:Array<{id:string,label:string,icon:Icons}>}) => Promise<string>;
     `
 }
 
-function composeTools(){
+function composeTools() {
     return `
-    declare const tools = {deleteSqlLite:() => Promise<void>,saveSqlLite:(arrayBuffer:ArrayBuffer) => Promise<void>};
+    declare const tools : {deleteSqlLite:() => Promise<void>,saveSqlLite:(arrayBuffer:ArrayBuffer) => Promise<void>,readSqlLite:() => Promise<ArrayBuffer>};
     `
 }
 
+function composeForm(formSchema?: string) {
+    if (formSchema && formSchema.length > 0) {
+        formSchema = formSchema || `Record<string, unknown>`;
+        return `
+            declare const formContext : {
+                value: Signal.State<${formSchema}>,
+                initialValue: ${formSchema},
+                errors: Signal.State<Record<string, string>>,
+                isChanged: Signal.State<boolean>,
+                reset: () => void,
+                submit: () => Promise<void>,
+                formIsValid: () => Promise<boolean>
+                isBusy: Signal.State<boolean>,
+                isDisabled: Signal.State<boolean>
+            }`
+    }
+    return '';
+
+}

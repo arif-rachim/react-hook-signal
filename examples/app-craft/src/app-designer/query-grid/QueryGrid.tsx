@@ -107,6 +107,7 @@ export const QueryGrid = forwardRef<HTMLDivElement | null, {
             propsRef.current.onQueryResultChange(queryResult);
         }
     }, [queryResult]);
+    const dataIsNotEmpty = (queryResult.data as Array<Record<string, SqlValue>>).length > 0;
     return <div ref={referenceRef}
                 style={{
                     overflow: 'auto',
@@ -114,7 +115,6 @@ export const QueryGrid = forwardRef<HTMLDivElement | null, {
                     flexDirection: 'column',
                     flexGrow: 1,
                     background: 'white',
-
                     ...style
                 }}>
         <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto', flexGrow: 1}}>
@@ -178,7 +178,7 @@ export const QueryGrid = forwardRef<HTMLDivElement | null, {
 
             />
         </div>
-        {pageable &&
+        {pageable && dataIsNotEmpty &&
             <SimpleTableFooter totalPages={queryResult.totalPage ?? 1} value={queryResult.currentPage ?? 1}
                                buttonCount={paginationButtonCount}
                                onChange={async (newPage) => {

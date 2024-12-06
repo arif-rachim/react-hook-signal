@@ -8,21 +8,25 @@ import {isDate} from "./isDate.ts";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
+import {useAppContext} from "../../hooks/useAppContext.ts";
 
 export const DateInput = forwardRef(function DateInput(props: {
     name?: string,
     value?: Date | string,
     onChange?: (value?: Date | string) => void,
+    disabled?: boolean,
     label?: string,
     error?: string,
     style?: CSSProperties,
     inputStyle?: CSSProperties,
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
-    const {inputStyle, style, error, label, onChange, value, name} = props;
+    const {inputStyle, style, error, label, onChange, value, disabled, name} = props;
     const nameSignal = useSignal(name);
     const [localValue, setLocalValue] = useState<Date | undefined>();
     const [localError, setLocalError] = useState<string | undefined>(error);
+    const context = useAppContext();
+    const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
 
     const propsRef = useRef({userIsChangingData: false});
 
@@ -67,18 +71,22 @@ export const DateInput = forwardRef(function DateInput(props: {
             }
             setLocalValue(result);
         }
-    })
+    });
 
     const text = format_ddMMMyyyy(localValue);
     const showPopup = useShowPopUp();
     return <TextInput ref={ref}
                       inputStyle={{width: 90, textAlign: 'center', ...inputStyle}}
                       style={style}
+                      disabled={disabled}
                       error={localError}
                       label={label}
                       value={text}
                       onFocus={async () => {
-                          const newDate = await showPopup<Date|false,HTMLLabelElement>(ref, (closePanel,commitLayout) => {
+                          if (isDesignMode) {
+                              return;
+                          }
+                          const newDate = await showPopup<Date | false, HTMLLabelElement>(ref, (closePanel, commitLayout) => {
                               commitLayout();
                               return <DivWithClickOutside style={{
                                   display: 'flex',
@@ -94,9 +102,10 @@ export const DateInput = forwardRef(function DateInput(props: {
                                   e.preventDefault()
                               }} onClickOutside={() => {
                                   closePanel(false);
-                              }}><DatePicker onChange={(newDate) => closePanel(newDate)} value={localValue}/></DivWithClickOutside>
+                              }}><DatePicker onChange={(newDate) => closePanel(newDate)}
+                                             value={localValue}/></DivWithClickOutside>
                           })
-                          if(newDate === false){
+                          if (newDate === false) {
                               return;
                           }
                           const typeIsString = typeof value === 'string';

@@ -2,7 +2,7 @@ import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
 import {useAppContext} from "../hooks/useAppContext.ts";
 import {isEmpty} from "../../utils/isEmpty.ts";
 import {useUpdateDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
-import {CSSProperties, useEffect, useState} from "react";
+import {CSSProperties, useEffect, useMemo, useRef, useState} from "react";
 import {colors} from "stock-watch/src/utils/colors.ts";
 import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
@@ -86,25 +86,37 @@ function EditColumnConfigFormula(props: {
     formula?: string,
     columns?: string[],
 }) {
-    const {columns, formula, closePanel} = props;
+    const {columns: columnsProps, formula, closePanel} = props;
     const [config, setConfig] = useState<ColumnsConfig>({});
     const [allHiddenStatus, setAllHiddenStatus] = useState<ThreeState>('no');
+    const columns = useMemo(() => {
+        return ((columnsProps ?? []).map((col, index) => {
+            if (config && col in config && config[col]) {
+                return {col, index: config[col].index}
+            }
+            return {col, index}
+        }) as Array<{ col: string, index: number }>).sort((a, b) => (a.index - b.index)).map(i => i.col);
+    }, [columnsProps, config])
+    const propsRef = useRef({columns});
+    propsRef.current.columns = columns;
+
     useEffect(() => {
         if (formula) {
             setTimeout(() => {
                 try {
                     const module = {exports: {}};
                     const fun = new Function('module', formula);
-                    fun.call(null, module)
+                    fun.call(null, module);
                     setConfig(module.exports);
                 } catch (err) {
                     console.error(err);
                 }
             }, 100)
-
         }
     }, [formula]);
+
     useEffect(() => {
+        const columns = propsRef.current.columns;
         if (allHiddenStatus === 'yes') {
             setConfig(oldConfig => {
                 if (columns) {
@@ -115,7 +127,6 @@ function EditColumnConfigFormula(props: {
                     }
                     return clone;
                 }
-
                 return oldConfig;
             })
         }
@@ -132,7 +143,7 @@ function EditColumnConfigFormula(props: {
                 return oldConfig;
             })
         }
-    }, [allHiddenStatus, columns]);
+    }, [allHiddenStatus]);
     return <div
         style={{
             display: 'flex',
@@ -172,7 +183,27 @@ function EditColumnConfigFormula(props: {
                     title: undefined,
                     rendererPageId: undefined
                 };
-                return <div key={col} style={{display: 'table-row'}}>
+                return <div key={col} style={{display: 'table-row'}} draggable={true} onDragStart={(e) => {
+                    e.dataTransfer.setData('text', JSON.stringify({col}));
+                }} onDragOver={e => {
+                    e.preventDefault();
+                }} onDrop={e => {
+                    const {col: sourceCol} = JSON.parse(e.dataTransfer.getData('text'));
+                    const columnsNew = columns.filter(i => i !== sourceCol);
+                    columnsNew.splice(columnsNew.indexOf(col) + 1, 0, sourceCol);
+                    setConfig(oldConfig => {
+                        if (columns) {
+                            const clone = {...oldConfig};
+                            for (const col of columns) {
+                                clone[col] = {...clone[col]};
+                                clone[col].index = columnsNew.indexOf(col);
+                            }
+                            return clone;
+                        }
+                        return oldConfig;
+                    })
+                }}>
+
                     <div style={{display: 'table-cell', padding: '0px 5px'}}>
                         {col}
                     </div>
@@ -207,7 +238,6 @@ function EditColumnConfigFormula(props: {
                                    const value = e.target.value;
                                    const isPercentageOrPixel = value.endsWith('%') || value.endsWith('px') || value.endsWith('p');
                                    const intValue = parseInt(value);
-
                                    setConfig(old => {
                                        const clone = {...old};
                                        clone[col] = {...clone[col]}

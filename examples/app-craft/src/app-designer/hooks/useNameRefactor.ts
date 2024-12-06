@@ -2,15 +2,7 @@ import {ContainerPropertyType} from "../AppDesigner.tsx";
 import {useUpdateApplication} from "./useUpdateApplication.ts";
 import {useAppContext} from "./useAppContext.ts";
 
-// queries GA pake
-// fetch GA pake
-// state GA pake
-// computed GA pake
-// property value GA pake
 
-// effect pake
-// callable pake
-// property callback pake
 export function useNameRefactor() {
     const updateApplication = useUpdateApplication();
     const {activePageIdSignal} = useAppContext();

@@ -9,7 +9,7 @@ import {ContainerRendererIdContext} from "./panels/design/container-renderer/Con
 import {QueryGrid} from "./query-grid/QueryGrid.tsx";
 import {ConfigPropertyEditor} from "./query-grid/ConfigPropertyEditor.tsx";
 import {IconType} from "react-icons";
-import {cssPropertiesSchema, iconSchema} from "./zod-schema/cssPropertiesSchema.ts";
+import {cssLength, cssPropertiesSchema, iconSchema} from "./zod-schema/cssPropertiesSchema.ts";
 import {DataRenderer} from "./data-renderer/DataRenderer.tsx";
 import {faultToIconByStatusId} from "../components/fault-status-icon/faultToIconByStatusId.tsx";
 import {TextInput} from "./form/text-input/TextInput.tsx";
@@ -58,18 +58,27 @@ export const DefaultElements: Record<string, Element> = {
         icon: MdOutlineSubtitles,
         property: {
             style: cssPropertiesSchema,
+            dimension: z.object({
+                width: cssLength,
+                height: cssLength,
+                flexGrow: z.number().optional(),
+                flexShrink: z.number().optional(),
+                minWidth: cssLength,
+                maxWidth: cssLength,
+                minHeight: cssLength,
+                maxHeight: cssLength
+            }),
             onClick: z.function().returns(z.void()),
-            title: z.string(),
-            flexGrow: z.number().optional()
+            title: z.string()
         },
         component: (props, ref) => {
-            const {style, onClick, title, flexGrow, container} = props;
+            const {style, onClick, title, container, dimension} = props;
             return <TitleBox ref={ref}
                              style={style}
                              onClick={onClick}
                              title={title}
-                             flexGrow={flexGrow}
                              container={container}
+                             dimension={dimension}
                              data-element-id={props['data-element-id']}
             />
         }
@@ -81,6 +90,7 @@ export const DefaultElements: Record<string, Element> = {
             style: cssPropertiesSchema,
             value: z.record(z.unknown()).optional(),
             disabled: z.boolean().optional(),
+            decorator: z.function().args(z.record(z.unknown()).optional(), z.record(z.unknown()).optional()).returns(z.promise(z.record(z.unknown()))),
             onChange: z.function().args(
                 z.record(z.unknown()),
                 z.object({
@@ -93,13 +103,14 @@ export const DefaultElements: Record<string, Element> = {
             schema: z.any()
         },
         component: (props, ref) => {
-            const {container, onChange, disabled, value} = props;
+            const {container, onChange, disabled, value, decorator} = props;
             return <Form ref={ref as MutableRefObject<HTMLFormElement>} {...props}
                          disabled={disabled}
                          style={props.style as CSSProperties}
                          container={container}
                          data-element-id={props["data-element-id"]}
                          onChange={onChange}
+                         decorator={decorator}
                          value={value}
 
             />
@@ -120,6 +131,30 @@ export const DefaultElements: Record<string, Element> = {
                             fun.apply(null, [module, z]);
                             if (module.exports) {
                                 returnTypeZod = module.exports
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                    return returnTypeZod;
+                })
+            },
+            decorator: {
+                label: 'decorator',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, propertyName, container} = props;
+                    let returnTypeZod: ZodType = z.any();
+                    if (element) {
+                        returnTypeZod = element.property[propertyName]
+                    }
+                    if ('schema' in container.properties && container.properties.schema && container.properties.schema.formula) {
+                        try {
+                            const fun = new Function('module', 'z', container.properties.schema.formula);
+                            const module: { exports: ZodType | undefined } = {exports: undefined};
+                            fun.apply(null, [module, z]);
+                            if (module.exports) {
+                                const type = module.exports as ZodType
+                                returnTypeZod = z.function().args(type, type).returns(z.promise(type))
                             }
                         } catch (err) {
                             console.error(err);
@@ -178,10 +213,11 @@ export const DefaultElements: Record<string, Element> = {
             onBlur: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema,
+            disabled: z.boolean().optional(),
             type: z.enum(['text', 'number', 'password']).optional()
         },
         component: (props, ref) => {
-            const {name, onChange, onBlur, value, label, error, type} = props;
+            const {name, onChange, onBlur, value, label, error, type, disabled, inputStyle} = props;
             return <TextInput ref={ref as MutableRefObject<HTMLLabelElement>}
                               style={props.style}
                               name={name}
@@ -189,7 +225,8 @@ export const DefaultElements: Record<string, Element> = {
                               value={value}
                               label={label}
                               onBlur={onBlur}
-                              inputStyle={props.inputStyle as CSSProperties}
+                              disabled={disabled}
+                              inputStyle={inputStyle as CSSProperties}
                               error={error}
                               type={type}
             />
@@ -266,12 +303,13 @@ export const DefaultElements: Record<string, Element> = {
             value: z.union([z.date(), z.string()]).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
+            disabled: z.boolean().optional(),
             onChange: z.function().args(z.union([z.date(), z.string()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
-            const {inputStyle, style, label, error, name, value, onChange} = props;
+            const {inputStyle, style, label, error, name, value, disabled, onChange} = props;
             return <DateInput ref={ref as MutableRefObject<HTMLLabelElement>} {...props}
                               style={style as CSSProperties} inputStyle={inputStyle as CSSProperties}
                               label={label}
@@ -279,6 +317,7 @@ export const DefaultElements: Record<string, Element> = {
                               name={name}
                               value={value}
                               onChange={onChange}
+                              disabled={disabled}
 
             />
         }
@@ -291,13 +330,15 @@ export const DefaultElements: Record<string, Element> = {
             value: z.union([z.date(), z.string()]).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
+            disabled: z.boolean().optional(),
             onChange: z.function().args(z.union([z.date(), z.string()]).optional()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
-            const {inputStyle, value, name, onChange, label, error} = props;
+            const {inputStyle, value, name, onChange, label, error, disabled} = props;
             return <DateTimeInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                                  disabled={disabled}
                                   style={props.style as CSSProperties}
                                   inputStyle={inputStyle as CSSProperties}
                                   value={value}
@@ -316,6 +357,7 @@ export const DefaultElements: Record<string, Element> = {
             value: z.object({from: z.union([z.date(), z.string()]), to: z.union([z.date(), z.string()])}).optional(),
             label: z.string().optional(),
             error: z.string().optional(),
+            disabled: z.boolean().optional(),
             onChange: z.function().args(z.object({
                 from: z.union([z.date(), z.string()]),
                 to: z.union([z.date(), z.string()])
@@ -324,8 +366,9 @@ export const DefaultElements: Record<string, Element> = {
             inputStyle: cssPropertiesSchema
         },
         component: (props, ref) => {
-            const {inputStyle, style, error, label, name, value, onChange} = props;
+            const {inputStyle, style, error, label, name, value, onChange, disabled} = props;
             return <DateRangeInput ref={ref as MutableRefObject<HTMLLabelElement>}
+                                   disabled={disabled}
                                    style={style as CSSProperties}
                                    inputStyle={inputStyle as CSSProperties}
                                    error={error}
@@ -370,6 +413,10 @@ export const DefaultElements: Record<string, Element> = {
             valueToRowData: z.function().args(z.union([z.string(), z.number()]).optional()).returns(z.promise(z.record(z.union([z.number(), z.string()])))),
             rowDataToText: z.function().args(z.record(ZodSqlValue).optional()).returns(z.string()),
             rowDataToValue: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(), z.number()])),
+            filterable: z.boolean().optional(),
+            sortable: z.boolean().optional(),
+            pageable: z.boolean().optional(),
+            disabled: z.boolean().optional(),
             itemToKey: z.function().args(z.record(ZodSqlValue).optional()).returns(z.union([z.string(), z.number()]))
         },
 
@@ -389,7 +436,11 @@ export const DefaultElements: Record<string, Element> = {
                 error,
                 valueToRowData,
                 rowDataToValue,
-                name
+                name,
+                filterable,
+                pageable,
+                sortable,
+                disabled,
             } = props;
             return <SelectInput ref={ref as MutableRefObject<HTMLLabelElement>}
                                 style={style as CSSProperties}
@@ -407,6 +458,10 @@ export const DefaultElements: Record<string, Element> = {
                                 valueToRowData={valueToRowData}
                                 rowDataToValue={rowDataToValue}
                                 name={name}
+                                filterable={filterable !== false}
+                                sortable={sortable !== false}
+                                pageable={pageable !== false}
+                                disabled={disabled}
             />
         },
         propertyEditor: {
@@ -703,15 +758,15 @@ const TitleBox = forwardRef(function TitleBox(props: {
     onClick: () => void,
     title: string,
     ["data-element-id"]: string,
-    flexGrow: CSSProperties['flexGrow']
+    dimension: Pick<CSSProperties, 'width' | 'height' | 'flexGrow' | 'flexShrink' | 'minWidth' | 'minHeight' | 'maxHeight' | 'maxWidth'>
 }, ref) {
 
-    const {container, onClick, style, title, flexGrow} = props;
+    const {container, onClick, style, title} = props;
     const containerStyle = useContainerStyleHook(style);
     const {elements, displayMode} = useContainerLayoutHook(container);
 
     return <ContainerRendererIdContext.Provider value={props["data-element-id"]}>
-        <div style={{display: 'flex', flexDirection: 'column-reverse', flexGrow: flexGrow}}>
+        <div style={{display: 'flex', flexDirection: 'column-reverse', ...props.dimension}}>
             <div ref={ref as LegacyRef<HTMLDivElement>}
                  style={{
                      padding: 10,

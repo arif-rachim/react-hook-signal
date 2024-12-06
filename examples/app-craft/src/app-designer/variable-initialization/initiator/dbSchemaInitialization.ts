@@ -59,7 +59,8 @@ type DbSchema = ${zodSchemaToJson(schema)}
 declare const db:{
     record:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
     remove:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
-    read:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<Array<DbSchema[N]>>
+    read:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<Array<DbSchema[N]>>,
+    commit: () => Promise<void>
 };
 `
 }
@@ -67,12 +68,14 @@ declare const db:{
 export function dbSchemaInitialization() {
     async function record(tableName: string, item: Record<string, SqlValue>) {
         const query = `INSERT INTO ${tableName} (${Object.keys(item).join(', ')}) VALUES (${Object.keys(item).map(() => `?`).join(', ')})`
-        const result = await sqlite({type: 'executeQuery', query: query, params: Object.values(item)});
+        const result = await sqlite({type: 'executeQuery', query: query, params: Object.values(item).map(i => i === undefined  ? null : i )});
         if (!result.errors) {
             const readResponse = await read(tableName, item);
             if (readResponse.length > 0) {
                 return readResponse[0];
             }
+        }else{
+            console.error(result.errors)
         }
         return result;
     }
@@ -109,9 +112,14 @@ export function dbSchemaInitialization() {
         return result;
     }
 
+    async function commit(){
+        await sqlite({type: 'persistChanges'});
+    }
+
     return {
         record,
         remove,
-        read
+        read,
+        commit
     }
 }
