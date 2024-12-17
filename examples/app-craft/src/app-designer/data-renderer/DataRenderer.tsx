@@ -26,9 +26,10 @@ function DataRendererFC(props: {
         minWidth: 20,
         ...propsStyle
     }
-    if (page === undefined) {
-        style.border = '1px dashed rgba(0,0,0,0.1)'
-    }
+    // Following code commented cause creating bug
+    // if (page === undefined) {
+        //style.border = '1px dashed rgba(0,0,0,0.1)'
+    // }
     useEffect(() => {
         componentIdSignal.set(component)
     }, [component, componentIdSignal]);

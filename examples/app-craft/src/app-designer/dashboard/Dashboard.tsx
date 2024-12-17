@@ -1,4 +1,14 @@
-import React, {createContext, CSSProperties, HTMLProps, PropsWithChildren, ReactNode, useEffect, useState} from "react";
+import React, {
+    createContext,
+    CSSProperties,
+    ForwardedRef,
+    HTMLProps,
+    PropsWithChildren,
+    ReactNode,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import {IconType} from "react-icons";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {useHoveredOnPress} from "./useHoveredOnPress.ts";
@@ -13,6 +23,9 @@ import {AppDesignerContext} from "../AppDesignerContext.ts";
 import {EmptyComponent} from "../empty-component/EmptyComponent.tsx";
 import {ToolBar} from "../ToolBar.tsx";
 import {addCenterPanel} from "./centerPanelStacks.ts";
+import {useShowPopUp} from "../hooks/useShowPopUp.tsx";
+import {Button} from "../button/Button.tsx";
+import {DivWithClickOutside} from "../div-with-click-outside/DivWithClickOutside.tsx";
 
 type PanelPosition = 'left' | 'bottom' | 'right' | 'mainCenter' | 'leftBottom' | 'rightBottom'
 export type Panel = {
@@ -169,7 +182,7 @@ export function Dashboard<T extends Record<string, Panel>>(props: PropsWithChild
                         </notifiable.div>
                     </div>
                     <RenderPanel panelsSignal={panelsSignal} selectedPanelSignal={selectedPanelSignal}
-                                 position={'bottom'} style={{minHeight: 0}}/>
+                                 position={'bottom'} style={{minHeight: 0,flexShrink:0}}/>
                 </div>
                 <notifiable.div
                     style={{
@@ -310,6 +323,31 @@ function RenderPanel<T extends SelectedPanelType>(props: {
     </notifiable.div>
 }
 
+function ContextMenuCloseTabs(props: { closePanel: (params: 'closeTab'|'closeOtherTabs'|false) => void, commitLayout: () => void }) {
+    const {commitLayout} = props;
+    useEffect(() => {
+        if(commitLayout){
+            commitLayout()
+        }
+    }, [commitLayout]);
+    return <DivWithClickOutside style={{
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 5,
+        gap: 5,
+        backgroundColor: '#FAFAFA',
+        width: 200,
+        boxShadow: '0px 5px 5px -3px rgba(0,0,0,0.1)',
+        borderBottomLeftRadius: 5,
+        borderBottomRightRadius: 5,
+        border: '1px solid rgba(0,0,0,0.1)'
+    }}
+                                onClickOutside={() => props.closePanel(false)}
+    >
+        <Button style={{borderRadius:0}} onClick={() => props.closePanel('closeTab')} icon={'IoMdClose'}>Close tab</Button>
+        <Button style={{borderRadius:0}} onClick={() => props.closePanel('closeOtherTabs')} icon={'IoMdClose'}>Close other tabs</Button>
+    </DivWithClickOutside>
+}
 
 function RenderTabPanel(props: {
     panelsSignal: Signal.State<Array<PanelInstance>>,
@@ -330,6 +368,28 @@ function RenderTabPanel(props: {
     })
     const removePanel = useRemoveDashboardPanel();
     const isEmpty = panelsComputed.length === 0;
+    const showPopup = useShowPopUp();
+    const ref = useRef<HTMLElement>();
+
+    async function handleRightClick(event: React.MouseEvent<HTMLDivElement>,panelId:string) {
+        event.preventDefault();
+        event.stopPropagation();
+        ref.current = event.target as HTMLElement;
+        const result = await showPopup<'closeTab'|'closeOtherTabs'|false>(ref as ForwardedRef<HTMLElement>, (closePanel, commitLayout) => {
+            return <ContextMenuCloseTabs closePanel={closePanel} commitLayout={commitLayout}/>
+        })
+        if(result === false){
+            return;
+        }
+        if(result === 'closeTab'){
+            removePanel(panelId);
+        }
+        if(result === 'closeOtherTabs'){
+            panelsComputed.filter(p => p.id !== panelId).forEach(p => {
+                removePanel(p.id);
+            })
+        }
+    }
 
     return <div style={{
         display: isEmpty ? 'none' : 'flex',
@@ -364,7 +424,7 @@ function RenderTabPanel(props: {
                         addCenterPanel(panel.id);
                     }
                     selectedPanelSignal.set(cloneSelectedPanel);
-                }} key={panel.id} isSelected={isSelected}>
+                }} key={panel.id} isSelected={isSelected} onContextMenu={(event) => handleRightClick(event,panel.id)}>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Econ/></div>
                     <div
                         style={{textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>{title}</div>
@@ -390,12 +450,17 @@ function RenderTabPanel(props: {
                     overflow: 'auto',
                     flexGrow: 1
                 }} key={panel.id}>
-                    <Component/>
+                    <PanelIsFocusedContext.Provider value={isSelected}>
+                        <Component/>
+                    </PanelIsFocusedContext.Provider>
                 </div>
             })}
         </div>
     </div>
 }
+
+// this is a context to inform if a panel is in focused
+export const PanelIsFocusedContext = createContext<boolean>(false)
 
 function TabButton(props: HTMLProps<HTMLDivElement> & { isSelected: boolean }) {
     const {ref, isOnPress} = useHoveredOnPress();

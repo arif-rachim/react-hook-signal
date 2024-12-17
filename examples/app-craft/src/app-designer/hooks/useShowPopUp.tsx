@@ -4,7 +4,7 @@ import {guid} from "../../utils/guid.ts";
 
 export function useShowPopUp() {
     const showModal = useShowModal();
-    return function showPopUp<T, V extends HTMLElement>(ref: ForwardedRef<V>, panel: (closePanel: (param?: T) => void, commitLayout: () => void) => ReactElement) {
+    return function showPopUp<T, V extends HTMLElement = HTMLElement>(ref: ForwardedRef<V>, panel: (closePanel: (param?: T) => void, commitLayout: () => void) => ReactElement) {
 
         return showModal<T>((closePanel) => {
             const id = guid();

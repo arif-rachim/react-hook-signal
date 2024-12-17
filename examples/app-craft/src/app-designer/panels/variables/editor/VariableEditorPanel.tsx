@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import {useShowModal} from "../../../../modal/useShowModal.ts";
 import {guid} from "../../../../utils/guid.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
@@ -17,6 +17,7 @@ import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPane
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
+import {PanelIsFocusedContext} from "../../../dashboard/Dashboard.tsx";
 
 /**
  * Represents a panel for editing variables.
@@ -28,6 +29,11 @@ export function VariableEditorPanel(props: {
     scope: 'page' | 'application'
 }) {
     const context = useAppContext();
+    const isFocused = useContext(PanelIsFocusedContext);
+    const isFocusedSignal = useSignal(isFocused);
+    useEffect(() => {
+        isFocusedSignal.set(isFocused);
+    }, [isFocusedSignal,isFocused]);
     const {variableId, defaultType, panelId, scope} = props;
 
     const variable = [...context.allPageVariablesSignal.get(), ...context.allApplicationVariablesSignal.get()].find(v => v.id === variableId);
@@ -151,6 +157,9 @@ export function VariableEditorPanel(props: {
                         {() => {
                             const variable = variableSignal.get();
                             const formula = variable.schemaCode;
+                            if(!isFocusedSignal.get()) {
+                                return false;
+                            }
                             return <Editor
                                 language="javascript"
                                 value={formula}
@@ -193,6 +202,9 @@ export function VariableEditorPanel(props: {
                         const allPageFetchers = allPageFetchersSignal.get();
                         const allPageCallables = allPageCallablesSignal.get();
                         const returnType = variable.type !== 'effect' ? zodSchemaToJson(wrapWithZObjectIfNeeded(variable.schemaCode)) : '';
+                        if(!isFocusedSignal.get()) {
+                            return false;
+                        }
                         return <Editor
                             language="javascript"
                             key={variable.schemaCode}

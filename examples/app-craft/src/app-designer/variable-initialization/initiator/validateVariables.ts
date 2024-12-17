@@ -15,6 +15,7 @@ export function validateVariables(variableInstances: Array<VariableInstance>, va
                     validator.parse(instances.instance.get())
                     errorMessage.variableValidation({variableId: instances.id});
                 } catch (err) {
+                    
                     errorMessage.variableValidation({variableId: instances.id, err});
                 }
             }

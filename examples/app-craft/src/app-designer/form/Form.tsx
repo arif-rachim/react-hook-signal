@@ -99,19 +99,15 @@ export const Form = forwardRef(function Form(props: {
     }, [localValue, isChanged, value]);
 
     useSignalEffect(() => {
-        let valPrev = prevValueRef.current;
-        let valCurrent = localValue.get();
+        const valPrev = prevValueRef.current;
+        const valCurrent = localValue.get();
         (async () => {
             if (propsRef.current.decorator) {
-                let valNext = await propsRef.current.decorator(valCurrent, valPrev);
-                while (valNext !== valCurrent){
-                    valPrev = valCurrent;
-                    valCurrent = valNext;
-                    valNext = await propsRef.current.decorator(valCurrent, valPrev);
+                const valNext = await propsRef.current.decorator(valCurrent, valPrev);
+                prevValueRef.current = valNext;
+                if (valNext !== valCurrent) {
+                    localValue.set(valNext);
                 }
-                prevValueRef.current = valCurrent;
-                localValue.set(valNext);
-
             }
         })();
     })
@@ -163,6 +159,7 @@ export const FormContext = createContext<{
     isBusy: Signal.State<boolean>,
     isDisabled: Signal.State<boolean>
 } | undefined>(undefined)
+
 /*
 function delay(milliSecond:number){
     return new Promise(resolve => {
@@ -171,5 +168,4 @@ function delay(milliSecond:number){
         },milliSecond);
     })
 }
-
  */

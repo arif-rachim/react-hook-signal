@@ -75,10 +75,11 @@ export const Button = forwardRef(function Button(props: DetailedHTMLProps<Button
             onClick(event)
         }
     }} disabled={buttonDisabled} {...properties}>
+        {Icon && <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center',paddingTop:1}}><Icon/></div>}
         {props.children && <div style={{display: 'flex', flexDirection: 'column'}}>
             {props.children}
         </div>}
-        {Icon && <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center',paddingTop:1}}><Icon/></div>}
+
     </button>
 });
 

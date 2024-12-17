@@ -85,11 +85,6 @@ export function PageViewer(props: {
         }
     })
 
-    /*
-    this is to debug why this panel is getting re-rendered
-    useWhichChange('PageViewer '+page.name,{...props,context,container});
-     */
-
 
     return <AppViewerContext.Provider value={context}>
         <PageVariableInitialization>

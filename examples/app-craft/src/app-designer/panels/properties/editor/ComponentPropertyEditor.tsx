@@ -9,6 +9,8 @@ import {useUpdateDragContainer} from "../../../hooks/useUpdateSelectedDragContai
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {z, ZodType, ZodTypeAny} from "zod";
+import {useContext, useEffect} from "react";
+import {PanelIsFocusedContext} from "../../../dashboard/Dashboard.tsx";
 
 /**
  * ComponentPropertyEditor is a React component that renders a property editor panel for a component.
@@ -20,6 +22,11 @@ export function ComponentPropertyEditor(props: {
     returnTypeZod?: ZodTypeAny,
 }) {
     const context = useAppContext();
+    const isFocused = useContext(PanelIsFocusedContext);
+    const isFocusedSignal = useSignal(isFocused);
+    useEffect(() => {
+        isFocusedSignal.set(isFocused);
+    }, [isFocused, isFocusedSignal]);
     const removePanel = useRemoveDashboardPanel();
     const {
         allPageVariablesSignal,
@@ -77,6 +84,9 @@ export function ComponentPropertyEditor(props: {
                 const allPageFetchers = allPageFetchersSignal.get();
                 const allPageCallables = allPageCallablesSignal.get();
                 const returnType = zodTypeToJson(returnTypeZod);
+                if(!isFocusedSignal.get()) {
+                    return false;
+                }
                 return <Editor
                     language="javascript"
                     beforeMount={(monaco) => {

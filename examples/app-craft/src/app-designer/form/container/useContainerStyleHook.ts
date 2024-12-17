@@ -13,6 +13,8 @@ export function useContainerStyleHook(style: CSSProperties) {
         const mode = displayMode.get();
         const MIN_SPACE = 5;
         if (mode === 'design') {
+            // we are cleaning border first
+            ['borderTop','borderRight','borderBottom','borderLeft'].forEach(key => delete style[key]);
             style.border = '1px dashed rgba(0,0,0,0.1)';
             const minWidthHeight = ['minWidth', 'minHeight'] as const;
             minWidthHeight.forEach(key => {

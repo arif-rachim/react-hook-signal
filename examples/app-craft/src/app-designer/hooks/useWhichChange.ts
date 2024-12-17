@@ -1,6 +1,7 @@
 import {useRef} from "react";
-
-export function whichChange(params:{label: string, props: Record<string, unknown> | undefined, ref: React.MutableRefObject<Record<string, unknown> | undefined>}) {
+import type {MutableRefObject} from "react";
+const debug:boolean = false;
+export function whichChange(params:{label: string, props: Record<string, unknown> | undefined, ref: MutableRefObject<Record<string, unknown> | undefined>}) {
     const {ref,label,props} = params;
     const previousValue = ref.current ?? {};
     if (props === previousValue) {
@@ -20,8 +21,8 @@ export function whichChange(params:{label: string, props: Record<string, unknown
     })
 
     ref.current = props;
-    if (difference) {
-        console.log(label, difference);
+    if (difference && debug) {
+        console.log('[whichChange]',label, difference);
     }
 }
 

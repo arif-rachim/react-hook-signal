@@ -60,6 +60,7 @@ declare const db:{
     record:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
     remove:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]>,
     read:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<Array<DbSchema[N]>>,
+    find:<N extends keyof DbSchema>(name:N,item:DbSchema[N]) => Promise<DbSchema[N]|undefined>,
     commit: () => Promise<void>
 };
 `
@@ -81,7 +82,8 @@ export function dbSchemaInitialization() {
     }
 
     async function remove(tableName: string, item: Record<string, SqlValue>) {
-        const query = `DELETE FROM ${tableName} WHERE ${Object.keys(item).map(k => `${k} = ?`).join(' AND ')}`
+        const whereCondition = Object.keys(item).map(k => `${k} = ?`).join(' AND ').trim();
+        const query = `DELETE FROM ${tableName} ${whereCondition ? `WHERE ${whereCondition}` : ''}`
         const queryResult = await sqlite({type: 'executeQuery', query: query, params: Object.values(item)});
         if (queryResult.errors) {
             console.error(queryResult.errors);
@@ -112,6 +114,14 @@ export function dbSchemaInitialization() {
         return result;
     }
 
+    async function find(tableName: string, item: Record<string, SqlValue>): Promise<Record<string, SqlValue>|undefined>{
+        const result = await read(tableName,item);
+        if(result.length > 0){
+            return result[0];
+        }
+        return undefined;
+    }
+
     async function commit(){
         await sqlite({type: 'persistChanges'});
     }
@@ -120,6 +130,7 @@ export function dbSchemaInitialization() {
         record,
         remove,
         read,
-        commit
+        commit,
+        find
     }
 }

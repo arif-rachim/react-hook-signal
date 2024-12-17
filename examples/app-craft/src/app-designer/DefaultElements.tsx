@@ -180,7 +180,7 @@ export const DefaultElements: Record<string, Element> = {
                                 const voSchema = module.exports as ZodObject<ZodRawShape>;
                                 const shapes = Object.keys(voSchema._def.shape() as object) as Array<string>;
                                 const errorsSchema = z.object(shapes.reduce((result, key) => {
-                                    result[key] = z.string().optional()
+                                    result[key] = z.string().optional();
                                     return result;
                                 }, {} as Record<string, ZodType>));
                                 const configSchema = z.object({
@@ -729,7 +729,33 @@ export const DefaultElements: Record<string, Element> = {
                             totalPage: z.number(),
                             currentPage: z.number(),
                             index: z.number()
-                        })).returns(z.void()) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
+                        })).returns(z.union([z.promise(z.void()), z.void()])) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
+
+                    }
+                    return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
+                })
+            },
+            onRowDoubleClick: {
+                label: 'onRowDoubleClick',
+                component: createCustomPropertyEditor((props) => {
+                    const {element, gridTemporalColumns, propertyName} = props;
+                    let returnTypeZod: ZodFunction<ZodTuple, ZodTypeAny> | undefined = undefined;
+                    if (element) {
+                        returnTypeZod = element.property[propertyName] as ZodFunction<ZodTuple, ZodTypeAny>
+                    }
+                    if (gridTemporalColumns) {
+                        const param = gridTemporalColumns.reduce((result, key) => {
+                            result[key] = ZodSqlValue.optional();
+                            return result;
+                        }, {} as ZodRawShape);
+
+                        returnTypeZod = z.function().args(z.object({
+                            value: z.object(param),
+                            data: z.array(z.object(param)),
+                            totalPage: z.number(),
+                            currentPage: z.number(),
+                            index: z.number()
+                        })).returns(z.union([z.promise(z.void()), z.void()])) as unknown as ZodFunction<ZodTuple, ZodTypeAny>
 
                     }
                     return returnTypeZod as ZodFunction<ZodTuple, ZodTypeAny>;
