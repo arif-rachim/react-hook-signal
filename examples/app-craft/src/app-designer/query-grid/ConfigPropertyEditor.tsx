@@ -166,7 +166,10 @@ function EditColumnConfigFormula(props: {
                     </div>
                 </div>
                 <div style={{display: 'table-cell', padding: '0px 5px'}}>
-                    Width
+                    Min Width
+                </div>
+                <div style={{display: 'table-cell', padding: '0px 5px'}}>
+                    Max Width
                 </div>
                 <div style={{display: 'table-cell', padding: '0px 5px', width: 300}}>
                     Renderer
@@ -233,7 +236,7 @@ function EditColumnConfigFormula(props: {
                             padding: '0px 5px',
                             width: 70
                         }}
-                               value={(conf.width ?? '').toString()}
+                               value={(conf.minWidth ?? '').toString()}
                                onChange={(e) => {
                                    const value = e.target.value;
                                    const isPercentageOrPixel = value.endsWith('%') || value.endsWith('px') || value.endsWith('p');
@@ -242,9 +245,37 @@ function EditColumnConfigFormula(props: {
                                        const clone = {...old};
                                        clone[col] = {...clone[col]}
                                        if (isPercentageOrPixel || isNaN(intValue)) {
-                                           clone[col].width = value
+                                           clone[col].minWidth = value
                                        } else {
-                                           clone[col].width = intValue
+                                           clone[col].minWidth = intValue
+                                       }
+
+                                       return clone;
+                                   })
+                               }}
+                        />
+                    </div>
+                    <div style={{display: 'table-cell'}}>
+                        <input style={{
+                            border: BORDER,
+                            borderRight: 'unset',
+                            borderBottom: isLastIndex ? BORDER : 'unset',
+                            borderRadius: 0,
+                            padding: '0px 5px',
+                            width: 70
+                        }}
+                               value={(conf.maxWidth ?? '').toString()}
+                               onChange={(e) => {
+                                   const value = e.target.value;
+                                   const isPercentageOrPixel = value.endsWith('%') || value.endsWith('px') || value.endsWith('p');
+                                   const intValue = parseInt(value);
+                                   setConfig(old => {
+                                       const clone = {...old};
+                                       clone[col] = {...clone[col]}
+                                       if (isPercentageOrPixel || isNaN(intValue)) {
+                                           clone[col].maxWidth = value
+                                       } else {
+                                           clone[col].maxWidth = intValue
                                        }
 
                                        return clone;

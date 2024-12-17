@@ -214,7 +214,8 @@ export function SimpleTableFooter(props: {
 
 export type ColumnsConfig = Record<string, {
     hidden?: boolean,
-    width?: CSSProperties["width"],
+    minWidth?: CSSProperties["minWidth"],
+    maxWidth?: CSSProperties["maxWidth"],
     rendererPageId?: string,
     rendererPageDataMapperFormula?: string,
     title?: string,
@@ -225,20 +226,26 @@ export type ColumnsConfig = Record<string, {
 function extractWidthAndHiddenField(columnsConfig: ColumnsConfig | undefined, col: string) {
 
 
-    let width: CSSProperties['width'] | undefined = undefined;
+    let minWidth: CSSProperties['minWidth'] | undefined = undefined;
+    let maxWidth: CSSProperties['maxWidth'] | undefined = undefined;
     let hide: boolean | undefined = false;
     if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
         const config = columnsConfig[col];
-        if (!isEmpty(config.width)) {
+        if (!isEmpty(config.minWidth)) {
             {
-                width = config.width;
+                minWidth = config.minWidth;
+            }
+        }
+        if (!isEmpty(config.maxWidth)) {
+            {
+                maxWidth = config.maxWidth;
             }
         }
         if (config.hidden !== undefined) {
             hide = config.hidden;
         }
     }
-    return {width, hide};
+    return {minWidth, maxWidth, hide};
 }
 
 const defaultItemToKey = (item: unknown) => {
@@ -264,7 +271,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
     onRowDoubleClick?: (value: Record<string, SqlValue>) => void
 }) {
     const {
-        columns:columnsProps,
+        columns: columnsProps,
         data,
         focusedRow: focusedRowProps,
         onFocusedRowChange,
@@ -296,7 +303,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
         <div style={{display: 'table', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
             <div style={{display: 'table-row', position: 'sticky', top: 0}}>
                 {columns.map(col => {
-                    const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
+                    const {minWidth, maxWidth, hide} = extractWidthAndHiddenField(columnsConfig, col);
                     let title = col;
                     if (columnsConfig && typeof columnsConfig === 'object' && col in columnsConfig) {
                         const config = columnsConfig[col];
@@ -318,7 +325,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                         backgroundColor: '#F2F2F2',
                         color: "black",
                         padding: '2px 0px 2px 10px',
-                        width,
+                        minWidth,
+                        maxWidth
                     }} onClick={() => {
                         if (onSortChange === undefined) {
                             return;
@@ -356,7 +364,7 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                 <div style={{display: 'table-row', position: 'sticky', top: 26}}>
                     {columns.map((col, index, source) => {
                         const lastIndex = (source.length - 1) === index
-                        const {width, hide} = extractWidthAndHiddenField(columnsConfig, col);
+                        const {minWidth, maxWidth, hide} = extractWidthAndHiddenField(columnsConfig, col);
                         let value = '';
                         if (filter && col in filter) {
                             const val = filter[col];
@@ -371,7 +379,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                             borderBottom: BORDER,
                             backgroundColor: '#F2F2F2',
                             color: "black",
-                            width,
+                            minWidth,
+                            maxWidth
                         }} key={`filter-${col}`}><input style={{
                             border: 'unset',
                             borderRight: lastIndex ? 'unset' : BORDER,
@@ -408,22 +417,13 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                     }
                 }}>
                     {columns.map((col, colIndex) => {
-                        let width: CSSProperties['width'] | undefined = undefined;
-                        let hide: boolean | undefined = false;
                         let rendererPageId: string | undefined = undefined;
                         const value = item[col] as ReactNode;
                         let valueParams = {value};
                         const lastIndex = colIndex === (columns.length - 1);
+                        const {minWidth, maxWidth, hide} = extractWidthAndHiddenField(columnsConfig, col);
                         if (columnsConfig !== undefined && columnsConfig !== null && typeof columnsConfig === 'object' && col in columnsConfig) {
                             const config = columnsConfig[col];
-                            if (!isEmpty(config.width)) {
-                                {
-                                    width = config.width;
-                                }
-                            }
-                            if (config.hidden !== undefined) {
-                                hide = config.hidden;
-                            }
                             if (config.rendererPageId) {
                                 rendererPageId = config.rendererPageId;
                             }
@@ -471,8 +471,8 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                             borderRight: lastIndex ? 'unset' : BORDER,
                             padding: '0px 10px',
                             overflow: 'hidden',
-                            width,
-                            maxWidth: width
+                            minWidth,
+                            maxWidth
                         }} key={`${colIndex}:${rowIndex}:${value}`}>
                             <div style={{minHeight: 22, display: 'flex', flexDirection: 'column'}}>{renderer}</div>
                         </div>

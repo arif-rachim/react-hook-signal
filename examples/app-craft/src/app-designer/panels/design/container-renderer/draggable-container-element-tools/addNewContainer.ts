@@ -11,12 +11,15 @@ export function addNewContainer(allContainersSignal: Signal.Computed<Array<Conta
     type: 'vertical' | 'horizontal' | string
 }, dropZoneId: Signal.State<string>, updatePage: ReturnType<typeof useUpdatePageSignal>) {
     const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
+    const type = config.type;
+    const properties = {};
+
     const newContainer: Container = {
         id: guid(),
-        type: config.type,
+        type: type,
         children: [],
         parent: parentContainerId,
-        properties: {}
+        properties: properties
     }
     const newAllContainers = [...allContainersSignal.get().map(n => {
         if (n.id === parentContainerId) {
@@ -35,19 +38,22 @@ export function addNewContainer(allContainersSignal: Signal.Computed<Array<Conta
 
 export function addPageElement(page: Page, allContainersSignal: Signal.Computed<Array<Container>>, dropZoneId: Signal.State<string>, updatePage: ReturnType<typeof useUpdatePageSignal>) {
     const {parentContainerId, insertionIndex} = getContainerIdAndIndexToPlaced(allContainersSignal, dropZoneId);
+    const type = 'element';
+    const properties = {
+        component: {
+            formula: `module.exports = "${page.id}"`
+        },
+        properties: {
+            formula: `module.exports = {}`
+        }
+    };
+
     const newContainer: Container = {
         id: guid(),
-        type: 'element',
+        type: type,
         children: [],
         parent: parentContainerId,
-        properties: {
-            component: {
-                formula: `module.exports = "${page.id}"`
-            },
-            properties: {
-                formula: `module.exports = {}`
-            }
-        }
+        properties: properties
     }
     const newAllContainers = [...allContainersSignal.get().map(n => {
         if (n.id === parentContainerId) {
