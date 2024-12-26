@@ -1,16 +1,15 @@
-import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useEffect, useRef} from "react";
 import {TextInput} from "../text-input/TextInput.tsx";
-import {dateToString, format_ddMMMyyyy, toDate} from "../../../utils/dateFormat.ts";
+import {dateToString, format_ddMMMyyyy, format_hhmm, toDate} from "../../../utils/dateFormat.ts";
 import {DatePicker} from "./DatePicker.tsx";
 import {Label} from "../label/Label.tsx";
-import {useSignal, useSignalEffect} from "react-hook-signal";
 import {isDate} from "./isDate.ts";
-import {FormContext} from "../Form.tsx";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 import {useAppContext} from "../../hooks/useAppContext.ts";
 import {BORDER} from "../../Border.ts";
+import {useFormInput} from "../useFormInput.ts";
 
 const ERROR_COLOR = '#C00000';
 export const DateTimeInput = forwardRef(function DateTimeInput(props: {
@@ -25,43 +24,37 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
     const {inputStyle, style, error, label, onChange, value, name, disabled} = props;
-    const nameSignal = useSignal(name);
-    const [localDate, setLocalDate] = useState<string | undefined>();
-    const [localHour, setLocalHour] = useState<string | undefined>();
-    const [localMinute, setLocalMinute] = useState<string | undefined>();
-    const [localError, setLocalError] = useState<string | undefined>(error);
+    const {localValue, setLocalValue, localError, formContext} = useFormInput<typeof value, {
+        date?: string,
+        hour?: string,
+        minute?: string
+    }>({
+        name,
+        value,
+        error,
+        valueToLocalValue: param => {
+            const result = toDate(param);
+            const date = result ? format_ddMMMyyyy(result) : undefined;
+            const hour = result ? format_hhmm(result).substring(0, 2) : undefined;
+            const minutes = result ? format_hhmm(result).substring(3, 5) : undefined;
+            return {date, hour, minutes}
+        }
+    });
     const context = useAppContext();
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
     const propsRef = useRef({onChange, value});
     propsRef.current = {onChange, value};
 
     useEffect(() => {
-        nameSignal.set(name);
-    }, [name, nameSignal]);
-
-    useEffect(() => {
-        const result: Date | undefined = toDate(value);
-        const date = result ? format_ddMMMyyyy(result) : undefined;
-        const hour = result ? result.getHours().toString().padStart(2, '0') : undefined;
-        const minutes = result ? result.getMinutes().toString().padStart(2, '0') : undefined;
-        setLocalDate(date);
-        setLocalHour(hour);
-        setLocalMinute(minutes);
-    }, [value]);
-
-    const formContext = useContext(FormContext);
-
-    useEffect(() => {
         const value = propsRef.current.value;
         const valueIsString = typeof value === 'string';
-        if (localDate && localHour && localMinute
-            && localDate.length >= '1-JAN-1970'.length
-            && localHour.length == 2
-            && localMinute.length == 2) {
-            const date = new Date(localDate);
-            const dateValue = new Date(date.getFullYear(), date.getMonth(), date.getDate(), parseInt(localHour), parseInt(localMinute));
+        if (localValue && localValue.hour && localValue.minute && localValue.date
+            && localValue.date.length >= '1-JAN-1970'.length
+            && localValue.hour.length == 2
+            && localValue.minute.length == 2) {
+            const dateValue = toDate(`${localValue.date} ${localValue.hour}:${localValue.minute}`) as Date;
             if (isDate(dateValue)) {
-                const shouldTriggerChange = value === undefined || (valueIsString &&  dateToString(dateValue) !== value) || (isDate(value) && dateToString(dateValue) !== dateToString(value));
+                const shouldTriggerChange = value === undefined || (valueIsString && dateToString(dateValue) !== value) || (isDate(value) && dateToString(dateValue) !== dateToString(value));
                 if (name && formContext && shouldTriggerChange) {
                     const newFormVal = {...formContext.value.get()};
                     newFormVal[name] = valueIsString ? dateToString(dateValue) : dateValue;
@@ -73,43 +66,22 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                     if (shouldTriggerChange && propsRef.current.onChange) {
                         propsRef.current.onChange(valueIsString ? dateToString(dateValue) : dateValue);
                     }
-                    setLocalDate(format_ddMMMyyyy(dateValue));
-                    setLocalHour(dateValue.getHours().toString().padStart(2, '0'));
-                    setLocalMinute(dateValue.getMinutes().toString().padStart(2, '0'));
+                    setLocalValue(prev => {
+                        const newVal = {
+                            date: format_ddMMMyyyy(dateValue),
+                            hour: format_hhmm(dateValue).substring(0, 2),
+                            minute: format_hhmm(dateValue).substring(3, 5)
+                        };
+                        if(JSON.stringify(prev) === JSON.stringify(newVal)){
+                            return prev;
+                        }
+                        return newVal;
+                    })
                 }
-
             }
         }
-    }, [formContext, localDate, localHour, localMinute, name]);
+    }, [setLocalValue,formContext, localValue, name]);
 
-    useEffect(() => {
-        setLocalError(error);
-    }, [error]);
-
-
-    useSignalEffect(() => {
-        const formValue = formContext?.value.get();
-        const name = nameSignal.get();
-        if (name && formValue && name in formValue) {
-            const value = formValue[name];
-            let result: Date | undefined;
-            if (value instanceof Date) {
-                result = value;
-            }
-            if (typeof value === 'string') {
-                result = new Date(value);
-            }
-            if (!isDate(result)) {
-                result = undefined;
-            }
-            const date = result ? format_ddMMMyyyy(result) : undefined;
-            const hour = result ? result.getHours().toString().padStart(2, '0') : undefined;
-            const minutes = result ? result.getMinutes().toString().padStart(2, '0') : undefined;
-            setLocalDate(date);
-            setLocalHour(hour);
-            setLocalMinute(minutes);
-        }
-    })
     const showPopup = useShowPopUp();
     const firstSegmentTimeRef = useRef<HTMLInputElement | undefined>();
     const secondSegmentTimeRef = useRef<HTMLInputElement | undefined>();
@@ -124,8 +96,10 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                     borderColor: localError ? ERROR_COLOR : 'rgba(0,0,0,0.1)',
                     ...inputStyle
                 }}
-                value={localDate}
-                onChange={val => setLocalDate(val)}
+                value={localValue?.date}
+                onChange={val => {
+                    setLocalValue(prev => ({...prev, date: val}));
+                }}
                 onFocus={async () => {
                     if (isDesignMode) {
                         return
@@ -145,12 +119,12 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                         }} onMouseDown={(e) => {
                             e.preventDefault()
                         }} onClickOutside={() => closePanel(false)}><DatePicker onChange={closePanel}
-                                                                                value={localDate ? new Date(localDate) : undefined}/></DivWithClickOutside>
+                                                                                value={toDate(localValue?.date)}/></DivWithClickOutside>
                     });
                     if (newDate === false) {
                         return;
                     }
-                    setLocalDate(format_ddMMMyyyy(newDate));
+                    setLocalValue(old => ({...old, date: format_ddMMMyyyy(newDate)}))
                     if (firstSegmentTimeRef.current) {
                         firstSegmentTimeRef.current.focus();
                     }
@@ -168,10 +142,10 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                         borderColor: localError ? ERROR_COLOR : 'rgba(0,0,0,0.1)',
                         ...inputStyle
                     }}
-                    value={localHour}
+                    value={localValue?.hour}
                     style={{width: 30}}
                     maxLength={2}
-                    onChange={e => setLocalHour(e)}
+                    onChange={e => setLocalValue(prev => ({...prev,hour:e}))}
                     onKeyUp={() => {
                         trapHowManyTimesUserTypeKeyDown.current += 1;
                         if (trapHowManyTimesUserTypeKeyDown.current === 2 && secondSegmentTimeRef.current) {
@@ -182,7 +156,11 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
 
                     }}
                 />
-                <div style={{borderTop: BORDER, borderBottom: BORDER,background:disabled?'rgba(0,0,0,0.05)':'unset'}}>
+                <div style={{
+                    borderTop: BORDER,
+                    borderBottom: BORDER,
+                    background: disabled ? 'rgba(0,0,0,0.05)' : 'unset'
+                }}>
                     {':'}
                 </div>
                 <TextInput
@@ -196,10 +174,10 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                         textAlign: 'left',
                         borderColor: localError ? ERROR_COLOR : 'rgba(0,0,0,0.1)'
                     }}
-                    value={localMinute}
+                    value={localValue?.minute}
                     style={{width: 30}}
                     maxLength={2}
-                    onChange={e => setLocalMinute(e)}
+                    onChange={e => setLocalValue(prev => ({...prev,minute:e}))}
                 />
             </div>
         </div>

@@ -9,6 +9,15 @@ const pad = (d: number): string => {
 };
 const monthsAbbreviated = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
+function isDdMmmYyyy(value: string) {
+    for (const month of monthsAbbreviated) {
+        if (value.indexOf(month) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Converts a date string or Date object to a Date object.
  * @param {unknown} date - The date string or Date object.
@@ -22,14 +31,26 @@ export function toDate(date?: unknown): Date | undefined {
         return date
     }
     try {
-        if (typeof date === 'string' && date.length > 17) {
-            const year = parseInt(date.substring(0, 4));
-            const month = parseInt(date.substring(5, 2)) - 1;
-            const day = parseInt(date.substring(8, 2));
-            const hours = parseInt(date.substring(11, 2));
-            const minutes = parseInt(date.substring(14, 2));
-            const seconds = parseInt(date.substring(17, 2));
-            return new Date(year, month, day, hours, minutes, seconds);
+        if (typeof date === 'string') {
+            const dateString = date.toUpperCase();
+            if(isDdMmmYyyy(dateString)){
+                const [dayString,monthString,yearAndTime] = dateString.split('-')
+                const day = parseInt(dayString);
+                const month = monthsAbbreviated.indexOf(monthString);
+                const year = yearAndTime.length >= '1970'.length ? parseInt(yearAndTime.substring(0, 4)) : 0;
+                const hours = yearAndTime.length >= '1970 11'.length ? parseInt(yearAndTime.substring(5, 7)) : 0;
+                const minutes = yearAndTime.length >= '1970 11:30'.length ? parseInt(yearAndTime.substring(8, 10)) : 0;
+                const seconds = yearAndTime.length >= '1970 11:30:00'.length ? parseInt(yearAndTime.substring(11, 13)) : 0;
+                return new Date(year, month, day, hours, minutes, seconds);
+            }else{
+                const year = dateString.length >= '1970'.length ? parseInt(dateString.substring(0, 4)) : 0;
+                const month = dateString.length >= '1970-01'.length ? parseInt(dateString.substring(5, 7)) - 1 : 0;
+                const day = dateString.length >= '1970-01-01'.length ? parseInt(dateString.substring(8, 10)) : 0;
+                const hours = dateString.length >= '1970-01-01T10'.length ? parseInt(dateString.substring(11, 13)) : 0;
+                const minutes = dateString.length >= '1970-01-01T10:10'.length ? parseInt(dateString.substring(14, 16)) : 0;
+                const seconds = dateString.length >= '1970-01-01T10:10:11'.length ? parseInt(dateString.substring(17, 19)) : 0;
+                return new Date(year, month, day, hours, minutes, seconds);
+            }
         }
     } catch (err) {
         console.error(err);
@@ -104,7 +125,7 @@ export function format_ddMMMyyyy(date?: Date | string): string {
  */
 export function format_hhmm(date?: Date | string): string {
     const formattedDate = toDate(date);
-    return formattedDate ? formatTime(formattedDate) : '';
+    return formattedDate ? formatTime(formattedDate).substring(0,5) : '';
 }
 
 /**

@@ -1,7 +1,6 @@
-import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
-import {useSignal, useSignalEffect} from "react-hook-signal";
-import {FormContext} from "../Form.tsx";
+import {CSSProperties, ForwardedRef, forwardRef} from "react";
 import {ImCheckboxChecked, ImCheckboxUnchecked} from "react-icons/im";
+import {useFormInput} from "../useFormInput.ts";
 
 export const CheckboxInput = forwardRef(function CheckboxInput(props: {
     name?: string,
@@ -12,44 +11,7 @@ export const CheckboxInput = forwardRef(function CheckboxInput(props: {
     error?: string,
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {name, value, onChange, error, label, style} = props;
-
-    const nameSignal = useSignal(name);
-    const [localValue, setLocalValue] = useState(false);
-    const [localError, setLocalError] = useState<string | undefined>();
-
-    const propsRef = useRef({onChange});
-    propsRef.current = {onChange};
-
-    useEffect(() => {
-        nameSignal.set(name);
-    }, [name, nameSignal]);
-
-    useEffect(() => {
-        setLocalValue(value === true)
-    }, [value]);
-
-    useEffect(() => {
-        setLocalError(error);
-    }, [error]);
-
-    const formContext = useContext(FormContext);
-
-    useSignalEffect(() => {
-        const formValue = formContext?.value.get();
-        const name = nameSignal.get();
-        if (name && formValue && name in formValue) {
-            const val = formValue[name];
-            setLocalValue(val as boolean);
-        }
-    })
-
-    useSignalEffect(() => {
-        const formError = formContext?.errors.get();
-        const name = nameSignal.get();
-        if (name && formError) {
-            setLocalError(formError[name]);
-        }
-    })
+    const {localValue, setLocalValue, localError, formContext} = useFormInput<typeof value,typeof value>({name, value, error});
 
     return <label ref={ref} style={{display: 'flex', flexDirection: 'column', ...style}}
                   onClick={() => {
@@ -96,8 +58,8 @@ export const CheckboxInput = forwardRef(function CheckboxInput(props: {
                      }
                  }}>
 
-                {localValue && <ImCheckboxChecked style={{fontSize: 14,color:'rgba(0,0,0,0.7)'}}/>}
-                {!localValue && <ImCheckboxUnchecked style={{fontSize: 14,color:'rgba(0,0,0,0.7)'}}/>}
+                {localValue && <ImCheckboxChecked style={{fontSize: 14, color: 'rgba(0,0,0,0.7)'}}/>}
+                {!localValue && <ImCheckboxUnchecked style={{fontSize: 14, color: 'rgba(0,0,0,0.7)'}}/>}
             </div>
             {label && <div style={{paddingBottom: 2}}>
                 {label}

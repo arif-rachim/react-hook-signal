@@ -1,15 +1,14 @@
-import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useRef} from "react";
 import {TextInput} from "../text-input/TextInput.tsx";
 import {QueryGrid} from "../../query-grid/QueryGrid.tsx";
 import {QueryType} from "../../variable-initialization/AppVariableInitialization.tsx";
 import {ColumnsConfig} from "../../panels/database/table-editor/TableEditor.tsx";
 import {Container} from "../../AppDesigner.tsx";
 import {SqlValue} from "sql.js";
-import {FormContext} from "../Form.tsx";
-import {useSignal, useSignalEffect} from "react-hook-signal";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 import {useAppContext} from "../../hooks/useAppContext.ts";
+import {useFormInput} from "../useFormInput.ts";
 
 const defaultRowDataToText = (data: unknown) => {
     if (typeof data === "string") {
@@ -36,7 +35,7 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     filterable?: boolean,
     pageable?: boolean,
     sortable?: boolean,
-    disabled?:boolean
+    disabled?: boolean
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {
         inputStyle,
@@ -59,54 +58,27 @@ export const SelectInput = forwardRef(function SelectInput(props: {
         pageable,
         disabled
     } = props;
-    const nameSignal = useSignal(name);
-    const [localValue, setLocalValue] = useState<Record<string, SqlValue> | undefined>();
-    const [localError, setLocalError] = useState<string | undefined>(error);
+    const {
+        localValue,
+        setLocalValue,
+        localError,
+        formContext,
+    } = useFormInput<typeof value, Record<string, SqlValue> | undefined>({
+        name,
+        value,
+        error,
+        disabled,
+        valueToLocalValue: async () => {
+            if (valueToRowData) {
+                return await valueToRowData(value)
+            }
+        }
+    });
+
     const context = useAppContext();
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
     const propsRef = useRef({valueToRowData, rowDataToText, rowDataToValue});
     propsRef.current = {valueToRowData, rowDataToText, rowDataToValue}
-
-    useEffect(() => {
-        nameSignal.set(name);
-    }, [name, nameSignal]);
-
-    useEffect(() => {
-        (async () => {
-            if (propsRef.current && propsRef.current.valueToRowData) {
-                const result = await propsRef.current.valueToRowData(value)
-                setLocalValue(result);
-            }
-        })();
-    }, [value]);
-
-    useEffect(() => {
-        setLocalError(error);
-    }, [error]);
-
-    const formContext = useContext(FormContext);
-
-    useSignalEffect(() => {
-        const formValue = formContext?.value.get();
-        const name = nameSignal.get();
-        if (name && formValue && name in formValue) {
-            const value = formValue[name] as string;
-            (async () => {
-                if (propsRef.current && propsRef.current.valueToRowData) {
-                    const result = await propsRef.current.valueToRowData(value)
-                    setLocalValue(result);
-                }
-            })();
-        }
-    })
-
-    useSignalEffect(() => {
-        const formError = formContext?.errors.get();
-        const name = nameSignal.get();
-        if (name && formError) {
-            setLocalError(formError[name]);
-        }
-    })
 
     const text = (rowDataToText ? rowDataToText(localValue) : defaultRowDataToText(localValue)) ?? '';
 
@@ -119,10 +91,10 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                       value={text}
                       disabled={disabled}
                       onFocus={async () => {
-                          if(disabled){
+                          if (disabled) {
                               return;
                           }
-                          if(isDesignMode){
+                          if (isDesignMode) {
                               return;
                           }
                           const props = await showPopup<{
@@ -141,11 +113,11 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                                             onFocusedRowChange={closePanel}
                                             style={{
                                                 boxShadow: '0px 10px 8px -8px rgba(0,0,0,0.5)',
-                                                paddingBottom :filterable ? 0 : 15,
+                                                paddingBottom: filterable ? 0 : 15,
                                                 borderBottomLeftRadius: 10,
                                                 borderBottomRightRadius: 10,
-                                                borderLeft:'1px solid rgba(0,0,0,0.1)',
-                                                borderRight:'1px solid rgba(0,0,0,0.1)',
+                                                borderLeft: '1px solid rgba(0,0,0,0.1)',
+                                                borderRight: '1px solid rgba(0,0,0,0.1)',
                                                 ...popupStyle
                                             }}
                                             focusedRow={localValue}

@@ -1,19 +1,20 @@
-import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
+import {CSSProperties, ForwardedRef, forwardRef, useRef} from "react";
 import {TextInput} from "../text-input/TextInput.tsx";
 import {format_ddMMMyyyy, toDate} from "../../../utils/dateFormat.ts";
 import {DatePicker} from "./DatePicker.tsx";
-import {useSignal, useSignalEffect} from "react-hook-signal";
-import {FormContext} from "../Form.tsx";
 import {isDate} from "./isDate.ts";
 import {useShowPopUp} from "../../hooks/useShowPopUp.tsx";
 import {useForwardedRef} from "../../hooks/useForwardedRef.ts";
 import {DivWithClickOutside} from "../../div-with-click-outside/DivWithClickOutside.tsx"
 import {useAppContext} from "../../hooks/useAppContext.ts";
+import {useFormInput} from "../useFormInput.ts";
 
-export const DateInput = forwardRef(function DateInput(props: {
+type DateOrString = Date | string
+
+export const DateInput = forwardRef(function DateInput<T extends DateOrString>(props: {
     name?: string,
-    value?: Date | string,
-    onChange?: (value?: Date | string) => void,
+    value?: T,
+    onChange?: (value?: T) => void,
     disabled?: boolean,
     label?: string,
     error?: string,
@@ -22,39 +23,15 @@ export const DateInput = forwardRef(function DateInput(props: {
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
     const {inputStyle, style, error, label, onChange, value, disabled, name} = props;
-    const nameSignal = useSignal(name);
-    const [localValue, setLocalValue] = useState<Date | undefined>();
-    const [localError, setLocalError] = useState<string | undefined>(error);
+    const {localValue, setLocalValue, localError, formContext} = useFormInput<typeof value, Date>({
+        name,
+        value,
+        error,
+        valueToLocalValue: param => toDate(param)
+    });
     const context = useAppContext();
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
-
     const propsRef = useRef({userIsChangingData: false});
-
-    useEffect(() => {
-        nameSignal.set(name);
-    }, [name, nameSignal]);
-
-    useEffect(() => {
-        const result: Date | undefined = toDate(value);
-        setLocalValue(result);
-    }, [value]);
-
-    useEffect(() => {
-        setLocalError(error);
-    }, [error]);
-
-    const formContext = useContext(FormContext);
-
-    useSignalEffect(() => {
-        const formValue = formContext?.value.get();
-        const name = nameSignal.get();
-        if (name && formValue && name in formValue) {
-            const value = formValue[name];
-            const result: Date | undefined = toDate(value);
-            setLocalValue(result);
-        }
-    });
-
     const text = format_ddMMMyyyy(localValue);
     const showPopup = useShowPopUp();
     return <TextInput ref={ref}
@@ -100,7 +77,7 @@ export const DateInput = forwardRef(function DateInput(props: {
                               formContext.errors.set(errors)
                           } else {
                               if (onChange) {
-                                  onChange(typeIsString ? format_ddMMMyyyy(newDate) : newDate);
+                                  onChange((typeIsString ? format_ddMMMyyyy(newDate) : newDate) as T);
                               } else {
                                   setLocalValue(newDate);
                               }
@@ -121,7 +98,7 @@ export const DateInput = forwardRef(function DateInput(props: {
                                       formContext.errors.set(errors)
                                   } else {
                                       if (onChange) {
-                                          onChange(typeIsString ? format_ddMMMyyyy(date) : date);
+                                          onChange((typeIsString ? format_ddMMMyyyy(date) : date) as T);
                                       } else {
                                           setLocalValue(date);
                                       }

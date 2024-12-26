@@ -1,7 +1,6 @@
-import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
-import {useSignal, useSignalEffect} from "react-hook-signal";
-import {FormContext} from "../Form.tsx";
+import {CSSProperties, ForwardedRef, forwardRef} from "react";
 import {IoIosRadioButtonOff, IoIosRadioButtonOn} from "react-icons/io";
+import {useFormInput} from "../useFormInput.ts";
 
 export const RadioInput = forwardRef(function RadioInput(props: {
     name?: string,
@@ -13,44 +12,8 @@ export const RadioInput = forwardRef(function RadioInput(props: {
     error?: string,
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {name, value, onChange, valueMatcher, error, label, style} = props;
+    const {localValue, setLocalValue, localError, formContext} = useFormInput({name, value, error});
 
-    const nameSignal = useSignal(name);
-    const [localValue, setLocalValue] = useState<string>();
-    const [localError, setLocalError] = useState<string | undefined>();
-
-    const propsRef = useRef({onChange});
-    propsRef.current = {onChange};
-
-    useEffect(() => {
-        nameSignal.set(name);
-    }, [name, nameSignal]);
-
-    useEffect(() => {
-        setLocalValue(value)
-    }, [value]);
-
-    useEffect(() => {
-        setLocalError(error);
-    }, [error]);
-
-    const formContext = useContext(FormContext);
-
-    useSignalEffect(() => {
-        const formValue = formContext?.value.get();
-        const name = nameSignal.get();
-        if (name && formValue && name in formValue) {
-            const val = formValue[name];
-            setLocalValue(val as string);
-        }
-    })
-
-    useSignalEffect(() => {
-        const formError = formContext?.errors.get();
-        const name = nameSignal.get();
-        if (name && formError) {
-            setLocalError(formError[name]);
-        }
-    })
     const isSelected = valueMatcher === localValue;
     return <label ref={ref} style={{display: 'flex', flexDirection: 'column', ...style}}
                   onClick={() => {
@@ -94,8 +57,8 @@ export const RadioInput = forwardRef(function RadioInput(props: {
                          }
                      }
                  }}>
-                {isSelected && <IoIosRadioButtonOn style={{fontSize: 18,color:'rgba(0,0,0,0.7)'}}/>}
-                {!isSelected && <IoIosRadioButtonOff style={{fontSize: 18,color:'rgba(0,0,0,0.7)'}}/>}
+                {isSelected && <IoIosRadioButtonOn style={{fontSize: 18, color: 'rgba(0,0,0,0.7)'}}/>}
+                {!isSelected && <IoIosRadioButtonOff style={{fontSize: 18, color: 'rgba(0,0,0,0.7)'}}/>}
             </div>
             {label && <div style={{paddingBottom: 2}}>
                 {label}
