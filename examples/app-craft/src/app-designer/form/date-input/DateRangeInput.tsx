@@ -29,13 +29,14 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
     const {inputStyle, style: defaultStyle, error, label, onChange, value, name, disabled} = props;
-    const {localValue, setLocalValue, localError, formContext} = useFormInput<RangeInput, {from?:string,to?:string}>({
+    const {handleValueChange, localValue, setLocalValue, localError, formContext} = useFormInput<RangeInput, {from?:string,to?:string}>({
         name,
         value,
         error,
         valueToLocalValue: value => {
             return {from:format_ddMMMyyyy(value?.from),to:format_ddMMMyyyy(value?.to)}
-        }
+        },
+        onChange
     });
     const context = useAppContext();
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
@@ -55,38 +56,15 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
             const toIsChanged = value === undefined ||
                 (toIsString && dateToString(to) !== value.to) || (isDate(value.to) && dateToString(to) !== dateToString(value.to));
             const shouldTriggerChange = fromIsChanged || toIsChanged;
-
-            if (name && formContext && shouldTriggerChange) {
-                const newFormVal = {...formContext.value.get()};
-                newFormVal[name] = {
-                    from: fromIsString ? dateToString(from) : from,
-                    to: toIsString ? dateToString(to) : to
-                };
-                const errors = {...formContext.errors.get()};
-                delete errors[name];
-                formContext.value.set(newFormVal);
-                formContext.errors.set(errors)
-            } else {
-                if (shouldTriggerChange && propsRef.current.onChange) {
-                    if (from && to) {
-                        const fromString = dateToString(from)!;
-                        const toString = dateToString(from)!;
-                        propsRef.current.onChange({
-                            from: fromIsString ? fromString : from,
-                            to: toIsString ? toString : to
-                        });
-                    }
-                }
-                setLocalValue(prev => {
-                    const newVal = {from:format_ddMMMyyyy(from),to:format_ddMMMyyyy(to)};
-                    if(JSON.stringify(prev) === JSON.stringify(newVal)){
-                        return prev;
-                    }
-                    return newVal;
-                })
+            const val = {
+                from: (fromIsString ? dateToString(from) : from) as string,
+                to: (toIsString ? dateToString(to) : to) as string
+            };
+            if(shouldTriggerChange){
+                handleValueChange(val);
             }
         }
-    }, [setLocalValue,formContext, localValue, name]);
+    }, [setLocalValue, formContext, localValue, name, handleValueChange]);
 
 
     const style = {

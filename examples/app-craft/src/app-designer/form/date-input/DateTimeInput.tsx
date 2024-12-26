@@ -24,7 +24,7 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
     const {inputStyle, style, error, label, onChange, value, name, disabled} = props;
-    const {localValue, setLocalValue, localError, formContext} = useFormInput<typeof value, {
+    const {localValue, setLocalValue, localError, formContext,handleValueChange} = useFormInput<typeof value, {
         date?: string,
         hour?: string,
         minute?: string
@@ -36,9 +36,10 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
             const result = toDate(param);
             const date = result ? format_ddMMMyyyy(result) : undefined;
             const hour = result ? format_hhmm(result).substring(0, 2) : undefined;
-            const minutes = result ? format_hhmm(result).substring(3, 5) : undefined;
-            return {date, hour, minutes}
-        }
+            const minute = result ? format_hhmm(result).substring(3, 5) : undefined;
+            return {date, hour, minute}
+        },
+        onChange
     });
     const context = useAppContext();
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
@@ -55,32 +56,13 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
             const dateValue = toDate(`${localValue.date} ${localValue.hour}:${localValue.minute}`) as Date;
             if (isDate(dateValue)) {
                 const shouldTriggerChange = value === undefined || (valueIsString && dateToString(dateValue) !== value) || (isDate(value) && dateToString(dateValue) !== dateToString(value));
-                if (name && formContext && shouldTriggerChange) {
-                    const newFormVal = {...formContext.value.get()};
-                    newFormVal[name] = valueIsString ? dateToString(dateValue) : dateValue;
-                    const errors = {...formContext.errors.get()};
-                    delete errors[name];
-                    formContext.value.set(newFormVal);
-                    formContext.errors.set(errors)
-                } else {
-                    if (shouldTriggerChange && propsRef.current.onChange) {
-                        propsRef.current.onChange(valueIsString ? dateToString(dateValue) : dateValue);
-                    }
-                    setLocalValue(prev => {
-                        const newVal = {
-                            date: format_ddMMMyyyy(dateValue),
-                            hour: format_hhmm(dateValue).substring(0, 2),
-                            minute: format_hhmm(dateValue).substring(3, 5)
-                        };
-                        if(JSON.stringify(prev) === JSON.stringify(newVal)){
-                            return prev;
-                        }
-                        return newVal;
-                    })
+                const val = valueIsString ? dateToString(dateValue) : dateValue;
+                if(shouldTriggerChange){
+                    handleValueChange(val);
                 }
             }
         }
-    }, [setLocalValue,formContext, localValue, name]);
+    }, [setLocalValue, formContext, localValue, name, handleValueChange]);
 
     const showPopup = useShowPopUp();
     const firstSegmentTimeRef = useRef<HTMLInputElement | undefined>();
@@ -163,6 +145,7 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
                 }}>
                     {':'}
                 </div>
+
                 <TextInput
                     disabled={disabled}
                     inputRef={secondSegmentTimeRef}

@@ -23,11 +23,12 @@ export const DateInput = forwardRef(function DateInput<T extends DateOrString>(p
 }, forwardedRef: ForwardedRef<HTMLLabelElement>) {
     const ref = useForwardedRef(forwardedRef);
     const {inputStyle, style, error, label, onChange, value, disabled, name} = props;
-    const {localValue, setLocalValue, localError, formContext} = useFormInput<typeof value, Date>({
+    const {localValue, localError, handleValueChange} = useFormInput<typeof value, Date>({
         name,
         value,
         error,
-        valueToLocalValue: param => toDate(param)
+        valueToLocalValue: param => toDate(param),
+        onChange
     });
     const context = useAppContext();
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
@@ -68,20 +69,8 @@ export const DateInput = forwardRef(function DateInput<T extends DateOrString>(p
                               return;
                           }
                           const typeIsString = typeof value === 'string';
-                          if (name && formContext) {
-                              const newFormVal = {...formContext.value.get()};
-                              newFormVal[name] = typeIsString ? format_ddMMMyyyy(newDate) : newDate;
-                              const errors = {...formContext.errors.get()};
-                              delete errors[name];
-                              formContext.value.set(newFormVal);
-                              formContext.errors.set(errors)
-                          } else {
-                              if (onChange) {
-                                  onChange((typeIsString ? format_ddMMMyyyy(newDate) : newDate) as T);
-                              } else {
-                                  setLocalValue(newDate);
-                              }
-                          }
+                          const val = typeIsString ? format_ddMMMyyyy(newDate) : newDate;
+                          handleValueChange(val as T)
                       }}
                       onBlur={(newVal) => {
                           if (propsRef.current.userIsChangingData) {
@@ -89,20 +78,8 @@ export const DateInput = forwardRef(function DateInput<T extends DateOrString>(p
                               const date = toDate(newVal);
                               if (isDate(date)) {
                                   const typeIsString = typeof value === 'string';
-                                  if (name && formContext) {
-                                      const newFormVal = {...formContext.value.get()};
-                                      newFormVal[name] = typeIsString ? format_ddMMMyyyy(date) : date;
-                                      const errors = {...formContext.errors.get()};
-                                      delete errors[name];
-                                      formContext.value.set(newFormVal);
-                                      formContext.errors.set(errors)
-                                  } else {
-                                      if (onChange) {
-                                          onChange((typeIsString ? format_ddMMMyyyy(date) : date) as T);
-                                      } else {
-                                          setLocalValue(date);
-                                      }
-                                  }
+                                  const val = typeIsString ? format_ddMMMyyyy(date) : date;
+                                  handleValueChange(val as T)
                               }
                           }
                       }}

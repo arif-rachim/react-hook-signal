@@ -60,14 +60,14 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     } = props;
     const {
         localValue,
-        setLocalValue,
         localError,
-        formContext,
+        handleValueChange
     } = useFormInput<typeof value, Record<string, SqlValue> | undefined>({
         name,
         value,
         error,
         disabled,
+        onChange,
         valueToLocalValue: async () => {
             if (valueToRowData) {
                 return await valueToRowData(value)
@@ -79,9 +79,7 @@ export const SelectInput = forwardRef(function SelectInput(props: {
     const isDesignMode = 'uiDisplayModeSignal' in context && context.uiDisplayModeSignal.get() === 'design';
     const propsRef = useRef({valueToRowData, rowDataToText, rowDataToValue});
     propsRef.current = {valueToRowData, rowDataToText, rowDataToValue}
-
     const text = (rowDataToText ? rowDataToText(localValue) : defaultRowDataToText(localValue)) ?? '';
-
     const showPopup = useShowPopUp();
     return <TextInput ref={ref}
                       inputStyle={inputStyle}
@@ -132,19 +130,8 @@ export const SelectInput = forwardRef(function SelectInput(props: {
                           if (props === false) {
                               return;
                           }
-                          if (name && formContext && propsRef.current.rowDataToValue) {
-                              const newFormVal = {...formContext.value.get()};
-                              newFormVal[name] = propsRef.current.rowDataToValue(props.value);
-                              const errors = {...formContext.errors.get()};
-                              delete errors[name];
-                              formContext.value.set(newFormVal);
-                              formContext.errors.set(errors)
-                          } else {
-                              if (onChange && propsRef.current.rowDataToValue) {
-                                  onChange(propsRef.current.rowDataToValue(props.value))
-                              } else {
-                                  setLocalValue(props.value);
-                              }
+                          if (propsRef.current.rowDataToValue) {
+                              handleValueChange(propsRef.current.rowDataToValue(props.value));
                           }
                       }}
     />

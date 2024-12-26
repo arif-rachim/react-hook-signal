@@ -12,25 +12,17 @@ export const RadioInput = forwardRef(function RadioInput(props: {
     error?: string,
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {name, value, onChange, valueMatcher, error, label, style} = props;
-    const {localValue, setLocalValue, localError, formContext} = useFormInput({name, value, error});
+    const {localValue,  localError, handleValueChange} = useFormInput({
+        name,
+        value,
+        error,
+        onChange
+    });
 
     const isSelected = valueMatcher === localValue;
     return <label ref={ref} style={{display: 'flex', flexDirection: 'column', ...style}}
                   onClick={() => {
-                      if (name && formContext) {
-                          const newFormVal = {...formContext.value.get()};
-                          newFormVal[name] = valueMatcher;
-                          const errors = {...formContext.errors.get()};
-                          delete errors[name];
-                          formContext.value.set(newFormVal);
-                          formContext.errors.set(errors)
-                      } else {
-                          if (onChange) {
-                              onChange(valueMatcher);
-                          } else {
-                              setLocalValue(valueMatcher ?? '')
-                          }
-                      }
+                      handleValueChange(valueMatcher);
                   }}>
         <div style={{display: 'flex', alignItems: 'center', gap: 5}}>
             <div style={{
@@ -41,20 +33,7 @@ export const RadioInput = forwardRef(function RadioInput(props: {
             }} tabIndex={0}
                  onKeyDown={(key) => {
                      if (key.code.toUpperCase() === 'ENTER') {
-                         if (name && formContext) {
-                             const newFormVal = {...formContext.value.get()};
-                             newFormVal[name] = valueMatcher;
-                             const errors = {...formContext.errors.get()};
-                             delete errors[name];
-                             formContext.value.set(newFormVal);
-                             formContext.errors.set(errors)
-                         } else {
-                             if (onChange) {
-                                 onChange(valueMatcher);
-                             } else {
-                                 setLocalValue(valueMatcher ?? '')
-                             }
-                         }
+                         handleValueChange(valueMatcher);
                      }
                  }}>
                 {isSelected && <IoIosRadioButtonOn style={{fontSize: 18, color: 'rgba(0,0,0,0.7)'}}/>}

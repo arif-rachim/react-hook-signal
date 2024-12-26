@@ -11,25 +11,16 @@ export const CheckboxInput = forwardRef(function CheckboxInput(props: {
     error?: string,
 }, ref: ForwardedRef<HTMLLabelElement>) {
     const {name, value, onChange, error, label, style} = props;
-    const {localValue, setLocalValue, localError, formContext} = useFormInput<typeof value,typeof value>({name, value, error});
+    const {localValue, localError, handleValueChange} = useFormInput<typeof value, typeof value>({
+        name,
+        value,
+        error,
+        onChange
+    });
 
     return <label ref={ref} style={{display: 'flex', flexDirection: 'column', ...style}}
                   onClick={() => {
-                      const val = !localValue;
-                      if (name && formContext) {
-                          const newFormVal = {...formContext.value.get()};
-                          newFormVal[name] = val;
-                          const errors = {...formContext.errors.get()};
-                          delete errors[name];
-                          formContext.value.set(newFormVal);
-                          formContext.errors.set(errors)
-                      } else {
-                          if (onChange) {
-                              onChange(val);
-                          } else {
-                              setLocalValue(val)
-                          }
-                      }
+                      handleValueChange(!localValue);
                   }}>
         <div style={{display: 'flex', alignItems: 'center', gap: 5}}>
             <div style={{
@@ -40,21 +31,7 @@ export const CheckboxInput = forwardRef(function CheckboxInput(props: {
             }} tabIndex={0}
                  onKeyDown={(key) => {
                      if (key.code.toUpperCase() === 'ENTER') {
-                         const val = !localValue;
-                         if (name && formContext) {
-                             const newFormVal = {...formContext.value.get()};
-                             newFormVal[name] = val;
-                             const errors = {...formContext.errors.get()};
-                             delete errors[name];
-                             formContext.value.set(newFormVal);
-                             formContext.errors.set(errors)
-                         } else {
-                             if (onChange) {
-                                 onChange(val);
-                             } else {
-                                 setLocalValue(val)
-                             }
-                         }
+                         handleValueChange(!localValue);
                      }
                  }}>
 

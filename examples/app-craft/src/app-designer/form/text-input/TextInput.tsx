@@ -7,7 +7,7 @@ import {useFormInput} from "../useFormInput.ts";
 export const TextInput = forwardRef(function TextInput(props: {
         name?: string,
         value?: string,
-        onChange?: (value: string) => void,
+        onChange?: (value?: string) => void,
         onFocus?: () => void,
         onBlur?: (value: string) => void,
         onKeyDown?: (value: string) => void,
@@ -44,16 +44,16 @@ export const TextInput = forwardRef(function TextInput(props: {
 
         const {
             localValue,
-            setLocalValue,
             localError,
             isDisabled,
-            formContext,
-            isBusy
-        } = useFormInput<typeof value,typeof value>({
+            isBusy,
+            handleValueChange
+        } = useFormInput<typeof value, typeof value>({
             name,
             value,
             error,
-            disabled
+            disabled,
+            onChange
         });
 
         const [cursorLoc, setCursorLoc] = useState<null | number>(null);
@@ -100,20 +100,7 @@ export const TextInput = forwardRef(function TextInput(props: {
                         val = val.toUpperCase();
                     }
                     setCursorLoc(e.target.selectionStart);
-                    if (name && formContext) {
-                        const newFormVal = {...formContext.value.get()};
-                        newFormVal[name] = val;
-                        const errors = {...formContext.errors.get()};
-                        delete errors[name];
-                        formContext.value.set(newFormVal);
-                        formContext.errors.set(errors)
-                    } else {
-                        if (onChange) {
-                            onChange(val);
-                        } else {
-                            setLocalValue(val)
-                        }
-                    }
+                    handleValueChange(val);
                 }}
                 onFocus={() => {
                     if (onFocus) {

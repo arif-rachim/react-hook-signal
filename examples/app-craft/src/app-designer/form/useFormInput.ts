@@ -8,7 +8,8 @@ export function useFormInput<T, V>(props: {
     value?: T,
     error?: string,
     disabled?: boolean,
-    valueToLocalValue?: (val?: T) => (Promise<V | undefined> | V | undefined)
+    valueToLocalValue?: (val?: T) => (Promise<V | undefined> | V | undefined),
+    onChange?:(value?:T) => void
 }) {
     const {name, value, error, disabled, valueToLocalValue} = props;
     const nameSignal = useSignal(name);
@@ -27,8 +28,8 @@ export function useFormInput<T, V>(props: {
     const [isDisabled, setIsDisabled] = useState<boolean>(disabled === true);
     const [isBusy, setIsBusy] = useState<boolean>(false);
     const formContext = useContext(FormContext);
-    const propsRef = useRef(props);
-    propsRef.current = props;
+    const propsRef = useRef({...props,localValue});
+    propsRef.current = {...props,localValue};
 
     useEffect(() => {
         nameSignal.set(name);
@@ -90,6 +91,46 @@ export function useFormInput<T, V>(props: {
         setIsDisabled(isDisabled);
     });
 
+    const handleValueChange = (nextValue?: (T | ((current?:T) => T | undefined))) => {
+        if (name && formContext) {
+            const prevFormVal = formContext.value.get()[name] as T;
+            let nextVal = nextValue as T;
+            if(typeof nextValue === 'function'){
+                const newValueFunction = nextValue as (current:T) => T
+                nextVal = newValueFunction(prevFormVal);
+            }
+            const newFormVal = { ...formContext.value.get(), [name]: nextVal };
+            const errors = { ...formContext.errors.get() };
+            delete errors[name];
+            formContext.value.set(newFormVal);
+            formContext.errors.set(errors);
+        } else if (propsRef.current.onChange) {
+            let nVal = nextValue as T;
+            if(typeof nextValue === 'function'){
+                const newValueFunction = nextValue as (param?:T) => T
+                nVal = newValueFunction(props.value);
+            }
+            propsRef.current.onChange(nVal);
+        } else {
+            const {valueToLocalValue} = propsRef.current;
+            if (valueToLocalValue) {
+                let nVal = nextValue as T;
+                if(typeof nextValue === 'function'){
+                    const newValueFunction = nextValue as (param?:T) => T
+                    nVal = newValueFunction(props.value);
+                }
+                const val = valueToLocalValue(nVal);
+                if (val instanceof Promise) {
+                    val.then(setLocalValue)
+                } else {
+                    setLocalValue(val);
+                }
+            } else {
+                setLocalValue(value as unknown as V);
+            }
+        }
+    };
+
     return {
         localValue,
         setLocalValue,
@@ -100,7 +141,8 @@ export function useFormInput<T, V>(props: {
         setIsDisabled,
         isBusy,
         setIsBusy,
-        formContext
+        formContext,
+        handleValueChange
     };
 }
 
