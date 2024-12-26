@@ -205,11 +205,11 @@ export const DefaultElements: Record<string, Element> = {
         shortName: 'Input',
         icon: LuTextCursorInput,
         property: {
-            value: z.string(),
+            value: z.string().optional(),
             name: z.string().optional(),
             label: z.string().optional(),
             error: z.string().optional(),
-            onChange: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
+            onChange: z.function().args(z.string().optional()).returns(z.union([z.promise(z.void()), z.void()])),
             onBlur: z.function().args(z.string()).returns(z.union([z.promise(z.void()), z.void()])),
             style: cssPropertiesSchema,
             inputStyle: cssPropertiesSchema,
