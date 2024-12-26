@@ -1,5 +1,5 @@
 import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
-import {format_ddMMMyyyy} from "../../../utils/dateFormat.ts";
+import {dateToString, format_ddMMMyyyy, toDate} from "../../../utils/dateFormat.ts";
 import {DateRangePicker} from "./DateRangePicker.tsx";
 import {Label} from "../label/Label.tsx";
 import {BORDER, BORDER_ERROR} from "../../Border.ts";
@@ -51,13 +51,13 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
             from = format_ddMMMyyyy(value.from);
         }
         if (value && isString(value.from)) {
-            from = format_ddMMMyyyy(new Date(value.from));
+            from = format_ddMMMyyyy(toDate(value.from));
         }
         if (value && isDate(value.to)) {
             to = format_ddMMMyyyy(value.to);
         }
         if (value && isString(value.to)) {
-            to = format_ddMMMyyyy(new Date(value.to));
+            to = format_ddMMMyyyy(toDate(value.to));
         }
         setLocalFrom(from);
         setLocalTo(to);
@@ -70,19 +70,19 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
         if (localFrom && localTo && localFrom.length === '01-JAN-1970'.length && localTo.length === '01-JAN-1970'.length) {
             const fromIsString = isString(value?.from);
             const toIsString = isString(value?.to);
-            const from = new Date(localFrom);
-            const to = new Date(localTo);
+            const from = toDate(localFrom);
+            const to = toDate(localTo);
             const fromIsChanged = value === undefined ||
-                (fromIsString && from.toISOString() !== value.from) || (isDate(value.from) && from.toISOString() !== value.from.toISOString());
+                (fromIsString && dateToString(from) !== value.from) || (isDate(value.from) && dateToString(from) !== dateToString(value.from));
             const toIsChanged = value === undefined ||
-                (toIsString && to.toISOString() !== value.to) || (isDate(value.to) && to.toISOString() !== value.to.toISOString());
+                (toIsString && dateToString(to) !== value.to) || (isDate(value.to) && dateToString(to) !== dateToString(value.to));
             const shouldTriggerChange = fromIsChanged || toIsChanged;
 
             if (name && formContext && shouldTriggerChange) {
                 const newFormVal = {...formContext.value.get()};
                 newFormVal[name] = {
-                    from: fromIsString ? from.toISOString() : from,
-                    to: toIsString ? to.toISOString() : to
+                    from: fromIsString ? dateToString(from) : from,
+                    to: toIsString ? dateToString(to) : to
                 };
                 const errors = {...formContext.errors.get()};
                 delete errors[name];
@@ -90,10 +90,14 @@ export const DateRangeInput = forwardRef(function DateRangeInput(props: {
                 formContext.errors.set(errors)
             } else {
                 if (shouldTriggerChange && propsRef.current.onChange) {
-                    propsRef.current.onChange({
-                        from: fromIsString ? from.toISOString() : from,
-                        to: toIsString ? to.toISOString() : to
-                    });
+                    if (from && to) {
+                        const fromString = dateToString(from)!;
+                        const toString = dateToString(from)!;
+                        propsRef.current.onChange({
+                            from: fromIsString ? fromString : from,
+                            to: toIsString ? toString : to
+                        });
+                    }
                 }
                 setLocalFrom(format_ddMMMyyyy(from));
                 setLocalTo(format_ddMMMyyyy(to));

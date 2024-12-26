@@ -6,7 +6,6 @@ import {App} from "./App.tsx";
 import CryptoJS from "crypto-js";
 
 window.CryptoJS = window.CryptoJS || CryptoJS;
-//ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App/>

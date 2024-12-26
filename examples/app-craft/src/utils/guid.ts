@@ -9,3 +9,7 @@ export function guid(): string {
         return v.toString(16);
     });
 }
+
+export function uniqueNumber(): number {
+    return parseInt(guid().replace(/-/g,''),16)
+}

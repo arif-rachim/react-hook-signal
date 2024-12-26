@@ -1,6 +1,6 @@
 import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
 import {TextInput} from "../text-input/TextInput.tsx";
-import {format_ddMMMyyyy} from "../../../utils/dateFormat.ts";
+import {dateToString, format_ddMMMyyyy, toDate} from "../../../utils/dateFormat.ts";
 import {DatePicker} from "./DatePicker.tsx";
 import {Label} from "../label/Label.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
@@ -40,16 +40,7 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
     }, [name, nameSignal]);
 
     useEffect(() => {
-        let result: Date | undefined;
-        if (isDate(value)) {
-            result = value;
-        }
-        if (typeof value === 'string') {
-            result = new Date(value);
-        }
-        if (!isDate(result)) {
-            result = undefined;
-        }
+        const result: Date | undefined = toDate(value);
         const date = result ? format_ddMMMyyyy(result) : undefined;
         const hour = result ? result.getHours().toString().padStart(2, '0') : undefined;
         const minutes = result ? result.getMinutes().toString().padStart(2, '0') : undefined;
@@ -70,17 +61,17 @@ export const DateTimeInput = forwardRef(function DateTimeInput(props: {
             const date = new Date(localDate);
             const dateValue = new Date(date.getFullYear(), date.getMonth(), date.getDate(), parseInt(localHour), parseInt(localMinute));
             if (isDate(dateValue)) {
-                const shouldTriggerChange = value === undefined || (valueIsString && dateValue.toISOString() !== value) || (isDate(value) && dateValue.toISOString() !== value.toISOString());
+                const shouldTriggerChange = value === undefined || (valueIsString &&  dateToString(dateValue) !== value) || (isDate(value) && dateToString(dateValue) !== dateToString(value));
                 if (name && formContext && shouldTriggerChange) {
                     const newFormVal = {...formContext.value.get()};
-                    newFormVal[name] = valueIsString ? dateValue.toISOString() : dateValue;
+                    newFormVal[name] = valueIsString ? dateToString(dateValue) : dateValue;
                     const errors = {...formContext.errors.get()};
                     delete errors[name];
                     formContext.value.set(newFormVal);
                     formContext.errors.set(errors)
                 } else {
                     if (shouldTriggerChange && propsRef.current.onChange) {
-                        propsRef.current.onChange(valueIsString ? dateValue.toISOString() : dateValue);
+                        propsRef.current.onChange(valueIsString ? dateToString(dateValue) : dateValue);
                     }
                     setLocalDate(format_ddMMMyyyy(dateValue));
                     setLocalHour(dateValue.getHours().toString().padStart(2, '0'));

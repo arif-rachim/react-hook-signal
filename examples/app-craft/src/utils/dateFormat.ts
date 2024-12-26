@@ -3,17 +3,64 @@
  * @param {number} d - The number to pad.
  * @returns {string} The padded number as a string.
  */
-const pad = (d: number): string => d <= 9 ? `0${d}` : `${d}`;
+const pad = (d: number): string => {
+    const a = Math.abs(d);
+    return a <= 9 ? `0${a}` : `${a}`
+};
 const monthsAbbreviated = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
 /**
  * Converts a date string or Date object to a Date object.
- * @param {Date | string} date - The date string or Date object.
+ * @param {unknown} date - The date string or Date object.
  * @returns {Date | undefined} The Date object, or undefined if invalid input.
  */
-function toDate(date?: Date | string): Date | undefined {
-    if (!date) return;
-    return typeof date === 'string' ? new Date(date) : date;
+export function toDate(date?: unknown): Date | undefined {
+    if (date === null || date === undefined || date === '') {
+        return undefined;
+    }
+    if (date instanceof Date) {
+        return date
+    }
+    try {
+        if (typeof date === 'string' && date.length > 17) {
+            const year = parseInt(date.substring(0, 4));
+            const month = parseInt(date.substring(5, 2)) - 1;
+            const day = parseInt(date.substring(8, 2));
+            const hours = parseInt(date.substring(11, 2));
+            const minutes = parseInt(date.substring(14, 2));
+            const seconds = parseInt(date.substring(17, 2));
+            return new Date(year, month, day, hours, minutes, seconds);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+export function dateToString(dateOrString: unknown): string | undefined {
+    const date = toDate(dateOrString);
+    if (date) {
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    }
+    return date
+}
+
+export function dateAdd(dateOrString: unknown, value: number, type: 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second'): Date | undefined {
+    const date = toDate(dateOrString);
+    if (date) {
+        const year = date.getFullYear() + type === 'year' ? value : 0;
+        const month = date.getMonth() + type === 'month' ? value : 0;
+        const day = date.getDay() + type === 'day' ? value : 0;
+        const hours = date.getHours() + type === 'hour' ? value : 0;
+        const minutes = date.getMinutes() + type === 'minute' ? value : 0;
+        const seconds = date.getSeconds() + type === 'second' ? value : 0;
+        return new Date(year, month, day, hours, minutes, seconds);
+    }
 }
 
 /**

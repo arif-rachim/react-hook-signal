@@ -45,6 +45,7 @@ ${composeNavigation(allPages)}
 ${composeDbSchema(allTables)}
 ${composeAlert()}
 ${composeTools()}
+${composeUtils()}
 ${composeForm(formSchema)}
 declare const app:{
     var:${composeLibrary(allApplicationVariables)},
@@ -80,6 +81,7 @@ function composeLibrary(allVariables: Array<Variable>) {
     return `{${variables.join(';\n')}}`;
 }
 
+
 function composeNavigation(allPages: Array<Page>) {
     const type = allPages.map(p => {
         const param = p.variables.filter(v => v.type === 'state').map(v => {
@@ -88,22 +90,55 @@ function composeNavigation(allPages: Array<Page>) {
         return `'${p.name}':{${param}}`;
     }).join(',');
     return `
-    type Navigate = {${type}};
-    declare const navigate : <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
-    `
+type Navigate = {${type}};
+declare const navigate : <P extends keyof Navigate>(path:P,param?:Navigate[P]) => void;
+`
 }
 
 function composeAlert() {
     return `
-    type Icons = ${icons.map(i => `"${i}"`).join('|')};
-    declare const alertBox : (props:{message:string,title?:string,icon?:Icons,buttons?:Array<{id:string,label:string,icon:Icons}>}) => Promise<string>;
-    `
+type Icons = ${icons.map(i => `"${i}"`).join('|')};
+declare const alertBox : (props:{message:string,title?:string,icon?:Icons,buttons?:Array<{id:string,label:string,icon:Icons}>}) => Promise<string>;
+`
 }
+
 
 function composeTools() {
     return `
-    declare const tools : {deleteSqlLite:() => Promise<void>,saveSqlLite:(arrayBuffer:ArrayBuffer) => Promise<void>,readSqlLite:() => Promise<ArrayBuffer>};
-    `
+declare const tools: {
+    deleteSqlLite: () => Promise<void>,
+    saveSqlLite: (arrayBuffer: ArrayBuffer) => Promise<void>,
+    readSqlLite: () => Promise<ArrayBuffer>
+};
+`
+}
+
+function composeUtils() {
+    return `
+interface ToStringType{
+    (val:unknown) : (string | undefined);
+    (val:unknown, defaultVal:string) : string;
+}
+interface ToNumberType{
+    (val:unknown) : (number | undefined);
+    (val:unknown, defaultVal:number) : number;
+}  
+declare const utils: {
+    toDate: (date: unknown) => Date | undefined,
+    dateToString: (date: unknown) => string | undefined,
+    dateAdd: (dateOrString: unknown, value: number, type: "year" | "month" | "day" | "hour" | "minute" | "second") => Date | undefined,
+    ddMmmYyyy: (date?: Date | string) => string,
+    hhMm: (date?: Date | string) => string,
+    ddMmm: (date?: Date | string) => string,
+    hhMmSs: (date?: Date | string) => string,
+    ddMmmYyyyHhMm: (date?: Date | string) => string,
+    toString: ToStringType,
+    toNumber: ToNumberType,
+    isEmpty: (val: unknown) => boolean,
+    guid: () => string,
+    uniqueNumber : () => number
+};
+`
 }
 
 function composeForm(formSchema?: string) {

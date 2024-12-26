@@ -3,7 +3,7 @@ import {effect} from "react-hook-signal";
 import {FormulaDependencyParameter} from "../AppVariableInitialization.tsx";
 import {dbSchemaInitialization} from "./dbSchemaInitialization.ts";
 import {ModalBox} from "./useModalBox.tsx";
-
+import {utils} from "../../../utils/utils.ts";
 
 const db = dbSchemaInitialization()
 
@@ -29,11 +29,11 @@ export function initiateEffect(props: {
         if (v.type !== 'effect') {
             continue;
         }
-        const params = ['navigate', 'db', 'app', 'page', 'alertBox', 'tools', `${v.functionCode}`];
+        const params = ['navigate', 'db', 'app', 'page', 'alertBox', 'tools', 'utils', `${v.functionCode}`];
         try {
             const func = new Function(...params) as (...args: unknown[]) => void
             const destructor = effect(() => {
-                const instances = [navigate, db, app, page, alertBox, tools]
+                const instances = [navigate, db, app, page, alertBox, tools, utils]
                 try {
                     func.call(null, ...instances);
                 } catch (err) {

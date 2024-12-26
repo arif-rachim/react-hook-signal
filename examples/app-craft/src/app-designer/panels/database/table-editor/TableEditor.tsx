@@ -20,6 +20,7 @@ import {
     FormulaDependencyParameter
 } from "../../../variable-initialization/AppVariableInitialization.tsx";
 import {PageVariableInitializationContext} from "../../../variable-initialization/PageVariableInitialization.tsx";
+import {utils} from "../../../../utils/utils.ts";
 
 
 async function queryTable(props: {
@@ -431,13 +432,13 @@ export function SimpleTable<T extends Record<string, SqlValue>>(props: {
                                 try {
                                     const app: FormulaDependencyParameter | undefined = appSignal ? appSignal.get() : undefined;
                                     const page: FormulaDependencyParameter | undefined = pageSignal ? pageSignal.get() : undefined;
-                                    const fun = new Function('module', 'app', 'page', config.rendererPageDataMapperFormula)
+                                    const fun = new Function('module', 'app', 'page', 'utils', config.rendererPageDataMapperFormula)
 
                                     const module: {
                                         exports: (props: unknown) => unknown
                                     } = {exports: (props: unknown) => console.log(props)};
 
-                                    fun.call(null, module, app, page)
+                                    fun.call(null, module, app, page, utils)
                                     valueParams = module.exports({
                                         cellValue: value,
                                         rowIndex,

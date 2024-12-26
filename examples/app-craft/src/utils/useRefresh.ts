@@ -25,7 +25,6 @@ export function useRefresh(name: string) {
                 setKey(event.detail as string);
             }
         }
-
         window.addEventListener(eventName, onRefreshTrigger);
         return () => {
             isMountedRef.current = false;

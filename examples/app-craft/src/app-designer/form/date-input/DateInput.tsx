@@ -1,6 +1,6 @@
 import {CSSProperties, ForwardedRef, forwardRef, useContext, useEffect, useRef, useState} from "react";
 import {TextInput} from "../text-input/TextInput.tsx";
-import {format_ddMMMyyyy} from "../../../utils/dateFormat.ts";
+import {format_ddMMMyyyy, toDate} from "../../../utils/dateFormat.ts";
 import {DatePicker} from "./DatePicker.tsx";
 import {useSignal, useSignalEffect} from "react-hook-signal";
 import {FormContext} from "../Form.tsx";
@@ -35,16 +35,7 @@ export const DateInput = forwardRef(function DateInput(props: {
     }, [name, nameSignal]);
 
     useEffect(() => {
-        let result: Date | undefined;
-        if (value instanceof Date) {
-            result = value;
-        }
-        if (typeof value === 'string') {
-            result = new Date(value);
-        }
-        if (!isDate(result)) {
-            result = undefined;
-        }
+        const result: Date | undefined = toDate(value);
         setLocalValue(result);
     }, [value]);
 
@@ -59,16 +50,7 @@ export const DateInput = forwardRef(function DateInput(props: {
         const name = nameSignal.get();
         if (name && formValue && name in formValue) {
             const value = formValue[name];
-            let result: Date | undefined;
-            if (value instanceof Date) {
-                result = value;
-            }
-            if (typeof value === 'string') {
-                result = new Date(value);
-            }
-            if (!isDate(result)) {
-                result = undefined;
-            }
+            const result: Date | undefined = toDate(value);
             setLocalValue(result);
         }
     });
@@ -127,7 +109,7 @@ export const DateInput = forwardRef(function DateInput(props: {
                       onBlur={(newVal) => {
                           if (propsRef.current.userIsChangingData) {
                               propsRef.current.userIsChangingData = false;
-                              const date = new Date(newVal);
+                              const date = toDate(newVal);
                               if (isDate(date)) {
                                   const typeIsString = typeof value === 'string';
                                   if (name && formContext) {
