@@ -15,6 +15,8 @@ import {colors} from "stock-watch/src/utils/colors.ts";
 import {guid} from "../../../utils/guid.ts";
 import {useRefactorPageName} from "../../hooks/useRefactorPageName.ts";
 import {AppDesignerContext} from "../../AppDesignerContext.ts";
+import {dragElementCloneDragImage} from "../design/container-renderer/dragElementCloneDragImage.ts";
+
 
 type TreeNode = {
     [key: string]: {
@@ -234,43 +236,6 @@ function RenderTree(props: {
         const isOpen = node.isOpen
         const isFocused = node.path === focusedPath;
 
-
-        /**
-
-         data-element-id={props.draggableDataType}
-         style={{
-         padding: 5,
-         borderRadius: 5,
-         backgroundColor: 'white',
-         display: 'flex',
-         flexDirection:'column',
-         alignItems: 'center',
-         justifyContent: 'center',
-         width: '20%',
-         height: 50,
-         flexShrink: 0,
-         flexGrow: 0
-         }} onDragStart={(event) => {
-         event.dataTransfer.setData('text/plain', props.draggableDataType);
-         const dragElement = document.querySelector(`[data-element-id="${props.draggableDataType}"]`);
-         if (dragElement === null) {
-         return;
-         }
-         const clone = dragElement.cloneNode(true) as HTMLElement;
-         clone.style.position = 'absolute';
-         clone.style.top = '-9999px'; // Move it off-screen, so it doesn't interfere
-         document.body.appendChild(clone);
-
-         //event.dataTransfer.setDragImage(clone, 0, 0);
-         setTimeout(() => {
-         document.body.removeChild(clone);
-         }, 0);
-         }}
-         draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}
-
-         */
-
-
         return <div key={key} style={{
             display: 'flex',
             flexDirection: 'column',
@@ -287,16 +252,8 @@ function RenderTree(props: {
                  }} onDragStart={(event) => {
                 event.dataTransfer.setData('text/plain', node.pageId ?? '');
                 const dragElement = document.querySelector(`[data-element-id="${node.pageId}"]`);
-                if (dragElement === null) {
-                    return;
-                }
-                const clone = dragElement.cloneNode(true) as HTMLElement;
-                clone.style.position = 'absolute';
-                clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
-                document.body.appendChild(clone);
-                setTimeout(() => {
-                    document.body.removeChild(clone);
-                }, 0);
+                dragElementCloneDragImage({dragElement,event})
+
             }} draggable={true} onDragEnd={() => activeDropZoneIdSignal.set('')}>
                 <div style={{width: 10}}>
                     {isFolder && isOpen && <Icon.ChevronDown/>}

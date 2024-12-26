@@ -13,6 +13,7 @@ import {useAppContext} from "./hooks/useAppContext.ts";
 import {AppDesignerContext} from "./AppDesignerContext.ts";
 import {DashboardContext} from "./dashboard/Dashboard.tsx";
 import {isEmpty} from "../utils/isEmpty.ts";
+import {dragElementCloneDragImage} from "./panels/design/container-renderer/dragElementCloneDragImage.ts";
 
 /**
  * Represents a toolbar component that provides actions for a container.
@@ -133,17 +134,7 @@ export function ToolBar() {
         }
         event.dataTransfer.setData('text/plain', container.id);
         const dragElement = document.querySelector(`[data-element-id="${container.id}"]`);
-        if (dragElement === null) {
-            return;
-        }
-        const clone = dragElement.cloneNode(true) as HTMLElement;
-        clone.style.position = 'absolute';
-        clone.style.top = '-9999px'; // Move it off-screen so it doesn't interfere
-        document.body.appendChild(clone);
-        event.dataTransfer.setDragImage(clone, 0, 0);
-        setTimeout(() => {
-            document.body.removeChild(clone);
-        }, 0);
+        dragElementCloneDragImage({dragElement, event});
     }
 
     function onDragEnd() {

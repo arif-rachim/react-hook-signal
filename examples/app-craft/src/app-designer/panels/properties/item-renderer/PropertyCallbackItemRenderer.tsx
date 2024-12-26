@@ -6,7 +6,7 @@ import {isEmpty} from "../../../../utils/isEmpty.ts";
 import {Icon} from "../../../Icon.ts";
 import {useAddDashboardPanel} from "../../../dashboard/useAddDashboardPanel.tsx";
 import {useAppContext} from "../../../hooks/useAppContext.ts";
-import {PropertyEditorComponent} from "../../../data-renderer/CustomPropertyEditor.tsx";
+import {PropertyEditorComponent} from "./PropertyEditorComponent.tsx";
 
 export function PropertyCallbackItemRenderer(props: { propertyName: string }) {
     const {propertyName} = props;

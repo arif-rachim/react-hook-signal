@@ -1,17 +1,13 @@
-import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
-import {useAppContext} from "../hooks/useAppContext.ts";
 import {useAddDashboardPanel} from "../dashboard/useAddDashboardPanel.tsx";
-import {isEmpty} from "../../utils/isEmpty.ts";
 import {ComponentPropertyEditor} from "../panels/properties/editor/ComponentPropertyEditor.tsx";
 import {Icon} from "../Icon.ts";
-import {Button} from "../button/Button.tsx";
-import {colors} from "stock-watch/src/utils/colors.ts";
-import {BORDER} from "../Border.ts";
 import {queryGridColumnsTemporalColumns} from "../query-grid/queryGridColumnsTemporalColumns.ts";
 import {z, ZodRawShape, ZodType, ZodTypeAny} from "zod";
 import {Container} from "../AppDesigner.tsx";
 import type {Element} from "../LayoutBuilderProps.ts";
 import {AppViewerContext} from "../../app-viewer/AppViewerContext.ts";
+import {usePropertyEditorInitialHook} from "../hooks/usePropertyEditorInitialHook.ts";
+import {PropertyEditorComponent} from "../panels/properties/item-renderer/PropertyEditorComponent.tsx";
 
 type Callback = (props: {
     propertyName: string,
@@ -39,49 +35,6 @@ const defaultCallback: Callback = (props) => {
     return returnTypeZod as ZodTypeAny;
 }
 
-export function usePropertyEditorInitialHook(props: { propertyName: string }) {
-    const containerSignal = useSelectedDragContainer();
-    const context = useAppContext();
-    const container = containerSignal.get();
-    const {propertyName} = props;
-    const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.containerId === container?.id) !== undefined;
-    let isFormulaEmpty = true;
-
-    if (container && container.properties[propertyName]) {
-        const formula = container.properties[propertyName].formula;
-        isFormulaEmpty = isEmpty(formula);
-    }
-    return {containerSignal, context, propertyName, hasError, isFormulaEmpty};
-}
-
-export function PropertyEditorComponent(props:{isFormulaEmpty: boolean, onClick: () => void, hasError: boolean}) {
-    const {isFormulaEmpty,onClick,hasError} = props;
-    return <div style={{display: 'flex'}}>
-        <Button style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderTopRightRadius: 0,
-            borderBottomRightRadius: 0,
-            backgroundColor: isFormulaEmpty ? 'rgba(255,255,255,0.9)' : colors.green,
-            color: isFormulaEmpty ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)',
-            padding: '0px 5px'
-        }} onClick={onClick}><Icon.Formula style={{fontSize: 16}}/></Button>
-        <div style={{
-            display: 'flex',
-            padding: '0px 5px',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.05)',
-            border: BORDER,
-            borderTopRightRadius: 20,
-            borderBottomRightRadius: 20
-        }}>
-            {hasError && <Icon.Error style={{fontSize: 16, color: colors.red}}/>}
-            {!hasError && <Icon.Checked style={{fontSize: 16, color: colors.green}}/>}
-        </div>
-    </div>;
-}
 
 export function createCustomPropertyEditor(callback: Callback) {
     return function CustomPropertyEditor(props: { propertyName: string }) {

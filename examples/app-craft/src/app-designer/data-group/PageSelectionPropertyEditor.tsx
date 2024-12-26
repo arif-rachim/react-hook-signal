@@ -6,7 +6,7 @@ import {Container} from "../AppDesigner.tsx";
 import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
 import {useSignalEffect} from "react-hook-signal";
-import {usePropertyEditorInitialHook} from "../data-renderer/CustomPropertyEditor.tsx";
+import {usePropertyEditorInitialHook} from "../hooks/usePropertyEditorInitialHook.ts";
 
 export function PageSelectionPropertyEditor(props: { propertyName: string }) {
     const {containerSignal, propertyName, hasError, isFormulaEmpty} = usePropertyEditorInitialHook(props);
