@@ -1,0 +1,79 @@
+@import "../../../assets/adobe-clean/stylesheet.css";
+
+:root {
+    line-height: 21px;
+    font-weight: 400;
+    font-size: 14px;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+label, input, button, option, select, body {
+    font-family: "Adobe Clean", Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 21px;
+    font-weight: 400;
+    font-size: 14px;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.view-lines.monaco-mouse-cursor-text {
+    font-family: Consolas, "Courier New", monospace !important;
+}
+
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 320px;
+    height: 100%;
+    overflow: auto;
+}
+
+input:focus {
+    outline: none;
+}
+
+select:focus {
+    outline: none;
+}
+
+* {
+    box-sizing: border-box
+}
+
+::-webkit-scrollbar {
+    width: 5px; /* For Chrome, Safari, and Opera */
+    height: 5px; /* For Chrome, Safari, and Opera */
+}
+
+/* Show scrollbar on hover */
+:hover::-webkit-scrollbar {
+    width: 5px; /* Adjust width as needed */
+    height: 5px; /* Adjust height as needed */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    border-radius: 4px;
+}
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 5px 10px 5px 5px
+}

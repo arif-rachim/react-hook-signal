@@ -1,7 +1,7 @@
-import AppDesigner, {Application} from "./app-designer/AppDesigner.tsx";
+import AppDesigner, {Application} from "./app/designer/AppDesigner.tsx";
 import {useState} from "react";
-import AppViewer from "./app-viewer/AppViewer.tsx";
-import {Button} from "./app-designer/button/Button.tsx";
+import AppViewer from "./app/viewer/AppViewer.tsx";
+import {Button} from "./app/button/Button.tsx";
 
 export function App() {
     const [value, setValue] = useState<Application>(() => {

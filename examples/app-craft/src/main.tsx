@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import './index.css'
+import './core/style/index.css'
 import "./editor/InitEditor.ts";
 import {App} from "./App.tsx";
 import CryptoJS from "crypto-js";
