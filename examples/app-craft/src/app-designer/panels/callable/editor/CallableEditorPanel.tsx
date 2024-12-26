@@ -1,7 +1,6 @@
 import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {useRef} from "react";
 import {Callable, Variable} from "../../../AppDesigner.tsx";
-import {useShowModal} from "../../../../modal/useShowModal.ts";
 import {notifiable, useSignal} from "react-hook-signal";
 import {useRemoveDashboardPanel} from "../../../dashboard/useRemoveDashboardPanel.ts";
 import {guid} from "../../../../utils/guid.ts";
@@ -13,10 +12,10 @@ import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLab
 import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import {Button} from "../../../button/Button.tsx";
-import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
 import {useUpdateCallable} from "../../../hooks/useUpdateCallable.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
+import {useShowErrorsDialogBox} from "../../../hooks/useShowErrorsDialogBox.tsx";
 
 export default function CallableEditorPanel(props: {
     callableId?: string,
@@ -26,7 +25,6 @@ export default function CallableEditorPanel(props: {
     const context = useAppContext();
     const {callableId, panelId, scope} = props;
     const callable = [...context.allPageCallablesSignal.get(), ...context.allApplicationCallablesSignal.get()].find(v => v.id === callableId);
-    const showModal = useShowModal();
     const updateCallable = useUpdateCallable(scope);
     const {
         allPageVariablesSignal,
@@ -44,7 +42,7 @@ export default function CallableEditorPanel(props: {
 
     const isModified = useSignal<boolean>(false)
     const removePanel = useRemoveDashboardPanel();
-
+    const {showErrors} = useShowErrorsDialogBox();
     function createNewCallable(): Callable {
         return {
             name: '',
@@ -272,18 +270,7 @@ export default function CallableEditorPanel(props: {
                             }
                             removePanel(panelId)
                         } else {
-                            await showModal<string>(cp => {
-                                const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
-                                    return errors[k]?.map(val => {
-                                        return <div key={val}>{(val ?? '') as string}</div>
-                                    })
-                                }).flat();
-                                return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                    icon: 'IoIosExit',
-                                    label: 'Ok',
-                                    id: 'Ok'
-                                }]}/>
-                            })
+                            await showErrors(errors)
                         }
                     }} style={{
                         display: 'flex',

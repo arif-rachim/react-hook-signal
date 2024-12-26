@@ -4,6 +4,20 @@ const month = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'O
 const dayOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FR', 'SAT', 'SUN'];
 export type Action = 'idle' | 'startDateSelected';
 
+function checkStyle(sameDay: (a?: Date, b?: Date) => (boolean ), date: Date | undefined, thisDate: Date, rangeEnabled: boolean, toDate: Date | undefined, endDate: Date | undefined, insideDate: (from?: Date, to?: Date, value?: Date) => (boolean)) {
+    let highlightBackground = sameDay(date, thisDate);
+    const isFirstSelection = sameDay(thisDate, date);
+    const isLastSelection = rangeEnabled ? sameDay(thisDate, toDate) : sameDay(thisDate, date);
+    if (rangeEnabled) {
+        if (sameDay(endDate, thisDate)) {
+            highlightBackground = true;
+        } else if (insideDate(date, toDate, thisDate)) {
+            highlightBackground = true;
+        }
+    }
+    return {highlightBackground, isFirstSelection, isLastSelection};
+}
+
 export function DatePicker(props: {
     value?: Date, onChange: (date?: Date) => void, range?: {
         enabled: boolean,
@@ -71,17 +85,11 @@ export function DatePicker(props: {
     for (let i = prevMonthDays - adjustedStartDay + 1; i <= prevMonthDays; i++) {
 
         const thisDate = new Date(displayMonth.year, displayMonth.month - 1, i);
-        let highlightBackground = sameDay(date, thisDate);
-
-        const isFirstSelection = sameDay(thisDate, date);
-        const isLastSelection = rangeEnabled ? sameDay(thisDate, toDate) : sameDay(thisDate, date);
-        if (rangeEnabled) {
-            if (sameDay(endDate, thisDate)) {
-                highlightBackground = true;
-            } else if (insideDate(date, toDate, thisDate)) {
-                highlightBackground = true;
-            }
-        }
+        const {
+            highlightBackground,
+            isFirstSelection,
+            isLastSelection
+        } = checkStyle(sameDay, date, thisDate, rangeEnabled, toDate, endDate, insideDate);
         calendarDays.push(<div key={`prev-month-${i}`} style={{
             display: 'flex',
             width: '14.2%',
@@ -182,18 +190,11 @@ export function DatePicker(props: {
     for (let i = 1; i <= daysNeeded; i++) {
 
         const thisDate = new Date(displayMonth.year, displayMonth.month + 1, i);
-        let highlightBackground = sameDay(date, thisDate);
-
-        const isFirstSelection = sameDay(thisDate, date);
-        const isLastSelection = rangeEnabled ? sameDay(thisDate, toDate) : sameDay(thisDate, date);
-
-        if (rangeEnabled) {
-            if (sameDay(endDate, thisDate)) {
-                highlightBackground = true;
-            } else if (insideDate(date, toDate, thisDate)) {
-                highlightBackground = true;
-            }
-        }
+        const {
+            highlightBackground,
+            isFirstSelection,
+            isLastSelection
+        } = checkStyle(sameDay, date, thisDate, rangeEnabled, toDate, endDate, insideDate);
 
         calendarDays.push(<div key={`next-month-${i}`} style={{
             display: 'flex',

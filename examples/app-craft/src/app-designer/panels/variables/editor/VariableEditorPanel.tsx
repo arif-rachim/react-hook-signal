@@ -1,5 +1,4 @@
 import {useContext, useEffect, useRef, useState} from "react";
-import {useShowModal} from "../../../../modal/useShowModal.ts";
 import {guid} from "../../../../utils/guid.ts";
 import {notifiable, useComputed, useSignal, useSignalEffect} from "react-hook-signal";
 import {isEmpty} from "../../../../utils/isEmpty.ts";
@@ -8,7 +7,6 @@ import {Button} from "../../../button/Button.tsx";
 import {LabelContainer} from "../../../label-container/LabelContainer.tsx";
 import {BORDER} from "../../../Border.ts";
 import {Variable, VariableType} from "../../../AppDesigner.tsx";
-import {ConfirmationDialog} from "../../../ConfirmationDialog.tsx";
 import {initiateSchemaTS} from "../../../initiateSchemaTS.ts";
 import {zodSchemaToJson} from "../../../zodSchemaToJson.ts";
 import CollapsibleLabelContainer from "../../../collapsible-panel/CollapsibleLabelContainer.tsx";
@@ -18,6 +16,7 @@ import {useAppContext} from "../../../hooks/useAppContext.ts";
 import {wrapWithZObjectIfNeeded} from "../../../../utils/wrapWithZObjectIfNeeded.ts";
 import {useNameRefactor} from "../../../hooks/useNameRefactor.ts";
 import {PanelIsFocusedContext} from "../../../dashboard/Dashboard.tsx";
+import {useShowErrorsDialogBox} from "../../../hooks/useShowErrorsDialogBox.tsx";
 
 /**
  * Represents a panel for editing variables.
@@ -38,7 +37,7 @@ export function VariableEditorPanel(props: {
 
     const variable = [...context.allPageVariablesSignal.get(), ...context.allApplicationVariablesSignal.get()].find(v => v.id === variableId);
     const [type, setType] = useState<VariableType>(variable?.type ?? defaultType);
-    const showModal = useShowModal();
+    const {showErrors} = useShowErrorsDialogBox();
     const updateVariable = useUpdateVariable(scope);
     const refactorVariableName = useNameRefactor();
     const {
@@ -265,18 +264,7 @@ export function VariableEditorPanel(props: {
                             }
                             removePanel(panelId)
                         } else {
-                            await showModal<string>(cp => {
-                                const message = (Object.keys(errors) as Array<keyof Variable>).map(k => {
-                                    return errors[k]?.map(val => {
-                                        return <div key={val}>{(val ?? '') as string}</div>
-                                    })
-                                }).flat();
-                                return <ConfirmationDialog message={message} closePanel={cp} buttons={[{
-                                    icon: 'IoIosExit',
-                                    label: 'Ok',
-                                    id: 'Ok'
-                                }]}/>
-                            })
+                            await showErrors(errors);
                         }
                     }} style={{
                         display: 'flex',

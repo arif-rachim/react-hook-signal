@@ -1,6 +1,3 @@
-import {useSelectedDragContainer} from "../hooks/useSelectedDragContainer.ts";
-import {useAppContext} from "../hooks/useAppContext.ts";
-import {isEmpty} from "../../utils/isEmpty.ts";
 import {useUpdateDragContainer} from "../hooks/useUpdateSelectedDragContainer.ts";
 import {CSSProperties, useState} from "react";
 import {colors} from "stock-watch/src/utils/colors.ts";
@@ -9,19 +6,11 @@ import {Container} from "../AppDesigner.tsx";
 import {BORDER} from "../Border.ts";
 import {Icon} from "../Icon.ts";
 import {useSignalEffect} from "react-hook-signal";
+import {usePropertyEditorInitialHook} from "../data-renderer/CustomPropertyEditor.tsx";
 
 export function PageSelectionPropertyEditor(props: { propertyName: string }) {
-    const containerSignal = useSelectedDragContainer();
-    const context = useAppContext();
-    const container = containerSignal.get();
-    const {propertyName} = props;
-    const hasError = context.allErrorsSignal.get().find(i => i.type === 'property' && i.propertyName === propertyName && i.containerId === container?.id) !== undefined;
-    let isFormulaEmpty = true;
+    const {containerSignal, propertyName, hasError, isFormulaEmpty} = usePropertyEditorInitialHook(props);
 
-    if (container && container.properties[propertyName]) {
-        const formula = container.properties[propertyName].formula;
-        isFormulaEmpty = isEmpty(formula);
-    }
     const update = useUpdateDragContainer();
     const [value, setValue] = useState<string>('');
 
