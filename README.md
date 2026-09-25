@@ -1,4 +1,6 @@
-<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-hero.png" width="830" alt="react hook signal, seamless way to integrate React with TC39 Signal Proposal">
+# React-Hook-Signal
+
+<img src="https://github.com/arif-rachim/react-hook-signal/raw/main/assets/react-hook-signal-hero.png" width="830" alt="react hook signal, a way to integrate React with the TC39 Signal Proposal">
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![codecov](https://codecov.io/gh/arif-rachim/react-hook-signal/graph/badge.svg?token=MRWEGD8U2Z)](https://codecov.io/gh/arif-rachim/react-hook-signal)
@@ -6,12 +8,16 @@
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/react-hook-signal)](https://bundlephobia.com/package/react-hook-signal@latest)
 
 
-> React-Hook-Signal is a tiny library, less than 1kb. It helps you integrate Signal with your React components easily.
+React-Hook-Signal is a small TypeScript library (under 1 KB minified and gzipped) that connects React 18 components to signals as defined by the TC39 Signals proposal, using the official `signal-polyfill` package. In plain React, a state change re-runs the whole component function and its JSX, which developers usually work around with `useMemo`, `useCallback` and `memo`. With this library, a `Signal.State` or `Signal.Computed` (or a function that reads signals) can be passed directly as a prop or child of a `notifiable` element such as `<notifiable.div>`, and only that element updates when the signal changes. It also provides hooks to create signals tied to a component's lifecycle (`useSignal`, `useComputed`), to react to signal changes (`useSignalEffect`), and a `Notifiable` wrapper that gives any existing component the same behaviour. It is aimed at React developers who want fine-grained updates without a compiler or Babel plugin. It is published on npm as a release candidate (`0.0.1-rc.18`, December 2024), is tested with Vitest and Testing Library, and ships with two example apps.
+
+> Status: release candidate (`0.0.1-rc.x`). The Signals proposal and `signal-polyfill` are still pre-standard, so the API may change.
 
 ### Installation
 ```bash
 npm install react-hook-signal signal-polyfill
 ```
+
+Peer dependencies: `react` and `react-dom` ^18.2.0, `signal-polyfill` ^0.1.0.
 
 ## What are Signals?
 
@@ -30,10 +36,10 @@ Once adopted, JavaScript will have a native signaling system, referred to as `Si
 In React components, re-rendering starts at the component's beginning and extends to the end of the JSX element. Signal usage allows precise re-rendering, boosting performance and simplifying development without the need for memoization or useCallback functions.
 
 ## Why choose React-Hook-Signal?
-- It's straightforward: Just React and Native Signal, no extra babel plugin needed.
-- Enjoy full TypeScript support for an improved Developer Experience.
-- Flexibility is key: Opt-in for integration in your React project, seamlessly blending state and signal.
-- It's incredibly lightweight, clocking in at less than 1kb
+- Just React and the Signal polyfill: no extra Babel plugin or compiler step.
+- Written in TypeScript, with typed props for every `notifiable` element.
+- Opt-in: use it in a single component and keep `useState` everywhere else; state and signals can be mixed.
+- Small: less than 1 KB minified and gzipped.
 
 ## Steps to Integrate Signals with React
 ### STEP 1: Rendering Signal Values:
@@ -43,9 +49,8 @@ In React components, re-rendering starts at the component's beginning and extend
 
 Example:
 ```tsx
-// Global.tsx
+// GlobalSignals.tsx
 import {Signal} from "signal-polyfill";
-import {JSXAttribute} from "react-hook-signal";
 
 export const count = new Signal.State(0)
 export const renderCount = new Signal.Computed(() => {
@@ -189,7 +194,7 @@ export function App() {
 
 Example :
 ```tsx
-import {Notifiable} from "react-hook-signal";
+import {Notifiable, useSignal} from "react-hook-signal";
 
 export function App() {
     const count = useSignal(0);
@@ -211,5 +216,47 @@ function MyComponent(props:{title:string}){
 }
 ```
 
+#### Event handlers on `Notifiable`
+
+Because `Notifiable` treats any function prop as a `Lambda` and calls it, pass real callbacks with a `Handler` suffix (for example `onClickHandler={...}` for a prop named `onClick`); the suffix is removed before the props reach the wrapped component. `notifiable.*` elements do this automatically for every prop that starts with `on`, so `<notifiable.button onClick={...}>` works as usual.
+
 ### Summary
 The integration of `Signal` into the React application can be done in various ways tailored to the needs and complexity of the app.
+
+## API
+
+| Export | Kind | Description |
+| --- | --- | --- |
+| `notifiable` | object of components | `notifiable.div`, `notifiable.span`, and so on for every intrinsic element; props and children accept values, signals or lambdas |
+| `Notifiable` | component | Wraps any component (`component={MyComponent}`) so its props accept signals or lambdas |
+| `useSignal(value, options?)` | hook | Creates a `Signal.State` bound to the component |
+| `useComputed(lambda, options?)` | hook | Creates a `Signal.Computed` bound to the component |
+| `useSignalEffect(callback)` | hook | Runs `callback` whenever the signals it reads change; may return a cleanup function |
+| `effect(callback)` | function | The same outside React; returns a function that stops the effect |
+| `AnySignal`, `Computable`, `HtmlNotifiableComponents`, `JSXAttribute` | types | Helper types |
+
+Effects are scheduled through a single `Signal.subtle.Watcher` and run in a microtask after the signals they depend on change.
+
+## Examples
+
+The [`examples/`](examples/README.md) folder is an npm workspace with two Vite apps:
+
+- [`todo-list`](examples/todo-list/README.md): a to-do app built with `notifiable` components.
+- [`stock-watch`](examples/stock-watch/README.md): a stock-watch app that updates prices and charts through signals.
+
+## Development
+
+```bash
+npm install
+npm run build        # tsc + Vite library build to dist/ (ES module, UMD and .d.ts)
+npm run test:unit    # Vitest in watch mode
+npm run coverage     # Vitest run with v8 coverage (used in CI)
+npm run lint
+npm run commit       # Commitizen conventional commit prompt
+```
+
+CI (`.github/workflows/node.js.yml`) builds and runs coverage on Node.js 18 and 20. A Husky pre-commit hook runs `npm run coverage`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
